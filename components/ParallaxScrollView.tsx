@@ -36,7 +36,7 @@ export default function ParallaxScrollView({
           translateY: interpolate(
             scrollOffset.value,
             [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
-            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75]
+            [-HEADER_HEIGHT / 2, 0, HEADER_HEIGHT * 0.75],
           ),
         },
         {
@@ -45,7 +45,7 @@ export default function ParallaxScrollView({
             scrollOffset.value,
             [-HEADER_HEIGHT, 0, HEADER_HEIGHT],
             [1.15, 1, 1],
-            Extrapolation.CLAMP
+            Extrapolation.CLAMP,
           ),
         },
       ],
@@ -59,13 +59,15 @@ export default function ParallaxScrollView({
         scrollEventThrottle={16}
         contentInsetAdjustmentBehavior="automatic"
         scrollIndicatorInsets={{ bottom }}
-        contentContainerStyle={{ paddingBottom: bottom + 16 }}>
+        contentContainerStyle={{ paddingBottom: bottom + 16 }}
+      >
         <Animated.View
           style={[
             styles.header,
             { backgroundColor: headerBackgroundColor[colorScheme] },
             headerAnimatedStyle,
-          ]}>
+          ]}
+        >
           {headerImage}
         </Animated.View>
         <ThemedView style={styles.content}>{children}</ThemedView>

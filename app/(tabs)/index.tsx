@@ -1,6 +1,6 @@
 import { Image } from 'expo-image';
-import { Platform, Pressable, StyleSheet } from 'react-native';
 import { Href, useRouter } from 'expo-router';
+import { Platform, Pressable, StyleSheet } from 'react-native';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -17,13 +17,14 @@ export default function HomeScreen() {
           source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
-      }>
+      }
+    >
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">Welcome!</ThemedText>
         <HelloWave />
       </ThemedView>
       <ThemedView style={styles.stepContainer}>
-  <Pressable onPress={() => router.push('/emergency' as Href)} style={styles.emergencyCta}>
+        <Pressable onPress={() => router.push('/emergency' as Href)} style={styles.emergencyCta}>
           <ThemedText style={styles.emergencyText}>Wandering — Start 15:00</ThemedText>
         </Pressable>
       </ThemedView>
@@ -82,8 +83,8 @@ const styles = StyleSheet.create({
   emergencyCta: {
     backgroundColor: '#e74c3c',
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingVertical: 12,
     alignItems: 'center',
   },
-  emergencyText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  emergencyText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
