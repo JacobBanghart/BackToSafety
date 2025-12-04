@@ -1,7 +1,7 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
+import { SymbolViewProps, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
@@ -18,6 +18,37 @@ const MAPPING = {
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  'chevron.left': 'chevron-left',
+  'phone.fill': 'phone',
+  pencil: 'edit',
+  plus: 'add',
+  phone: 'phone',
+  person: 'person',
+  location: 'location-on',
+  'star.fill': 'star',
+  'heart.fill': 'favorite',
+  'person.2.fill': 'people',
+  'briefcase.fill': 'work',
+  'bell.fill': 'notifications',
+  xmark: 'close',
+  gear: 'settings',
+  'gearshape.fill': 'settings',
+  'arrow.up.right': 'open-in-new',
+  'arrow.left.arrow.right': 'swap-horiz',
+  'exclamationmark.triangle.fill': 'warning',
+  'info.circle.fill': 'info',
+  'mappin.and.ellipse': 'place',
+  'drop.fill': 'water-drop',
+  'building.columns.fill': 'account-balance',
+  'cart.fill': 'shopping-cart',
+  'fork.knife': 'restaurant',
+  'figure.walk': 'directions-walk',
+  mappin: 'place',
+  ellipsis: 'more-horiz',
+  'checkmark.circle.fill': 'check-circle',
+  'wrench.fill': 'build',
+  'trash.fill': 'delete',
+  'paintbrush.fill': 'brush',
 } as IconMapping;
 
 /**

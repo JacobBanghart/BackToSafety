@@ -1,109 +1,317 @@
+/**
+ * Emergency Search Screen
+ * 12-step guided protocol for finding someone who has wandered
+ */
+
+import { goBack, setPreviousRoute } from '@/utils/navigation';
 import * as Haptics from 'expo-haptics';
 import * as Location from 'expo-location';
-import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Vibration } from 'react-native';
+import { Href, useRouter } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+    Linking,
+    Modal,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    Vibration,
+    View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { Colors } from '@/constants/Colors';
+import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Colors, neutral, primary, secondary, semantic } from '@/constants/Colors';
 import { useProfile } from '@/context/ProfileContext';
-import { useColorScheme } from '@/hooks/useColorScheme';
+import { useTheme } from '@/context/ThemeContext';
+import { Destination, getDestinations } from '@/database/destinations';
+import { getSetting, saveSetting } from '@/database/storage';
 
-type ChecklistItem = {
+// Emergency state stored in settings
+const EMERGENCY_STATE_KEY = 'active_emergency';
+
+type EmergencyState = {
+  startedAt: string; // ISO timestamp
+  wearing: string;
+  checkedSteps: string[];
+  isActive: boolean;
+};
+
+type ChecklistStep = {
   id: string;
+  step: number;
   title: string;
+  description: string;
   hint?: string;
+  urgent?: boolean;
   checked: boolean;
 };
 
 const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
 
+const INITIAL_STEPS: ChecklistStep[] = [
+  {
+    id: 'home_search',
+    step: 1,
+    title: 'Search home thoroughly',
+    description: 'Check every room, closet, under beds, bathrooms, garage, basement, sheds',
+    hint: 'People often seek small, quiet spaces',
+    checked: false,
+  },
+  {
+    id: 'tracking',
+    step: 2,
+    title: 'Activate tracking devices',
+    description: 'Check GPS tracker, AirTag, Project Lifesaver, or other locative devices',
+    checked: false,
+  },
+  {
+    id: 'outside_immediate',
+    step: 3,
+    title: 'Check outside areas',
+    description: 'Yard, porches, paths, driveways, inside vehicles (locked or unlocked)',
+    checked: false,
+  },
+  {
+    id: 'neighbors',
+    step: 4,
+    title: 'Alert neighbors',
+    description: 'Show photo, ask them to call if seen. Check their yards too.',
+    checked: false,
+  },
+  {
+    id: 'radius_search',
+    step: 5,
+    title: 'Search 1-1.5 mile radius',
+    description: 'Most people are found within this distance from home',
+    checked: false,
+  },
+  {
+    id: 'high_risk',
+    step: 6,
+    title: 'Check high-risk areas first',
+    description: 'Water (pools, ponds, streams), wooded areas, ditches, busy roads',
+    urgent: true,
+    checked: false,
+  },
+  {
+    id: 'familiar_places',
+    step: 7,
+    title: 'Search familiar places',
+    description: 'Former home, church, old workplace, favorite walking routes',
+    checked: false,
+  },
+  {
+    id: 'call_911',
+    step: 8,
+    title: 'Call 911',
+    description: 'If not found within 15 minutes, call immediately',
+    urgent: true,
+    checked: false,
+  },
+  {
+    id: 'silver_alert',
+    step: 9,
+    title: 'Request Silver/Feather Alert',
+    description: 'Ask 911 dispatcher about activating state alert program',
+    checked: false,
+  },
+  {
+    id: 'share_info',
+    step: 10,
+    title: 'Share medical/behavioral info',
+    description: 'Provide responders with conditions, medications, de-escalation tips',
+    checked: false,
+  },
+  {
+    id: 'coordinate',
+    step: 11,
+    title: 'Coordinate search efforts',
+    description: 'Assign areas to helpers, avoid duplicating coverage',
+    checked: false,
+  },
+  {
+    id: 'document',
+    step: 12,
+    title: 'Document everything',
+    description: 'Note times, areas checked, people contacted for responders',
+    checked: false,
+  },
+];
+
 export default function EmergencyScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme() ?? 'light';
-  const { setLastSeen, profile, addIncident } = useProfile();
+  const { colorScheme } = useTheme();
+  const theme = Colors[colorScheme];
+  const isDark = colorScheme === 'dark';
+  const { setLastSeen, profile, emergencyContacts, addIncident } = useProfile();
+
+  const [isLoading, setIsLoading] = useState(true);
   const [secondsLeft, setSecondsLeft] = useState<number>(SEARCH_WINDOW_SECONDS);
-  const [startedAt] = useState<Date>(new Date());
+  const [startedAt, setStartedAt] = useState<Date>(new Date());
+  const [wearing, setWearing] = useState('');
+  const [steps, setSteps] = useState<ChecklistStep[]>(INITIAL_STEPS);
+  const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [showWearingInput, setShowWearingInput] = useState(true);
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalType, setModalType] = useState<'found' | 'leave' | 'noContacts' | 'smsError' | null>(
+    null,
+  );
+
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const [containerHeight, setContainerHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
-  const [items, setItems] = useState<ChecklistItem[]>([
-    {
-      id: 'yard',
-      title: 'Home & yard',
-      hint: 'Front/back yard, porch, garage, shed',
-      checked: false,
-    },
-    {
-      id: 'street',
-      title: 'Street outside home',
-      hint: 'Walk 100–200 ft in both directions',
-      checked: false,
-    },
-    {
-      id: 'route',
-      title: 'Usual route',
-      hint: 'Favorite walks, coffee shop, mailbox',
-      checked: false,
-    },
-    {
-      id: 'edges',
-      title: 'Edges & hazards',
-      hint: 'Water, tree/brush lines, fences/gates',
-      checked: false,
-    },
-    {
-      id: 'dest',
-      title: 'Likely destinations',
-      hint: 'Past work, faith community, friends',
-      checked: false,
-    },
-  ]);
+  const scrollRef = useRef<ScrollView>(null);
 
-  const allChecked = useMemo(() => items.every((i) => i.checked), [items]);
+  const timerExpired = secondsLeft === 0;
+  const checkedCount = steps.filter((s) => s.checked).length;
+  const progress = (checkedCount / steps.length) * 100;
 
+  // Save emergency state to storage
+  const saveEmergencyState = useCallback(async (state: EmergencyState) => {
+    try {
+      await saveSetting(EMERGENCY_STATE_KEY, JSON.stringify(state));
+    } catch (error) {
+      console.error('Failed to save emergency state:', error);
+    }
+  }, []);
+
+  // Clear emergency state from storage
+  const clearEmergencyState = useCallback(async () => {
+    try {
+      await saveSetting(EMERGENCY_STATE_KEY, '');
+    } catch (error) {
+      console.error('Failed to clear emergency state:', error);
+    }
+  }, []);
+
+  // Load destinations for familiar places hints
   useEffect(() => {
-    // Start timer on mount
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    // Record last seen time and a placeholder location (real GPS wired later)
-    setLastSeen({ time: new Date().toISOString() });
-    // Try to capture current GPS
-    (async () => {
+    getDestinations().then(setDestinations).catch(console.error);
+  }, []);
+
+  // Load or create emergency state on mount
+  useEffect(() => {
+    const initEmergency = async () => {
       try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-        if (status === 'granted') {
-          const loc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          setLastSeen({
-            time: new Date().toISOString(),
-            coords: {
-              lat: loc.coords.latitude,
-              lon: loc.coords.longitude,
-              accuracy: loc.coords.accuracy ?? undefined,
-            },
-          });
+        const savedState = await getSetting(EMERGENCY_STATE_KEY);
+
+        if (savedState) {
+          const state: EmergencyState = JSON.parse(savedState);
+
+          if (state.isActive) {
+            // Resume existing emergency
+            const started = new Date(state.startedAt);
+            const elapsedSeconds = Math.floor((Date.now() - started.getTime()) / 1000);
+            const remaining = Math.max(0, SEARCH_WINDOW_SECONDS - elapsedSeconds);
+
+            setStartedAt(started);
+            setSecondsLeft(remaining);
+            setWearing(state.wearing);
+            setShowWearingInput(!state.wearing);
+            setSteps((prev) =>
+              prev.map((step) => ({
+                ...step,
+                checked: state.checkedSteps.includes(step.id),
+              })),
+            );
+
+            setIsLoading(false);
+
+            // Start timer from remaining time
+            startTimer(remaining);
+            return;
+          }
         }
-      } catch {}
-    })();
+
+        // Start new emergency
+        const now = new Date();
+        setStartedAt(now);
+
+        await saveEmergencyState({
+          startedAt: now.toISOString(),
+          wearing: '',
+          checkedSteps: [],
+          isActive: true,
+        });
+
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+        setLastSeen({ time: now.toISOString() });
+
+        // Try to capture GPS
+        try {
+          const { status } = await Location.requestForegroundPermissionsAsync();
+          if (status === 'granted') {
+            const loc = await Location.getCurrentPositionAsync({
+              accuracy: Location.Accuracy.Balanced,
+            });
+            setLastSeen({
+              time: now.toISOString(),
+              coords: {
+                lat: loc.coords.latitude,
+                lon: loc.coords.longitude,
+                accuracy: loc.coords.accuracy ?? undefined,
+              },
+            });
+          }
+        } catch {}
+
+        setIsLoading(false);
+        startTimer(SEARCH_WINDOW_SECONDS);
+      } catch (error) {
+        console.error('Failed to init emergency:', error);
+        setIsLoading(false);
+        startTimer(SEARCH_WINDOW_SECONDS);
+      }
+    };
+
+    initEmergency();
+
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount
+  }, []);
+
+  // Start the countdown timer
+  const startTimer = (initialSeconds: number) => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+
+    if (initialSeconds <= 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
 
     intervalRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           if (intervalRef.current) clearInterval(intervalRef.current);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-          Vibration.vibrate(800);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          Vibration.vibrate([0, 500, 200, 500]);
           return 0;
+        }
+        // Warning vibration at 5 minutes
+        if (prev === 5 * 60) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         }
         return prev - 1;
       });
     }, 1000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, []);
+  };
+
+  // Persist state changes (wearing and steps)
+  useEffect(() => {
+    if (!isLoading) {
+      saveEmergencyState({
+        startedAt: startedAt.toISOString(),
+        wearing,
+        checkedSteps: steps.filter((s) => s.checked).map((s) => s.id),
+        isActive: true,
+      });
+    }
+  }, [wearing, steps, isLoading, startedAt, saveEmergencyState]);
 
   const mmss = useMemo(() => {
     const m = Math.floor(secondsLeft / 60)
@@ -113,129 +321,473 @@ export default function EmergencyScreen() {
     return `${m}:${s}`;
   }, [secondsLeft]);
 
-  const toggleItem = (id: string) =>
-    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i)));
+  const toggleStep = useCallback((id: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, checked: !s.checked } : s)));
+  }, []);
 
   const onMarkFound = async () => {
-    await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    addIncident({ at: new Date().toISOString(), outcome: 'found' });
-    router.back();
+    // Clear state first and wait for it
+    await clearEmergencyState();
+    addIncident({
+      at: new Date().toISOString(),
+      outcome: 'found',
+      checked: steps.filter((s) => s.checked).map((s) => s.id),
+    });
+    setModalType('found');
+    setModalVisible(true);
   };
 
   const onCall911 = async () => {
-    const script = `I\'m reporting a missing vulnerable adult with dementia. Last seen around ${
-      startedAt.toLocaleTimeString() || 'now'
-    }. Location: home. Wearing [clothes]. Risks: [medical]. Please advise on issuing a local Silver/Purple Alert.`;
-    // Open dialer. Many regions accept 911; this simply opens the dialer with 911.
-    try {
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-      Linking.openURL('tel:911');
-    } catch (e) {
-      // no-op
-    }
-    addIncident({ at: new Date().toISOString(), outcome: '911_called' });
-    // Optionally, copy the script to clipboard in future.
-    // Clipboard.setStringAsync(script)
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    toggleStep('call_911');
+    addIncident({
+      at: new Date().toISOString(),
+      outcome: '911_called',
+      checked: steps.filter((s) => s.checked).map((s) => s.id),
+    });
+    Linking.openURL('tel:911');
   };
 
-  const shouldScroll = contentHeight > containerHeight + 1;
+  const onViewReadout = () => {
+    setPreviousRoute('/emergency');
+    router.push('/readout' as Href);
+  };
+
+  const onAlertContacts = async () => {
+    if (emergencyContacts.length === 0) {
+      setModalType('noContacts');
+      setModalVisible(true);
+      return;
+    }
+
+    const message = `URGENT: ${profile?.name || 'Our loved one'} is missing. Last seen ${startedAt.toLocaleTimeString()}. ${wearing ? `Wearing: ${wearing}. ` : ''}Please help search or call if you see them.`;
+
+    // Open SMS with first contact
+    const firstContact = emergencyContacts[0];
+    const smsUrl = `sms:${firstContact.phone}?body=${encodeURIComponent(message)}`;
+
+    try {
+      await Linking.openURL(smsUrl);
+    } catch {
+      setModalType('smsError');
+      setModalVisible(true);
+    }
+  };
+
+  const getDirectionHint = () => {
+    if (profile?.dominantHand === 'left') return '← May veer left (left-handed)';
+    if (profile?.dominantHand === 'right') return '→ May veer right (right-handed)';
+    return null;
+  };
+
+  const onBackPress = () => {
+    setModalType('leave');
+    setModalVisible(true);
+  };
+
+  const handleModalAction = (action: 'dismiss' | 'leave' | 'end') => {
+    setModalVisible(false);
+
+    const navigateBack = () => {
+      // Go back to where we came from, or home as fallback
+      goBack('/(tabs)');
+    };
+
+    if (action === 'dismiss') {
+      if (modalType === 'found') {
+        navigateBack();
+      }
+      return;
+    }
+    if (action === 'leave') {
+      navigateBack();
+    }
+    if (action === 'end') {
+      clearEmergencyState().then(() => navigateBack());
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: theme.background }]}
+        edges={['top']}
+      >
+        <View style={styles.loadingContainer}>
+          <ThemedText style={{ color: theme.text }}>Loading emergency state...</ThemedText>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
-    <SafeAreaView
-      style={styles.container}
-      edges={['top', 'left', 'right', 'bottom']}
-      onLayout={(e) => setContainerHeight(e.nativeEvent.layout.height)}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        onContentSizeChange={(_, h) => setContentHeight(h)}
-        scrollEnabled={shouldScroll}
-        bounces={shouldScroll}
-        showsVerticalScrollIndicator={shouldScroll}
-        overScrollMode={shouldScroll ? 'auto' : 'never'}
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+      {/* Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
       >
-        <ThemedText type="title">Wandering Emergency</ThemedText>
-        <ThemedText style={styles.meta}>
-          Last seen: {new Date().toLocaleTimeString()} • Direction hint:{' '}
-          {profile.dominantHand === 'left'
-            ? 'May veer left'
-            : profile.dominantHand === 'right'
-              ? 'May veer right'
-              : '—'}
-        </ThemedText>
-        <ThemedText style={styles.subtitleSmall}>
-          Guided search — call 911 if not found by 15 minutes
-        </ThemedText>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+            {modalType === 'found' && (
+              <>
+                <IconSymbol name="checkmark.circle.fill" size={48} color={semantic.success} />
+                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
+                  Found!
+                </ThemedText>
+                <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
+                  Great news! Remember to use calm, reassuring language. Offer water and rest.
+                </ThemedText>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: semantic.success }]}
+                  onPress={() => handleModalAction('dismiss')}
+                >
+                  <ThemedText style={styles.modalButtonText}>OK</ThemedText>
+                </TouchableOpacity>
+              </>
+            )}
 
-        <ThemedView
+            {modalType === 'leave' && (
+              <>
+                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
+                  Leave Emergency Search?
+                </ThemedText>
+                <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
+                  The timer will continue in the background. You can return to resume.
+                </ThemedText>
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.modalButton,
+                      styles.modalButtonOutline,
+                      { borderColor: theme.border },
+                    ]}
+                    onPress={() => setModalVisible(false)}
+                  >
+                    <ThemedText style={[styles.modalButtonText, { color: theme.text }]}>
+                      Stay
+                    </ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.modalButton, { backgroundColor: primary[600] }]}
+                    onPress={() => handleModalAction('leave')}
+                  >
+                    <ThemedText style={styles.modalButtonText}>Leave</ThemedText>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={[styles.modalButtonDestructive]}
+                  onPress={() => handleModalAction('end')}
+                >
+                  <ThemedText style={[styles.modalButtonText, { color: semantic.error }]}>
+                    End Emergency
+                  </ThemedText>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {modalType === 'noContacts' && (
+              <>
+                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
+                  No Contacts
+                </ThemedText>
+                <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
+                  Add emergency contacts to send alerts.
+                </ThemedText>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: primary[600] }]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <ThemedText style={styles.modalButtonText}>OK</ThemedText>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {modalType === 'smsError' && (
+              <>
+                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
+                  Error
+                </ThemedText>
+                <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
+                  Could not open messaging app.
+                </ThemedText>
+                <TouchableOpacity
+                  style={[styles.modalButton, { backgroundColor: primary[600] }]}
+                  onPress={() => setModalVisible(false)}
+                >
+                  <ThemedText style={styles.modalButtonText}>OK</ThemedText>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Header */}
+      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <TouchableOpacity style={styles.backButton} onPress={onBackPress} activeOpacity={0.7}>
+          <IconSymbol name="chevron.left" size={24} color={theme.text} />
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
+          <View style={styles.headerTitleRow}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={20} color={semantic.error} />
+            <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
+              Emergency Search
+            </ThemedText>
+          </View>
+        </View>
+        <View style={styles.headerRight} />
+      </View>
+
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Timer Card */}
+        <View
           style={[
             styles.timerCard,
             {
-              backgroundColor: Colors[colorScheme].card,
-              borderColor: Colors[colorScheme].border,
+              backgroundColor: timerExpired ? semantic.error : primary[700],
             },
           ]}
         >
-          <ThemedText type="title" style={styles.timerText}>
-            {mmss}
+          <ThemedText style={styles.timerLabel}>
+            {timerExpired ? 'TIME TO CALL 911' : 'Time remaining'}
           </ThemedText>
+          <ThemedText style={styles.timerText}>{mmss}</ThemedText>
           <ThemedText style={styles.timerHint}>
-            Stay calm and check nearby places. Mark each step as you go.
+            {timerExpired
+              ? 'Call 911 immediately and request a Silver Alert'
+              : 'Stay calm. Check each step systematically.'}
           </ThemedText>
-        </ThemedView>
 
-        <ThemedView style={styles.list}>
-          {items.map((item) => (
+          {/* Progress bar */}
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+            </View>
+            <ThemedText style={styles.progressText}>
+              {checkedCount}/{steps.length} steps
+            </ThemedText>
+          </View>
+        </View>
+
+        {/* Direction hint */}
+        {getDirectionHint() && (
+          <View
+            style={[
+              styles.hintCard,
+              { backgroundColor: secondary[100], borderColor: secondary[300] },
+            ]}
+          >
+            <ThemedText style={[styles.hintText, { color: primary[800] }]}>
+              {getDirectionHint()}
+            </ThemedText>
+          </View>
+        )}
+
+        {/* What are they wearing? */}
+        {showWearingInput && (
+          <View
+            style={[styles.wearingCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          >
+            <ThemedText style={[styles.wearingLabel, { color: theme.text }]}>
+              What are they wearing? (for 911)
+            </ThemedText>
+            <TextInput
+              style={[
+                styles.wearingInput,
+                {
+                  backgroundColor: isDark ? neutral[800] : neutral[100],
+                  color: theme.text,
+                  borderColor: theme.border,
+                },
+              ]}
+              value={wearing}
+              onChangeText={setWearing}
+              placeholder="e.g., Blue jacket, gray pants, white sneakers"
+              placeholderTextColor={neutral[400]}
+              multiline
+            />
+            <Pressable style={styles.wearingDismiss} onPress={() => setShowWearingInput(false)}>
+              <ThemedText style={{ color: neutral[500], fontSize: 13 }}>Dismiss</ThemedText>
+            </Pressable>
+          </View>
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.actionButton, { backgroundColor: semantic.success }]}
+            onPress={onMarkFound}
+            activeOpacity={0.7}
+          >
+            <IconSymbol name="checkmark.circle.fill" size={20} color="#fff" />
+            <ThemedText style={styles.actionButtonText}>Found — Safe</ThemedText>
+          </TouchableOpacity>
+
+          <View style={styles.actionRow}>
             <Pressable
-              key={item.id}
-              onPress={() => toggleItem(item.id)}
-              style={[styles.row, { borderColor: Colors[colorScheme].border }]}
+              style={[styles.actionButtonSmall, { backgroundColor: primary[600] }]}
+              onPress={onViewReadout}
             >
-              <ThemedView
+              <ThemedText style={styles.actionButtonText}>📋 911 Script</ThemedText>
+            </Pressable>
+
+            <Pressable
+              style={[styles.actionButtonSmall, { backgroundColor: primary[600] }]}
+              onPress={onAlertContacts}
+            >
+              <ThemedText style={styles.actionButtonText}>📱 Alert Circle</ThemedText>
+            </Pressable>
+          </View>
+
+          <Pressable
+            style={[
+              styles.actionButton,
+              {
+                backgroundColor: timerExpired ? semantic.error : 'transparent',
+                borderWidth: timerExpired ? 0 : 2,
+                borderColor: semantic.error,
+              },
+            ]}
+            onPress={onCall911}
+          >
+            <ThemedText
+              style={[styles.actionButtonText, { color: timerExpired ? '#fff' : semantic.error }]}
+            >
+              📞 Call 911
+            </ThemedText>
+          </Pressable>
+        </View>
+
+        {/* 12-Step Checklist */}
+        <View style={styles.checklistSection}>
+          <ThemedText type="subtitle" style={[styles.sectionTitle, { color: theme.text }]}>
+            12-Step Search Protocol
+          </ThemedText>
+
+          {steps.map((step) => (
+            <Pressable
+              key={step.id}
+              style={[
+                styles.stepCard,
+                {
+                  backgroundColor: step.checked
+                    ? isDark
+                      ? primary[900]
+                      : primary[50]
+                    : theme.card,
+                  borderColor:
+                    step.urgent && !step.checked
+                      ? semantic.error
+                      : step.checked
+                        ? primary[300]
+                        : theme.border,
+                  borderWidth: step.urgent && !step.checked ? 2 : 1,
+                },
+              ]}
+              onPress={() => toggleStep(step.id)}
+            >
+              <View
                 style={[
-                  styles.checkbox,
+                  styles.stepNumber,
                   {
-                    borderColor:
-                      colorScheme === 'dark' ? 'rgba(236,237,238,0.6)' : 'rgba(0,0,0,0.4)',
+                    backgroundColor: step.checked
+                      ? primary[600]
+                      : isDark
+                        ? neutral[700]
+                        : neutral[200],
                   },
-                  item.checked && styles.checkboxChecked,
                 ]}
-              />
-              <ThemedView style={styles.rowTextWrap}>
-                <ThemedText type="defaultSemiBold">{item.title}</ThemedText>
-                {!!item.hint && <ThemedText style={styles.hint}>{item.hint}</ThemedText>}
-              </ThemedView>
+              >
+                {step.checked ? (
+                  <ThemedText style={styles.stepNumberText}>✓</ThemedText>
+                ) : (
+                  <ThemedText
+                    style={[styles.stepNumberText, { color: isDark ? neutral[300] : neutral[600] }]}
+                  >
+                    {step.step}
+                  </ThemedText>
+                )}
+              </View>
+
+              <View style={styles.stepContent}>
+                <View style={styles.stepHeader}>
+                  <ThemedText
+                    style={[
+                      styles.stepTitle,
+                      { color: theme.text },
+                      step.checked && styles.stepTitleChecked,
+                    ]}
+                  >
+                    {step.title}
+                  </ThemedText>
+                  {step.urgent && !step.checked && (
+                    <View style={[styles.urgentBadge, { backgroundColor: semantic.error }]}>
+                      <ThemedText style={styles.urgentText}>PRIORITY</ThemedText>
+                    </View>
+                  )}
+                </View>
+                <ThemedText style={[styles.stepDescription, { color: theme.textSecondary }]}>
+                  {step.description}
+                </ThemedText>
+                {step.hint && (
+                  <ThemedText style={[styles.stepHint, { color: primary[600] }]}>
+                    💡 {step.hint}
+                  </ThemedText>
+                )}
+
+                {/* Show saved destinations for familiar places step */}
+                {step.id === 'familiar_places' && destinations.length > 0 && !step.checked && (
+                  <View style={styles.destinationsList}>
+                    <ThemedText style={[styles.destinationsLabel, { color: theme.textSecondary }]}>
+                      Saved places to check:
+                    </ThemedText>
+                    {destinations.slice(0, 3).map((dest) => (
+                      <ThemedText
+                        key={dest.id}
+                        style={[styles.destinationItem, { color: primary[600] }]}
+                      >
+                        • {dest.name} {dest.address ? `(${dest.address})` : ''}
+                      </ThemedText>
+                    ))}
+                    {destinations.length > 3 && (
+                      <ThemedText style={[styles.destinationItem, { color: neutral[500] }]}>
+                        +{destinations.length - 3} more in Places
+                      </ThemedText>
+                    )}
+                  </View>
+                )}
+              </View>
             </Pressable>
           ))}
-        </ThemedView>
+        </View>
 
-        <ThemedView style={styles.actions}>
-          <Pressable onPress={onMarkFound} style={[styles.button, styles.found]}>
-            <ThemedText style={styles.buttonText}>Found — De-escalate</ThemedText>
-          </Pressable>
-          <Pressable
-            onPress={() => router.push('/readout' as any)}
-            style={[styles.button, styles.readout]}
-          >
-            <ThemedText style={styles.buttonText}>View 911 Read-out</ThemedText>
-          </Pressable>
-          {secondsLeft === 0 ? (
-            <Pressable onPress={onCall911} style={[styles.button, styles.call]}>
-              <ThemedText style={styles.buttonText}>Call 911</ThemedText>
-            </Pressable>
-          ) : (
-            <Pressable onPress={onCall911} style={[styles.button, styles.call, styles.callDimmed]}>
-              <ThemedText style={styles.buttonText}>If not found, Call 911</ThemedText>
-            </Pressable>
-          )}
-        </ThemedView>
-
-        <ThemedView style={styles.tips}>
-          <ThemedText type="defaultSemiBold">Quiet approach tips</ThemedText>
-          <ThemedText style={styles.tipText}>
-            Speak slowly, short sentences, give time to respond. Offer to call their caregiver.
+        {/* De-escalation Tips */}
+        <View
+          style={[
+            styles.tipsCard,
+            { backgroundColor: secondary[100], borderColor: secondary[300] },
+          ]}
+        >
+          <ThemedText style={[styles.tipsTitle, { color: primary[800] }]}>
+            💡 When you find them
           </ThemedText>
-        </ThemedView>
+          <ThemedText style={[styles.tipsText, { color: primary[700] }]}>
+            • Approach calmly from the front{'\n'}• Speak slowly with short sentences{'\n'}• Give
+            time to respond{'\n'}• Offer to walk with them{'\n'}• Don&apos;t argue or correct{'\n'}
+            {profile?.deescalationTechniques && `• ${profile.deescalationTechniques}`}
+          </ThemedText>
+        </View>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -245,72 +797,282 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  scrollContent: {
-    paddingHorizontal: 12,
-    paddingTop: 6,
-    paddingBottom: 12,
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  backButton: {
+    padding: 8,
+    marginLeft: -8,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 8,
-    flexGrow: 1,
+  },
+  headerTitle: {
+    fontSize: 18,
+  },
+  headerRight: {
+    width: 40,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    gap: 16,
   },
   timerCard: {
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.08)',
+    borderRadius: 16,
+    padding: 20,
     alignItems: 'center',
     gap: 4,
   },
-  timerText: {
-    fontSize: 44,
-    lineHeight: 52,
-    letterSpacing: 1,
+  timerLabel: {
+    color: 'rgba(255,255,255,0.8)',
+    fontSize: 14,
+    fontWeight: '500',
   },
-  timerHint: { textAlign: 'center', opacity: 0.8 },
-  list: { gap: 6, marginTop: 2 },
-  row: {
+  timerText: {
+    color: '#fff',
+    fontSize: 56,
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  timerHint: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  progressContainer: {
+    width: '100%',
+    marginTop: 16,
+    gap: 6,
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#fff',
+    borderRadius: 3,
+  },
+  progressText: {
+    color: 'rgba(255,255,255,0.9)',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  hintCard: {
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  hintText: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  wearingCard: {
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  wearingLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  wearingInput: {
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 15,
+    borderWidth: 1,
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  wearingDismiss: {
+    alignSelf: 'flex-end',
+  },
+  actionButtons: {
+    gap: 10,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  actionButtonSmall: {
+    flex: 1,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  actionButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  checklistSection: {
+    gap: 12,
+  },
+  sectionTitle: {
+    marginBottom: 4,
+  },
+  stepCard: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    padding: 14,
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  stepNumber: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepNumberText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  stepContent: {
+    flex: 1,
+    gap: 4,
+  },
+  stepHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 6,
-    paddingLeft: 12,
-    paddingRight: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+    flexWrap: 'wrap',
   },
-  checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 5,
-    borderWidth: 2,
-    borderColor: 'rgba(0,0,0,0.4)',
+  stepTitle: {
+    fontSize: 16,
+    fontWeight: '600',
   },
-  checkboxChecked: {
-    backgroundColor: 'rgba(0, 122, 255, 0.9)',
-    borderColor: 'rgba(0, 122, 255, 1)',
+  stepTitleChecked: {
+    textDecorationLine: 'line-through',
+    opacity: 0.7,
   },
-  rowTextWrap: { flex: 1 },
-  hint: { opacity: 0.7, marginTop: 1 },
-  actions: { marginTop: 8, gap: 6 },
-  button: {
+  stepDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  stepHint: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  urgentBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  urgentText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  destinationsList: {
+    marginTop: 8,
+    gap: 2,
+  },
+  destinationsLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  destinationItem: {
+    fontSize: 13,
+  },
+  tipsCard: {
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    gap: 8,
+  },
+  tipsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  tipsText: {
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 15,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+    marginTop: 8,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
     borderRadius: 10,
-    paddingVertical: 12,
     alignItems: 'center',
   },
-  found: {
-    backgroundColor: '#2ecc71',
+  modalButtonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
   },
-  call: {
-    backgroundColor: '#e74c3c',
+  modalButtonDestructive: {
+    paddingVertical: 12,
+    marginTop: 8,
   },
-  readout: {
-    backgroundColor: '#0a7ea4',
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
-  callDimmed: {
-    opacity: 0.9,
-  },
-  buttonText: { color: 'white', fontSize: 16, fontWeight: '600' },
-  tips: { marginTop: 6 },
-  tipText: { opacity: 0.8 },
-  subtitleSmall: { fontSize: 14, opacity: 0.9 },
-  meta: { opacity: 0.8, marginTop: 2 },
 });
