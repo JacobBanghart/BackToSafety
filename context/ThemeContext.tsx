@@ -43,7 +43,11 @@ export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) =
 
   // Calculate effective color scheme
   const colorScheme: ColorScheme =
-    themePreference === 'system' ? (systemColorScheme ?? 'light') : themePreference;
+    themePreference === 'system'
+      ? systemColorScheme === 'dark'
+        ? 'dark'
+        : 'light'
+      : themePreference;
 
   // Save preference
   const setThemePreference = useCallback(async (pref: ThemePreference) => {
