@@ -8,12 +8,15 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { neutral, primary } from '@/constants/Colors';
+import { Colors, primary } from '@/constants/Colors';
 import { useOnboarding } from '@/context/OnboardingContext';
+import { useTheme } from '@/context/ThemeContext';
 
 export default function CompleteScreen() {
   const router = useRouter();
   const { completeStep, refreshOnboardingState } = useOnboarding();
+  const { colorScheme } = useTheme();
+  const theme = Colors[colorScheme];
 
   const handleFinish = async () => {
     await completeStep('complete');
@@ -38,14 +41,14 @@ export default function CompleteScreen() {
           screen to start the guided search.
         </ThemedText>
 
-        <View style={styles.nextSteps}>
+        <View style={[styles.nextSteps, { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }]}>
           <ThemedText style={styles.nextStepsTitle}>You can add more later:</ThemedText>
           <View style={styles.nextStepsList}>
-            <ThemedText style={styles.nextStepItem}>• Medical conditions & medications</ThemedText>
-            <ThemedText style={styles.nextStepItem}>• De-escalation techniques</ThemedText>
-            <ThemedText style={styles.nextStepItem}>• Likely destinations</ThemedText>
-            <ThemedText style={styles.nextStepItem}>• More emergency contacts</ThemedText>
-            <ThemedText style={styles.nextStepItem}>• Safety checklist</ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• Medical conditions & medications</ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• De-escalation techniques</ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• Likely destinations</ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• More emergency contacts</ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• Safety checklist</ThemedText>
           </View>
         </View>
       </View>
@@ -95,7 +98,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   nextSteps: {
-    backgroundColor: neutral[100],
     borderRadius: 12,
     padding: 20,
     width: '100%',
@@ -109,7 +111,6 @@ const styles = StyleSheet.create({
   },
   nextStepItem: {
     fontSize: 15,
-    color: neutral[700],
   },
   footer: {
     padding: 24,

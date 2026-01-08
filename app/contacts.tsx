@@ -30,6 +30,7 @@ import {
     getContacts,
     updateContact,
 } from '@/database/contacts';
+import { formatPhoneInput, formatPhoneNumber } from '@/utils/phone';
 
 type ContactRole = 'primary_caregiver' | 'caregiver' | 'neighbor' | 'family' | 'friend' | 'other';
 
@@ -267,7 +268,7 @@ export default function ContactsScreen() {
               <IconSymbol name="phone.fill" size={16} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: primary[600] }]}
+              style={[styles.actionButton, { backgroundColor: primary[700] }]}
               onPress={() => handleEdit(contact)}
             >
               <IconSymbol name="pencil" size={16} color="#fff" />
@@ -283,7 +284,7 @@ export default function ContactsScreen() {
               lightColor={neutral[700]}
               darkColor={neutral[300]}
             >
-              {contact.phone}
+              {formatPhoneNumber(contact.phone)}
             </ThemedText>
           </View>
 
@@ -364,7 +365,7 @@ export default function ContactsScreen() {
             },
           ]}
           value={formData.phone}
-          onChangeText={(text) => setFormData({ ...formData, phone: text })}
+          onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneInput(text) })}
           placeholder="(555) 123-4567"
           placeholderTextColor={isDark ? neutral[500] : neutral[400]}
           keyboardType="phone-pad"
@@ -569,7 +570,7 @@ export default function ContactsScreen() {
           </ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: primary[600] }]}
+          style={[styles.saveButton, { backgroundColor: primary[700] }]}
           onPress={handleSave}
         >
           <ThemedText style={styles.saveButtonText}>{editingContact ? 'Update' : 'Add'}</ThemedText>
@@ -604,7 +605,7 @@ export default function ContactsScreen() {
       )}
 
       <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: primary[600] }]}
+        style={[styles.addButton, { backgroundColor: primary[700] }]}
         onPress={handleAddNew}
       >
         <IconSymbol name="plus" size={20} color="#fff" />
@@ -619,7 +620,11 @@ export default function ContactsScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: isDark ? neutral[800] : neutral[200] }]}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: isDark ? neutral[800] : neutral[200], backgroundColor: theme.card },
+          ]}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
             <IconSymbol name="chevron.left" size={24} color={primary[600]} />
           </TouchableOpacity>
@@ -701,6 +706,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   backButton: {
     padding: 8,

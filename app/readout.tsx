@@ -5,18 +5,19 @@
  */
 
 import { goBack } from '@/utils/navigation';
+import { formatPhoneNumber } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import {
-    ActivityIndicator,
-    Linking,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    View,
+  ActivityIndicator,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -69,7 +70,7 @@ export default function ReadoutScreen() {
       `Name: ${profile.name}${profile.nickname ? ` (goes by "${profile.nickname}")` : ''}`,
       profile.dateOfBirth ? `DOB: ${profile.dateOfBirth}` : undefined,
       appearanceDesc ? `Appearance: ${appearanceDesc}` : undefined,
-      medicalDesc ? `Medical: ${medicalDesc}` : undefined,
+      medicalDesc ? `Medical Conditions: ${medicalDesc}` : undefined,
       profile.medications ? `Medications: ${profile.medications}` : undefined,
       profile.cognitiveStatus ? `Cognitive Status: ${profile.cognitiveStatus}` : undefined,
       profile.mobilityLevel ? `Mobility: ${profile.mobilityLevel}` : undefined,
@@ -165,12 +166,12 @@ export default function ReadoutScreen() {
         overScrollMode={shouldScroll ? 'auto' : 'never'}
       >
         <Pressable onPress={() => goBack('/(tabs)')} style={styles.backLink}>
-          <IconSymbol name="chevron.left" size={20} color={primary[700]} />
-          <ThemedText style={styles.backText}>Back</ThemedText>
+          <IconSymbol name="chevron.left" size={20} color={theme.tint} />
+          <ThemedText style={[styles.backText, { color: theme.tint }]}>Back</ThemedText>
         </Pressable>
 
-        <ThemedText type="title" style={styles.title}>
-          911 Dispatch Read-out
+        <ThemedText type="title" style={[styles.title, { color: theme.text }]}>
+          Missing Person Description
         </ThemedText>
 
         {/* Call 911 Button - Most prominent */}
@@ -210,7 +211,7 @@ export default function ReadoutScreen() {
                   </ThemedText>
                   <Pressable onPress={() => Linking.openURL(`tel:${c.phone}`)}>
                     <ThemedText style={[styles.phoneLink, { color: theme.tint }]}>
-                      {c.phone}
+                      {formatPhoneNumber(c.phone)}
                     </ThemedText>
                   </Pressable>
                 </View>
@@ -289,11 +290,9 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   backText: {
-    color: primary[700],
     fontWeight: '600',
   },
   title: {
-    color: primary[900],
   },
   emergencyButton: {
     backgroundColor: semantic.error,

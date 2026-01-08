@@ -97,7 +97,7 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.headerText}>
             <ThemedText type="title" style={styles.title}>
-              {hasProfile ? `Caring for ${profile.name}` : 'Nijii'}
+              {hasProfile ? `Caring for ${profile.name}` : 'Wandering'}
             </ThemedText>
           </View>
           <Pressable onPress={() => router.push('/profile' as Href)}>
@@ -150,7 +150,7 @@ export default function HomeScreen() {
                   <ThemedText style={styles.emergencySubtitle}>
                     {timerExpired
                       ? 'Tap to continue search protocol'
-                      : `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')} remaining • ${activeEmergency.checkedSteps.length}/12 steps`}
+                      : `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')} remaining • ${activeEmergency.checkedSteps.length}/11 steps`}
                   </ThemedText>
                 </View>
               </View>
@@ -219,9 +219,11 @@ export default function HomeScreen() {
                   profile.cognitiveStatus ||
                   profile.deescalationTechniques
                 ) && (
-                  <ThemedText style={[styles.summaryEmpty, { color: theme.textSecondary }]}>
-                    Tap to add medical info
-                  </ThemedText>
+                  <Pressable onPress={() => router.push('/profile' as Href)}>
+                    <ThemedText style={[styles.summaryEmpty, { color: theme.tint }]}>
+                      + Add medical info
+                    </ThemedText>
+                  </Pressable>
                 )}
               </View>
               <View style={styles.viewScriptButton}>
@@ -240,7 +242,7 @@ export default function HomeScreen() {
                 {profile.medicalConditions && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      Medical
+                      Medical Conditions
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}

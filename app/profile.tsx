@@ -9,14 +9,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -290,7 +290,7 @@ export default function ProfileScreen() {
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: theme.border }]}>
+        <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
           <Pressable onPress={() => router.replace('/(tabs)')} style={styles.backButton}>
             <IconSymbol name="chevron.left" size={24} color={theme.tint} />
           </Pressable>
@@ -529,6 +529,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   backButton: {
     padding: 8,

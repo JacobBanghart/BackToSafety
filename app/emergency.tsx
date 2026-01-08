@@ -1,6 +1,6 @@
 /**
  * Emergency Search Screen
- * 12-step guided protocol for finding someone who has wandered
+ * 11-step guided protocol for finding someone who has wandered
  */
 
 import { goBack, setPreviousRoute } from '@/utils/navigation';
@@ -9,15 +9,15 @@ import * as Location from 'expo-location';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-    Linking,
-    Modal,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    TouchableOpacity,
-    Vibration,
-    View,
+  Linking,
+  Modal,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Vibration,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -61,36 +61,29 @@ const INITIAL_STEPS: ChecklistStep[] = [
     checked: false,
   },
   {
-    id: 'tracking',
-    step: 2,
-    title: 'Activate tracking devices',
-    description: 'Check GPS tracker, AirTag, Project Lifesaver, or other locative devices',
-    checked: false,
-  },
-  {
     id: 'outside_immediate',
-    step: 3,
+    step: 2,
     title: 'Check outside areas',
     description: 'Yard, porches, paths, driveways, inside vehicles (locked or unlocked)',
     checked: false,
   },
   {
     id: 'neighbors',
-    step: 4,
+    step: 3,
     title: 'Alert neighbors',
     description: 'Show photo, ask them to call if seen. Check their yards too.',
     checked: false,
   },
   {
     id: 'radius_search',
-    step: 5,
+    step: 4,
     title: 'Search 1-1.5 mile radius',
     description: 'Most people are found within this distance from home',
     checked: false,
   },
   {
     id: 'high_risk',
-    step: 6,
+    step: 5,
     title: 'Check high-risk areas first',
     description: 'Water (pools, ponds, streams), wooded areas, ditches, busy roads',
     urgent: true,
@@ -98,14 +91,14 @@ const INITIAL_STEPS: ChecklistStep[] = [
   },
   {
     id: 'familiar_places',
-    step: 7,
+    step: 6,
     title: 'Search familiar places',
     description: 'Former home, church, old workplace, favorite walking routes',
     checked: false,
   },
   {
     id: 'call_911',
-    step: 8,
+    step: 7,
     title: 'Call 911',
     description: 'If not found within 15 minutes, call immediately',
     urgent: true,
@@ -113,28 +106,28 @@ const INITIAL_STEPS: ChecklistStep[] = [
   },
   {
     id: 'silver_alert',
-    step: 9,
+    step: 8,
     title: 'Request Silver/Feather Alert',
     description: 'Ask 911 dispatcher about activating state alert program',
     checked: false,
   },
   {
     id: 'share_info',
-    step: 10,
+    step: 9,
     title: 'Share medical/behavioral info',
     description: 'Provide responders with conditions, medications, de-escalation tips',
     checked: false,
   },
   {
     id: 'coordinate',
-    step: 11,
+    step: 10,
     title: 'Coordinate search efforts',
     description: 'Assign areas to helpers, avoid duplicating coverage',
     checked: false,
   },
   {
     id: 'document',
-    step: 12,
+    step: 11,
     title: 'Document everything',
     description: 'Note times, areas checked, people contacted for responders',
     checked: false,
@@ -210,7 +203,7 @@ export default function EmergencyScreen() {
             setStartedAt(started);
             setSecondsLeft(remaining);
             setWearing(state.wearing);
-            setShowWearingInput(!state.wearing);
+            setShowWearingInput(true);
             setSteps((prev) =>
               prev.map((step) => ({
                 ...step,
@@ -472,7 +465,7 @@ export default function EmergencyScreen() {
                     </ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.modalButton, { backgroundColor: primary[600] }]}
+                    style={[styles.modalButton, { backgroundColor: primary[700] }]}
                     onPress={() => handleModalAction('leave')}
                   >
                     <ThemedText style={styles.modalButtonText}>Leave</ThemedText>
@@ -498,7 +491,7 @@ export default function EmergencyScreen() {
                   Add emergency contacts to send alerts.
                 </ThemedText>
                 <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: primary[600] }]}
+                  style={[styles.modalButton, { backgroundColor: primary[700] }]}
                   onPress={() => setModalVisible(false)}
                 >
                   <ThemedText style={styles.modalButtonText}>OK</ThemedText>
@@ -515,7 +508,7 @@ export default function EmergencyScreen() {
                   Could not open messaging app.
                 </ThemedText>
                 <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: primary[600] }]}
+                  style={[styles.modalButton, { backgroundColor: primary[700] }]}
                   onPress={() => setModalVisible(false)}
                 >
                   <ThemedText style={styles.modalButtonText}>OK</ThemedText>
@@ -527,7 +520,7 @@ export default function EmergencyScreen() {
       </Modal>
 
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border }]}>
+      <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
         <TouchableOpacity style={styles.backButton} onPress={onBackPress} activeOpacity={0.7}>
           <IconSymbol name="chevron.left" size={24} color={theme.text} />
         </TouchableOpacity>
@@ -570,7 +563,8 @@ export default function EmergencyScreen() {
           {/* Progress bar */}
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View style={[styles.progressFill, { width: `${progress}%` }]} />
+              <View style={[styles.progressFill, { flex: progress / 100 }]} />
+              <View style={{ flex: (100 - progress) / 100 }} />
             </View>
             <ThemedText style={styles.progressText}>
               {checkedCount}/{steps.length} steps
@@ -634,14 +628,14 @@ export default function EmergencyScreen() {
 
           <View style={styles.actionRow}>
             <Pressable
-              style={[styles.actionButtonSmall, { backgroundColor: primary[600] }]}
+              style={[styles.actionButtonSmall, { backgroundColor: primary[700] }]}
               onPress={onViewReadout}
             >
-              <ThemedText style={styles.actionButtonText}>📋 911 Script</ThemedText>
+              <ThemedText style={styles.actionButtonText}>📋 Missing Person Information</ThemedText>
             </Pressable>
 
             <Pressable
-              style={[styles.actionButtonSmall, { backgroundColor: primary[600] }]}
+              style={[styles.actionButtonSmall, { backgroundColor: primary[700] }]}
               onPress={onAlertContacts}
             >
               <ThemedText style={styles.actionButtonText}>📱 Alert Circle</ThemedText>
@@ -667,10 +661,10 @@ export default function EmergencyScreen() {
           </Pressable>
         </View>
 
-        {/* 12-Step Checklist */}
+        {/* 11-Step Checklist */}
         <View style={styles.checklistSection}>
           <ThemedText type="subtitle" style={[styles.sectionTitle, { color: theme.text }]}>
-            12-Step Search Protocol
+            11-Step Search Protocol
           </ThemedText>
 
           {steps.map((step) => (
@@ -774,13 +768,13 @@ export default function EmergencyScreen() {
         <View
           style={[
             styles.tipsCard,
-            { backgroundColor: secondary[100], borderColor: secondary[300] },
+            { backgroundColor: isDark ? `${primary[900]}50` : primary[50] },
           ]}
         >
-          <ThemedText style={[styles.tipsTitle, { color: primary[800] }]}>
+          <ThemedText style={[styles.tipsTitle, { color: isDark ? primary[200] : primary[800] }]}>
             💡 When you find them
           </ThemedText>
-          <ThemedText style={[styles.tipsText, { color: primary[700] }]}>
+          <ThemedText style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]}>
             • Approach calmly from the front{'\n'}• Speak slowly with short sentences{'\n'}• Give
             time to respond{'\n'}• Offer to walk with them{'\n'}• Don&apos;t argue or correct{'\n'}
             {profile?.deescalationTechniques && `• ${profile.deescalationTechniques}`}
@@ -804,6 +798,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   backButton: {
     padding: 8,
@@ -864,6 +863,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.3)',
     borderRadius: 3,
     overflow: 'hidden',
+    flexDirection: 'row',
   },
   progressFill: {
     height: '100%',
@@ -1008,7 +1008,6 @@ const styles = StyleSheet.create({
   tipsCard: {
     borderRadius: 12,
     padding: 16,
-    borderWidth: 1,
     gap: 8,
   },
   tipsTitle: {

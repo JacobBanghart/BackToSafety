@@ -6,13 +6,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    TextInput,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -20,6 +20,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { neutral, primary } from '@/constants/Colors';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { createContact } from '@/database/contacts';
+import { formatPhoneInput } from '@/utils/phone';
 
 export default function ContactScreen() {
   const router = useRouter();
@@ -102,7 +103,7 @@ export default function ContactScreen() {
                 style={styles.input}
                 value={phone}
                 onChangeText={(text) => {
-                  setPhone(text);
+                  setPhone(formatPhoneInput(text));
                   setError('');
                 }}
                 placeholder="(555) 123-4567"

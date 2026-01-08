@@ -594,7 +594,7 @@ export default function DestinationsScreen() {
           </ThemedText>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: primary[600] }]}
+          style={[styles.saveButton, { backgroundColor: primary[700] }]}
           onPress={handleSave}
         >
           <ThemedText style={styles.saveButtonText}>
@@ -648,7 +648,7 @@ export default function DestinationsScreen() {
       )}
 
       <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: primary[600] }]}
+        style={[styles.addButton, { backgroundColor: primary[700] }]}
         onPress={handleAddNew}
       >
         <IconSymbol name="plus" size={20} color="#fff" />
@@ -663,7 +663,11 @@ export default function DestinationsScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <View style={[styles.header, { borderBottomColor: isDark ? neutral[800] : neutral[200] }]}>
+        <View
+          style={[
+            styles.header,
+            { borderBottomColor: isDark ? neutral[800] : neutral[200], backgroundColor: theme.card },
+          ]}>
           <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
             <IconSymbol name="chevron.left" size={24} color={primary[600]} />
           </TouchableOpacity>
@@ -745,6 +749,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
   backButton: {
     padding: 8,
