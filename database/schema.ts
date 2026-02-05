@@ -1,5 +1,5 @@
 /**
- * SQLite Database Schema for Nijii App
+ * SQLite Database Schema for Back to Safety App
  * All data stored locally - no cloud sync
  *
  * MIGRATION STRATEGY:

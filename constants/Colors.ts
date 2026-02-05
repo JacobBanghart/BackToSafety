@@ -1,5 +1,5 @@
 /**
- * Nijii App Color Palette
+ * Back to Safety App Color Palette
  * Based on Material UI color guidelines
  * Primary: Deep Purple (900: #3f2875)
  * Secondary: Gold/Cream (100: #e3d895)

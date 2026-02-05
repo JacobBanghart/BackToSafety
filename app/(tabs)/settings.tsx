@@ -183,7 +183,7 @@ export default function SettingsScreen() {
           </ThemedText>
           <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
             <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>App</ThemedText>
-            <ThemedText style={styles.infoValue}>Nijii</ThemedText>
+            <ThemedText style={styles.infoValue}>Back to Safety</ThemedText>
           </View>
           <Pressable
             style={({ pressed }) => [

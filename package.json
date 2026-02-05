@@ -1,5 +1,5 @@
 {
-  "name": "nijii-app",
+  "name": "back-to-safety",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
@@ -15,8 +15,8 @@
     "prebuild:android": "expo prebuild --platform android",
     "prebuild:ios": "expo prebuild --platform ios",
     "prebuild:clean": "rm -rf android ios && expo prebuild",
-    "build:apk": "cd android && ANDROID_HOME=~/Android/Sdk ./gradlew assembleRelease && cd .. && mkdir -p build && cp android/app/build/outputs/apk/release/app-release.apk build/Wandering.apk && echo 'APK built: build/Wandering.apk'",
-    "build:aab": "cd android && ANDROID_HOME=~/Android/Sdk ./gradlew bundleRelease && cd .. && mkdir -p build && cp android/app/build/outputs/bundle/release/app-release.aab build/Wandering.aab && echo 'AAB built: build/Wandering.aab'",
+    "build:apk": "cd android && ANDROID_HOME=~/Android/Sdk ./gradlew assembleRelease && cd .. && mkdir -p build && cp android/app/build/outputs/apk/release/app-release.apk build/BackToSafety.apk && echo 'APK built: build/BackToSafety.apk'",
+    "build:aab": "cd android && ANDROID_HOME=~/Android/Sdk ./gradlew bundleRelease && cd .. && mkdir -p build && cp android/app/build/outputs/bundle/release/app-release.aab build/BackToSafety.aab && echo 'AAB built: build/BackToSafety.aab'",
     "build:android": "npm run build:apk && npm run build:aab",
     "clean": "rm -rf android ios build .expo node_modules/.cache",
     "typecheck": "tsc --noEmit"

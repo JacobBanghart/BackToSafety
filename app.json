@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Wandering",
-    "slug": "nijii-app",
+    "name": "Back to Safety",
+    "slug": "back-to-safety",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "nijiiapp",
+    "scheme": "backtosafety",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -24,7 +24,7 @@
         "ACCESS_FINE_LOCATION"
       ],
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.nijiiapp"
+      "package": "com.backtosafety.app"
     },
     "plugins": [
       "expo-router",
