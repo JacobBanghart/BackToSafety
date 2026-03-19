@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  TouchableOpacity,
-  ActivityIndicator,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native';
+import { TouchableOpacity, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
@@ -51,8 +46,9 @@ export function PrimaryButton({
 
 const styles = StyleSheet.create({
   button: {
-    flex: 1,
-    padding: Spacing.md,
+    minHeight: 48,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
     borderRadius: Radius.md,
     alignItems: 'center',
     justifyContent: 'center',

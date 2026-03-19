@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors, neutral, primary, secondary, semantic } from '@/constants/Colors';
+import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
@@ -146,12 +147,22 @@ export default function ReadoutScreen() {
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
         <ThemedText>No profile found. Please complete onboarding first.</ThemedText>
-        <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => router.push('/onboarding')}>
-          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>Go to Onboarding</ThemedText>
+        <Pressable
+          style={[styles.button, { backgroundColor: theme.primary }]}
+          onPress={() => router.push('/onboarding')}
+        >
+          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
+            Go to Onboarding
+          </ThemedText>
         </Pressable>
       </SafeAreaView>
     );
   }
+
+  const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : null;
+  const gps = lastSeen.coords
+    ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)} (±${lastSeen.coords.accuracy ?? '—'}m)`
+    : null;
 
   return (
     <SafeAreaView
@@ -172,74 +183,352 @@ export default function ReadoutScreen() {
           <ThemedText style={[styles.backText, { color: theme.tint }]}>Back</ThemedText>
         </Pressable>
 
-        <ThemedText type="title" style={[styles.title, { color: theme.text }]}>
+        <ThemedText type="title" style={{ color: theme.text }}>
           Missing Person Description
         </ThemedText>
 
         {/* Call 911 Button - Most prominent */}
-        <Pressable style={styles.emergencyButton} onPress={call911}>
-          <ThemedText style={styles.emergencyButtonText}>📞 Call 911</ThemedText>
+        <Pressable style={[styles.emergencyButton, getShadow('sm', colorScheme)]} onPress={call911}>
+          <ThemedText style={styles.emergencyButtonText}>Call 911</ThemedText>
         </Pressable>
 
+        {/* Identity Card */}
         <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
-          {/* Photo and basic info */}
-          <View style={styles.headerRow}>
-            {profile.photoUri && (
+          <View style={styles.identityRow}>
+            {profile.photoUri ? (
               <Image source={{ uri: profile.photoUri }} style={styles.photo} contentFit="cover" />
+            ) : (
+              <View style={[styles.photoPlaceholder, { backgroundColor: theme.primaryLight }]}>
+                <IconSymbol name="person.fill" size={36} color={theme.primary} />
+              </View>
             )}
-            <View style={styles.headerInfo}>
-              <ThemedText type="title" style={{ color: theme.text }}>{profile.name}</ThemedText>
+            <View style={styles.identityInfo}>
+              <ThemedText type="headline" style={{ color: theme.text }}>
+                {profile.name}
+              </ThemedText>
               {profile.nickname && (
                 <ThemedText style={[styles.nickname, { color: theme.textSecondary }]}>
                   Goes by &ldquo;{profile.nickname}&rdquo;
                 </ThemedText>
               )}
+              {profile.dateOfBirth && (
+                <View style={styles.infoChip}>
+                  <IconSymbol name="calendar" size={12} color={theme.textSecondary} />
+                  <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                    DOB: {profile.dateOfBirth}
+                  </ThemedText>
+                </View>
+              )}
             </View>
           </View>
+        </View>
 
-          {/* Full info block */}
-          <ThemedText style={[styles.block, { color: theme.text }]}>{textBlock}</ThemedText>
-
-          {/* Emergency Contacts */}
-          {emergencyContacts.length > 0 && (
-            <View style={[styles.contactsSection, { borderTopColor: theme.border }]}>
-              <ThemedText type="bodyBold" style={[styles.sectionLabel, { color: theme.primary }]}>
-                Emergency Contacts:
+        {/* Last Seen Card */}
+        {(ls || gps) && (
+          <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="clock.fill" size={14} color={theme.primary} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: theme.primary }]}
+              >
+                Last Known Location
               </ThemedText>
-              {emergencyContacts.map((c) => (
-                <View key={c.id} style={styles.contactRow}>
-                  <ThemedText style={[styles.contactText, { color: theme.text }]}>
-                    {c.name} ({c.relationship || c.role})
-                  </ThemedText>
-                  <Pressable onPress={() => Linking.openURL(`tel:${c.phone}`)}>
-                    <ThemedText style={[styles.phoneLink, { color: theme.tint }]}>
-                      {formatPhoneNumber(c.phone)}
-                    </ThemedText>
-                  </Pressable>
-                </View>
-              ))}
             </View>
-          )}
+            {ls && <InfoRow icon="clock" label="Time" value={ls} theme={theme} />}
+            {gps && <InfoRow icon="location.fill" label="GPS" value={gps} theme={theme} />}
+            {lastSeen.coords && (
+              <Pressable
+                style={[styles.mapsButton, { backgroundColor: semantic.success }]}
+                onPress={openMaps}
+              >
+                <IconSymbol name="map.fill" size={16} color="#fff" />
+                <ThemedText style={styles.mapsButtonText}>Open in Maps</ThemedText>
+              </Pressable>
+            )}
+          </View>
+        )}
 
-          {lastSeen.coords && (
-            <Pressable style={[styles.button, styles.mapsButton]} onPress={openMaps}>
-              <ThemedText style={styles.buttonText}>📍 Open Last Seen in Maps</ThemedText>
-            </Pressable>
-          )}
+        {/* Appearance Card */}
+        {(profile.height ||
+          profile.weight ||
+          profile.hairColor ||
+          profile.eyeColor ||
+          profile.identifyingMarks) && (
+          <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="eye.fill" size={14} color={theme.primary} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: theme.primary }]}
+              >
+                Appearance
+              </ThemedText>
+            </View>
+            <View style={styles.gridRow}>
+              {profile.height && <InfoChip label="Height" value={profile.height} theme={theme} />}
+              {profile.weight && <InfoChip label="Weight" value={profile.weight} theme={theme} />}
+              {profile.hairColor && (
+                <InfoChip label="Hair" value={profile.hairColor} theme={theme} />
+              )}
+              {profile.eyeColor && <InfoChip label="Eyes" value={profile.eyeColor} theme={theme} />}
+              {profile.dominantHand && profile.dominantHand !== 'unknown' && (
+                <InfoChip
+                  label="Dominant Hand"
+                  value={profile.dominantHand === 'left' ? 'Left' : 'Right'}
+                  theme={theme}
+                />
+              )}
+              {profile.mobilityLevel && (
+                <InfoChip label="Mobility" value={profile.mobilityLevel} theme={theme} />
+              )}
+            </View>
+            {profile.identifyingMarks && (
+              <InfoRow
+                icon="person.text.rectangle"
+                label="Identifying Marks"
+                value={profile.identifyingMarks}
+                theme={theme}
+              />
+            )}
+          </View>
+        )}
 
-          <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={copyScript}>
-            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>📋 Copy 911 Script</ThemedText>
+        {/* Wearing reminder */}
+        <View
+          style={[
+            styles.warnCard,
+            { backgroundColor: `${semantic.warning}15`, borderColor: `${semantic.warning}40` },
+          ]}
+        >
+          <IconSymbol name="exclamationmark.triangle.fill" size={16} color={semantic.warning} />
+          <ThemedText
+            style={[
+              styles.warnText,
+              { color: colorScheme === 'dark' ? secondary[100] : neutral[700] },
+            ]}
+          >
+            Fill in: What are they wearing? (shirt, jacket, pants, shoes, hat)
+          </ThemedText>
+        </View>
+
+        {/* Medical Card */}
+        {(profile.medicalConditions ||
+          profile.medications ||
+          profile.allergies ||
+          profile.cognitiveStatus) && (
+          <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="cross.fill" size={14} color={semantic.error} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: semantic.error }]}
+              >
+                Medical
+              </ThemedText>
+            </View>
+            {profile.medicalConditions && (
+              <InfoRow
+                icon="heart.fill"
+                label="Conditions"
+                value={profile.medicalConditions}
+                theme={theme}
+              />
+            )}
+            {profile.medications && (
+              <InfoRow
+                icon="pills.fill"
+                label="Medications"
+                value={profile.medications}
+                theme={theme}
+              />
+            )}
+            {profile.allergies && (
+              <InfoRow icon="allergens" label="Allergies" value={profile.allergies} theme={theme} />
+            )}
+            {profile.cognitiveStatus && (
+              <InfoRow
+                icon="brain.head.profile"
+                label="Cognitive Status"
+                value={profile.cognitiveStatus}
+                theme={theme}
+              />
+            )}
+          </View>
+        )}
+
+        {/* Approach & De-escalation Card */}
+        {(profile.communicationPreference ||
+          profile.deescalationTechniques ||
+          profile.approachGuidance ||
+          profile.likes ||
+          profile.dislikesTriggers ||
+          profile.safeWord) && (
+          <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="bubble.left.fill" size={14} color={theme.primary} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: theme.primary }]}
+              >
+                How to Approach
+              </ThemedText>
+            </View>
+            {profile.communicationPreference && (
+              <InfoRow
+                icon="waveform"
+                label="Communication"
+                value={profile.communicationPreference}
+                theme={theme}
+              />
+            )}
+            {profile.approachGuidance && (
+              <InfoRow
+                icon="figure.walk.motion"
+                label="Best Approach"
+                value={profile.approachGuidance}
+                theme={theme}
+              />
+            )}
+            {profile.deescalationTechniques && (
+              <InfoRow
+                icon="hand.raised.fill"
+                label="De-escalation"
+                value={profile.deescalationTechniques}
+                theme={theme}
+              />
+            )}
+            {profile.likes && (
+              <InfoRow
+                icon="heart.fill"
+                label="Likes / Comforts"
+                value={profile.likes}
+                theme={theme}
+              />
+            )}
+            {profile.dislikesTriggers && (
+              <InfoRow
+                icon="exclamationmark.triangle.fill"
+                label="Avoid / Triggers"
+                value={profile.dislikesTriggers}
+                theme={theme}
+              />
+            )}
+            {profile.safeWord && (
+              <InfoRow
+                icon="key.fill"
+                label="Family Safe Word"
+                value={profile.safeWord}
+                theme={theme}
+              />
+            )}
+          </View>
+        )}
+
+        {/* Tracking & ID Card */}
+        {(profile.locativeDeviceInfo || profile.idBracelets || profile.medicAlertId) && (
+          <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="location.fill" size={14} color={theme.primary} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: theme.primary }]}
+              >
+                Tracking &amp; ID
+              </ThemedText>
+            </View>
+            {profile.locativeDeviceInfo && (
+              <InfoRow
+                icon="antenna.radiowaves.left.and.right"
+                label="GPS Device"
+                value={profile.locativeDeviceInfo}
+                theme={theme}
+              />
+            )}
+            {profile.idBracelets && (
+              <InfoRow
+                icon="person.badge.shield.checkmark.fill"
+                label="ID Bracelet"
+                value={profile.idBracelets}
+                theme={theme}
+              />
+            )}
+            {profile.medicAlertId && (
+              <InfoRow
+                icon="staroflife.fill"
+                label="MedicAlert ID"
+                value={profile.medicAlertId}
+                theme={theme}
+              />
+            )}
+          </View>
+        )}
+
+        {/* Emergency Contacts Card */}
+        {emergencyContacts.length > 0 && (
+          <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="phone.fill" size={14} color={semantic.success} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: semantic.success }]}
+              >
+                Emergency Contacts
+              </ThemedText>
+            </View>
+            {emergencyContacts.map((c) => (
+              <View key={c.id} style={[styles.contactRow, { borderTopColor: theme.border }]}>
+                <View style={styles.contactInfo}>
+                  <ThemedText type="bodyBold" style={{ color: theme.text }}>
+                    {c.name}
+                  </ThemedText>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                    {c.relationship || c.role}
+                  </ThemedText>
+                </View>
+                <Pressable
+                  style={[styles.callButton, { backgroundColor: semantic.success }]}
+                  onPress={() => Linking.openURL(`tel:${c.phone}`)}
+                >
+                  <IconSymbol name="phone.fill" size={14} color="#fff" />
+                  <ThemedText style={styles.callButtonText}>
+                    {formatPhoneNumber(c.phone)}
+                  </ThemedText>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* Action Buttons */}
+        <View style={styles.actionsCard}>
+          <Pressable
+            style={[styles.button, { backgroundColor: theme.primary }]}
+            onPress={copyScript}
+          >
+            <IconSymbol name="doc.on.clipboard.fill" size={18} color="#fff" />
+            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
+              Copy 911 Script
+            </ThemedText>
           </Pressable>
-
-          <Pressable style={[styles.button, styles.secondary, { backgroundColor: theme.primaryPressed }]} onPress={copyAll}>
-            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>📄 Copy Full Details</ThemedText>
+          <Pressable
+            style={[
+              styles.button,
+              styles.buttonSecondary,
+              { borderColor: theme.border, backgroundColor: theme.card },
+            ]}
+            onPress={copyAll}
+          >
+            <IconSymbol name="square.and.arrow.up" size={18} color={theme.text} />
+            <ThemedText style={[styles.buttonText, { color: theme.text }]}>
+              Copy Full Details
+            </ThemedText>
           </Pressable>
         </View>
 
         {/* Silver Alert Info */}
         <View
           style={[
-            styles.card,
             styles.alertCard,
             {
               backgroundColor: colorScheme === 'dark' ? primary[900] : secondary[100],
@@ -249,11 +538,9 @@ export default function ReadoutScreen() {
         >
           <ThemedText
             type="bodyBold"
-            style={[
-              { color: colorScheme === 'dark' ? secondary[100] : primary[900] },
-            ]}
+            style={{ color: colorScheme === 'dark' ? secondary[100] : primary[900] }}
           >
-            💜 Request a Silver Alert
+            Request a Silver Alert
           </ThemedText>
           <ThemedText
             style={[
@@ -270,6 +557,74 @@ export default function ReadoutScreen() {
     </SafeAreaView>
   );
 }
+
+// ── Sub-components ──────────────────────────────────────────────────────────
+
+type ThemeColors = typeof Colors.light;
+
+function InfoRow({
+  icon,
+  label,
+  value,
+  theme,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  theme: ThemeColors;
+}) {
+  return (
+    <View style={infoRowStyles.row}>
+      <ThemedText type="caption" style={[infoRowStyles.label, { color: theme.textSecondary }]}>
+        {label}
+      </ThemedText>
+      <ThemedText style={[infoRowStyles.value, { color: theme.text }]}>{value}</ThemedText>
+    </View>
+  );
+}
+
+function InfoChip({ label, value, theme }: { label: string; value: string; theme: ThemeColors }) {
+  return (
+    <View
+      style={[infoChipStyles.chip, { backgroundColor: theme.surface, borderColor: theme.border }]}
+    >
+      <ThemedText type="small" style={{ color: theme.textSecondary }}>
+        {label}
+      </ThemedText>
+      <ThemedText type="bodyBold" style={{ color: theme.text }}>
+        {value}
+      </ThemedText>
+    </View>
+  );
+}
+
+const infoRowStyles = StyleSheet.create({
+  row: {
+    paddingVertical: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(128,128,128,0.15)',
+  },
+  label: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  value: {
+    ...Typography.body,
+    lineHeight: 22,
+  },
+});
+
+const infoChipStyles = StyleSheet.create({
+  chip: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    minWidth: 80,
+  },
+});
 
 const styles = StyleSheet.create({
   loadingContainer: {
@@ -294,97 +649,165 @@ const styles = StyleSheet.create({
   backText: {
     fontWeight: '600',
   },
-  title: {
-  },
   emergencyButton: {
     backgroundColor: semantic.error,
     paddingVertical: Spacing.lg,
     borderRadius: Radius.lg,
     alignItems: 'center',
     shadowColor: semantic.error,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: Spacing.sm,
-    elevation: 4,
   },
   emergencyButtonText: {
     color: '#fff',
-    fontSize: 20,
+    ...Typography.bodyLarge,
     fontWeight: '700',
   },
+
+  // Cards
   card: {
     borderWidth: StyleSheet.hairlineWidth,
     borderRadius: Radius.lg,
     padding: Spacing.lg,
-    gap: Spacing.md,
+    gap: Spacing.xs,
   },
-  headerRow: {
+  sectionLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginBottom: Spacing.xs,
+  },
+  sectionLabelText: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontSize: 12,
+  },
+
+  // Identity
+  identityRow: {
     flexDirection: 'row',
     gap: Spacing.md,
+    alignItems: 'center',
   },
   photo: {
     width: 80,
     height: 80,
     borderRadius: Radius.md,
   },
-  headerInfo: {
-    flex: 1,
+  photoPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: Radius.md,
     justifyContent: 'center',
+    alignItems: 'center',
   },
-  name: {
+  identityInfo: {
+    flex: 1,
+    gap: Spacing.xs,
   },
   nickname: {
     fontStyle: 'italic',
-    fontSize: 15,
+    ...Typography.body,
   },
-  block: {
-    fontFamily: 'System',
-    fontSize: 15,
-    lineHeight: 22,
+  infoChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xxs,
   },
-  sectionLabel: {
+
+  // Grid
+  gridRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
     marginBottom: Spacing.xs,
   },
-  contactsSection: {
-    borderTopWidth: 1,
-    paddingTop: Spacing.md,
+
+  // Warn card
+  warnCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
   },
+  warnText: {
+    flex: 1,
+    ...Typography.body,
+    lineHeight: 20,
+  },
+
+  // Contacts
   contactRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingTop: Spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: Spacing.md,
   },
-  contactText: {
-    fontSize: 15,
+  contactInfo: {
+    flex: 1,
+    gap: 2,
   },
-  phoneLink: {
-    fontWeight: '600',
-    fontSize: 15,
+  callButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
   },
-  button: {
-    marginTop: Spacing.xs,
+  callButtonText: {
+    color: '#fff',
+    ...Typography.bodyBold,
+  },
+
+  // Maps
+  mapsButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
     paddingVertical: Spacing.md,
     borderRadius: Radius.md,
+    marginTop: Spacing.xs,
+  },
+  mapsButtonText: {
+    color: '#fff',
+    ...Typography.bodyBold,
+  },
+
+  // Action buttons
+  actionsCard: {
+    gap: Spacing.sm,
+  },
+  button: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
+    minHeight: 48,
   },
-  secondary: {
-    // backgroundColor set inline via theme.primaryPressed
-  },
-  mapsButton: {
-    backgroundColor: semantic.success,
+  buttonSecondary: {
+    borderWidth: 1,
   },
   buttonText: {
-    color: 'white',
     fontWeight: '600',
-    fontSize: 15,
+    ...Typography.body,
   },
+
+  // Silver Alert
   alertCard: {
-    // Background set dynamically
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
   },
   alertText: {
-    fontSize: 15,
-    lineHeight: 20,
-    marginTop: Spacing.xs,
+    ...Typography.body,
+    lineHeight: 22,
   },
 });

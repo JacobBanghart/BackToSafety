@@ -24,6 +24,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors, semantic, primary, neutral, secondary } from '@/constants/Colors';
+import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
@@ -425,14 +426,20 @@ export default function EmergencyScreen() {
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: theme.overlay }]}>
+          <View
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.card },
+              getShadow('lg', colorScheme),
+            ]}
+          >
             {modalType === 'found' && (
               <>
-                <IconSymbol name="checkmark.circle.fill" size={48} color={semantic.success} />
-                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
-                  Found!
-                </ThemedText>
+                <View style={[styles.modalIconWrap, { backgroundColor: `${semantic.success}20` }]}>
+                  <IconSymbol name="checkmark.circle.fill" size={40} color={semantic.success} />
+                </View>
+                <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Found!</ThemedText>
                 <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
                   Great news! Remember to use calm, reassuring language. Offer water and rest.
                 </ThemedText>
@@ -447,7 +454,7 @@ export default function EmergencyScreen() {
 
             {modalType === 'leave' && (
               <>
-                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
+                <ThemedText style={[styles.modalTitle, { color: theme.text }]}>
                   Leave Emergency Search?
                 </ThemedText>
                 <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
@@ -474,43 +481,30 @@ export default function EmergencyScreen() {
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
-                  style={[styles.modalButtonDestructive]}
+                  style={styles.modalButtonDestructive}
                   onPress={() => handleModalAction('end')}
                 >
-                  <ThemedText style={[styles.modalButtonText, { color: semantic.error }]}>
+                  <ThemedText
+                    style={[styles.modalButtonDestructiveText, { color: semantic.error }]}
+                  >
                     End Emergency
                   </ThemedText>
                 </TouchableOpacity>
               </>
             )}
 
-            {modalType === 'noContacts' && (
+            {(modalType === 'noContacts' || modalType === 'smsError') && (
               <>
-                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
-                  No Contacts
+                <ThemedText style={[styles.modalTitle, { color: theme.text }]}>
+                  {modalType === 'noContacts' ? 'No Contacts' : 'Error'}
                 </ThemedText>
                 <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
-                  Add emergency contacts to send alerts.
+                  {modalType === 'noContacts'
+                    ? 'Add emergency contacts to send alerts.'
+                    : 'Could not open messaging app.'}
                 </ThemedText>
                 <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: primary[700] }]}
-                  onPress={() => setModalVisible(false)}
-                >
-                  <ThemedText style={styles.modalButtonText}>OK</ThemedText>
-                </TouchableOpacity>
-              </>
-            )}
-
-            {modalType === 'smsError' && (
-              <>
-                <ThemedText type="subtitle" style={[styles.modalTitle, { color: theme.text }]}>
-                  Error
-                </ThemedText>
-                <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
-                  Could not open messaging app.
-                </ThemedText>
-                <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: primary[700] }]}
+                  style={[styles.modalButton, { backgroundColor: theme.primary }]}
                   onPress={() => setModalVisible(false)}
                 >
                   <ThemedText style={styles.modalButtonText}>OK</ThemedText>
@@ -522,14 +516,25 @@ export default function EmergencyScreen() {
       </Modal>
 
       {/* Header */}
-      <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
-        <TouchableOpacity style={styles.backButton} onPress={onBackPress} activeOpacity={0.7}>
-          <IconSymbol name="chevron.left" size={24} color={theme.text} />
+      <View
+        style={[
+          styles.header,
+          { borderBottomColor: theme.border, backgroundColor: theme.card },
+          getShadow('sm', colorScheme),
+        ]}
+      >
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={onBackPress}
+          activeOpacity={0.7}
+          hitSlop={8}
+        >
+          <IconSymbol name="chevron.left" size={22} color={theme.tint} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <View style={styles.headerTitleRow}>
-            <IconSymbol name="exclamationmark.triangle.fill" size={20} color={semantic.error} />
-            <ThemedText type="defaultSemiBold" style={styles.headerTitle}>
+            <IconSymbol name="exclamationmark.triangle.fill" size={18} color={semantic.error} />
+            <ThemedText style={[styles.headerTitle, { color: theme.text }]}>
               Emergency Search
             </ThemedText>
           </View>
@@ -550,6 +555,7 @@ export default function EmergencyScreen() {
             {
               backgroundColor: timerExpired ? semantic.error : primary[700],
             },
+            getShadow('md', colorScheme),
           ]}
         >
           <ThemedText style={styles.timerLabel}>
@@ -569,7 +575,7 @@ export default function EmergencyScreen() {
               <View style={{ flex: (100 - progress) / 100 }} />
             </View>
             <ThemedText style={styles.progressText}>
-              {checkedCount}/{steps.length} steps
+              {checkedCount}/{steps.length} steps complete
             </ThemedText>
           </View>
         </View>
@@ -582,6 +588,7 @@ export default function EmergencyScreen() {
               { backgroundColor: secondary[100], borderColor: secondary[300] },
             ]}
           >
+            <IconSymbol name="arrow.left.arrow.right" size={16} color={primary[800]} />
             <ThemedText style={[styles.hintText, { color: primary[800] }]}>
               {getDirectionHint()}
             </ThemedText>
@@ -594,15 +601,18 @@ export default function EmergencyScreen() {
             style={[styles.wearingCard, { backgroundColor: theme.card, borderColor: theme.border }]}
           >
             <ThemedText style={[styles.wearingLabel, { color: theme.text }]}>
-              What are they wearing? (for 911)
+              What are they wearing?
+            </ThemedText>
+            <ThemedText style={[styles.wearingHint, { color: theme.textSecondary }]}>
+              You'll need this for 911
             </ThemedText>
             <TextInput
               style={[
                 styles.wearingInput,
                 {
-                  backgroundColor: isDark ? neutral[800] : neutral[100],
+                  backgroundColor: isDark ? neutral[800] : neutral[50],
                   color: theme.text,
-                  borderColor: theme.border,
+                  borderColor: theme.inputBorder,
                 },
               ]}
               value={wearing}
@@ -612,62 +622,90 @@ export default function EmergencyScreen() {
               multiline
             />
             <Pressable style={styles.wearingDismiss} onPress={() => setShowWearingInput(false)}>
-              <ThemedText type="caption" style={{ color: neutral[500] }}>Dismiss</ThemedText>
+              <ThemedText style={[styles.dismissText, { color: theme.textSecondary }]}>
+                Dismiss
+              </ThemedText>
             </Pressable>
           </View>
         )}
 
-        {/* Action Buttons */}
+        {/* ── Action Buttons — ordered by priority ── */}
         <View style={styles.actionButtons}>
+          {/* 1. Found Safe — most prominent, always available */}
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: semantic.success }]}
+            style={[
+              styles.actionButtonPrimary,
+              { backgroundColor: semantic.success },
+              getShadow('sm', colorScheme),
+            ]}
             onPress={onMarkFound}
-            activeOpacity={0.7}
+            activeOpacity={0.8}
           >
-            <IconSymbol name="checkmark.circle.fill" size={20} color="#fff" />
-            <ThemedText style={styles.actionButtonText}>Found — Safe</ThemedText>
+            <IconSymbol name="checkmark.circle.fill" size={22} color="#fff" />
+            <ThemedText style={styles.actionButtonTextLarge}>Found — Safe</ThemedText>
           </TouchableOpacity>
 
-          <View style={styles.actionRow}>
-            <Pressable
-              style={[styles.actionButtonSmall, { backgroundColor: primary[700] }]}
-              onPress={onViewReadout}
-            >
-              <ThemedText style={styles.actionButtonText}>📋 Missing Person Information</ThemedText>
-            </Pressable>
-
-            <Pressable
-              style={[styles.actionButtonSmall, { backgroundColor: primary[700] }]}
-              onPress={onAlertContacts}
-            >
-              <ThemedText style={styles.actionButtonText}>📱 Alert Circle</ThemedText>
-            </Pressable>
-          </View>
-
+          {/* 2. Call 911 — red, urgent state-aware */}
           <Pressable
             style={[
-              styles.actionButton,
+              styles.actionButtonPrimary,
               {
                 backgroundColor: timerExpired ? semantic.error : 'transparent',
                 borderWidth: timerExpired ? 0 : 2,
                 borderColor: semantic.error,
               },
+              timerExpired && getShadow('sm', colorScheme),
             ]}
             onPress={onCall911}
           >
             <ThemedText
-              style={[styles.actionButtonText, { color: timerExpired ? '#fff' : semantic.error }]}
+              style={[
+                styles.actionButtonTextLarge,
+                { color: timerExpired ? '#fff' : semantic.error },
+              ]}
             >
               📞 Call 911
             </ThemedText>
           </Pressable>
+
+          {/* 3. Secondary actions — side by side */}
+          <View style={styles.actionRow}>
+            <Pressable
+              style={[
+                styles.actionButtonSecondary,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+              onPress={onViewReadout}
+            >
+              <ThemedText style={[styles.actionButtonTextSmall, { color: theme.text }]}>
+                📋 Info Sheet
+              </ThemedText>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.actionButtonSecondary,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+              onPress={onAlertContacts}
+            >
+              <ThemedText style={[styles.actionButtonTextSmall, { color: theme.text }]}>
+                📱 Alert Circle
+              </ThemedText>
+            </Pressable>
+          </View>
         </View>
 
-        {/* 11-Step Checklist */}
+        {/* ── 11-Step Checklist ── */}
         <View style={styles.checklistSection}>
-          <ThemedText type="subtitle" style={[styles.sectionTitle, { color: theme.text }]}>
-            11-Step Search Protocol
-          </ThemedText>
+          <View style={styles.checklistHeader}>
+            <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
+              Search Protocol
+            </ThemedText>
+            <ThemedText style={[styles.checklistCount, { color: theme.textSecondary }]}>
+              {checkedCount}/{steps.length}
+            </ThemedText>
+          </View>
 
           {steps.map((step) => (
             <Pressable
@@ -687,27 +725,38 @@ export default function EmergencyScreen() {
                         ? primary[300]
                         : theme.border,
                   borderWidth: step.urgent && !step.checked ? 2 : 1,
+                  opacity: step.checked ? 0.75 : 1,
                 },
               ]}
               onPress={() => toggleStep(step.id)}
             >
+              {/* Step number / checkmark */}
               <View
                 style={[
                   styles.stepNumber,
                   {
                     backgroundColor: step.checked
                       ? primary[600]
-                      : isDark
-                        ? neutral[700]
-                        : neutral[200],
+                      : step.urgent
+                        ? `${semantic.error}18`
+                        : isDark
+                          ? neutral[700]
+                          : neutral[200],
+                    borderWidth: step.urgent && !step.checked ? 1.5 : 0,
+                    borderColor: step.urgent && !step.checked ? semantic.error : 'transparent',
                   },
                 ]}
               >
                 {step.checked ? (
-                  <ThemedText style={styles.stepNumberText}>✓</ThemedText>
+                  <IconSymbol name="checkmark" size={14} color="#fff" />
                 ) : (
                   <ThemedText
-                    style={[styles.stepNumberText, { color: isDark ? neutral[300] : neutral[600] }]}
+                    style={[
+                      styles.stepNumberText,
+                      {
+                        color: step.urgent ? semantic.error : isDark ? neutral[300] : neutral[600],
+                      },
+                    ]}
                   >
                     {step.step}
                   </ThemedText>
@@ -742,7 +791,7 @@ export default function EmergencyScreen() {
 
                 {/* Show saved destinations for familiar places step */}
                 {step.id === 'familiar_places' && destinations.length > 0 && !step.checked && (
-                  <View style={styles.destinationsList}>
+                  <View style={[styles.destinationsList, { borderTopColor: theme.border }]}>
                     <ThemedText style={[styles.destinationsLabel, { color: theme.textSecondary }]}>
                       Saved places to check:
                     </ThemedText>
@@ -770,20 +819,23 @@ export default function EmergencyScreen() {
         <View
           style={[
             styles.tipsCard,
-            { backgroundColor: isDark ? `${primary[900]}50` : primary[50] },
+            {
+              backgroundColor: isDark ? `${primary[900]}60` : primary[50],
+              borderColor: isDark ? primary[700] : primary[100],
+            },
           ]}
         >
           <ThemedText style={[styles.tipsTitle, { color: isDark ? primary[200] : primary[800] }]}>
-            💡 When you find them
+            When you find them
           </ThemedText>
           <ThemedText style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]}>
             • Approach calmly from the front{'\n'}• Speak slowly with short sentences{'\n'}• Give
-            time to respond{'\n'}• Offer to walk with them{'\n'}• Don&apos;t argue or correct{'\n'}
-            {profile?.deescalationTechniques && `• ${profile.deescalationTechniques}`}
+            time to respond{'\n'}• Offer to walk with them{'\n'}• Don&apos;t argue or correct
+            {profile?.deescalationTechniques ? `\n• ${profile.deescalationTechniques}` : ''}
           </ThemedText>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: Spacing.xxl }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -797,18 +849,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    minHeight: 52,
   },
   backButton: {
-    padding: Spacing.sm,
-    marginLeft: -8,
+    width: 44,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
   },
   headerCenter: {
     flex: 1,
@@ -817,13 +866,13 @@ const styles = StyleSheet.create({
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.sm,
+    gap: Spacing.xs,
   },
   headerTitle: {
-    fontSize: 18,
+    ...Typography.title,
   },
   headerRight: {
-    width: 40,
+    width: 44,
   },
   scrollView: {
     flex: 1,
@@ -832,37 +881,42 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.lg,
   },
+
+  // Timer card
   timerCard: {
     borderRadius: Radius.xl,
-    padding: 20,
+    padding: Spacing.xl,
     alignItems: 'center',
     gap: Spacing.xs,
   },
   timerLabel: {
-    color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
-    fontWeight: '500',
+    color: 'rgba(255,255,255,0.75)',
+    ...Typography.caption,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   timerText: {
     color: '#fff',
-    fontSize: 56,
+    fontSize: 60,
     fontWeight: '700',
     letterSpacing: 2,
+    lineHeight: 72,
   },
   timerHint: {
     color: 'rgba(255,255,255,0.9)',
-    fontSize: 14,
+    ...Typography.body,
     textAlign: 'center',
     marginTop: Spacing.xs,
   },
   progressContainer: {
     width: '100%',
-    marginTop: Spacing.lg,
-    gap: 6,
+    marginTop: Spacing.md,
+    gap: Spacing.xs,
   },
   progressBar: {
     height: 6,
-    backgroundColor: 'rgba(255,255,255,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: 3,
     overflow: 'hidden',
     flexDirection: 'row',
@@ -874,19 +928,24 @@ const styles = StyleSheet.create({
   },
   progressText: {
     color: 'rgba(255,255,255,0.9)',
-    fontSize: 12,
+    ...Typography.caption,
     textAlign: 'center',
   },
+
+  // Direction hint
   hintCard: {
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
+    flexDirection: 'row',
     alignItems: 'center',
+    gap: Spacing.sm,
   },
   hintText: {
-    fontSize: 15,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
+
+  // Wearing card
   wearingCard: {
     borderRadius: Radius.lg,
     padding: Spacing.lg,
@@ -894,55 +953,85 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   wearingLabel: {
-    fontSize: 15,
-    fontWeight: '600',
+    ...Typography.bodyBold,
+  },
+  wearingHint: {
+    ...Typography.caption,
+    marginTop: -Spacing.xs,
   },
   wearingInput: {
     borderRadius: Radius.md,
     padding: Spacing.md,
-    fontSize: 15,
+    ...Typography.body,
     borderWidth: 1,
-    minHeight: 60,
+    minHeight: 64,
     textAlignVertical: 'top',
   },
   wearingDismiss: {
     alignSelf: 'flex-end',
+    paddingVertical: Spacing.xs,
   },
+  dismissText: {
+    ...Typography.caption,
+  },
+
+  // Action buttons
   actionButtons: {
-    gap: 10,
+    gap: Spacing.sm,
   },
-  actionButton: {
+  actionButtonPrimary: {
     flexDirection: 'row',
     borderRadius: Radius.lg,
-    padding: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.sm,
+    minHeight: 56,
+  },
+  actionButtonTextLarge: {
+    color: '#fff',
+    ...Typography.bodyBold,
+    fontSize: 18,
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: Spacing.sm,
   },
-  actionButtonSmall: {
+  actionButtonSecondary: {
     flex: 1,
     borderRadius: Radius.lg,
-    padding: 14,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+    borderWidth: 1,
   },
-  actionButtonText: {
-    color: '#fff',
+  actionButtonTextSmall: {
     ...Typography.bodyBold,
   },
+
+  // Checklist
   checklistSection: {
-    gap: Spacing.md,
+    gap: Spacing.sm,
+  },
+  checklistHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
   },
   sectionTitle: {
-    marginBottom: Spacing.xs,
+    ...Typography.title,
+  },
+  checklistCount: {
+    ...Typography.bodyBold,
   },
   stepCard: {
     flexDirection: 'row',
     borderRadius: Radius.lg,
-    padding: 14,
+    padding: Spacing.md,
     gap: Spacing.md,
     alignItems: 'flex-start',
   },
@@ -952,10 +1041,11 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    flexShrink: 0,
+    marginTop: 2,
   },
   stepNumberText: {
-    color: '#fff',
-    fontSize: 14,
+    ...Typography.caption,
     fontWeight: '700',
   },
   stepContent: {
@@ -970,19 +1060,19 @@ const styles = StyleSheet.create({
   },
   stepTitle: {
     ...Typography.bodyBold,
+    flex: 1,
   },
   stepTitleChecked: {
     textDecorationLine: 'line-through',
-    opacity: 0.7,
+    opacity: 0.6,
   },
   stepDescription: {
-    fontSize: 14,
+    ...Typography.body,
     lineHeight: 20,
   },
   stepHint: {
     ...Typography.caption,
     fontStyle: 'italic',
-    marginTop: Spacing.xs,
   },
   urgentBadge: {
     paddingHorizontal: Spacing.sm,
@@ -991,43 +1081,55 @@ const styles = StyleSheet.create({
   },
   urgentText: {
     color: '#fff',
-    fontSize: 10,
+    ...Typography.small,
     fontWeight: '700',
+    letterSpacing: 0.5,
   },
   destinationsList: {
     marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
     gap: Spacing.xxs,
   },
   destinationsLabel: {
-    fontSize: 12,
-    fontWeight: '500',
+    ...Typography.small,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: Spacing.xxs,
   },
   destinationItem: {
     ...Typography.caption,
   },
+
+  // Tips card
   tipsCard: {
     borderRadius: Radius.lg,
     padding: Spacing.lg,
     gap: Spacing.sm,
+    borderWidth: 1,
   },
   tipsTitle: {
     ...Typography.bodyBold,
   },
   tipsText: {
-    fontSize: 14,
-    lineHeight: 22,
+    ...Typography.body,
+    lineHeight: 24,
   },
+
+  // Loading
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: Spacing.xl,
   },
   modalContent: {
     borderRadius: Radius.xl,
@@ -1037,12 +1139,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.md,
   },
+  modalIconWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
   modalTitle: {
     ...Typography.title,
     textAlign: 'center',
   },
   modalMessage: {
-    fontSize: 15,
+    ...Typography.body,
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -1050,14 +1160,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Spacing.md,
     width: '100%',
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: Radius.md,
     alignItems: 'center',
+    minHeight: 48,
+    justifyContent: 'center',
   },
   modalButtonOutline: {
     backgroundColor: 'transparent',
@@ -1065,7 +1177,10 @@ const styles = StyleSheet.create({
   },
   modalButtonDestructive: {
     paddingVertical: Spacing.md,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs,
+  },
+  modalButtonDestructiveText: {
+    ...Typography.bodyBold,
   },
   modalButtonText: {
     ...Typography.bodyBold,

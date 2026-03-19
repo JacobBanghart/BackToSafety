@@ -5,13 +5,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Linking,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  Alert,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -29,11 +30,11 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useTheme } from '@/context/ThemeContext';
 import {
-    createDestination,
-    deleteDestination,
-    Destination,
-    getDestinations,
-    updateDestination,
+  createDestination,
+  deleteDestination,
+  Destination,
+  getDestinations,
+  updateDestination,
 } from '@/database/destinations';
 
 type DestinationCategory =
@@ -325,11 +326,7 @@ export default function DestinationsScreen() {
 
         {destination.distanceFromHome && (
           <View style={styles.detailRow}>
-            <IconSymbol
-              name="arrow.left.arrow.right"
-              size={12}
-              color={theme.icon}
-            />
+            <IconSymbol name="arrow.left.arrow.right" size={12} color={theme.icon} />
             <ThemedText style={[styles.detailText, { color: theme.textSecondary }]}>
               {destination.distanceFromHome} from home
             </ThemedText>
@@ -375,9 +372,7 @@ export default function DestinationsScreen() {
 
       {/* Category */}
       <View style={styles.formField}>
-        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
-          Location Type
-        </ThemedText>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Location Type</ThemedText>
         <View style={styles.optionGrid}>
           {CATEGORY_OPTIONS.map((option) => {
             const isWater = option.value === 'water';
@@ -408,7 +403,10 @@ export default function DestinationsScreen() {
                   color={isSelected ? '#fff' : theme.icon}
                 />
                 <ThemedText
-                  style={[styles.optionText, isSelected ? { color: '#fff' } : { color: theme.text }]}
+                  style={[
+                    styles.optionText,
+                    isSelected ? { color: '#fff' } : { color: theme.text },
+                  ]}
                 >
                   {option.label}
                 </ThemedText>
@@ -428,9 +426,7 @@ export default function DestinationsScreen() {
 
       {/* Risk Level */}
       <View style={styles.formField}>
-        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
-          Search Priority
-        </ThemedText>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Search Priority</ThemedText>
         <View style={styles.riskRow}>
           {RISK_OPTIONS.map((option) => {
             const color = semantic[option.color];
@@ -494,7 +490,11 @@ export default function DestinationsScreen() {
       {/* Buttons */}
       <View style={styles.formButtons}>
         <SecondaryButton label="Cancel" onPress={handleCancel} style={{ flex: 1 }} />
-        <PrimaryButton label={editingDestination ? 'Update' : 'Add'} onPress={handleSave} style={{ flex: 1 }} />
+        <PrimaryButton
+          label={editingDestination ? 'Update' : 'Add'}
+          onPress={handleSave}
+          style={{ flex: 1 }}
+        />
       </View>
 
       <View style={{ height: 40 }} />
@@ -504,9 +504,7 @@ export default function DestinationsScreen() {
   const renderDestinationList = () => (
     <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
       {/* Info Box */}
-      <View
-        style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}
-      >
+      <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
         <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
         <ThemedText style={[styles.infoText, { color: theme.text }]}>
           Most people with dementia are found within 1.5 miles of where they were last seen. Check
@@ -516,18 +514,25 @@ export default function DestinationsScreen() {
 
       {destinations.length === 0 ? (
         <View style={styles.emptyState}>
-          <IconSymbol
-            name="mappin.and.ellipse"
-            size={48}
-            color={theme.icon}
-          />
-          <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>
+          <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
+            <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
+          </View>
+          <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
             No Destinations Added
           </ThemedText>
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
             Add places your loved one may wander to, like former homes, favorite stores, or water
             sources.
           </ThemedText>
+          <Pressable
+            style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+            onPress={handleAddNew}
+          >
+            <IconSymbol name="plus" size={18} color="#fff" />
+            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
+              Add First Location
+            </ThemedText>
+          </Pressable>
         </View>
       ) : (
         <>
@@ -610,8 +615,8 @@ const styles = StyleSheet.create({
   infoBox: {
     flexDirection: 'row',
     padding: Spacing.md,
-    borderRadius: 10,
-    gap: 10,
+    borderRadius: Radius.lg,
+    gap: Spacing.md,
     marginBottom: Spacing.lg,
   },
   infoText: {
@@ -622,23 +627,41 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   listCount: {
-    fontSize: 14,
+    ...Typography.body,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
     paddingHorizontal: Spacing.xxl,
+    gap: Spacing.md,
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: Spacing.lg,
+  emptyIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  emptyText: {
-    fontSize: 14,
+  emptyTitle: {
     textAlign: 'center',
-    lineHeight: 20,
+  },
+  emptyText: {
+    ...Typography.body,
+    textAlign: 'center',
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.sm,
+    minHeight: 48,
+  },
+  emptyButtonText: {
+    ...Typography.bodyBold,
   },
 
   // Destination card
@@ -671,7 +694,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   destinationName: {
-    fontSize: 17,
+    ...Typography.bodyLarge,
     fontWeight: '600',
     flex: 1,
   },
@@ -688,7 +711,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   riskText: {
-    fontSize: 11,
+    ...Typography.small,
     fontWeight: '600',
   },
   categoryText: {
@@ -730,14 +753,14 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(128,128,128,0.2)',
   },
   reasonLabel: {
-    fontSize: 11,
+    ...Typography.small,
     fontWeight: '500',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    marginBottom: 2,
+    marginBottom: Spacing.xxs,
   },
   reasonText: {
-    fontSize: 14,
+    ...Typography.body,
     fontStyle: 'italic',
   },
   deleteButton: {
@@ -748,7 +771,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteText: {
-    fontSize: 14,
+    ...Typography.body,
     fontWeight: '500',
   },
   addButton: {
@@ -771,22 +794,19 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   formTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    ...Typography.headline,
     marginBottom: Spacing.sm,
   },
   formHint: {
-    fontSize: 14,
-    marginBottom: 20,
-    lineHeight: 20,
+    ...Typography.body,
+    marginBottom: Spacing.xl,
   },
   formField: {
     marginBottom: Spacing.lg,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
+    ...Typography.bodyBold,
+    marginBottom: Spacing.xs,
   },
   optionGrid: {
     flexDirection: 'row',
@@ -803,7 +823,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   optionText: {
-    fontSize: 13,
+    ...Typography.caption,
     fontWeight: '500',
   },
   warningBox: {
@@ -815,12 +835,12 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   warningText: {
-    fontSize: 12,
+    ...Typography.caption,
     flex: 1,
   },
   riskRow: {
     flexDirection: 'row',
-    gap: 10,
+    gap: Spacing.md,
   },
   riskOption: {
     flex: 1,
@@ -830,7 +850,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   riskOptionText: {
-    fontSize: 14,
+    ...Typography.body,
     fontWeight: '600',
   },
   formButtons: {

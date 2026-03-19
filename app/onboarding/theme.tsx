@@ -9,6 +9,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { Colors, neutral, primary } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 
@@ -111,8 +113,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 20,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xl,
   },
   progress: {
     flexDirection: 'row',
@@ -127,16 +129,15 @@ const styles = StyleSheet.create({
     backgroundColor: neutral[400],
   },
   progressActive: {
-    backgroundColor: primary[500],
+    backgroundColor: primary[700],
     width: 24,
   },
   title: {
     marginBottom: 8,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: 32,
-    lineHeight: 22,
+    ...Typography.body,
+    marginBottom: Spacing.xxl,
   },
   options: {
     gap: 12,
@@ -144,10 +145,10 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
     borderWidth: 2,
-    gap: 16,
+    gap: Spacing.lg,
   },
   optionIcon: {
     fontSize: 32,
@@ -156,29 +157,29 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionLabel: {
-    fontSize: 18,
+    ...Typography.bodyLarge,
     fontWeight: '600',
-    marginBottom: 2,
+    marginBottom: Spacing.xxs,
   },
   optionDescription: {
-    fontSize: 14,
+    ...Typography.body,
   },
   checkmark: {
     fontSize: 20,
     fontWeight: '700',
   },
   footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingHorizontal: Spacing.xl,
+    paddingBottom: Spacing.xl,
   },
   button: {
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    ...Typography.bodyLarge,
     fontWeight: '600',
   },
 });

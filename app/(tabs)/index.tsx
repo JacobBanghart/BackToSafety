@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors, semantic } from '@/constants/Colors';
+import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 
@@ -22,6 +23,8 @@ import { getSetting } from '@/database/storage';
 import { setPreviousRoute } from '@/utils/navigation';
 
 const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
+/** Dark red button background used when an emergency is active but the timer has not expired */
+const EMERGENCY_ACTIVE_BG = '#4A1515';
 
 type EmergencyState = {
   startedAt: string;
@@ -95,32 +98,50 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        {/* ── Header ── */}
         <View style={styles.header}>
-          <View style={styles.headerText}>
-            <ThemedText type="title" style={styles.title}>
-              {hasProfile ? `Caring for ${profile.name}` : 'Wandering'}
+          <View style={styles.headerLeft}>
+            {hasProfile && (
+              <ThemedText style={[styles.caringLabel, { color: theme.textSecondary }]}>
+                Caring for
+              </ThemedText>
+            )}
+            <ThemedText type="headline" style={{ color: theme.text }}>
+              {hasProfile ? profile.name : 'Wandering'}
             </ThemedText>
           </View>
-          <Pressable onPress={() => router.push('/profile' as Href)}>
+
+          {/* Avatar */}
+          <Pressable onPress={() => router.push('/profile' as Href)} style={styles.avatarWrapper}>
             {profile?.photoUri ? (
               <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
             ) : (
               <View
-                style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: theme.primaryLight, borderColor: theme.secondary }]}
+                style={[
+                  styles.avatar,
+                  styles.avatarPlaceholder,
+                  { backgroundColor: theme.primaryLight, borderColor: theme.border },
+                ]}
               >
                 <ThemedText style={styles.avatarPlaceholderText}>👤</ThemedText>
               </View>
             )}
+            {/* Edit badge */}
+            <View style={[styles.avatarBadge, { backgroundColor: theme.tint }]}>
+              <IconSymbol name="pencil" size={10} color="#fff" />
+            </View>
           </Pressable>
         </View>
 
-        {/* Emergency Button */}
+        {/* ── Emergency Button ── */}
         <Pressable
           style={[
             styles.emergencyButton,
-            activeEmergency && { backgroundColor: timerExpired ? semantic.error : '#4A1515' },
+            getShadow('md', colorScheme),
+            activeEmergency && {
+              backgroundColor: timerExpired ? semantic.error : EMERGENCY_ACTIVE_BG,
+            },
           ]}
           onPress={() => {
             setPreviousRoute('/(tabs)');
@@ -140,12 +161,9 @@ export default function HomeScreen() {
           {activeEmergency ? (
             <View style={styles.emergencyActiveContent}>
               <View style={styles.emergencyContent}>
-                <IconSymbol
-                  name="exclamationmark.triangle.fill"
-                  size={32}
-                  color="#fff"
-                  style={styles.emergencyIcon}
-                />
+                <View style={styles.emergencyIconWrap}>
+                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color="#fff" />
+                </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>
                     {timerExpired ? 'Timer Expired — Call 911' : 'Emergency In Progress'}
@@ -153,21 +171,18 @@ export default function HomeScreen() {
                   <ThemedText style={styles.emergencySubtitle}>
                     {timerExpired
                       ? 'Tap to continue search protocol'
-                      : `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')} remaining • ${activeEmergency.checkedSteps.length}/11 steps`}
+                      : `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')} remaining · ${activeEmergency.checkedSteps.length}/11 steps`}
                   </ThemedText>
                 </View>
               </View>
-              <IconSymbol name="chevron.right" size={24} color="#fff" />
+              <IconSymbol name="chevron.right" size={20} color="rgba(255,255,255,0.7)" />
             </View>
           ) : (
-            <>
+            <View style={styles.emergencyActiveContent}>
               <View style={styles.emergencyContent}>
-                <IconSymbol
-                  name="exclamationmark.triangle.fill"
-                  size={32}
-                  color="#fff"
-                  style={styles.emergencyIcon}
-                />
+                <View style={styles.emergencyIconWrap}>
+                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color="#fff" />
+                </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>Start Emergency Search</ThemedText>
                   <ThemedText style={styles.emergencySubtitle}>
@@ -175,21 +190,23 @@ export default function HomeScreen() {
                   </ThemedText>
                 </View>
               </View>
-              <IconSymbol name="chevron.right" size={24} color="#fff" />
-            </>
+              <IconSymbol name="chevron.right" size={20} color="rgba(255,255,255,0.7)" />
+            </View>
           )}
         </Pressable>
 
-        {/* Quick Actions */}
+        {/* ── Quick Actions ── */}
         <View style={styles.quickActions}>
           <Pressable
             style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => router.push('/contacts' as Href)}
           >
-            <ThemedText style={styles.actionIcon}>📞</ThemedText>
+            <View style={[styles.actionIconWrap, { backgroundColor: theme.primaryLight }]}>
+              <ThemedText style={styles.actionIconEmoji}>📞</ThemedText>
+            </View>
             <ThemedText style={[styles.actionTitle, { color: theme.text }]}>Contacts</ThemedText>
             <ThemedText style={[styles.actionSubtitle, { color: theme.textSecondary }]}>
-              {contactCount} saved
+              {contactCount === 0 ? 'None added' : `${contactCount} saved`}
             </ThemedText>
           </Pressable>
 
@@ -197,7 +214,9 @@ export default function HomeScreen() {
             style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
             onPress={() => router.push('/destinations' as Href)}
           >
-            <ThemedText style={styles.actionIcon}>📍</ThemedText>
+            <View style={[styles.actionIconWrap, { backgroundColor: theme.primaryLight }]}>
+              <ThemedText style={styles.actionIconEmoji}>📍</ThemedText>
+            </View>
             <ThemedText style={[styles.actionTitle, { color: theme.text }]}>Places</ThemedText>
             <ThemedText style={[styles.actionSubtitle, { color: theme.textSecondary }]}>
               Likely spots
@@ -205,7 +224,7 @@ export default function HomeScreen() {
           </Pressable>
         </View>
 
-        {/* Profile Summary Card - Tap to view 911 Script */}
+        {/* ── Emergency Info Card ── */}
         {hasProfile && (
           <Pressable
             style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
@@ -213,7 +232,7 @@ export default function HomeScreen() {
           >
             <View style={styles.summaryHeader}>
               <View style={styles.summaryHeaderLeft}>
-                <ThemedText type="subtitle" style={{ color: theme.text }}>
+                <ThemedText style={[styles.summaryTitle, { color: theme.text }]}>
                   Emergency Info
                 </ThemedText>
                 {!(
@@ -229,11 +248,11 @@ export default function HomeScreen() {
                   </Pressable>
                 )}
               </View>
-              <View style={styles.viewScriptButton}>
+              <View style={[styles.viewScriptButton, { backgroundColor: theme.primaryLight }]}>
                 <ThemedText style={[styles.viewScriptHint, { color: theme.tint }]}>
-                  View 911 Script
+                  911 Script
                 </ThemedText>
-                <IconSymbol name="chevron.right" size={16} color={theme.tint} />
+                <IconSymbol name="chevron.right" size={14} color={theme.tint} />
               </View>
             </View>
 
@@ -241,7 +260,7 @@ export default function HomeScreen() {
               profile.medications ||
               profile.cognitiveStatus ||
               profile.deescalationTechniques) && (
-              <View style={styles.summaryGrid}>
+              <View style={[styles.summaryGrid, { borderTopColor: theme.border }]}>
                 {profile.medicalConditions && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
@@ -298,15 +317,19 @@ export default function HomeScreen() {
             )}
           </Pressable>
         )}
-        {/* Setup Prompts */}
+
+        {/* ── Setup Prompt ── */}
         {!hasProfile && (
           <View
             style={[
               styles.setupCard,
-              { backgroundColor: theme.primaryLight, borderColor: theme.secondary },
+              { backgroundColor: theme.card, borderColor: theme.border },
+              getShadow('sm', colorScheme),
             ]}
           >
-            <ThemedText style={styles.setupIcon}>📝</ThemedText>
+            <View style={[styles.setupIconWrap, { backgroundColor: theme.primaryLight }]}>
+              <ThemedText style={styles.setupIconEmoji}>📝</ThemedText>
+            </View>
             <ThemedText style={[styles.setupTitle, { color: theme.text }]}>
               Complete Your Profile
             </ThemedText>
@@ -318,7 +341,8 @@ export default function HomeScreen() {
               style={[styles.setupButton, { backgroundColor: theme.primary }]}
               onPress={() => router.push('/profile' as Href)}
             >
-              <ThemedText style={styles.setupButtonText}>Start Profile →</ThemedText>
+              <ThemedText style={styles.setupButtonText}>Start Profile</ThemedText>
+              <IconSymbol name="chevron.right" size={16} color="#fff" />
             </Pressable>
           </View>
         )}
@@ -332,76 +356,100 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 20,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xxl,
   },
+
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: Spacing.xl,
+    paddingTop: Spacing.xs,
   },
-  headerText: {
+  headerLeft: {
     flex: 1,
+    gap: Spacing.xxs,
   },
-  title: {
+  caringLabel: {
+    ...Typography.caption,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    fontWeight: '600',
+  },
+
+  // Avatar
+  avatarWrapper: {
+    marginLeft: Spacing.md,
   },
   avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   avatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderStyle: 'dashed',
+    borderWidth: 1,
   },
   avatarPlaceholderText: {
     fontSize: 24,
   },
+  avatarBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+
+  // Emergency button
   emergencyButton: {
     backgroundColor: semantic.error,
     borderRadius: Radius.xl,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    shadowColor: semantic.error,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: Spacing.sm,
-    elevation: 4,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.xl,
+    marginBottom: Spacing.lg,
     overflow: 'hidden',
   },
   emergencyContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
+    gap: Spacing.md,
   },
-  emergencyIcon: {
-    marginRight: Spacing.lg,
+  emergencyIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   emergencyTextContainer: {
     flex: 1,
   },
   emergencyTitle: {
     color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: Spacing.xs,
+    ...Typography.bodyBold,
+    marginBottom: 2,
   },
   emergencySubtitle: {
     color: 'rgba(255,255,255,0.8)',
-    fontSize: 14,
+    ...Typography.caption,
   },
   emergencyProgressFill: {
     position: 'absolute',
     top: 0,
     left: 0,
     bottom: 0,
-    backgroundColor: semantic.error,
-    borderRadius: Radius.xl,
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
   emergencyActiveContent: {
     flexDirection: 'row',
@@ -410,10 +458,12 @@ const styles = StyleSheet.create({
     flex: 1,
     zIndex: 1,
   },
+
+  // Quick actions
   quickActions: {
     flexDirection: 'row',
     gap: Spacing.md,
-    marginBottom: 20,
+    marginBottom: Spacing.lg,
   },
   actionCard: {
     flex: 1,
@@ -421,19 +471,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: Spacing.lg,
     alignItems: 'center',
+    minHeight: 110,
+    justifyContent: 'center',
+    gap: Spacing.xs,
   },
-  actionIcon: {
-    fontSize: 28,
-    marginBottom: Spacing.sm,
-  },
-  actionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
+  actionIconWrap: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: Spacing.xs,
   },
-  actionSubtitle: {
-    fontSize: 12,
+  actionIconEmoji: {
+    fontSize: 22,
   },
+  actionTitle: {
+    ...Typography.bodyBold,
+  },
+  actionSubtitle: {
+    ...Typography.caption,
+  },
+
+  // Summary card
   summaryCard: {
     borderRadius: Radius.lg,
     borderWidth: 1,
@@ -447,65 +507,82 @@ const styles = StyleSheet.create({
   },
   summaryHeaderLeft: {
     flex: 1,
+    gap: Spacing.xs,
+  },
+  summaryTitle: {
+    ...Typography.bodyBold,
   },
   viewScriptButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
+    gap: Spacing.xxs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.md,
   },
   viewScriptHint: {
-    fontSize: 14,
-    fontWeight: '500',
+    ...Typography.caption,
+    fontWeight: '600',
   },
   summaryEmpty: {
-    fontSize: 12,
-    marginTop: Spacing.xs,
+    ...Typography.caption,
     fontStyle: 'italic',
   },
   summaryGrid: {
     gap: Spacing.md,
-    marginTop: Spacing.lg,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
   },
-  summaryItem: {
-    marginBottom: Spacing.sm,
-  },
+  summaryItem: {},
   summaryLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: Spacing.xs,
+    ...Typography.small,
+    fontWeight: '700',
+    marginBottom: Spacing.xxs,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.6,
   },
   summaryValue: {
-    fontSize: 15,
-    lineHeight: 20,
+    ...Typography.body,
   },
+
+  // Setup card
   setupCard: {
     borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: 20,
+    padding: Spacing.xl,
     alignItems: 'center',
     marginBottom: Spacing.lg,
+    gap: Spacing.md,
   },
-  setupIcon: {
-    fontSize: 40,
-    marginBottom: Spacing.md,
+  setupIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
+  setupIconEmoji: {
+    fontSize: 32,
   },
   setupTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: Spacing.sm,
+    ...Typography.title,
+    textAlign: 'center',
   },
   setupText: {
-    fontSize: 14,
+    ...Typography.body,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: Spacing.lg,
   },
   setupButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
     paddingHorizontal: Spacing.xl,
     paddingVertical: Spacing.md,
     borderRadius: Radius.md,
+    marginTop: Spacing.xs,
+    minHeight: 48,
   },
   setupButtonText: {
     color: '#fff',

@@ -127,7 +127,7 @@ export default function NameScreen() {
 
         <View style={styles.footer}>
           <Pressable
-            style={[styles.button, !name.trim() && styles.buttonDisabled]}
+            style={[styles.button, { backgroundColor: theme.primary }, !name.trim() && styles.buttonDisabled]}
             onPress={handleContinue}
             disabled={!name.trim()}
           >
@@ -186,25 +186,24 @@ const styles = StyleSheet.create({
     ...Typography.bodyBold,
   },
   input: {
+    ...Typography.bodyLarge,
     borderWidth: 1,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
-    fontSize: 18,
+    paddingVertical: Spacing.md,
   },
   hint: {
-    fontSize: 14,
+    ...Typography.body,
   },
   error: {
+    ...Typography.body,
     color: '#ef4444',
-    fontSize: 14,
   },
   footer: {
     padding: Spacing.xl,
     paddingBottom: Spacing.xxl,
   },
   button: {
-    backgroundColor: primary[700],
     paddingVertical: Spacing.lg,
     borderRadius: Radius.lg,
     alignItems: 'center',
@@ -214,7 +213,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: 18,
+    ...Typography.bodyLarge,
     fontWeight: '600',
   },
 });

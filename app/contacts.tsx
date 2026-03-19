@@ -6,13 +6,14 @@
 import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
-    Alert,
-    Linking,
-    Platform,
-    ScrollView,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  Alert,
+  Linking,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -28,14 +29,13 @@ import { Colors, semantic } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 
-
 import { useTheme } from '@/context/ThemeContext';
 import {
-    Contact,
-    createContact,
-    deleteContact,
-    getContacts,
-    updateContact,
+  Contact,
+  createContact,
+  deleteContact,
+  getContacts,
+  updateContact,
 } from '@/database/contacts';
 import { formatPhoneInput, formatPhoneNumber } from '@/utils/phone';
 
@@ -251,11 +251,7 @@ export default function ContactsScreen() {
           <View style={styles.contactInfo}>
             <ThemedText style={styles.contactName}>{contact.name}</ThemedText>
             <View style={styles.roleRow}>
-              <IconSymbol
-                name={roleInfo.icon as any}
-                size={12}
-                color={theme.icon}
-              />
+              <IconSymbol name={roleInfo.icon as any} size={12} color={theme.icon} />
               <ThemedText style={[styles.contactRole, { color: theme.textSecondary }]}>
                 {roleInfo.label}
               </ThemedText>
@@ -298,10 +294,7 @@ export default function ContactsScreen() {
           {contact.address && (
             <View style={styles.detailRow}>
               <IconSymbol name="location" size={14} color={theme.icon} />
-              <ThemedText
-                style={[styles.detailText, { color: theme.text }]}
-                numberOfLines={2}
-              >
+              <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={2}>
                 {contact.address}
               </ThemedText>
             </View>
@@ -361,9 +354,7 @@ export default function ContactsScreen() {
 
       {/* Role */}
       <View style={styles.formField}>
-        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
-          Role
-        </ThemedText>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Role</ThemedText>
         <View style={styles.roleGrid}>
           {ROLE_OPTIONS.map((option) => {
             const isSelected = formData.role === option.value;
@@ -486,13 +477,24 @@ export default function ContactsScreen() {
     <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
       {contacts.length === 0 ? (
         <View style={styles.emptyState}>
-          <IconSymbol name="person.2" size={48} color={theme.icon} />
-          <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>
-            No Emergency Contacts
+          <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
+            <IconSymbol name="person.2.fill" size={40} color={theme.primary} />
+          </View>
+          <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
+            No Contacts Yet
           </ThemedText>
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
             Add family members, neighbors, or friends who can help in an emergency.
           </ThemedText>
+          <Pressable
+            style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+            onPress={handleAddNew}
+          >
+            <IconSymbol name="plus" size={18} color="#fff" />
+            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
+              Add First Contact
+            </ThemedText>
+          </Pressable>
         </View>
       ) : (
         <>
@@ -539,7 +541,11 @@ export default function ContactsScreen() {
         visible={modalVisible}
         onDismiss={() => handleModalAction('cancel')}
         title={
-          modalType === 'delete' ? 'Delete Contact' : modalType === 'validation' ? 'Required' : 'Error'
+          modalType === 'delete'
+            ? 'Delete Contact'
+            : modalType === 'validation'
+              ? 'Required'
+              : 'Error'
         }
         message={modalMessage}
         type={modalType === 'delete' ? 'delete' : 'alert'}
@@ -571,23 +577,41 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   listCount: {
-    fontSize: 14,
+    ...Typography.body,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
     paddingHorizontal: Spacing.xxl,
+    gap: Spacing.md,
   },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: Spacing.lg,
+  emptyIconWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: Spacing.sm,
   },
-  emptyText: {
-    fontSize: 14,
+  emptyTitle: {
     textAlign: 'center',
-    lineHeight: 20,
+  },
+  emptyText: {
+    ...Typography.body,
+    textAlign: 'center',
+  },
+  emptyButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.sm,
+    minHeight: 48,
+  },
+  emptyButtonText: {
+    ...Typography.bodyBold,
   },
 
   // Contact card
@@ -607,7 +631,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contactName: {
-    fontSize: 17,
+    ...Typography.bodyLarge,
     fontWeight: '600',
   },
   roleRow: {
@@ -624,9 +648,9 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   actionButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -639,7 +663,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   detailText: {
-    fontSize: 14,
+    ...Typography.body,
     flex: 1,
   },
   deleteButton: {
@@ -650,7 +674,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   deleteText: {
-    fontSize: 14,
+    ...Typography.body,
     fontWeight: '500',
   },
   addButton: {
@@ -673,17 +697,15 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
   },
   formTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 20,
+    ...Typography.headline,
+    marginBottom: Spacing.xl,
   },
   formField: {
     marginBottom: Spacing.lg,
   },
   fieldLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 6,
+    ...Typography.bodyBold,
+    marginBottom: Spacing.xs,
   },
   roleGrid: {
     flexDirection: 'row',
@@ -700,15 +722,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   roleOptionText: {
-    fontSize: 13,
+    ...Typography.caption,
     fontWeight: '500',
   },
   toggleField: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 10,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     marginBottom: Spacing.lg,
   },
@@ -717,12 +739,12 @@ const styles = StyleSheet.create({
     marginRight: Spacing.md,
   },
   toggleLabel: {
-    fontSize: 15,
+    ...Typography.bodyLarge,
     fontWeight: '500',
   },
   toggleHint: {
-    fontSize: 12,
-    marginTop: 2,
+    ...Typography.caption,
+    marginTop: Spacing.xxs,
   },
   toggle: {
     width: 50,
