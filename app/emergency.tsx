@@ -23,7 +23,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors, neutral, primary, secondary, semantic } from '@/constants/Colors';
+import { Colors, semantic, primary, neutral, secondary } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { Destination, getDestinations } from '@/database/destinations';
@@ -465,7 +467,7 @@ export default function EmergencyScreen() {
                     </ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.modalButton, { backgroundColor: primary[700] }]}
+                    style={[styles.modalButton, { backgroundColor: theme.primary }]}
                     onPress={() => handleModalAction('leave')}
                   >
                     <ThemedText style={styles.modalButtonText}>Leave</ThemedText>
@@ -610,7 +612,7 @@ export default function EmergencyScreen() {
               multiline
             />
             <Pressable style={styles.wearingDismiss} onPress={() => setShowWearingInput(false)}>
-              <ThemedText style={{ color: neutral[500], fontSize: 13 }}>Dismiss</ThemedText>
+              <ThemedText type="caption" style={{ color: neutral[500] }}>Dismiss</ThemedText>
             </Pressable>
           </View>
         )}
@@ -795,8 +797,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -805,7 +807,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   backButton: {
-    padding: 8,
+    padding: Spacing.sm,
     marginLeft: -8,
   },
   headerCenter: {
@@ -815,7 +817,7 @@ const styles = StyleSheet.create({
   headerTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   headerTitle: {
     fontSize: 18,
@@ -827,14 +829,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    gap: 16,
+    padding: Spacing.lg,
+    gap: Spacing.lg,
   },
   timerCard: {
-    borderRadius: 16,
+    borderRadius: Radius.xl,
     padding: 20,
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
   },
   timerLabel: {
     color: 'rgba(255,255,255,0.8)',
@@ -851,11 +853,11 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.9)',
     fontSize: 14,
     textAlign: 'center',
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   progressContainer: {
     width: '100%',
-    marginTop: 16,
+    marginTop: Spacing.lg,
     gap: 6,
   },
   progressBar: {
@@ -876,8 +878,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   hintCard: {
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
     borderWidth: 1,
     alignItems: 'center',
   },
@@ -886,18 +888,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   wearingCard: {
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
     borderWidth: 1,
-    gap: 8,
+    gap: Spacing.sm,
   },
   wearingLabel: {
     fontSize: 15,
     fontWeight: '600',
   },
   wearingInput: {
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: Radius.md,
+    padding: Spacing.md,
     fontSize: 15,
     borderWidth: 1,
     minHeight: 60,
@@ -911,11 +913,11 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flexDirection: 'row',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   actionRow: {
     flexDirection: 'row',
@@ -923,26 +925,25 @@ const styles = StyleSheet.create({
   },
   actionButtonSmall: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     padding: 14,
     alignItems: 'center',
   },
   actionButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   checklistSection: {
-    gap: 12,
+    gap: Spacing.md,
   },
   sectionTitle: {
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   stepCard: {
     flexDirection: 'row',
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     padding: 14,
-    gap: 12,
+    gap: Spacing.md,
     alignItems: 'flex-start',
   },
   stepNumber: {
@@ -959,17 +960,16 @@ const styles = StyleSheet.create({
   },
   stepContent: {
     flex: 1,
-    gap: 4,
+    gap: Spacing.xs,
   },
   stepHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     flexWrap: 'wrap',
   },
   stepTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   stepTitleChecked: {
     textDecorationLine: 'line-through',
@@ -980,14 +980,14 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   stepHint: {
-    fontSize: 13,
+    ...Typography.caption,
     fontStyle: 'italic',
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
   urgentBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radius.sm,
   },
   urgentText: {
     color: '#fff',
@@ -995,24 +995,23 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   destinationsList: {
-    marginTop: 8,
-    gap: 2,
+    marginTop: Spacing.sm,
+    gap: Spacing.xxs,
   },
   destinationsLabel: {
     fontSize: 12,
     fontWeight: '500',
   },
   destinationItem: {
-    fontSize: 13,
+    ...Typography.caption,
   },
   tipsCard: {
-    borderRadius: 12,
-    padding: 16,
-    gap: 8,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.sm,
   },
   tipsTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   tipsText: {
     fontSize: 14,
@@ -1031,16 +1030,15 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContent: {
-    borderRadius: 16,
-    padding: 24,
+    borderRadius: Radius.xl,
+    padding: Spacing.xl,
     width: '100%',
     maxWidth: 340,
     alignItems: 'center',
-    gap: 12,
+    gap: Spacing.md,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    ...Typography.title,
     textAlign: 'center',
   },
   modalMessage: {
@@ -1050,9 +1048,9 @@ const styles = StyleSheet.create({
   },
   modalButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
     width: '100%',
-    marginTop: 8,
+    marginTop: Spacing.sm,
   },
   modalButton: {
     flex: 1,
@@ -1066,12 +1064,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   modalButtonDestructive: {
-    paddingVertical: 12,
-    marginTop: 8,
+    paddingVertical: Spacing.md,
+    marginTop: Spacing.sm,
   },
   modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
     color: '#fff',
   },
 });

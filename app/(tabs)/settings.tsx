@@ -8,9 +8,13 @@ import { useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppCard } from '@/components/AppCard';
+import { ListItem } from '@/components/ListItem';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors, primary, semantic } from '@/constants/Colors';
+import { Colors, semantic } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { clearAllData } from '@/database/storage';
 
@@ -101,7 +105,7 @@ export default function SettingsScreen() {
         </ThemedText>
 
         {/* Theme Section */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <AppCard>
           <View style={styles.sectionHeader}>
             <IconSymbol name="paintbrush.fill" size={20} color={theme.text} />
             <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -122,9 +126,7 @@ export default function SettingsScreen() {
                     borderColor: themePreference === option.value ? theme.tint : theme.border,
                     backgroundColor:
                       themePreference === option.value
-                        ? colorScheme === 'dark'
-                          ? primary[800]
-                          : primary[50]
+                        ? theme.primaryLight
                         : 'transparent',
                   },
                 ]}
@@ -142,13 +144,11 @@ export default function SettingsScreen() {
               </Pressable>
             ))}
           </View>
-        </View>
+        </AppCard>
 
         {/* Dev Mode Section - Only visible when enabled */}
         {devModeEnabled && (
-          <View
-            style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
+          <AppCard>
             <View style={styles.sectionHeader}>
               <IconSymbol name="wrench.fill" size={20} color={theme.text} />
               <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -173,45 +173,23 @@ export default function SettingsScreen() {
             <ThemedText style={[styles.warning, { color: theme.textSecondary }]}>
               This will permanently delete all profile data, contacts, incidents, and settings.
             </ThemedText>
-          </View>
+          </AppCard>
         )}
 
         {/* App Info */}
-        <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
+        <AppCard>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             About
           </ThemedText>
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>App</ThemedText>
-            <ThemedText style={styles.infoValue}>Back to Safety</ThemedText>
-          </View>
-          <Pressable
-            style={({ pressed }) => [
-              styles.infoRow,
-              styles.infoRowTappable,
-              { borderBottomColor: theme.border },
-              pressed && { opacity: 0.5, backgroundColor: theme.border },
-            ]}
+          <ListItem label="App" value="Back to Safety" />
+          <ListItem
+            label="Version"
+            value={`0.1.0${devModeEnabled ? ' (Dev)' : ''}`}
             onPress={handleVersionTap}
-          >
-            <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>
-              Version
-            </ThemedText>
-            <ThemedText style={styles.infoValue}>0.1.0{devModeEnabled ? ' (Dev)' : ''}</ThemedText>
-          </Pressable>
-          <View style={[styles.infoRow, { borderBottomColor: theme.border }]}>
-            <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>
-              Platform
-            </ThemedText>
-            <ThemedText style={styles.infoValue}>{Platform.OS}</ThemedText>
-          </View>
-          <View style={[styles.infoRow, { borderBottomColor: 'transparent' }]}>
-            <ThemedText style={[styles.infoLabel, { color: theme.textSecondary }]}>
-              Theme
-            </ThemedText>
-            <ThemedText style={styles.infoValue}>{colorScheme}</ThemedText>
-          </View>
-        </View>
+          />
+          <ListItem label="Platform" value={Platform.OS} />
+          <ListItem label="Theme" value={colorScheme} style={{ borderBottomColor: 'transparent' }} />
+        </AppCard>
       </ScrollView>
     </SafeAreaView>
   );
@@ -222,41 +200,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    padding: 24,
+    padding: Spacing.xl,
   },
   title: {
-    marginBottom: 24,
-  },
-  section: {
-    borderRadius: 12,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    marginBottom: Spacing.xl,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
   sectionTitle: {},
   sectionDescription: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   themeOptions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   themeOption: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     borderWidth: 2,
   },
   themeIcon: {
     fontSize: 24,
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   themeLabel: {
     fontSize: 14,
@@ -265,38 +237,22 @@ const styles = StyleSheet.create({
     backgroundColor: semantic.error,
     paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   dangerButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
   warning: {
-    fontSize: 13,
-    marginTop: 12,
+    ...Typography.caption,
+    marginTop: Spacing.md,
     textAlign: 'center',
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  infoRowTappable: {
-    // @ts-ignore - web only
-    userSelect: 'none',
-    cursor: 'pointer',
-  },
-  infoLabel: {},
-  infoValue: {
-    fontWeight: '500',
   },
 });

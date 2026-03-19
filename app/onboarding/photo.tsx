@@ -12,13 +12,18 @@ import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { neutral, primary } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
+import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
 
 export default function PhotoScreen() {
   const router = useRouter();
   const { completeStep } = useOnboarding();
+  const { colorScheme } = useTheme();
+  const theme = Colors[colorScheme];
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -102,20 +107,20 @@ export default function PhotoScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
         <View style={styles.progress}>
-          <View style={[styles.progressDot, styles.progressComplete]} />
-          <View style={[styles.progressDot, styles.progressActive]} />
-          <View style={styles.progressDot} />
-          <View style={styles.progressDot} />
+          <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
+          <View style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]} />
+          <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
+          <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
         </View>
 
         <ThemedText type="title" style={styles.title}>
           Add a recent photo
         </ThemedText>
 
-        <ThemedText style={styles.subtitle}>
+        <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
           A clear, recent photo is critical for neighbors and first responders to identify them
           quickly.
         </ThemedText>
@@ -124,33 +129,33 @@ export default function PhotoScreen() {
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
           ) : (
-            <View style={styles.photoPlaceholder}>
+            <View style={[styles.photoPlaceholder, { backgroundColor: theme.surface, borderColor: theme.border }]}>
               <ThemedText style={styles.photoPlaceholderText}>📷</ThemedText>
-              <ThemedText style={styles.photoPlaceholderHint}>No photo yet</ThemedText>
+              <ThemedText style={[styles.photoPlaceholderHint, { color: theme.textSecondary }]}>No photo yet</ThemedText>
             </View>
           )}
         </View>
 
         <View style={styles.photoButtons}>
-          <Pressable style={styles.photoButton} onPress={takePhoto}>
-            <ThemedText style={styles.photoButtonText}>Take Photo</ThemedText>
+          <Pressable style={[styles.photoButton, { borderColor: theme.primary }]} onPress={takePhoto}>
+            <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>Take Photo</ThemedText>
           </Pressable>
-          <Pressable style={styles.photoButton} onPress={pickImage}>
-            <ThemedText style={styles.photoButtonText}>Choose from Library</ThemedText>
+          <Pressable style={[styles.photoButton, { borderColor: theme.primary }]} onPress={pickImage}>
+            <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>Choose from Library</ThemedText>
           </Pressable>
         </View>
 
-        <ThemedText style={styles.tip}>
+        <ThemedText style={[styles.tip, { color: theme.textDisabled }]}>
           💡 Tip: Use a photo from the last 3-6 months that shows their face clearly.
         </ThemedText>
       </View>
 
       <View style={styles.footer}>
         <Pressable style={styles.skipButton} onPress={handleSkip}>
-          <ThemedText style={styles.skipButtonText}>Skip for now</ThemedText>
+          <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>Skip for now</ThemedText>
         </Pressable>
         <Pressable
-          style={[styles.button, !photoUri && styles.buttonDisabled]}
+          style={[styles.button, { backgroundColor: theme.primary }, !photoUri && styles.buttonDisabled]}
           onPress={handleContinue}
           disabled={!photoUri || isLoading}
         >
@@ -167,40 +172,33 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
     paddingTop: 20,
   },
   progress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 32,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
   },
   progressDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: neutral[300],
+    borderRadius: Radius.sm,
   },
   progressActive: {
-    backgroundColor: primary[700],
     width: 24,
   },
-  progressComplete: {
-    backgroundColor: primary[500],
-  },
   title: {
-    fontSize: 28,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 24,
+    ...Typography.body,
+    marginBottom: Spacing.xl,
   },
   photoContainer: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   photo: {
     width: 200,
@@ -211,59 +209,50 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    backgroundColor: neutral[200],
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: neutral[300],
     borderStyle: 'dashed',
   },
   photoPlaceholderText: {
     fontSize: 48,
   },
   photoPlaceholderHint: {
-    marginTop: 8,
-    color: neutral[500],
+    marginTop: Spacing.sm,
   },
   photoButtons: {
-    gap: 12,
-    marginBottom: 24,
+    gap: Spacing.md,
+    marginBottom: Spacing.xl,
   },
   photoButton: {
     borderWidth: 1,
-    borderColor: primary[700],
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     paddingVertical: 14,
     alignItems: 'center',
   },
   photoButtonText: {
-    color: primary[700],
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   tip: {
     fontSize: 14,
-    color: neutral[600],
     textAlign: 'center',
     fontStyle: 'italic',
   },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
-    gap: 12,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.md,
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   skipButtonText: {
-    color: neutral[500],
-    fontSize: 16,
+    ...Typography.body,
   },
   button: {
-    backgroundColor: primary[700],
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   buttonDisabled: {

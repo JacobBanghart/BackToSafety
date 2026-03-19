@@ -17,14 +17,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { neutral, primary } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
+import { Typography } from '@/constants/Typography';
+import { Spacing, Radius } from '@/constants/Spacing';
 import { useOnboarding } from '@/context/OnboardingContext';
+import { useTheme } from '@/context/ThemeContext';
 import { createContact } from '@/database/contacts';
 import { formatPhoneInput } from '@/utils/phone';
 
 export default function ContactScreen() {
   const router = useRouter();
   const { completeStep } = useOnboarding();
+  const { colorScheme } = useTheme();
+  const theme = Colors[colorScheme];
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [relationship, setRelationship] = useState('');
@@ -59,24 +64,24 @@ export default function ContactScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.progress}>
-            <View style={[styles.progressDot, styles.progressComplete]} />
-            <View style={[styles.progressDot, styles.progressComplete]} />
-            <View style={[styles.progressDot, styles.progressComplete]} />
-            <View style={[styles.progressDot, styles.progressActive]} />
+            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
+            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
+            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
+            <View style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]} />
           </View>
 
           <ThemedText type="title" style={styles.title}>
             Emergency contact
           </ThemedText>
 
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
             Who should we notify if they wander? You can add more contacts later.
           </ThemedText>
 
@@ -84,14 +89,14 @@ export default function ContactScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Contact Name *</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
                   setError('');
                 }}
                 placeholder="e.g., John Smith"
-                placeholderTextColor={neutral[400]}
+                placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
                 autoComplete="name"
               />
@@ -100,14 +105,14 @@ export default function ContactScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Phone Number *</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                 value={phone}
                 onChangeText={(text) => {
                   setPhone(formatPhoneInput(text));
                   setError('');
                 }}
                 placeholder="(555) 123-4567"
-                placeholderTextColor={neutral[400]}
+                placeholderTextColor={theme.inputPlaceholder}
                 keyboardType="phone-pad"
                 autoComplete="tel"
               />
@@ -116,21 +121,21 @@ export default function ContactScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Relationship</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                 value={relationship}
                 onChangeText={setRelationship}
                 placeholder="e.g., Son, Daughter, Neighbor"
-                placeholderTextColor={neutral[400]}
+                placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
               />
             </View>
 
-            {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+            {error ? <ThemedText style={[styles.error, { color: theme.error }]}>{error}</ThemedText> : null}
           </View>
 
-          <View style={styles.infoBox}>
-            <ThemedText style={styles.infoTitle}>What happens in an emergency?</ThemedText>
-            <ThemedText style={styles.infoText}>
+          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
+            <ThemedText style={[styles.infoTitle, { color: theme.text }]}>What happens in an emergency?</ThemedText>
+            <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>
               • You&apos;ll have a one-tap button to text this contact{'\n'}• They&apos;ll receive
               the person&apos;s photo and last known location{'\n'}• You can add neighbors and
               family later
@@ -140,13 +145,13 @@ export default function ContactScreen() {
 
         <View style={styles.footer}>
           <Pressable style={styles.skipButton} onPress={handleSkip}>
-            <ThemedText style={styles.skipButtonText}>Skip for now</ThemedText>
+            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>Skip for now</ThemedText>
           </Pressable>
           <Pressable
-            style={[styles.button, (!name.trim() || !phone.trim()) && styles.buttonDisabled]}
+            style={[styles.button, { backgroundColor: theme.primary }, (!name.trim() || !phone.trim()) && styles.buttonDisabled]}
             onPress={handleContinue}
           >
-            <ThemedText style={styles.buttonText}>Continue</ThemedText>
+            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>Continue</ThemedText>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -165,101 +170,85 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
     paddingTop: 20,
     paddingBottom: 20,
   },
   progress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 32,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
   },
   progressDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: neutral[300],
+    borderRadius: Radius.sm,
   },
   progressActive: {
-    backgroundColor: primary[700],
     width: 24,
   },
-  progressComplete: {
-    backgroundColor: primary[500],
-  },
+  progressComplete: {},
   title: {
-    fontSize: 28,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 32,
+    ...Typography.body,
+    marginBottom: Spacing.xxl,
   },
   form: {
     gap: 20,
   },
   inputGroup: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   input: {
     borderWidth: 1,
-    borderColor: neutral[300],
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: 14,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    ...Typography.body,
   },
   error: {
-    color: '#ef4444',
     fontSize: 14,
   },
   infoBox: {
-    backgroundColor: primary[50],
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 24,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    marginTop: Spacing.xl,
   },
   infoTitle: {
-    fontWeight: '600',
-    marginBottom: 8,
-    color: primary[800],
+    ...Typography.bodyBold,
+    marginBottom: Spacing.sm,
   },
   infoText: {
     fontSize: 14,
     lineHeight: 22,
-    color: primary[700],
   },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
-    gap: 12,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.md,
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   skipButtonText: {
-    color: neutral[500],
-    fontSize: 16,
+    ...Typography.body,
   },
   button: {
-    backgroundColor: primary[700],
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   buttonDisabled: {
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: '600',
   },

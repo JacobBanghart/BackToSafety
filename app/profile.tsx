@@ -20,9 +20,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors, neutral, primary } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -257,7 +259,7 @@ export default function ProfileScreen() {
         value={form[field] as string}
         onChangeText={(v) => updateField(field, v)}
         placeholder={options?.placeholder}
-        placeholderTextColor={neutral[400]}
+        placeholderTextColor={theme.inputPlaceholder}
         multiline={options?.multiline}
         numberOfLines={options?.multiline ? 3 : 1}
         keyboardType={options?.keyboardType || 'default'}
@@ -274,7 +276,7 @@ export default function ProfileScreen() {
     <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Pressable style={styles.sectionHeader} onPress={() => toggleSection(key)}>
         <ThemedText style={styles.sectionIcon}>{icon}</ThemedText>
-        <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>{title}</ThemedText>
+        <ThemedText type="bodyBold" style={[styles.sectionTitle, { color: theme.text }]}>{title}</ThemedText>
         <ThemedText style={[styles.chevron, { color: theme.textSecondary }]}>
           {expandedSection === key ? '▼' : '▶'}
         </ThemedText>
@@ -289,22 +291,18 @@ export default function ProfileScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        {/* Header */}
-        <View style={[styles.header, { borderBottomColor: theme.border, backgroundColor: theme.card }]}>
-          <Pressable onPress={() => router.replace('/(tabs)')} style={styles.backButton}>
-            <IconSymbol name="chevron.left" size={24} color={theme.tint} />
-          </Pressable>
-          <ThemedText type="subtitle" style={styles.headerTitle}>
-            Edit Profile
-          </ThemedText>
-          <Pressable
-            onPress={handleSave}
-            style={[styles.saveButton, { backgroundColor: theme.tint }]}
-            disabled={isSaving}
-          >
-            <ThemedText style={styles.saveText}>{isSaving ? 'Saving...' : 'Save'}</ThemedText>
-          </Pressable>
-        </View>
+        <ScreenHeader
+          title="Edit Profile"
+          rightElement={
+            <Pressable
+              onPress={handleSave}
+              style={[styles.saveButton, { backgroundColor: theme.tint }]}
+              disabled={isSaving}
+            >
+              <ThemedText style={styles.saveText}>{isSaving ? 'Saving...' : 'Save'}</ThemedText>
+            </Pressable>
+          }
+        />
 
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Photo Section */}
@@ -331,7 +329,7 @@ export default function ProfileScreen() {
                 <ThemedText style={styles.photoButtonText}>Take Photo</ThemedText>
               </Pressable>
               <Pressable
-                style={[styles.photoButton, { backgroundColor: primary[500] }]}
+                style={[styles.photoButton, { backgroundColor: theme.primary }]}
                 onPress={pickImage}
               >
                 <ThemedText style={styles.photoButtonText}>Choose Photo</ThemedText>
@@ -522,30 +520,10 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 18,
-  },
   saveButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
   },
   saveText: {
     color: '#fff',
@@ -555,14 +533,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: Spacing.lg,
   },
   photoSection: {
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   photoContainer: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   photo: {
     width: 120,
@@ -583,12 +561,12 @@ const styles = StyleSheet.create({
   },
   photoButtons: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   photoButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
   },
   photoButtonText: {
     color: '#fff',
@@ -596,50 +574,48 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   section: {
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    marginBottom: 12,
+    marginBottom: Spacing.md,
     overflow: 'hidden',
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: Spacing.lg,
   },
   sectionIcon: {
     fontSize: 20,
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
   sectionTitle: {
     flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
   },
   chevron: {
     fontSize: 12,
   },
   sectionContent: {
-    padding: 16,
+    padding: Spacing.lg,
     paddingTop: 0,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   label: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   hint: {
     fontSize: 12,
     marginBottom: 6,
   },
   input: {
+    ...Typography.body,
     borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 12,
+    borderRadius: Radius.md,
+    paddingHorizontal: Spacing.md,
     paddingVertical: 10,
-    fontSize: 16,
   },
   textArea: {
     minHeight: 80,
@@ -647,19 +623,19 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   halfWidth: {
     flex: 1,
   },
   buttonGroup: {
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
   },
   optionButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     borderWidth: 1,
     alignItems: 'center',
   },

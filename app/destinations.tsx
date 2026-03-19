@@ -3,25 +3,30 @@
  * Places the person may wander to during an emergency
  */
 
-import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     Linking,
-    Modal,
     Platform,
     ScrollView,
     StyleSheet,
-    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppModal } from '@/components/AppModal';
+import { AppTextInput } from '@/components/AppTextInput';
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { SecondaryButton } from '@/components/SecondaryButton';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors, neutral, primary, semantic } from '@/constants/Colors';
+import { Colors, primary, semantic } from '@/constants/Colors';
+// neutral is intentionally not imported — all neutral refs use theme tokens
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useTheme } from '@/context/ThemeContext';
 import {
     createDestination,
@@ -81,7 +86,6 @@ const EMPTY_FORM: FormData = {
 
 export default function DestinationsScreen() {
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
   const theme = Colors[colorScheme];
 
   const [destinations, setDestinations] = useState<Destination[]>([]);
@@ -256,8 +260,8 @@ export default function DestinationsScreen() {
         style={[
           styles.card,
           {
-            backgroundColor: isDark ? neutral[800] : neutral[50],
-            borderColor: isDark ? neutral[700] : neutral[200],
+            backgroundColor: theme.card,
+            borderColor: theme.border,
             borderLeftColor: riskColor,
           },
         ]}
@@ -287,11 +291,7 @@ export default function DestinationsScreen() {
                   {riskInfo.label}
                 </ThemedText>
               </View>
-              <ThemedText
-                style={styles.categoryText}
-                lightColor={neutral[500]}
-                darkColor={neutral[400]}
-              >
+              <ThemedText style={[styles.categoryText, { color: theme.textSecondary }]}>
                 {categoryInfo.label}
               </ThemedText>
             </View>
@@ -307,7 +307,7 @@ export default function DestinationsScreen() {
 
         {destination.address && (
           <TouchableOpacity
-            style={[styles.addressRow, { backgroundColor: isDark ? neutral[700] : neutral[100] }]}
+            style={[styles.addressRow, { backgroundColor: theme.surface }]}
             onPress={() => handleOpenMaps(destination.address!)}
           >
             <IconSymbol name="location" size={14} color={primary[600]} />
@@ -328,13 +328,9 @@ export default function DestinationsScreen() {
             <IconSymbol
               name="arrow.left.arrow.right"
               size={12}
-              color={isDark ? neutral[500] : neutral[400]}
+              color={theme.icon}
             />
-            <ThemedText
-              style={styles.detailText}
-              lightColor={neutral[600]}
-              darkColor={neutral[400]}
-            >
+            <ThemedText style={[styles.detailText, { color: theme.textSecondary }]}>
               {destination.distanceFromHome} from home
             </ThemedText>
           </View>
@@ -342,18 +338,10 @@ export default function DestinationsScreen() {
 
         {destination.reason && (
           <View style={styles.reasonBox}>
-            <ThemedText
-              style={styles.reasonLabel}
-              lightColor={neutral[500]}
-              darkColor={neutral[500]}
-            >
+            <ThemedText style={[styles.reasonLabel, { color: theme.textSecondary }]}>
               Why they might go here:
             </ThemedText>
-            <ThemedText
-              style={styles.reasonText}
-              lightColor={neutral[700]}
-              darkColor={neutral[300]}
-            >
+            <ThemedText style={[styles.reasonText, { color: theme.text }]}>
               {destination.reason}
             </ThemedText>
           </View>
@@ -372,34 +360,22 @@ export default function DestinationsScreen() {
         {editingDestination ? 'Edit Location' : 'Add Likely Destination'}
       </ThemedText>
 
-      <ThemedText style={styles.formHint} lightColor={neutral[600]} darkColor={neutral[400]}>
+      <ThemedText style={[styles.formHint, { color: theme.textSecondary }]}>
         Add places your loved one may wander to. These will be checked during a search.
       </ThemedText>
 
       {/* Name */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Location Name *
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.name}
-          onChangeText={(text) => setFormData({ ...formData, name: text })}
-          placeholder="e.g., Riverside Park, Old House on Maple St"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-        />
-      </View>
+      <AppTextInput
+        label="Location Name"
+        required
+        placeholder="e.g., Riverside Park, Old House on Maple St"
+        value={formData.name}
+        onChangeText={(text) => setFormData({ ...formData, name: text })}
+      />
 
       {/* Category */}
       <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
           Location Type
         </ThemedText>
         <View style={styles.optionGrid}>
@@ -416,16 +392,12 @@ export default function DestinationsScreen() {
                       ? isWater
                         ? semantic.warning
                         : primary[600]
-                      : isDark
-                        ? neutral[800]
-                        : neutral[100],
+                      : theme.inputBackground,
                     borderColor: isSelected
                       ? isWater
                         ? semantic.warning
                         : primary[600]
-                      : isDark
-                        ? neutral[600]
-                        : neutral[300],
+                      : theme.inputBorder,
                   },
                 ]}
                 onPress={() => setFormData({ ...formData, category: option.value })}
@@ -433,12 +405,10 @@ export default function DestinationsScreen() {
                 <IconSymbol
                   name={option.icon as any}
                   size={14}
-                  color={isSelected ? '#fff' : neutral[500]}
+                  color={isSelected ? '#fff' : theme.icon}
                 />
                 <ThemedText
-                  style={[styles.optionText, isSelected && { color: '#fff' }]}
-                  lightColor={neutral[700]}
-                  darkColor={neutral[300]}
+                  style={[styles.optionText, isSelected ? { color: '#fff' } : { color: theme.text }]}
                 >
                   {option.label}
                 </ThemedText>
@@ -458,7 +428,7 @@ export default function DestinationsScreen() {
 
       {/* Risk Level */}
       <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
           Search Priority
         </ThemedText>
         <View style={styles.riskRow}>
@@ -487,120 +457,44 @@ export default function DestinationsScreen() {
       </View>
 
       {/* Address */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Address
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            styles.textArea,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.address}
-          onChangeText={(text) => setFormData({ ...formData, address: text })}
-          placeholder="Street address or description"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-          multiline
-          numberOfLines={2}
-        />
-      </View>
+      <AppTextInput
+        label="Address"
+        placeholder="Street address or description"
+        multiline
+        value={formData.address}
+        onChangeText={(text) => setFormData({ ...formData, address: text })}
+      />
 
       {/* Distance */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Distance from Home
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.distanceFromHome}
-          onChangeText={(text) => setFormData({ ...formData, distanceFromHome: text })}
-          placeholder="e.g., 0.5 miles, 2 blocks"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-        />
-      </View>
+      <AppTextInput
+        label="Distance from Home"
+        placeholder="e.g., 0.5 miles, 2 blocks"
+        value={formData.distanceFromHome}
+        onChangeText={(text) => setFormData({ ...formData, distanceFromHome: text })}
+      />
 
       {/* Reason */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Why They Might Go Here
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            styles.textArea,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.reason}
-          onChangeText={(text) => setFormData({ ...formData, reason: text })}
-          placeholder="e.g., Lived here 30 years ago, Used to work here"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
+      <AppTextInput
+        label="Why They Might Go Here"
+        placeholder="e.g., Lived here 30 years ago, Used to work here"
+        multiline
+        value={formData.reason}
+        onChangeText={(text) => setFormData({ ...formData, reason: text })}
+      />
 
       {/* Notes */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Additional Notes
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            styles.textArea,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.notes}
-          onChangeText={(text) => setFormData({ ...formData, notes: text })}
-          placeholder="Any other helpful details..."
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
+      <AppTextInput
+        label="Additional Notes"
+        placeholder="Any other helpful details..."
+        multiline
+        value={formData.notes}
+        onChangeText={(text) => setFormData({ ...formData, notes: text })}
+      />
 
       {/* Buttons */}
       <View style={styles.formButtons}>
-        <TouchableOpacity
-          style={[styles.cancelButton, { borderColor: neutral[400] }]}
-          onPress={handleCancel}
-        >
-          <ThemedText
-            style={styles.cancelButtonText}
-            lightColor={neutral[700]}
-            darkColor={neutral[300]}
-          >
-            Cancel
-          </ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: primary[700] }]}
-          onPress={handleSave}
-        >
-          <ThemedText style={styles.saveButtonText}>
-            {editingDestination ? 'Update' : 'Add'}
-          </ThemedText>
-        </TouchableOpacity>
+        <SecondaryButton label="Cancel" onPress={handleCancel} style={{ flex: 1 }} />
+        <PrimaryButton label={editingDestination ? 'Update' : 'Add'} onPress={handleSave} style={{ flex: 1 }} />
       </View>
 
       <View style={{ height: 40 }} />
@@ -611,10 +505,10 @@ export default function DestinationsScreen() {
     <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
       {/* Info Box */}
       <View
-        style={[styles.infoBox, { backgroundColor: isDark ? `${primary[900]}50` : primary[50] }]}
+        style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}
       >
         <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
-        <ThemedText style={styles.infoText} lightColor={primary[800]} darkColor={primary[200]}>
+        <ThemedText style={[styles.infoText, { color: theme.text }]}>
           Most people with dementia are found within 1.5 miles of where they were last seen. Check
           water sources first!
         </ThemedText>
@@ -625,12 +519,12 @@ export default function DestinationsScreen() {
           <IconSymbol
             name="mappin.and.ellipse"
             size={48}
-            color={isDark ? neutral[600] : neutral[300]}
+            color={theme.icon}
           />
-          <ThemedText style={styles.emptyTitle} lightColor={neutral[700]} darkColor={neutral[300]}>
+          <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>
             No Destinations Added
           </ThemedText>
-          <ThemedText style={styles.emptyText} lightColor={neutral[500]} darkColor={neutral[400]}>
+          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
             Add places your loved one may wander to, like former homes, favorite stores, or water
             sources.
           </ThemedText>
@@ -638,7 +532,7 @@ export default function DestinationsScreen() {
       ) : (
         <>
           <View style={styles.listHeader}>
-            <ThemedText style={styles.listCount} lightColor={neutral[600]} darkColor={neutral[400]}>
+            <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
               {destinations.length} location{destinations.length !== 1 ? 's' : ''} • Sorted by
               priority
             </ThemedText>
@@ -648,7 +542,7 @@ export default function DestinationsScreen() {
       )}
 
       <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: primary[700] }]}
+        style={[styles.addButton, { backgroundColor: theme.primary }]}
         onPress={handleAddNew}
       >
         <IconSymbol name="plus" size={20} color="#fff" />
@@ -663,17 +557,7 @@ export default function DestinationsScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <View
-          style={[
-            styles.header,
-            { borderBottomColor: isDark ? neutral[800] : neutral[200], backgroundColor: theme.card },
-          ]}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
-            <IconSymbol name="chevron.left" size={24} color={primary[600]} />
-          </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>Likely Destinations</ThemedText>
-          <View style={styles.headerRight} />
-        </View>
+        <ScreenHeader title="Likely Destinations" />
 
         {/* Content */}
         {isLoading ? (
@@ -687,50 +571,20 @@ export default function DestinationsScreen() {
         )}
       </SafeAreaView>
 
-      {/* Alert Modal for Web */}
-      <Modal
-        animationType="fade"
-        transparent
+      <AppModal
         visible={modalVisible}
-        onRequestClose={() => handleModalAction('cancel')}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <ThemedText style={styles.modalTitle}>
-              {modalType === 'delete'
-                ? 'Delete Location'
-                : modalType === 'validation'
-                  ? 'Required'
-                  : 'Error'}
-            </ThemedText>
-            <ThemedText style={styles.modalText}>{modalMessage}</ThemedText>
-            <View
-              style={[
-                styles.modalButtons,
-                modalType === 'delete' ? {} : { justifyContent: 'center' },
-              ]}>
-              {modalType === 'delete' && (
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalCancelButton, { borderColor: theme.border }]}
-                  onPress={() => handleModalAction('cancel')}>
-                  <ThemedText style={styles.modalButtonText}>Cancel</ThemedText>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  modalType === 'delete'
-                    ? { backgroundColor: semantic.error }
-                    : { backgroundColor: primary[500] },
-                ]}
-                onPress={() => handleModalAction('confirm')}>
-                <ThemedText style={[styles.modalButtonText, { color: '#fff' }]}>
-                  {modalType === 'delete' ? 'Delete' : 'OK'}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onDismiss={() => handleModalAction('cancel')}
+        title={
+          modalType === 'delete'
+            ? 'Delete Location'
+            : modalType === 'validation'
+              ? 'Required'
+              : 'Error'
+        }
+        message={modalMessage}
+        type={modalType === 'delete' ? 'delete' : 'alert'}
+        onConfirm={() => handleModalAction('confirm')}
+      />
     </ThemedView>
   );
 }
@@ -742,30 +596,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerRight: {
-    width: 40,
-  },
   loading: {
     flex: 1,
     justifyContent: 'center',
@@ -775,22 +605,21 @@ const styles = StyleSheet.create({
   // List styles
   listContainer: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.lg,
   },
   infoBox: {
     flexDirection: 'row',
-    padding: 12,
+    padding: Spacing.md,
     borderRadius: 10,
     gap: 10,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   infoText: {
     flex: 1,
-    fontSize: 13,
-    lineHeight: 18,
+    ...Typography.caption,
   },
   listHeader: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   listCount: {
     fontSize: 14,
@@ -798,13 +627,13 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing.xxl,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   emptyText: {
     fontSize: 14,
@@ -814,11 +643,11 @@ const styles = StyleSheet.create({
 
   // Destination card
   card: {
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     borderLeftWidth: 4,
-    padding: 16,
-    marginBottom: 12,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -837,7 +666,7 @@ const styles = StyleSheet.create({
   categoryIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -849,26 +678,26 @@ const styles = StyleSheet.create({
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     marginTop: 6,
     marginLeft: 42,
   },
   riskBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radius.sm,
   },
   riskText: {
     fontSize: 11,
     fontWeight: '600',
   },
   categoryText: {
-    fontSize: 13,
+    ...Typography.caption,
   },
   editButton: {
     width: 32,
     height: 32,
-    borderRadius: 8,
+    borderRadius: Radius.md,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -876,13 +705,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 8,
+    paddingVertical: Spacing.sm,
     paddingHorizontal: 10,
-    borderRadius: 8,
-    marginBottom: 8,
+    borderRadius: Radius.md,
+    marginBottom: Spacing.sm,
   },
   addressText: {
-    fontSize: 13,
+    ...Typography.caption,
     flex: 1,
   },
   detailRow: {
@@ -892,11 +721,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   detailText: {
-    fontSize: 13,
+    ...Typography.caption,
   },
   reasonBox: {
-    marginTop: 8,
-    paddingTop: 8,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
     borderTopWidth: 1,
     borderTopColor: 'rgba(128,128,128,0.2)',
   },
@@ -912,8 +741,8 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   deleteButton: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: 'rgba(128,128,128,0.2)',
     alignItems: 'center',
@@ -926,26 +755,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.sm,
   },
   addButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
 
   // Form styles
   formContainer: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.lg,
   },
   formTitle: {
     fontSize: 22,
     fontWeight: '700',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   formHint: {
     fontSize: 14,
@@ -953,35 +781,25 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   formField: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   fieldLabel: {
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 6,
   },
-  textInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
-    fontSize: 16,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
   optionGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: Spacing.sm,
   },
   optionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
   },
   optionText: {
@@ -991,10 +809,10 @@ const styles = StyleSheet.create({
   warningBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
     padding: 10,
-    borderRadius: 8,
-    marginTop: 8,
+    borderRadius: Radius.md,
+    marginTop: Spacing.sm,
   },
   warningText: {
     fontSize: 12,
@@ -1006,8 +824,8 @@ const styles = StyleSheet.create({
   },
   riskOption: {
     flex: 1,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
     borderWidth: 2,
     alignItems: 'center',
   },
@@ -1017,74 +835,7 @@ const styles = StyleSheet.create({
   },
   formButtons: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 340,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalCancelButton: {
-    borderWidth: 1,
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    gap: Spacing.md,
+    marginTop: Spacing.xl,
   },
 });

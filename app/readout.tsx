@@ -24,6 +24,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors, neutral, primary, secondary, semantic } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -134,18 +136,18 @@ export default function ReadoutScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.loadingContainer]}>
-        <ActivityIndicator size="large" color={primary[700]} />
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
+        <ActivityIndicator size="large" color={theme.primary} />
       </SafeAreaView>
     );
   }
 
   if (!profile) {
     return (
-      <SafeAreaView style={styles.loadingContainer}>
+      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
         <ThemedText>No profile found. Please complete onboarding first.</ThemedText>
-        <Pressable style={styles.button} onPress={() => router.push('/onboarding')}>
-          <ThemedText style={styles.buttonText}>Go to Onboarding</ThemedText>
+        <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={() => router.push('/onboarding')}>
+          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>Go to Onboarding</ThemedText>
         </Pressable>
       </SafeAreaView>
     );
@@ -153,7 +155,7 @@ export default function ReadoutScreen() {
 
   return (
     <SafeAreaView
-      style={{ flex: 1 }}
+      style={{ flex: 1, backgroundColor: theme.background }}
       edges={['top', 'left', 'right', 'bottom']}
       onLayout={(e) => setContainerH(e.nativeEvent.layout.height)}
     >
@@ -186,7 +188,7 @@ export default function ReadoutScreen() {
               <Image source={{ uri: profile.photoUri }} style={styles.photo} contentFit="cover" />
             )}
             <View style={styles.headerInfo}>
-              <ThemedText style={[styles.name, { color: theme.text }]}>{profile.name}</ThemedText>
+              <ThemedText type="title" style={{ color: theme.text }}>{profile.name}</ThemedText>
               {profile.nickname && (
                 <ThemedText style={[styles.nickname, { color: theme.textSecondary }]}>
                   Goes by &ldquo;{profile.nickname}&rdquo;
@@ -201,7 +203,7 @@ export default function ReadoutScreen() {
           {/* Emergency Contacts */}
           {emergencyContacts.length > 0 && (
             <View style={[styles.contactsSection, { borderTopColor: theme.border }]}>
-              <ThemedText style={[styles.sectionLabel, { color: theme.primary }]}>
+              <ThemedText type="bodyBold" style={[styles.sectionLabel, { color: theme.primary }]}>
                 Emergency Contacts:
               </ThemedText>
               {emergencyContacts.map((c) => (
@@ -225,12 +227,12 @@ export default function ReadoutScreen() {
             </Pressable>
           )}
 
-          <Pressable style={styles.button} onPress={copyScript}>
-            <ThemedText style={styles.buttonText}>📋 Copy 911 Script</ThemedText>
+          <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={copyScript}>
+            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>📋 Copy 911 Script</ThemedText>
           </Pressable>
 
-          <Pressable style={[styles.button, styles.secondary]} onPress={copyAll}>
-            <ThemedText style={styles.buttonText}>📄 Copy Full Details</ThemedText>
+          <Pressable style={[styles.button, styles.secondary, { backgroundColor: theme.primaryPressed }]} onPress={copyAll}>
+            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>📄 Copy Full Details</ThemedText>
           </Pressable>
         </View>
 
@@ -246,8 +248,8 @@ export default function ReadoutScreen() {
           ]}
         >
           <ThemedText
+            type="bodyBold"
             style={[
-              styles.alertTitle,
               { color: colorScheme === 'dark' ? secondary[100] : primary[900] },
             ]}
           >
@@ -274,20 +276,20 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 24,
-    gap: 16,
+    padding: Spacing.xl,
+    gap: Spacing.lg,
   },
   container: {
-    padding: 16,
-    gap: 12,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   backLink: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    paddingVertical: 4,
-    marginBottom: 2,
-    gap: 4,
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.xxs,
+    gap: Spacing.xs,
   },
   backText: {
     fontWeight: '600',
@@ -296,13 +298,13 @@ const styles = StyleSheet.create({
   },
   emergencyButton: {
     backgroundColor: semantic.error,
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
     shadowColor: semantic.error,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: Spacing.sm,
     elevation: 4,
   },
   emergencyButtonText: {
@@ -312,26 +314,24 @@ const styles = StyleSheet.create({
   },
   card: {
     borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: 12,
-    padding: 16,
-    gap: 12,
+    borderRadius: Radius.lg,
+    padding: Spacing.lg,
+    gap: Spacing.md,
   },
   headerRow: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   photo: {
     width: 80,
     height: 80,
-    borderRadius: 8,
+    borderRadius: Radius.md,
   },
   headerInfo: {
     flex: 1,
     justifyContent: 'center',
   },
   name: {
-    fontSize: 20,
-    fontWeight: '600',
   },
   nickname: {
     fontStyle: 'italic',
@@ -343,14 +343,12 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   sectionLabel: {
-    marginBottom: 4,
-    fontWeight: '600',
-    fontSize: 16,
+    marginBottom: Spacing.xs,
   },
   contactsSection: {
     borderTopWidth: 1,
-    paddingTop: 12,
-    gap: 8,
+    paddingTop: Spacing.md,
+    gap: Spacing.sm,
   },
   contactRow: {
     flexDirection: 'row',
@@ -365,14 +363,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   button: {
-    marginTop: 4,
-    backgroundColor: primary[700],
-    paddingVertical: 12,
-    borderRadius: 8,
+    marginTop: Spacing.xs,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
     alignItems: 'center',
   },
   secondary: {
-    backgroundColor: primary[500],
+    // backgroundColor set inline via theme.primaryPressed
   },
   mapsButton: {
     backgroundColor: semantic.success,
@@ -385,13 +382,9 @@ const styles = StyleSheet.create({
   alertCard: {
     // Background set dynamically
   },
-  alertTitle: {
-    fontWeight: '600',
-    fontSize: 16,
-  },
   alertText: {
     fontSize: 15,
     lineHeight: 20,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
 });

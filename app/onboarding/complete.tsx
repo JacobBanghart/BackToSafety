@@ -8,7 +8,9 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { Colors, primary } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -26,17 +28,17 @@ export default function CompleteScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
           <ThemedText style={styles.icon}>✓</ThemedText>
         </View>
 
-        <ThemedText type="title" style={styles.title}>
+        <ThemedText type="display" style={styles.title}>
           You&apos;re ready!
         </ThemedText>
 
-        <ThemedText style={styles.description}>
+        <ThemedText style={[styles.description, { color: theme.textSecondary }]}>
           You have the essential information set up. In an emergency, tap the big button on the home
           screen to start the guided search.
         </ThemedText>
@@ -54,8 +56,8 @@ export default function CompleteScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable style={styles.button} onPress={handleFinish}>
-          <ThemedText style={styles.buttonText}>Go to Home</ThemedText>
+        <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleFinish}>
+          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>Go to Home</ThemedText>
         </Pressable>
       </View>
     </SafeAreaView>
@@ -68,7 +70,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
     paddingTop: 60,
     alignItems: 'center',
   },
@@ -79,51 +81,45 @@ const styles = StyleSheet.create({
     backgroundColor: '#22c55e',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
   },
   icon: {
     fontSize: 48,
     color: '#fff',
   },
   title: {
-    fontSize: 32,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
     textAlign: 'center',
   },
   description: {
-    fontSize: 16,
+    ...Typography.body,
     textAlign: 'center',
-    opacity: 0.8,
-    lineHeight: 24,
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
   },
   nextSteps: {
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     padding: 20,
-    width: '100%',
   },
   nextStepsTitle: {
-    fontWeight: '600',
-    marginBottom: 12,
+    ...Typography.bodyBold,
+    marginBottom: Spacing.md,
   },
   nextStepsList: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   nextStepItem: {
     fontSize: 15,
   },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl,
   },
   button: {
-    backgroundColor: primary[700],
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
     fontSize: 18,
     fontWeight: '600',
   },

@@ -12,7 +12,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors, neutral, primary, secondary, semantic } from '@/constants/Colors';
+import { Colors, semantic } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
+
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { getSetting } from '@/database/storage';
@@ -105,7 +108,7 @@ export default function HomeScreen() {
               <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
             ) : (
               <View
-                style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: primary[100] }]}
+                style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: theme.primaryLight, borderColor: theme.secondary }]}
               >
                 <ThemedText style={styles.avatarPlaceholderText}>👤</ThemedText>
               </View>
@@ -300,19 +303,19 @@ export default function HomeScreen() {
           <View
             style={[
               styles.setupCard,
-              { backgroundColor: secondary[100], borderColor: secondary[300] },
+              { backgroundColor: theme.primaryLight, borderColor: theme.secondary },
             ]}
           >
             <ThemedText style={styles.setupIcon}>📝</ThemedText>
-            <ThemedText style={[styles.setupTitle, { color: primary[900] }]}>
+            <ThemedText style={[styles.setupTitle, { color: theme.text }]}>
               Complete Your Profile
             </ThemedText>
-            <ThemedText style={[styles.setupText, { color: neutral[700] }]}>
+            <ThemedText style={[styles.setupText, { color: theme.textSecondary }]}>
               Add information about the person you care for. This will be used during emergencies to
               help 911 and searchers.
             </ThemedText>
             <Pressable
-              style={[styles.setupButton, { backgroundColor: primary[700] }]}
+              style={[styles.setupButton, { backgroundColor: theme.primary }]}
               onPress={() => router.push('/profile' as Href)}
             >
               <ThemedText style={styles.setupButtonText}>Start Profile →</ThemedText>
@@ -335,13 +338,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   headerText: {
     flex: 1,
   },
   title: {
-    fontSize: 28,
   },
   avatar: {
     width: 50,
@@ -352,7 +354,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: primary[300],
     borderStyle: 'dashed',
   },
   avatarPlaceholderText: {
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
   },
   emergencyButton: {
     backgroundColor: semantic.error,
-    borderRadius: 16,
+    borderRadius: Radius.xl,
     padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
     shadowColor: semantic.error,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowRadius: Spacing.sm,
     elevation: 4,
     overflow: 'hidden',
   },
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emergencyIcon: {
-    marginRight: 16,
+    marginRight: Spacing.lg,
   },
   emergencyTextContainer: {
     flex: 1,
@@ -388,7 +389,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   emergencySubtitle: {
     color: 'rgba(255,255,255,0.8)',
@@ -400,7 +401,7 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     backgroundColor: semantic.error,
-    borderRadius: 16,
+    borderRadius: Radius.xl,
   },
   emergencyActiveContent: {
     flexDirection: 'row',
@@ -411,33 +412,33 @@ const styles = StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
     marginBottom: 20,
   },
   actionCard: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: 16,
+    padding: Spacing.lg,
     alignItems: 'center',
   },
   actionIcon: {
     fontSize: 28,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   actionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
   },
   actionSubtitle: {
     fontSize: 12,
   },
   summaryCard: {
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
   },
   summaryHeader: {
     flexDirection: 'row',
@@ -450,7 +451,7 @@ const styles = StyleSheet.create({
   viewScriptButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
   },
   viewScriptHint: {
     fontSize: 14,
@@ -458,20 +459,20 @@ const styles = StyleSheet.create({
   },
   summaryEmpty: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: Spacing.xs,
     fontStyle: 'italic',
   },
   summaryGrid: {
-    gap: 12,
-    marginTop: 16,
+    gap: Spacing.md,
+    marginTop: Spacing.lg,
   },
   summaryItem: {
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   summaryLabel: {
     fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: Spacing.xs,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -480,35 +481,34 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   setupCard: {
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
     padding: 20,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   setupIcon: {
     fontSize: 40,
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   setupTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   setupText: {
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   setupButton: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.md,
   },
   setupButtonText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
+    ...Typography.bodyBold,
   },
 });

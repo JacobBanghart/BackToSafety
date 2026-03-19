@@ -57,18 +57,35 @@ export const semantic = {
 
 export const Colors = {
   light: {
-    // Core
+    // Core text
     text: '#171717',
     textSecondary: neutral[600],
+    textDisabled: neutral[400],
+    textOnPrimary: '#ffffff',
+    textOnSecondary: neutral[900],
+
+    // Backgrounds
     background: '#ffffff',
     card: '#ffffff',
+    surface: neutral[50],
+    overlay: 'rgba(0,0,0,0.4)',
+
+    // Borders & dividers
     border: neutral[200],
+    borderFocused: primary[700],
+    divider: neutral[200],
 
     // Primary & Secondary
     primary: primary[900],
+    primaryPressed: primary[800],
     primaryLight: primary[100],
     secondary: secondary[100],
     secondaryDark: secondary[500],
+
+    // Inputs
+    inputBackground: '#ffffff',
+    inputBorder: neutral[300],
+    inputPlaceholder: neutral[400],
 
     // UI Elements
     tint: primary[700],
@@ -80,18 +97,35 @@ export const Colors = {
     ...semantic,
   },
   dark: {
-    // Core
+    // Core text
     text: '#fafafa',
     textSecondary: neutral[400],
+    textDisabled: neutral[600],
+    textOnPrimary: '#ffffff',
+    textOnSecondary: neutral[900],
+
+    // Backgrounds
     background: '#0a0a0a',
     card: neutral[900],
+    surface: neutral[800],
+    overlay: 'rgba(0,0,0,0.6)',
+
+    // Borders & dividers
     border: neutral[800],
+    borderFocused: primary[300],
+    divider: neutral[800],
 
     // Primary & Secondary
     primary: primary[300],
+    primaryPressed: primary[200],
     primaryLight: primary[900],
     secondary: secondary[100],
     secondaryDark: secondary[300],
+
+    // Inputs
+    inputBackground: neutral[900],
+    inputBorder: neutral[700],
+    inputPlaceholder: neutral[500],
 
     // UI Elements
     tint: primary[300],

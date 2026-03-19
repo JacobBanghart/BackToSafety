@@ -17,13 +17,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { neutral, primary } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
+import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
 
 export default function AppearanceScreen() {
   const router = useRouter();
   const { completeStep } = useOnboarding();
+  const { colorScheme } = useTheme();
+  const theme = Colors[colorScheme];
   const [height, setHeight] = useState('');
   const [weight, setWeight] = useState('');
   const [hairColor, setHairColor] = useState('');
@@ -52,24 +57,24 @@ export default function AppearanceScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           <View style={styles.progress}>
-            <View style={[styles.progressDot, styles.progressComplete]} />
-            <View style={[styles.progressDot, styles.progressComplete]} />
-            <View style={[styles.progressDot, styles.progressActive]} />
-            <View style={styles.progressDot} />
+            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
+            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
+            <View style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]} />
+            <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
           </View>
 
           <ThemedText type="title" style={styles.title}>
             Physical description
           </ThemedText>
 
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
             This helps 911 and searchers identify them. Be as specific as possible.
           </ThemedText>
 
@@ -78,21 +83,21 @@ export default function AppearanceScreen() {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Height</ThemedText>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                   value={height}
                   onChangeText={setHeight}
                   placeholder="5'6&quot;"
-                  placeholderTextColor={neutral[400]}
+                  placeholderTextColor={theme.inputPlaceholder}
                 />
               </View>
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Weight</ThemedText>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                   value={weight}
                   onChangeText={setWeight}
                   placeholder="150 lbs"
-                  placeholderTextColor={neutral[400]}
+                  placeholderTextColor={theme.inputPlaceholder}
                   keyboardType="default"
                 />
               </View>
@@ -102,21 +107,21 @@ export default function AppearanceScreen() {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Hair Color</ThemedText>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                   value={hairColor}
                   onChangeText={setHairColor}
                   placeholder="Gray, short"
-                  placeholderTextColor={neutral[400]}
+                  placeholderTextColor={theme.inputPlaceholder}
                 />
               </View>
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Eye Color</ThemedText>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                   value={eyeColor}
                   onChangeText={setEyeColor}
                   placeholder="Blue"
-                  placeholderTextColor={neutral[400]}
+                  placeholderTextColor={theme.inputPlaceholder}
                 />
               </View>
             </View>
@@ -124,11 +129,11 @@ export default function AppearanceScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Identifying Marks</ThemedText>
               <TextInput
-                style={[styles.input, styles.textArea]}
+                style={[styles.input, styles.textArea, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
                 value={identifyingMarks}
                 onChangeText={setIdentifyingMarks}
                 placeholder="Tattoos, scars, birthmarks, glasses, hearing aids..."
-                placeholderTextColor={neutral[400]}
+                placeholderTextColor={theme.inputPlaceholder}
                 multiline
                 numberOfLines={3}
               />
@@ -138,9 +143,9 @@ export default function AppearanceScreen() {
 
         <View style={styles.footer}>
           <Pressable style={styles.skipButton} onPress={handleSkip}>
-            <ThemedText style={styles.skipButtonText}>Skip for now</ThemedText>
+            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>Skip for now</ThemedText>
           </Pressable>
-          <Pressable style={styles.button} onPress={handleContinue}>
+          <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleContinue}>
             <ThemedText style={styles.buttonText}>Continue</ThemedText>
           </Pressable>
         </View>
@@ -160,85 +165,76 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
     paddingTop: 20,
     paddingBottom: 20,
   },
   progress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 32,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
   },
   progressDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: neutral[300],
+    borderRadius: Radius.sm,
   },
   progressActive: {
-    backgroundColor: primary[700],
     width: 24,
   },
   progressComplete: {
-    backgroundColor: primary[500],
   },
   title: {
-    fontSize: 28,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
+    ...Typography.body,
     opacity: 0.7,
-    marginBottom: 32,
+    marginBottom: Spacing.xxl,
   },
   form: {
     gap: 20,
   },
   row: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   inputGroup: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   halfWidth: {
     flex: 1,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   input: {
     borderWidth: 1,
-    borderColor: neutral[300],
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: 14,
-    fontSize: 16,
-    backgroundColor: '#fff',
+    ...Typography.body,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
-    gap: 12,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.md,
   },
   skipButton: {
-    paddingVertical: 12,
+    paddingVertical: Spacing.md,
     alignItems: 'center',
   },
   skipButtonText: {
-    color: neutral[500],
-    fontSize: 16,
+    ...Typography.body,
   },
   button: {
-    backgroundColor: primary[700],
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   buttonText: {

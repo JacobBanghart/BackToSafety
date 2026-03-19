@@ -16,13 +16,19 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { neutral, primary } from '@/constants/Colors';
+import { Colors, primary } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
+import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
 
 export default function NameScreen() {
   const router = useRouter();
   const { completeStep } = useOnboarding();
+  const { colorScheme } = useTheme();
+  const theme = Colors[colorScheme];
+
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
@@ -47,7 +53,7 @@ export default function NameScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
@@ -64,7 +70,7 @@ export default function NameScreen() {
             Who are you caring for?
           </ThemedText>
 
-          <ThemedText style={styles.subtitle}>
+          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
             This name will be used when calling 911 and alerting your circle.
           </ThemedText>
 
@@ -72,14 +78,21 @@ export default function NameScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Full Name *</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
                   setError('');
                 }}
                 placeholder="e.g., Jane Smith"
-                placeholderTextColor={neutral[400]}
+                placeholderTextColor={theme.inputPlaceholder}
                 autoFocus
                 autoCapitalize="words"
                 autoComplete="name"
@@ -89,14 +102,23 @@ export default function NameScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Nickname / Goes By</ThemedText>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
                 value={nickname}
                 onChangeText={setNickname}
                 placeholder="e.g., Mom, Grandma, Jane"
-                placeholderTextColor={neutral[400]}
+                placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
               />
-              <ThemedText style={styles.hint}>What name do they respond to best?</ThemedText>
+              <ThemedText style={[styles.hint, { color: theme.textDisabled }]}>
+                What name do they respond to best?
+              </ThemedText>
             </View>
 
             {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
@@ -126,69 +148,65 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 24,
+    paddingHorizontal: Spacing.xl,
     paddingTop: 20,
   },
   progress: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 32,
+    gap: Spacing.sm,
+    marginBottom: Spacing.xxl,
   },
   progressDot: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: neutral[300],
+    borderRadius: Radius.sm,
+    backgroundColor: primary[300],
+    opacity: 0.4,
   },
   progressActive: {
     backgroundColor: primary[700],
+    opacity: 1,
     width: 24,
   },
   title: {
-    fontSize: 28,
-    marginBottom: 8,
+    marginBottom: Spacing.sm,
   },
   subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 32,
+    ...Typography.body,
+    marginBottom: Spacing.xxl,
   },
   form: {
-    gap: 24,
+    gap: Spacing.xl,
   },
   inputGroup: {
-    gap: 8,
+    gap: Spacing.sm,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   input: {
     borderWidth: 1,
-    borderColor: neutral[300],
-    borderRadius: 12,
-    paddingHorizontal: 16,
+    borderRadius: Radius.lg,
+    paddingHorizontal: Spacing.lg,
     paddingVertical: 14,
     fontSize: 18,
-    backgroundColor: '#fff',
   },
   hint: {
     fontSize: 14,
-    opacity: 0.6,
   },
   error: {
     color: '#ef4444',
     fontSize: 14,
   },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl,
   },
   button: {
     backgroundColor: primary[700],
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
   },
   buttonDisabled: {

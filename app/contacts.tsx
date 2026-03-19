@@ -8,20 +8,27 @@ import { useCallback, useEffect, useState } from 'react';
 import {
     Alert,
     Linking,
-    Modal,
     Platform,
     ScrollView,
     StyleSheet,
-    TextInput,
     TouchableOpacity,
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AppModal } from '@/components/AppModal';
+import { AppTextInput } from '@/components/AppTextInput';
+import { PrimaryButton } from '@/components/PrimaryButton';
+import { ScreenHeader } from '@/components/ScreenHeader';
+import { SecondaryButton } from '@/components/SecondaryButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Colors, neutral, primary, semantic } from '@/constants/Colors';
+import { Colors, semantic } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
+
+
 import { useTheme } from '@/context/ThemeContext';
 import {
     Contact,
@@ -67,7 +74,6 @@ const EMPTY_FORM: FormData = {
 
 export default function ContactsScreen() {
   const { colorScheme } = useTheme();
-  const isDark = colorScheme === 'dark';
   const theme = Colors[colorScheme];
 
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -236,8 +242,8 @@ export default function ContactsScreen() {
         style={[
           styles.contactCard,
           {
-            backgroundColor: isDark ? neutral[800] : neutral[50],
-            borderColor: isDark ? neutral[700] : neutral[200],
+            backgroundColor: theme.card,
+            borderColor: theme.border,
           },
         ]}
       >
@@ -248,13 +254,9 @@ export default function ContactsScreen() {
               <IconSymbol
                 name={roleInfo.icon as any}
                 size={12}
-                color={isDark ? neutral[400] : neutral[500]}
+                color={theme.icon}
               />
-              <ThemedText
-                style={styles.contactRole}
-                lightColor={neutral[600]}
-                darkColor={neutral[400]}
-              >
+              <ThemedText style={[styles.contactRole, { color: theme.textSecondary }]}>
                 {roleInfo.label}
               </ThemedText>
             </View>
@@ -268,7 +270,7 @@ export default function ContactsScreen() {
               <IconSymbol name="phone.fill" size={16} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: primary[700] }]}
+              style={[styles.actionButton, { backgroundColor: theme.primary }]}
               onPress={() => handleEdit(contact)}
             >
               <IconSymbol name="pencil" size={16} color="#fff" />
@@ -278,24 +280,16 @@ export default function ContactsScreen() {
 
         <View style={styles.contactDetails}>
           <View style={styles.detailRow}>
-            <IconSymbol name="phone" size={14} color={isDark ? neutral[500] : neutral[400]} />
-            <ThemedText
-              style={styles.detailText}
-              lightColor={neutral[700]}
-              darkColor={neutral[300]}
-            >
+            <IconSymbol name="phone" size={14} color={theme.icon} />
+            <ThemedText style={[styles.detailText, { color: theme.text }]}>
               {formatPhoneNumber(contact.phone)}
             </ThemedText>
           </View>
 
           {contact.relationship && (
             <View style={styles.detailRow}>
-              <IconSymbol name="person" size={14} color={isDark ? neutral[500] : neutral[400]} />
-              <ThemedText
-                style={styles.detailText}
-                lightColor={neutral[700]}
-                darkColor={neutral[300]}
-              >
+              <IconSymbol name="person" size={14} color={theme.icon} />
+              <ThemedText style={[styles.detailText, { color: theme.text }]}>
                 {contact.relationship}
               </ThemedText>
             </View>
@@ -303,11 +297,9 @@ export default function ContactsScreen() {
 
           {contact.address && (
             <View style={styles.detailRow}>
-              <IconSymbol name="location" size={14} color={isDark ? neutral[500] : neutral[400]} />
+              <IconSymbol name="location" size={14} color={theme.icon} />
               <ThemedText
-                style={styles.detailText}
-                lightColor={neutral[700]}
-                darkColor={neutral[300]}
+                style={[styles.detailText, { color: theme.text }]}
                 numberOfLines={2}
               >
                 {contact.address}
@@ -330,136 +322,79 @@ export default function ContactsScreen() {
       </ThemedText>
 
       {/* Name */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Name *
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.name}
-          onChangeText={(text) => setFormData({ ...formData, name: text })}
-          placeholder="Contact name"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-        />
-      </View>
+      <AppTextInput
+        label="Name"
+        value={formData.name}
+        onChangeText={(text) => setFormData({ ...formData, name: text })}
+        placeholder="Contact name"
+        required
+      />
 
       {/* Phone */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Phone Number *
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.phone}
-          onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneInput(text) })}
-          placeholder="(555) 123-4567"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-          keyboardType="phone-pad"
-          autoComplete="tel"
-        />
-      </View>
+      <AppTextInput
+        label="Phone Number"
+        value={formData.phone}
+        onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneInput(text) })}
+        placeholder="(555) 123-4567"
+        keyboardType="phone-pad"
+        autoComplete="tel"
+        required
+      />
 
       {/* Relationship */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Relationship
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.relationship}
-          onChangeText={(text) => setFormData({ ...formData, relationship: text })}
-          placeholder="e.g., Daughter, Next-door neighbor"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-        />
-      </View>
+      <AppTextInput
+        label="Relationship"
+        value={formData.relationship}
+        onChangeText={(text) => setFormData({ ...formData, relationship: text })}
+        placeholder="e.g., Daughter, Next-door neighbor"
+      />
 
       {/* Address */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Address
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            styles.textArea,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.address}
-          onChangeText={(text) => setFormData({ ...formData, address: text })}
-          placeholder="Street address, city, state"
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-          multiline
-          numberOfLines={2}
-        />
-      </View>
+      <AppTextInput
+        label="Address"
+        value={formData.address}
+        onChangeText={(text) => setFormData({ ...formData, address: text })}
+        placeholder="Street address, city, state"
+        multiline
+        numberOfLines={2}
+      />
 
       {/* Role */}
       <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
           Role
         </ThemedText>
         <View style={styles.roleGrid}>
-          {ROLE_OPTIONS.map((option) => (
-            <TouchableOpacity
-              key={option.value}
-              style={[
-                styles.roleOption,
-                {
-                  backgroundColor:
-                    formData.role === option.value
-                      ? primary[600]
-                      : isDark
-                        ? neutral[800]
-                        : neutral[100],
-                  borderColor:
-                    formData.role === option.value
-                      ? primary[600]
-                      : isDark
-                        ? neutral[600]
-                        : neutral[300],
-                },
-              ]}
-              onPress={() => setFormData({ ...formData, role: option.value })}
-            >
-              <IconSymbol
-                name={option.icon as any}
-                size={14}
-                color={formData.role === option.value ? '#fff' : neutral[500]}
-              />
-              <ThemedText
-                style={[styles.roleOptionText, formData.role === option.value && { color: '#fff' }]}
-                lightColor={neutral[700]}
-                darkColor={neutral[300]}
+          {ROLE_OPTIONS.map((option) => {
+            const isSelected = formData.role === option.value;
+            return (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.roleOption,
+                  {
+                    backgroundColor: isSelected ? theme.primary : theme.inputBackground,
+                    borderColor: isSelected ? theme.primary : theme.inputBorder,
+                  },
+                ]}
+                onPress={() => setFormData({ ...formData, role: option.value })}
               >
-                {option.label}
-              </ThemedText>
-            </TouchableOpacity>
-          ))}
+                <IconSymbol
+                  name={option.icon as any}
+                  size={14}
+                  color={isSelected ? '#fff' : theme.icon}
+                />
+                <ThemedText
+                  style={[
+                    styles.roleOptionText,
+                    isSelected ? { color: '#fff' } : { color: theme.text },
+                  ]}
+                >
+                  {option.label}
+                </ThemedText>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -468,15 +403,15 @@ export default function ContactsScreen() {
         style={[
           styles.toggleField,
           {
-            backgroundColor: isDark ? neutral[800] : neutral[50],
-            borderColor: isDark ? neutral[600] : neutral[300],
+            backgroundColor: theme.inputBackground,
+            borderColor: theme.inputBorder,
           },
         ]}
         onPress={() => setFormData({ ...formData, notifyOnEmergency: !formData.notifyOnEmergency })}
       >
         <View style={styles.toggleInfo}>
           <ThemedText style={styles.toggleLabel}>Notify in Emergency</ThemedText>
-          <ThemedText style={styles.toggleHint} lightColor={neutral[500]} darkColor={neutral[400]}>
+          <ThemedText style={[styles.toggleHint, { color: theme.textSecondary }]}>
             Include in emergency SMS alerts
           </ThemedText>
         </View>
@@ -484,11 +419,7 @@ export default function ContactsScreen() {
           style={[
             styles.toggle,
             {
-              backgroundColor: formData.notifyOnEmergency
-                ? semantic.success
-                : isDark
-                  ? neutral[600]
-                  : neutral[300],
+              backgroundColor: formData.notifyOnEmergency ? semantic.success : theme.border,
             },
           ]}
         >
@@ -503,15 +434,15 @@ export default function ContactsScreen() {
         style={[
           styles.toggleField,
           {
-            backgroundColor: isDark ? neutral[800] : neutral[50],
-            borderColor: isDark ? neutral[600] : neutral[300],
+            backgroundColor: theme.inputBackground,
+            borderColor: theme.inputBorder,
           },
         ]}
         onPress={() => setFormData({ ...formData, shareMedicalInfo: !formData.shareMedicalInfo })}
       >
         <View style={styles.toggleInfo}>
           <ThemedText style={styles.toggleLabel}>Share Medical Info</ThemedText>
-          <ThemedText style={styles.toggleHint} lightColor={neutral[500]} darkColor={neutral[400]}>
+          <ThemedText style={[styles.toggleHint, { color: theme.textSecondary }]}>
             Include medical details when alerting
           </ThemedText>
         </View>
@@ -519,11 +450,7 @@ export default function ContactsScreen() {
           style={[
             styles.toggle,
             {
-              backgroundColor: formData.shareMedicalInfo
-                ? semantic.success
-                : isDark
-                  ? neutral[600]
-                  : neutral[300],
+              backgroundColor: formData.shareMedicalInfo ? semantic.success : theme.border,
             },
           ]}
         >
@@ -532,49 +459,23 @@ export default function ContactsScreen() {
       </TouchableOpacity>
 
       {/* Notes */}
-      <View style={styles.formField}>
-        <ThemedText style={styles.fieldLabel} lightColor={neutral[700]} darkColor={neutral[300]}>
-          Notes
-        </ThemedText>
-        <TextInput
-          style={[
-            styles.textInput,
-            styles.textArea,
-            {
-              backgroundColor: isDark ? neutral[800] : neutral[50],
-              borderColor: isDark ? neutral[600] : neutral[300],
-              color: isDark ? neutral[100] : neutral[900],
-            },
-          ]}
-          value={formData.notes}
-          onChangeText={(text) => setFormData({ ...formData, notes: text })}
-          placeholder="Additional notes about this contact..."
-          placeholderTextColor={isDark ? neutral[500] : neutral[400]}
-          multiline
-          numberOfLines={3}
-        />
-      </View>
+      <AppTextInput
+        label="Notes"
+        value={formData.notes}
+        onChangeText={(text) => setFormData({ ...formData, notes: text })}
+        placeholder="Additional notes about this contact..."
+        multiline
+        numberOfLines={3}
+      />
 
       {/* Buttons */}
       <View style={styles.formButtons}>
-        <TouchableOpacity
-          style={[styles.cancelButton, { borderColor: neutral[400] }]}
-          onPress={handleCancel}
-        >
-          <ThemedText
-            style={styles.cancelButtonText}
-            lightColor={neutral[700]}
-            darkColor={neutral[300]}
-          >
-            Cancel
-          </ThemedText>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.saveButton, { backgroundColor: primary[700] }]}
+        <SecondaryButton label="Cancel" onPress={handleCancel} style={{ flex: 1 }} />
+        <PrimaryButton
+          label={editingContact ? 'Update' : 'Add'}
           onPress={handleSave}
-        >
-          <ThemedText style={styles.saveButtonText}>{editingContact ? 'Update' : 'Add'}</ThemedText>
-        </TouchableOpacity>
+          style={{ flex: 1 }}
+        />
       </View>
 
       <View style={{ height: 40 }} />
@@ -585,18 +486,18 @@ export default function ContactsScreen() {
     <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
       {contacts.length === 0 ? (
         <View style={styles.emptyState}>
-          <IconSymbol name="person.2" size={48} color={isDark ? neutral[600] : neutral[300]} />
-          <ThemedText style={styles.emptyTitle} lightColor={neutral[700]} darkColor={neutral[300]}>
+          <IconSymbol name="person.2" size={48} color={theme.icon} />
+          <ThemedText style={[styles.emptyTitle, { color: theme.text }]}>
             No Emergency Contacts
           </ThemedText>
-          <ThemedText style={styles.emptyText} lightColor={neutral[500]} darkColor={neutral[400]}>
+          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
             Add family members, neighbors, or friends who can help in an emergency.
           </ThemedText>
         </View>
       ) : (
         <>
           <View style={styles.listHeader}>
-            <ThemedText style={styles.listCount} lightColor={neutral[600]} darkColor={neutral[400]}>
+            <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
               {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
             </ThemedText>
           </View>
@@ -605,7 +506,7 @@ export default function ContactsScreen() {
       )}
 
       <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: primary[700] }]}
+        style={[styles.addButton, { backgroundColor: theme.primary }]}
         onPress={handleAddNew}
       >
         <IconSymbol name="plus" size={20} color="#fff" />
@@ -620,17 +521,7 @@ export default function ContactsScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <View
-          style={[
-            styles.header,
-            { borderBottomColor: isDark ? neutral[800] : neutral[200], backgroundColor: theme.card },
-          ]}>
-          <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)')}>
-            <IconSymbol name="chevron.left" size={24} color={primary[600]} />
-          </TouchableOpacity>
-          <ThemedText style={styles.headerTitle}>Emergency Contacts</ThemedText>
-          <View style={styles.headerRight} />
-        </View>
+        <ScreenHeader title="Emergency Contacts" />
 
         {/* Content */}
         {isLoading ? (
@@ -644,50 +535,16 @@ export default function ContactsScreen() {
         )}
       </SafeAreaView>
 
-      {/* Alert Modal for Web */}
-      <Modal
-        animationType="fade"
-        transparent
+      <AppModal
         visible={modalVisible}
-        onRequestClose={() => handleModalAction('cancel')}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: theme.card }]}>
-            <ThemedText style={styles.modalTitle}>
-              {modalType === 'delete'
-                ? 'Delete Contact'
-                : modalType === 'validation'
-                  ? 'Required'
-                  : 'Error'}
-            </ThemedText>
-            <ThemedText style={styles.modalText}>{modalMessage}</ThemedText>
-            <View
-              style={[
-                styles.modalButtons,
-                modalType === 'delete' ? {} : { justifyContent: 'center' },
-              ]}>
-              {modalType === 'delete' && (
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.modalCancelButton, { borderColor: theme.border }]}
-                  onPress={() => handleModalAction('cancel')}>
-                  <ThemedText style={styles.modalButtonText}>Cancel</ThemedText>
-                </TouchableOpacity>
-              )}
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  modalType === 'delete'
-                    ? { backgroundColor: semantic.error }
-                    : { backgroundColor: primary[500] },
-                ]}
-                onPress={() => handleModalAction('confirm')}>
-                <ThemedText style={[styles.modalButtonText, { color: '#fff' }]}>
-                  {modalType === 'delete' ? 'Delete' : 'OK'}
-                </ThemedText>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+        onDismiss={() => handleModalAction('cancel')}
+        title={
+          modalType === 'delete' ? 'Delete Contact' : modalType === 'validation' ? 'Required' : 'Error'
+        }
+        message={modalMessage}
+        type={modalType === 'delete' ? 'delete' : 'alert'}
+        onConfirm={() => handleModalAction('confirm')}
+      />
     </ThemedView>
   );
 }
@@ -699,30 +556,6 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  backButton: {
-    padding: 8,
-    marginLeft: -8,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerRight: {
-    width: 40,
-  },
   loading: {
     flex: 1,
     justifyContent: 'center',
@@ -732,10 +565,10 @@ const styles = StyleSheet.create({
   // List styles
   listContainer: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.lg,
   },
   listHeader: {
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   listCount: {
     fontSize: 14,
@@ -743,13 +576,13 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
-    paddingHorizontal: 32,
+    paddingHorizontal: Spacing.xxl,
   },
   emptyTitle: {
     fontSize: 18,
     fontWeight: '600',
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: Spacing.lg,
+    marginBottom: Spacing.sm,
   },
   emptyText: {
     fontSize: 14,
@@ -759,16 +592,16 @@ const styles = StyleSheet.create({
 
   // Contact card
   contactCard: {
-    borderRadius: 12,
+    borderRadius: Radius.lg,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 12,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
   },
   contactHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 12,
+    marginBottom: Spacing.md,
   },
   contactInfo: {
     flex: 1,
@@ -780,15 +613,15 @@ const styles = StyleSheet.create({
   roleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.xs,
     marginTop: 2,
   },
   contactRole: {
-    fontSize: 13,
+    ...Typography.caption,
   },
   contactActions: {
     flexDirection: 'row',
-    gap: 8,
+    gap: Spacing.sm,
   },
   actionButton: {
     width: 36,
@@ -803,15 +636,15 @@ const styles = StyleSheet.create({
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: Spacing.sm,
   },
   detailText: {
     fontSize: 14,
     flex: 1,
   },
   deleteButton: {
-    marginTop: 12,
-    paddingTop: 12,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
     borderTopWidth: 1,
     borderTopColor: 'rgba(128,128,128,0.2)',
     alignItems: 'center',
@@ -824,21 +657,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    padding: 16,
-    borderRadius: 12,
-    marginTop: 8,
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    marginTop: Spacing.sm,
   },
   addButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
 
   // Form styles
   formContainer: {
     flex: 1,
-    padding: 16,
+    padding: Spacing.lg,
   },
   formTitle: {
     fontSize: 22,
@@ -846,35 +678,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   formField: {
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   fieldLabel: {
     fontSize: 14,
     fontWeight: '500',
     marginBottom: 6,
   },
-  textInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 14,
-    fontSize: 16,
-  },
-  textArea: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
   roleGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    gap: Spacing.sm,
   },
   roleOption: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: Radius.md,
     borderWidth: 1,
   },
   roleOptionText: {
@@ -888,11 +710,11 @@ const styles = StyleSheet.create({
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
   },
   toggleInfo: {
     flex: 1,
-    marginRight: 12,
+    marginRight: Spacing.md,
   },
   toggleLabel: {
     fontSize: 15,
@@ -919,74 +741,7 @@ const styles = StyleSheet.create({
   },
   formButtons: {
     flexDirection: 'row',
-    gap: 12,
-    marginTop: 24,
-  },
-  cancelButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    flex: 1,
-    padding: 16,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    borderRadius: 16,
-    padding: 24,
-    width: '100%',
-    maxWidth: 340,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  modalText: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  modalButton: {
-    flex: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  modalCancelButton: {
-    borderWidth: 1,
-  },
-  modalButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    gap: Spacing.md,
+    marginTop: Spacing.xl,
   },
 });
