@@ -5,7 +5,6 @@
 
 import { goBack, setPreviousRoute } from '@/utils/navigation';
 import * as Haptics from 'expo-haptics';
-import * as Location from 'expo-location';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -235,24 +234,6 @@ export default function EmergencyScreen() {
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
         setLastSeen({ time: now.toISOString() });
-
-        // Try to capture GPS
-        try {
-          const { status } = await Location.requestForegroundPermissionsAsync();
-          if (status === 'granted') {
-            const loc = await Location.getCurrentPositionAsync({
-              accuracy: Location.Accuracy.Balanced,
-            });
-            setLastSeen({
-              time: now.toISOString(),
-              coords: {
-                lat: loc.coords.latitude,
-                lon: loc.coords.longitude,
-                accuracy: loc.coords.accuracy ?? undefined,
-              },
-            });
-          }
-        } catch {}
 
         setIsLoading(false);
         startTimer(SEARCH_WINDOW_SECONDS);
