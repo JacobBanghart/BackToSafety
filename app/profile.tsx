@@ -22,6 +22,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
+import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
@@ -272,14 +273,28 @@ export default function ProfileScreen() {
     title: string,
     icon: string,
     content: React.ReactNode,
+    filledCount?: number,
   ) => (
     <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Pressable style={styles.sectionHeader} onPress={() => toggleSection(key)}>
-        <ThemedText style={styles.sectionIcon}>{icon}</ThemedText>
-        <ThemedText type="bodyBold" style={[styles.sectionTitle, { color: theme.text }]}>{title}</ThemedText>
-        <ThemedText style={[styles.chevron, { color: theme.textSecondary }]}>
-          {expandedSection === key ? '▼' : '▶'}
+        <View style={[styles.sectionIconWrap, { backgroundColor: theme.primaryLight }]}>
+          <IconSymbol name={icon as any} size={16} color={theme.primary} />
+        </View>
+        <ThemedText type="bodyBold" style={[styles.sectionTitle, { color: theme.text }]}>
+          {title}
         </ThemedText>
+        {filledCount !== undefined && filledCount > 0 && (
+          <View style={[styles.completionBadge, { backgroundColor: theme.primaryLight }]}>
+            <ThemedText type="small" style={{ color: theme.primary, fontWeight: '700' }}>
+              {filledCount}
+            </ThemedText>
+          </View>
+        )}
+        <IconSymbol
+          name={expandedSection === key ? 'chevron.up' : 'chevron.down'}
+          size={16}
+          color={theme.textSecondary}
+        />
       </Pressable>
       {expandedSection === key && <View style={styles.sectionContent}>{content}</View>}
     </View>
@@ -341,7 +356,7 @@ export default function ProfileScreen() {
           {renderSection(
             'personal',
             'Personal Information',
-            '👤',
+            'person.fill',
             <>
               {renderInput('Name', 'name', { placeholder: 'Full name (required)' })}
               {renderInput('Nickname / Preferred Name', 'nickname', {
@@ -373,13 +388,23 @@ export default function ProfileScreen() {
                 hint: 'Anything that would help identify them',
               })}
             </>,
+            [
+              form.name,
+              form.nickname,
+              form.dateOfBirth,
+              form.height,
+              form.weight,
+              form.hairColor,
+              form.eyeColor,
+              form.identifyingMarks,
+            ].filter(Boolean).length,
           )}
 
           {/* Medical & Behavioral Section */}
           {renderSection(
             'medical',
             'Medical & Behavioral',
-            '🏥',
+            'cross.fill',
             <>
               {renderInput('Medical Conditions', 'medicalConditions', {
                 placeholder: "Alzheimer's, diabetes, heart condition...",
@@ -432,13 +457,20 @@ export default function ProfileScreen() {
                 placeholder: 'Walks independently, uses walker, wheelchair...',
               })}
             </>,
+            [
+              form.medicalConditions,
+              form.medications,
+              form.allergies,
+              form.cognitiveStatus,
+              form.mobilityLevel,
+            ].filter(Boolean).length,
           )}
 
           {/* Communication & De-escalation Section */}
           {renderSection(
             'communication',
             'Communication & De-escalation',
-            '💬',
+            'bubble.left.fill',
             <>
               {renderInput('Communication Preference', 'communicationPreference', {
                 placeholder: 'Speaking, non-speaking, uses gestures, sign language...',
@@ -473,13 +505,22 @@ export default function ProfileScreen() {
                 hint: 'Something only family would know',
               })}
             </>,
+            [
+              form.communicationPreference,
+              form.escalationSigns,
+              form.deescalationTechniques,
+              form.approachGuidance,
+              form.likes,
+              form.dislikesTriggers,
+              form.safeWord,
+            ].filter(Boolean).length,
           )}
 
           {/* Devices & IDs Section */}
           {renderSection(
             'devices',
             'Devices & IDs',
-            '📍',
+            'location.fill',
             <>
               {renderInput('GPS/Tracking Device', 'locativeDeviceInfo', {
                 placeholder: 'Apple AirTag in jacket, GPS watch...',
@@ -498,6 +539,12 @@ export default function ProfileScreen() {
                 keyboardType: 'phone-pad',
               })}
             </>,
+            [
+              form.locativeDeviceInfo,
+              form.idBracelets,
+              form.medicAlertId,
+              form.medicAlertHotline,
+            ].filter(Boolean).length,
           )}
 
           {/* Bottom padding */}
@@ -527,7 +574,7 @@ const styles = StyleSheet.create({
   },
   saveText: {
     color: '#fff',
-    fontWeight: '600',
+    ...Typography.bodyBold,
   },
   scrollView: {
     flex: 1,
@@ -570,8 +617,7 @@ const styles = StyleSheet.create({
   },
   photoButtonText: {
     color: '#fff',
-    fontWeight: '600',
-    fontSize: 14,
+    ...Typography.bodyBold,
   },
   section: {
     borderRadius: Radius.lg,
@@ -583,16 +629,24 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: Spacing.lg,
+    gap: Spacing.md,
   },
-  sectionIcon: {
-    fontSize: 20,
-    marginRight: Spacing.md,
+  sectionIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  completionBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: Radius.sm,
+    minWidth: 24,
+    alignItems: 'center',
   },
   sectionTitle: {
     flex: 1,
-  },
-  chevron: {
-    fontSize: 12,
   },
   sectionContent: {
     padding: Spacing.lg,
@@ -602,20 +656,19 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.lg,
   },
   label: {
-    fontSize: 14,
-    fontWeight: '600',
+    ...Typography.bodyBold,
     marginBottom: Spacing.xs,
   },
   hint: {
-    fontSize: 12,
-    marginBottom: 6,
+    ...Typography.caption,
+    marginBottom: Spacing.xs,
   },
   input: {
     ...Typography.body,
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 10,
+    paddingVertical: Spacing.sm,
   },
   textArea: {
     minHeight: 80,
@@ -634,13 +687,13 @@ const styles = StyleSheet.create({
   },
   optionButton: {
     flex: 1,
-    paddingVertical: 10,
+    paddingVertical: Spacing.sm,
     borderRadius: Radius.md,
     borderWidth: 1,
     alignItems: 'center',
   },
   optionText: {
-    fontSize: 14,
+    ...Typography.body,
     fontWeight: '500',
   },
 });

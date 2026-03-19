@@ -45,7 +45,7 @@ export function AppModal({
       visible={visible}
       onRequestClose={onDismiss}
     >
-      <View style={styles.overlay}>
+      <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
         <View style={[styles.content, { backgroundColor: theme.card }]}>
           <ThemedText style={styles.title}>{title}</ThemedText>
           <ThemedText style={styles.message}>{message}</ThemedText>
@@ -85,7 +85,6 @@ export function AppModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: Spacing.lg,

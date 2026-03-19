@@ -9,7 +9,9 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { neutral, primary, secondary } from '@/constants/Colors';
+import { Colors, neutral, primary } from '@/constants/Colors';
+import { Spacing, Radius } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 
@@ -19,6 +21,7 @@ export default function WelcomeScreen() {
   const { themePreference, setThemePreference, colorScheme } = useTheme();
 
   const isDark = colorScheme === 'dark';
+  const theme = Colors[colorScheme];
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
     { value: 'light', label: 'Light', icon: '☀️' },
@@ -31,22 +34,22 @@ export default function WelcomeScreen() {
     router.push('/onboarding/name' as any);
   };
 
-  // Dynamic colors based on theme
+  // Map legacy `colors.*` references to theme tokens
   const colors = {
-    background: isDark ? primary[900] : neutral[50],
-    text: isDark ? '#fff' : neutral[900],
-    textSecondary: isDark ? 'rgba(255,255,255,0.85)' : neutral[600],
-    textMuted: isDark ? 'rgba(255,255,255,0.7)' : neutral[500],
-    textFaint: isDark ? 'rgba(255,255,255,0.6)' : neutral[400],
-    textVeryFaint: isDark ? 'rgba(255,255,255,0.5)' : neutral[400],
+    background: theme.background,
+    text: theme.text,
+    textSecondary: theme.textSecondary,
+    textMuted: theme.textSecondary,
+    textFaint: theme.textDisabled,
+    textVeryFaint: theme.textDisabled,
     featureBg: isDark ? 'rgba(255,255,255,0.08)' : neutral[100],
-    featureIconBg: isDark ? 'rgba(255,255,255,0.15)' : primary[100],
+    featureIconBg: theme.primaryLight,
     optionBg: isDark ? 'rgba(255,255,255,0.1)' : neutral[100],
-    optionActiveBg: isDark ? 'rgba(255,255,255,0.2)' : primary[100],
-    optionBorder: isDark ? secondary[100] : primary[700],
-    optionActiveText: isDark ? secondary[100] : primary[700],
-    buttonBg: isDark ? secondary[100] : primary[700],
-    buttonText: isDark ? primary[900] : '#fff',
+    optionActiveBg: theme.primaryLight,
+    optionBorder: theme.tint,
+    optionActiveText: theme.tint,
+    buttonBg: theme.primary,
+    buttonText: theme.textOnPrimary,
   };
 
   return (
@@ -76,8 +79,12 @@ export default function WelcomeScreen() {
               <ThemedText style={styles.featureIcon}>⏱️</ThemedText>
             </View>
             <View style={styles.featureContent}>
-              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>15-Minute Timer</ThemedText>
-              <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>Guided search protocol with step-by-step checklist</ThemedText>
+              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>
+                15-Minute Timer
+              </ThemedText>
+              <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>
+                Guided search protocol with step-by-step checklist
+              </ThemedText>
             </View>
           </View>
           <View style={[styles.feature, { backgroundColor: colors.featureBg }]}>
@@ -85,8 +92,12 @@ export default function WelcomeScreen() {
               <ThemedText style={styles.featureIcon}>📋</ThemedText>
             </View>
             <View style={styles.featureContent}>
-              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>911 Ready</ThemedText>
-              <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>One-tap script with all critical info for dispatchers</ThemedText>
+              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>
+                911 Ready
+              </ThemedText>
+              <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>
+                One-tap script with all critical info for dispatchers
+              </ThemedText>
             </View>
           </View>
           <View style={[styles.feature, { backgroundColor: colors.featureBg }]}>
@@ -94,15 +105,21 @@ export default function WelcomeScreen() {
               <ThemedText style={styles.featureIcon}>🔒</ThemedText>
             </View>
             <View style={styles.featureContent}>
-              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>100% Private</ThemedText>
-              <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>All data stays on your device. No accounts needed.</ThemedText>
+              <ThemedText style={[styles.featureTitle, { color: colors.text }]}>
+                100% Private
+              </ThemedText>
+              <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>
+                All data stays on your device. No accounts needed.
+              </ThemedText>
             </View>
           </View>
         </View>
 
         {/* Theme Selector */}
         <View style={styles.themeSection}>
-          <ThemedText style={[styles.themeLabel, { color: colors.textFaint }]}>Choose your theme</ThemedText>
+          <ThemedText style={[styles.themeLabel, { color: colors.textFaint }]}>
+            Choose your theme
+          </ThemedText>
           <View style={styles.themeOptions}>
             {themeOptions.map((option) => (
               <Pressable
@@ -110,7 +127,10 @@ export default function WelcomeScreen() {
                 style={[
                   styles.themeOption,
                   { backgroundColor: colors.optionBg },
-                  themePreference === option.value && { backgroundColor: colors.optionActiveBg, borderColor: colors.optionBorder },
+                  themePreference === option.value && {
+                    backgroundColor: colors.optionActiveBg,
+                    borderColor: colors.optionBorder,
+                  },
                 ]}
                 onPress={() => setThemePreference(option.value)}
               >
@@ -119,7 +139,10 @@ export default function WelcomeScreen() {
                   style={[
                     styles.themeText,
                     { color: colors.textMuted },
-                    themePreference === option.value && { color: colors.optionActiveText, fontWeight: '600' },
+                    themePreference === option.value && {
+                      color: colors.optionActiveText,
+                      fontWeight: '600',
+                    },
                   ]}
                 >
                   {option.label}
@@ -131,8 +154,13 @@ export default function WelcomeScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable style={[styles.button, { backgroundColor: colors.buttonBg }]} onPress={handleContinue}>
-          <ThemedText style={[styles.buttonText, { color: colors.buttonText }]}>Get Started</ThemedText>
+        <Pressable
+          style={[styles.button, { backgroundColor: colors.buttonBg }]}
+          onPress={handleContinue}
+        >
+          <ThemedText style={[styles.buttonText, { color: colors.buttonText }]}>
+            Get Started
+          </ThemedText>
         </Pressable>
         <ThemedText style={[styles.privacy, { color: colors.textVeryFaint }]}>
           Your information never leaves this device.
@@ -145,22 +173,21 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: primary[900],
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 48,
-    paddingBottom: 20,
+    paddingHorizontal: Spacing.xl,
+    paddingTop: Spacing.xxxl,
+    paddingBottom: Spacing.xl,
   },
   heroSection: {
-    marginBottom: 40,
+    marginBottom: Spacing.xxl,
     alignItems: 'center',
   },
   logoContainer: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
     alignItems: 'center',
   },
   logoImage: {
@@ -168,35 +195,31 @@ const styles = StyleSheet.create({
     height: 180,
   },
   title: {
+    ...Typography.display,
     fontSize: 36,
-    color: '#fff',
-    marginBottom: 16,
+    marginBottom: Spacing.lg,
     lineHeight: 44,
     textAlign: 'center',
   },
   description: {
-    fontSize: 17,
-    color: 'rgba(255,255,255,0.85)',
-    lineHeight: 26,
+    ...Typography.bodyLarge,
     textAlign: 'center',
   },
   features: {
-    gap: 16,
-    marginBottom: 32,
+    gap: Spacing.lg,
+    marginBottom: Spacing.xxl,
   },
   feature: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     gap: 16,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    padding: 16,
-    borderRadius: 12,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
   },
   featureIconContainer: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -205,32 +228,27 @@ const styles = StyleSheet.create({
   },
   featureContent: {
     flex: 1,
-    gap: 4,
+    gap: Spacing.xs,
   },
   featureTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#fff',
+    ...Typography.bodyBold,
   },
   featureText: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.7)',
-    lineHeight: 20,
+    ...Typography.body,
   },
   themeSection: {
-    marginBottom: 24,
+    marginBottom: Spacing.xl,
   },
   themeLabel: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.6)',
-    marginBottom: 12,
+    ...Typography.caption,
+    marginBottom: Spacing.md,
     textTransform: 'uppercase',
     letterSpacing: 1,
     fontWeight: '600',
   },
   themeOptions: {
     flexDirection: 'row',
-    gap: 12,
+    gap: Spacing.md,
   },
   themeOption: {
     flex: 1,
@@ -238,48 +256,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.lg,
     borderWidth: 2,
     borderColor: 'transparent',
-  },
-  themeOptionActive: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderColor: secondary[100],
   },
   themeIcon: {
     fontSize: 20,
   },
   themeText: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.8)',
+    ...Typography.bodyLarge,
     fontWeight: '500',
   },
-  themeTextActive: {
-    color: secondary[100],
-    fontWeight: '600',
-  },
   footer: {
-    padding: 24,
-    paddingBottom: 32,
-    gap: 16,
+    padding: Spacing.xl,
+    paddingBottom: Spacing.xxl,
+    gap: Spacing.lg,
   },
   button: {
-    backgroundColor: secondary[100],
-    paddingVertical: 16,
-    borderRadius: 12,
+    paddingVertical: Spacing.lg,
+    borderRadius: Radius.lg,
     alignItems: 'center',
+    minHeight: 52,
+    justifyContent: 'center',
   },
   buttonText: {
-    color: primary[900],
-    fontSize: 18,
+    ...Typography.bodyLarge,
     fontWeight: '600',
   },
   privacy: {
-    fontSize: 13,
-    color: 'rgba(255,255,255,0.5)',
+    ...Typography.caption,
     textAlign: 'center',
   },
 });

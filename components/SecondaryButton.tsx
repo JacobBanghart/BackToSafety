@@ -29,8 +29,9 @@ export function SecondaryButton({ label, onPress, style }: SecondaryButtonProps)
 
 const styles = StyleSheet.create({
   button: {
-    flex: 1,
-    padding: Spacing.md,
+    minHeight: 48,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xl,
     borderRadius: Radius.md,
     borderWidth: 1,
     alignItems: 'center',

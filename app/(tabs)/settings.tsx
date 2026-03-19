@@ -117,32 +117,40 @@ export default function SettingsScreen() {
           </ThemedText>
 
           <View style={styles.themeOptions}>
-            {themeOptions.map((option) => (
-              <Pressable
-                key={option.value}
-                style={[
-                  styles.themeOption,
-                  {
-                    borderColor: themePreference === option.value ? theme.tint : theme.border,
-                    backgroundColor:
-                      themePreference === option.value
-                        ? theme.primaryLight
-                        : 'transparent',
-                  },
-                ]}
-                onPress={() => setThemePreference(option.value)}
-              >
-                <ThemedText style={styles.themeIcon}>{option.icon}</ThemedText>
-                <ThemedText
+            {themeOptions.map((option) => {
+              const isSelected = themePreference === option.value;
+              return (
+                <Pressable
+                  key={option.value}
                   style={[
-                    styles.themeLabel,
-                    themePreference === option.value && { color: theme.tint, fontWeight: '600' },
+                    styles.themeOption,
+                    {
+                      borderColor: isSelected ? theme.tint : theme.border,
+                      backgroundColor: isSelected ? theme.primaryLight : 'transparent',
+                    },
                   ]}
+                  onPress={() => setThemePreference(option.value)}
                 >
-                  {option.label}
-                </ThemedText>
-              </Pressable>
-            ))}
+                  <ThemedText style={styles.themeIcon}>{option.icon}</ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.themeLabel,
+                      isSelected && { color: theme.tint, fontWeight: '600' },
+                    ]}
+                  >
+                    {option.label}
+                  </ThemedText>
+                  {isSelected && (
+                    <IconSymbol
+                      name="checkmark.circle.fill"
+                      size={14}
+                      color={theme.tint}
+                      style={styles.themeCheck}
+                    />
+                  )}
+                </Pressable>
+              );
+            })}
           </View>
         </AppCard>
 
@@ -188,7 +196,11 @@ export default function SettingsScreen() {
             onPress={handleVersionTap}
           />
           <ListItem label="Platform" value={Platform.OS} />
-          <ListItem label="Theme" value={colorScheme} style={{ borderBottomColor: 'transparent' }} />
+          <ListItem
+            label="Theme"
+            value={colorScheme}
+            style={{ borderBottomColor: 'transparent' }}
+          />
         </AppCard>
       </ScrollView>
     </SafeAreaView>
@@ -232,6 +244,9 @@ const styles = StyleSheet.create({
   },
   themeLabel: {
     fontSize: 14,
+  },
+  themeCheck: {
+    marginTop: Spacing.xs,
   },
   dangerButton: {
     backgroundColor: semantic.error,

@@ -3,9 +3,11 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
+import { getShadow } from '@/constants/Shadows';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Spacing, Radius } from '@/constants/Spacing';
+import { Spacing } from '@/constants/Spacing';
+import { Typography } from '@/constants/Typography';
 
 interface ScreenHeaderProps {
   title: string;
@@ -18,26 +20,36 @@ export function ScreenHeader({ title, onBack, rightElement }: ScreenHeaderProps)
   const theme = Colors[colorScheme];
   const router = useRouter();
 
-  const handleBack = onBack ?? (() => router.replace('/(tabs)'));
+  const handleBack =
+    onBack ??
+    (() => {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
+    });
 
   return (
     <View
       style={[
         styles.header,
         { borderBottomColor: theme.border, backgroundColor: theme.card },
+        getShadow('sm', colorScheme),
       ]}
     >
-      <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-        <IconSymbol name="chevron.left" size={24} color={theme.tint} />
+      {/* Left: back button — fixed 44px wide for balance */}
+      <TouchableOpacity style={styles.sideSlot} onPress={handleBack} hitSlop={8}>
+        <IconSymbol name="chevron.left" size={22} color={theme.tint} />
       </TouchableOpacity>
 
-      <ThemedText style={styles.headerTitle}>{title}</ThemedText>
+      {/* Center: title */}
+      <ThemedText style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+        {title}
+      </ThemedText>
 
-      {rightElement != null ? (
-        <View style={styles.headerRight}>{rightElement}</View>
-      ) : (
-        <View style={styles.headerRight} />
-      )}
+      {/* Right: action or spacer — same width as left for visual balance */}
+      <View style={[styles.sideSlot, styles.rightSlot]}>{rightElement ?? null}</View>
     </View>
   );
 }
@@ -46,26 +58,22 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.lg,
+    paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    minHeight: 52,
   },
-  backButton: {
-    padding: Spacing.sm,
-    marginLeft: -8,
+  sideSlot: {
+    width: 44,
+    alignItems: 'flex-start',
+    justifyContent: 'center',
+  },
+  rightSlot: {
+    alignItems: 'flex-end',
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  headerRight: {
-    width: 40,
-    alignItems: 'flex-end',
+    flex: 1,
+    textAlign: 'center',
+    ...Typography.title,
   },
 });

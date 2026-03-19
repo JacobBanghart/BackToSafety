@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, TextInput, StyleSheet, KeyboardTypeOptions, TextInputProps } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
@@ -33,6 +33,7 @@ export function AppTextInput({
 }: AppTextInputProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+  const [isFocused, setIsFocused] = useState(false);
 
   return (
     <View style={styles.formField}>
@@ -53,7 +54,7 @@ export function AppTextInput({
           multiline && styles.textArea,
           {
             backgroundColor: theme.inputBackground,
-            borderColor: theme.inputBorder,
+            borderColor: isFocused ? theme.borderFocused : theme.inputBorder,
             color: theme.text,
           },
         ]}
@@ -65,6 +66,8 @@ export function AppTextInput({
         numberOfLines={numberOfLines}
         keyboardType={keyboardType}
         autoComplete={autoComplete}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
       />
     </View>
   );
