@@ -32,6 +32,19 @@
 - [ ] Replace starter README content in `README.md` with app-specific documentation.
 - [ ] Update generic not-found copy in `app/+not-found.tsx` to branded messaging.
 
+## GitHub Pages + Domain
+
+- [x] Add basic branded GitHub Pages site (`site/index.html`, `site/privacy.html`).
+- [x] Add GitHub Actions Pages deployment workflow (`.github/workflows/deploy-pages.yml`).
+- [ ] Enable Pages in repository settings (Source: GitHub Actions).
+- [ ] Verify live URLs work:
+  - [ ] `/`
+  - [ ] `/privacy.html`
+- [ ] Configure custom domain when ready:
+  - [ ] Create `site/CNAME` from `site/CNAME.example`
+  - [ ] Add DNS records
+  - [ ] Enable HTTPS in GitHub Pages settings
+
 ## Execution Order
 
 1. [x] Create `eas.json` with `preview` and `production` profiles.
