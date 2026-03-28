@@ -531,7 +531,7 @@ export default function ProfileScreen() {
                     { backgroundColor: theme.card, borderColor: theme.border },
                   ]}
                 >
-                  <ThemedText style={styles.photoPlaceholderText}>📷</ThemedText>
+                  <IconSymbol name="camera.fill" size={38} color={theme.textSecondary} />
                 </View>
               )}
             </View>
@@ -909,9 +909,6 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  photoPlaceholderText: {
-    fontSize: 40,
   },
   photoButtons: {
     flexDirection: 'row',

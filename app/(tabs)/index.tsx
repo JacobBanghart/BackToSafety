@@ -124,7 +124,7 @@ export default function HomeScreen() {
                   { backgroundColor: theme.primaryLight, borderColor: theme.border },
                 ]}
               >
-                <ThemedText style={styles.avatarPlaceholderText}>👤</ThemedText>
+                <IconSymbol name="person.fill" size={28} color={theme.textSecondary} />
               </View>
             )}
             {/* Edit badge */}
@@ -381,9 +381,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-  },
-  avatarPlaceholderText: {
-    fontSize: 24,
   },
   avatarBadge: {
     position: 'absolute',
