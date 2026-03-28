@@ -279,6 +279,49 @@ types/
 
 ---
 
+## Engineering Rules
+
+- Always run `git fetch` before reporting branch merge/ahead/behind status.
+- Validate UI fixes on target device class (mobile) before calling them complete.
+- Prefer shared component fixes for repeated UI issues (e.g., input alignment) over per-screen patches.
+- Keep destructive actions (delete/remove) in edit/detail screens, not list cards, unless explicitly requested.
+- For risky native infra changes (gesture/reanimated/drag), ship behind a fallback path and verify rollout incrementally.
+- Keep one stable rendering model per screen state (empty vs populated) and avoid mixing complex list-empty composition until stable.
+- Compatibility gate before library version changes: verify Expo SDK + `react-native` + `react-native-reanimated` + target package compatibility before install/upgrade/downgrade.
+- Web workarounds must stay web-scoped: if a resolver bug is web-only, implement it in `.web.ts/.web.tsx` wrappers unless native repro proves broader scope.
+- Known-good snapshot before risky infra changes: create a clear rollback point before touching gesture/reanimated/native package wiring.
+- Drag UX standard: every drag-and-drop feature must include active-item visual state and haptics (when platform-supported).
+- Sort order consistency: reorderable entities must have ordered reads, append-on-create (`max+1`), selective updates on reorder, and native/web parity.
+- Branch safety: create a feature branch before the first commit when current branch is `main` or `develop`.
+- Dirty tree scoped commit: in a non-clean worktree, stage files explicitly (no broad adds) and verify unrelated files remain uncommitted.
+- Compact card hierarchy: use one visual signal per concept (e.g., severity) and avoid duplicate color cues in dense cards.
+- Mobile tap targets: actionable icon buttons should be at least `40x40`.
+- Copy UX feedback: clipboard actions must show visible success/failure feedback (no silent copy).
+- Emergency script wording: avoid `Unknown`/`N/A` in dispatch copy; use fill-in placeholders and omit unavailable optional sections.
+- Diagnosis-neutral default copy: emergency/public-facing scripts should not assume a specific diagnosis unless explicitly provided.
+- Chip selector performance: use guarded state updates for option chips (`prev === next ? prev : ...`) to avoid no-op rerenders.
+
+---
+
+## Team Skills (Playbooks)
+
+- **Mobile List Stability**: Checklist for list rendering on iOS/Android (safe area, viewport fill, empty state, footer/header composition, gesture stack).
+- **Form Guard Standardization**: Reusable pattern for unsaved-change detection, back interception, and discard confirmation.
+- **Expo Runtime Config Check**: Validate Babel/Expo Router/Reanimated/Gesture config against current SDK guidance.
+- **UI Consistency Pass**: Normalize save placement, empty-state CTA behavior, and destructive action placement across screens.
+- **Safe Feature Rollout**: Roll out native/infra-heavy features with platform flag or fallback path, then remove guard after device validation.
+- **Draggable List Rollout**: Standard implementation template for press-and-hold drag, active-item visuals, haptics, optimistic reorder, and persistence.
+- **Platform Import Firebreak**: Create `.native/.web` wrappers for fragile third-party imports and keep platform-specific resolver workarounds isolated.
+- **List Order Persistence Audit**: Verify `sortOrder` behavior across read/create/update/delete paths for both SQLite/native and AsyncStorage/web.
+- **Expo Go Crash Triage**: Fast debugging checklist for native crashes with weak logs (cache reset, version compatibility, entrypoint validation, rollback strategy).
+- **Mobile Card Density Pass**: Reduce card clutter through hierarchy audit, metadata trimming, and redundant signal removal.
+- **Clipboard Feedback Patterns**: Standardize copy/share confirmation UX (inline label/icon swap, timeout reset, failure handling).
+- **Emergency Copy Builder**: Generate dispatch-ready, diagnosis-neutral scripts with conditional sections and fill-in placeholders.
+- **Pressable Performance Tuning**: Improve perceived responsiveness for chip/segment controls (Pressable, hitSlop, guarded updates, memoized rows when needed).
+- **Collapsed Content UX**: Reusable expand/collapse section pattern with clear affordance, default state guidance, and accessibility considerations.
+
+---
+
 ## Reference Documents
 
 Located in `/reference/`:

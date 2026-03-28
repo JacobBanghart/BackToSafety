@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import {
   Alert,
   Linking,
@@ -117,6 +118,11 @@ export default function ContactsScreen() {
       Alert.alert(type === 'validation' ? 'Required' : 'Error', message);
     }
   };
+
+  const triggerHaptic = useCallback((style: Haptics.ImpactFeedbackStyle) => {
+    if (Platform.OS === 'web') return;
+    void Haptics.impactAsync(style).catch(() => undefined);
+  }, []);
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
@@ -333,8 +339,8 @@ export default function ContactsScreen() {
           styles.contactCard,
           isActive && styles.contactCardActive,
           {
-            backgroundColor: theme.card,
-            borderColor: theme.border,
+            backgroundColor: isActive ? theme.primaryLight : theme.card,
+            borderColor: isActive ? theme.primary : theme.border,
           },
         ]}
       >
@@ -524,6 +530,8 @@ export default function ContactsScreen() {
       data={contacts}
       keyExtractor={(contact: Contact) => String(contact.id ?? contact.phone)}
       onDragEnd={handleDragEnd}
+      onDragBegin={() => triggerHaptic(Haptics.ImpactFeedbackStyle.Medium)}
+      onRelease={() => triggerHaptic(Haptics.ImpactFeedbackStyle.Light)}
       activationDistance={8}
       autoscrollThreshold={120}
       containerStyle={styles.listContainer}
@@ -727,7 +735,13 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.md,
   },
   contactCardActive: {
-    opacity: 0.9,
+    opacity: 0.98,
+    transform: [{ scale: 1.02 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
   },
   contactHeader: {
     flexDirection: 'row',

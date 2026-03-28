@@ -9,9 +9,10 @@ import { formatPhoneNumber } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Linking,
   Platform,
   Pressable,
@@ -37,6 +38,9 @@ export default function ReadoutScreen() {
   const theme = Colors[colorScheme];
   const [containerH, setContainerH] = useState(0);
   const [contentH, setContentH] = useState(0);
+  const [isScriptExpanded, setIsScriptExpanded] = useState(false);
+  const [copiedType, setCopiedType] = useState<'script' | 'all' | null>(null);
+  const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Mobility values that imply a vehicle/aid to physically check nearby
   const VEHICLE_MOBILITY_VALUES = [
@@ -125,19 +129,90 @@ export default function ReadoutScreen() {
   const script = useMemo(() => {
     if (!profile) return '';
 
-    const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : 'Unknown time';
-    const locationText = lastSeen.coords
-      ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)}`
-      : 'Unknown location';
+    const scriptParts: string[] = [
+      "I'm reporting a missing vulnerable adult who may be disoriented or at risk.",
+      `Name: ${profile.name}.`,
+    ];
 
-    const age = profile.dateOfBirth
-      ? `Age approximately ${new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()}`
-      : '';
+    if (profile.dateOfBirth) {
+      const age = new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear();
+      scriptParts.push(`Age approximately ${age}.`);
+    }
 
-    return `I'm reporting a missing vulnerable adult with dementia. Name: ${profile.name}. ${age}. Last seen: ${ls}. Location: ${locationText}. Appearance: ${appearanceDesc || 'N/A'}. Medical conditions: ${medicalDesc || 'N/A'}. ${profile.medicAlertId ? `MedicAlert ID: ${profile.medicAlertId}.` : ''} Photo available. Please advise about issuing a local Silver/Purple Alert.`;
+    if (lastSeen.time) {
+      scriptParts.push(`Last seen: ${new Date(lastSeen.time).toLocaleString()}.`);
+    } else {
+      scriptParts.push('Last seen: [fill in time].');
+    }
+
+    if (lastSeen.coords) {
+      scriptParts.push(
+        `Last known location: ${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)}.`,
+      );
+    } else {
+      scriptParts.push('Last known location: [fill in location].');
+    }
+
+    if (appearanceDesc) {
+      scriptParts.push(`Appearance: ${appearanceDesc}.`);
+    }
+
+    if (medicalDesc) {
+      scriptParts.push(`Medical conditions: ${medicalDesc}.`);
+    }
+
+    if (profile.medicAlertId) {
+      scriptParts.push(`MedicAlert ID: ${profile.medicAlertId}.`);
+    }
+
+    scriptParts.push('Photo available.');
+    scriptParts.push('Please advise about issuing a local Silver/Purple Alert.');
+
+    return scriptParts.join(' ');
   }, [profile, lastSeen, appearanceDesc, medicalDesc]);
 
-  const copyScript = async () => Clipboard.setStringAsync(script);
+  const missingScriptDetails = useMemo(() => {
+    if (!profile) return [];
+
+    const missing: string[] = [];
+
+    if (!lastSeen.time) missing.push('last seen time');
+    if (!lastSeen.coords) missing.push('last known location');
+    if (!appearanceDesc) missing.push('appearance details');
+    if (!medicalDesc) missing.push('medical details');
+
+    return missing;
+  }, [profile, lastSeen, appearanceDesc, medicalDesc]);
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimeoutRef.current) {
+        clearTimeout(copiedTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const showCopyConfirmation = (type: 'script' | 'all') => {
+    setCopiedType(type);
+
+    if (copiedTimeoutRef.current) {
+      clearTimeout(copiedTimeoutRef.current);
+    }
+
+    copiedTimeoutRef.current = setTimeout(() => {
+      setCopiedType(null);
+      copiedTimeoutRef.current = null;
+    }, 1800);
+  };
+
+  const copyScript = async () => {
+    try {
+      await Clipboard.setStringAsync(script);
+      showCopyConfirmation('script');
+    } catch {
+      Alert.alert('Copy Failed', 'Unable to copy the 911 script right now.');
+    }
+  };
   const openMaps = () => {
     if (!lastSeen.coords) return;
     const { lat, lon } = lastSeen.coords;
@@ -149,7 +224,12 @@ export default function ReadoutScreen() {
   };
 
   const copyAll = async () => {
-    await Clipboard.setStringAsync(textBlock);
+    try {
+      await Clipboard.setStringAsync(textBlock);
+      showCopyConfirmation('all');
+    } catch {
+      Alert.alert('Copy Failed', 'Unable to copy the full details right now.');
+    }
   };
 
   const call911 = () => {
@@ -214,6 +294,46 @@ export default function ReadoutScreen() {
         <Pressable style={[styles.emergencyButton, getShadow('sm', colorScheme)]} onPress={call911}>
           <ThemedText style={styles.emergencyButtonText}>Call 911</ThemedText>
         </Pressable>
+
+        {/* 911 Script Card */}
+        <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
+          <Pressable
+            style={styles.scriptHeaderButton}
+            onPress={() => setIsScriptExpanded((prev) => !prev)}
+          >
+            <View style={styles.sectionLabel}>
+              <IconSymbol name="phone.connection.fill" size={14} color={semantic.success} />
+              <ThemedText
+                type="bodyBold"
+                style={[styles.sectionLabelText, { color: semantic.success }]}
+              >
+                911 Call Script
+              </ThemedText>
+            </View>
+            <IconSymbol
+              name={isScriptExpanded ? 'chevron.up' : 'chevron.down'}
+              size={16}
+              color={theme.textSecondary}
+            />
+          </Pressable>
+          {isScriptExpanded ? (
+            <>
+              <ThemedText style={[styles.scriptHint, { color: theme.textSecondary }]}>
+                Read this to dispatch:
+              </ThemedText>
+              <ThemedText style={[styles.scriptText, { color: theme.text }]}>{script}</ThemedText>
+              {missingScriptDetails.length > 0 && (
+                <ThemedText style={[styles.scriptMissingText, { color: semantic.warning }]}>
+                  Add for stronger script: {missingScriptDetails.join(', ')}.
+                </ThemedText>
+              )}
+            </>
+          ) : (
+            <ThemedText style={[styles.scriptHint, { color: theme.textSecondary }]}>
+              Tap to expand
+            </ThemedText>
+          )}
+        </View>
 
         {/* Identity Card */}
         <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
@@ -565,9 +685,13 @@ export default function ReadoutScreen() {
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={copyScript}
           >
-            <IconSymbol name="doc.on.clipboard.fill" size={18} color="#fff" />
+            <IconSymbol
+              name={copiedType === 'script' ? 'checkmark.circle.fill' : 'doc.on.clipboard.fill'}
+              size={18}
+              color="#fff"
+            />
             <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-              Copy 911 Script
+              {copiedType === 'script' ? 'Copied 911 Script' : 'Copy 911 Script'}
             </ThemedText>
           </Pressable>
           <Pressable
@@ -578,9 +702,13 @@ export default function ReadoutScreen() {
             ]}
             onPress={copyAll}
           >
-            <IconSymbol name="square.and.arrow.up" size={18} color={theme.text} />
+            <IconSymbol
+              name={copiedType === 'all' ? 'checkmark.circle.fill' : 'square.and.arrow.up'}
+              size={18}
+              color={copiedType === 'all' ? semantic.success : theme.text}
+            />
             <ThemedText style={[styles.buttonText, { color: theme.text }]}>
-              Copy Full Details
+              {copiedType === 'all' ? 'Copied Full Details' : 'Copy Full Details'}
             </ThemedText>
           </Pressable>
         </View>
@@ -739,6 +867,11 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     fontSize: 12,
   },
+  scriptHeaderButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
 
   // Identity
   identityRow: {
@@ -872,6 +1005,21 @@ const styles = StyleSheet.create({
   buttonText: {
     fontWeight: '600',
     ...Typography.body,
+  },
+
+  scriptHint: {
+    ...Typography.caption,
+    marginTop: Spacing.xxs,
+    marginBottom: Spacing.xs,
+  },
+  scriptText: {
+    ...Typography.body,
+    lineHeight: 22,
+  },
+  scriptMissingText: {
+    ...Typography.caption,
+    marginTop: Spacing.sm,
+    lineHeight: 18,
   },
 
   // Silver Alert
