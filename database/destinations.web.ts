@@ -44,19 +44,12 @@ async function saveAllDestinations(destinations: Destination[]): Promise<void> {
   await AsyncStorage.setItem(STORAGE_KEYS.DESTINATIONS, JSON.stringify(destinations));
 }
 
-const riskOrder = { high: 0, medium: 1, low: 2 };
-
 /**
- * Get all destinations ordered by risk level and sort order
+ * Get all destinations ordered by sort order
  */
 export async function getDestinations(): Promise<Destination[]> {
   const destinations = await getAllDestinations();
-  return destinations.sort((a, b) => {
-    const riskA = riskOrder[a.riskLevel ?? 'low'] ?? 3;
-    const riskB = riskOrder[b.riskLevel ?? 'low'] ?? 3;
-    if (riskA !== riskB) return riskA - riskB;
-    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
-  });
+  return destinations.sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 }
 
 /**
@@ -85,11 +78,13 @@ export async function createDestination(
 ): Promise<number> {
   const destinations = await getAllDestinations();
   const maxId = destinations.reduce((max, d) => Math.max(max, d.id ?? 0), 0);
+  const maxSortOrder = destinations.reduce((max, d) => Math.max(max, d.sortOrder ?? -1), -1);
   const newId = maxId + 1;
 
   const newDest: Destination = {
     ...dest,
     id: newId,
+    sortOrder: dest.sortOrder ?? maxSortOrder + 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

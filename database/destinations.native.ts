@@ -30,17 +30,11 @@ export interface Destination {
 }
 
 /**
- * Get all destinations ordered by risk level and sort order
+ * Get all destinations ordered by sort order
  */
 export async function getDestinations(): Promise<Destination[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<any>(
-    `SELECT * FROM destinations 
-     ORDER BY 
-       CASE risk_level WHEN 'high' THEN 0 WHEN 'medium' THEN 1 WHEN 'low' THEN 2 ELSE 3 END,
-       sort_order, 
-       created_at`,
-  );
+  const rows = await db.getAllAsync<any>(`SELECT * FROM destinations ORDER BY sort_order, created_at`);
   return rows.map(mapRowToDestination);
 }
 
@@ -71,6 +65,10 @@ export async function createDestination(
   dest: Omit<Destination, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<number> {
   const db = await getDatabase();
+  const sortOrderResult = await db.getFirstAsync<{ maxSortOrder: number | null }>(
+    `SELECT MAX(sort_order) as maxSortOrder FROM destinations`,
+  );
+  const nextSortOrder = (sortOrderResult?.maxSortOrder ?? -1) + 1;
 
   const result = await db.runAsync(
     `INSERT INTO destinations (name, address, latitude, longitude, category, reason, distance_from_home, risk_level, notes, sort_order)
@@ -85,7 +83,7 @@ export async function createDestination(
       dest.distanceFromHome ?? null,
       dest.riskLevel ?? 'medium',
       dest.notes ?? null,
-      dest.sortOrder ?? 0,
+      dest.sortOrder ?? nextSortOrder,
     ],
   );
 

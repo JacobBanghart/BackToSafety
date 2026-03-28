@@ -10,12 +10,13 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DraggableFlatList, { RenderItemParams } from '@/utils/draggable-flatlist';
 
 import { AppModal } from '@/components/AppModal';
 import { AppTextInput } from '@/components/AppTextInput';
@@ -157,6 +158,10 @@ export default function DestinationsScreen() {
           notes: formData.notes || undefined,
         });
       } else {
+        const nextSortOrder = destinations.reduce((maxOrder, destination) => {
+          return Math.max(maxOrder, destination.sortOrder ?? 0);
+        }, -1);
+
         await createDestination({
           name: formData.name,
           address: formData.address || undefined,
@@ -165,6 +170,7 @@ export default function DestinationsScreen() {
           reason: formData.reason || undefined,
           distanceFromHome: formData.distanceFromHome || undefined,
           notes: formData.notes || undefined,
+          sortOrder: nextSortOrder + 1,
         });
       }
 
@@ -302,7 +308,40 @@ export default function DestinationsScreen() {
     return RISK_OPTIONS.find((r) => r.value === riskLevel) || RISK_OPTIONS[1];
   };
 
-  const renderDestinationCard = (destination: Destination) => {
+  const handleDragEnd = async ({ data }: { data: Destination[] }) => {
+    const updates = data
+      .map((destination, index) => ({
+        id: destination.id,
+        previousSortOrder: destination.sortOrder,
+        newSortOrder: index,
+      }))
+      .filter((destination) => destination.id && destination.previousSortOrder !== destination.newSortOrder);
+
+    const reordered = data.map((destination, index) => ({
+      ...destination,
+      sortOrder: index,
+    }));
+    setDestinations(reordered);
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    try {
+      await Promise.all(
+        updates.map((destination) =>
+          updateDestination(destination.id!, { sortOrder: destination.newSortOrder }),
+        ),
+      );
+      await loadDestinations();
+    } catch (error) {
+      console.error('Failed to reorder destinations:', error);
+      showAlert('error', 'Failed to save location order. Please try again.');
+      await loadDestinations();
+    }
+  };
+
+  const renderDestinationCard = ({ item: destination, drag, isActive }: RenderItemParams<Destination>) => {
     const categoryInfo = getCategoryInfo(destination.category);
     const riskInfo = getRiskInfo(destination.riskLevel);
     const riskColor = semantic[riskInfo.color];
@@ -310,9 +349,11 @@ export default function DestinationsScreen() {
 
     return (
       <Pressable
-        key={destination.id}
+        onLongPress={drag}
+        delayLongPress={180}
         style={[
           styles.card,
+          isActive && styles.cardActive,
           {
             backgroundColor: theme.card,
             borderColor: theme.border,
@@ -552,81 +593,78 @@ export default function DestinationsScreen() {
     </ScrollView>
   );
 
-  const renderDestinationList = () => {
-    if (destinations.length === 0) {
-      return (
-        <ScrollView
-          style={styles.listContainer}
-          contentContainerStyle={[styles.listContent, styles.emptyListContainer]}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
+  const renderDestinationList = () => (
+    <DraggableFlatList
+      data={destinations}
+      keyExtractor={(destination: Destination) => String(destination.id ?? destination.name)}
+      onDragEnd={handleDragEnd}
+      activationDistance={8}
+      autoscrollThreshold={120}
+      containerStyle={styles.listContainer}
+      contentContainerStyle={[styles.listContent, destinations.length === 0 && styles.emptyListContainer]}
+      showsVerticalScrollIndicator={false}
+      renderItem={renderDestinationCard}
+      ListHeaderComponent={
+        <>
+          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}> 
             <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
-            <ThemedText style={[styles.infoText, { color: theme.text }]}>
-              Most people with dementia are found within 1.5 miles of where they were last seen.
-              Check water sources first!
+            <ThemedText style={[styles.infoText, { color: theme.text }]}> 
+              Most people with dementia are found within 1.5 miles of where they were last seen. Check
+              water sources first!
             </ThemedText>
           </View>
 
-          <View style={styles.emptyState}>
-            <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
-              <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
+          {destinations.length > 0 && (
+            <View style={styles.listHeader}>
+              <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}> 
+                {destinations.length} location{destinations.length !== 1 ? 's' : ''}
+              </ThemedText>
+              <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}> 
+                Press and hold any location card to reorder search priority.
+              </ThemedText>
             </View>
-            <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
-              No Destinations Added
+          )}
+        </>
+      }
+      ListEmptyComponent={
+        <View style={styles.emptyState}>
+          <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}> 
+            <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
+          </View>
+          <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}> 
+            No Destinations Added
+          </ThemedText>
+          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}> 
+            Add places your loved one may wander to, like former homes, favorite stores, or water
+            sources.
+          </ThemedText>
+          <Pressable
+            style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+            onPress={handleAddNew}
+          >
+            <IconSymbol name="plus" size={18} color="#fff" />
+            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}> 
+              Add First Location
             </ThemedText>
-            <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
-              Add places your loved one may wander to, like former homes, favorite stores, or water
-              sources.
-            </ThemedText>
-            <Pressable
-              style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+          </Pressable>
+        </View>
+      }
+      ListFooterComponent={
+        <>
+          {destinations.length > 0 && (
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.primary }]}
               onPress={handleAddNew}
             >
-              <IconSymbol name="plus" size={18} color="#fff" />
-              <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
-                Add First Location
-              </ThemedText>
-            </Pressable>
-          </View>
-        </ScrollView>
-      );
-    }
-
-    return (
-      <ScrollView
-        style={styles.listContainer}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
-          <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
-          <ThemedText style={[styles.infoText, { color: theme.text }]}>
-            Most people with dementia are found within 1.5 miles of where they were last seen. Check
-            water sources first!
-          </ThemedText>
-        </View>
-
-        <View style={styles.listHeader}>
-          <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
-            {destinations.length} location{destinations.length !== 1 ? 's' : ''}
-          </ThemedText>
-        </View>
-
-        {destinations.map(renderDestinationCard)}
-
-        <TouchableOpacity
-          style={[styles.addButton, { backgroundColor: theme.primary }]}
-          onPress={handleAddNew}
-        >
-          <IconSymbol name="plus" size={20} color="#fff" />
-          <ThemedText style={styles.addButtonText}>Add Location</ThemedText>
-        </TouchableOpacity>
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    );
-  };
+              <IconSymbol name="plus" size={20} color="#fff" />
+              <ThemedText style={styles.addButtonText}>Add Location</ThemedText>
+            </TouchableOpacity>
+          )}
+          <View style={{ height: 40 }} />
+        </>
+      }
+    />
+  );
 
   return (
     <ThemedView style={styles.container}>
@@ -739,6 +777,10 @@ const styles = StyleSheet.create({
   listCount: {
     ...Typography.body,
   },
+  listHint: {
+    ...Typography.caption,
+    marginTop: Spacing.xxs,
+  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 40,
@@ -781,6 +823,9 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
+  },
+  cardActive: {
+    opacity: 0.92,
   },
   cardHeader: {
     flexDirection: 'row',
