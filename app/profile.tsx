@@ -7,10 +7,13 @@ import { File, Paths } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -19,6 +22,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
@@ -28,6 +32,7 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
+import { formatPhoneInput } from '@/utils/phone';
 
 type SectionKey = 'personal' | 'medical' | 'communication' | 'devices';
 
@@ -47,15 +52,21 @@ type MobilityOption = (typeof MOBILITY_OPTIONS)[number];
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const { profile, saveProfile, isLoading, refreshProfile } = useProfile();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>('personal');
   const [isSaving, setIsSaving] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showIosDatePicker, setShowIosDatePicker] = useState(false);
+  const [pendingDobDate, setPendingDobDate] = useState<Date>(new Date(1940, 0, 1));
+  const [initialSnapshot, setInitialSnapshot] = useState('');
   // When mobilityLevel is set to a custom value not in MOBILITY_OPTIONS, we show "Other" selected
   // and store the custom text in mobilityOtherText
   const [mobilityOtherText, setMobilityOtherText] = useState('');
+  const [selectedMobilityOptions, setSelectedMobilityOptions] = useState<MobilityOption[]>([]);
 
   // Form state
   const [form, setForm] = useState({
@@ -76,7 +87,6 @@ export default function ProfileScreen() {
     allergies: '',
     cognitiveStatus: '',
     dominantHand: 'unknown' as 'left' | 'right' | 'unknown',
-    mobilityLevel: '',
 
     // Communication & De-escalation
     communicationPreference: '',
@@ -104,7 +114,17 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (profile) {
       const savedMobility = profile.mobilityLevel || '';
-      const isKnownOption = MOBILITY_OPTIONS.includes(savedMobility as MobilityOption);
+      const tokens = savedMobility
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean);
+      const knownSelections = tokens.filter((token) =>
+        MOBILITY_OPTIONS.includes(token as MobilityOption),
+      ) as MobilityOption[];
+      const customSelections = tokens.filter(
+        (token) => !MOBILITY_OPTIONS.includes(token as MobilityOption),
+      );
+      const hasCustomMobility = customSelections.length > 0;
       setForm({
         name: profile.name || '',
         nickname: profile.nickname || '',
@@ -120,7 +140,6 @@ export default function ProfileScreen() {
         allergies: profile.allergies || '',
         cognitiveStatus: profile.cognitiveStatus || '',
         dominantHand: profile.dominantHand || 'unknown',
-        mobilityLevel: isKnownOption || savedMobility === '' ? savedMobility : 'Other',
         communicationPreference: profile.communicationPreference || '',
         escalationSigns: profile.escalationSigns || '',
         deescalationTechniques: profile.deescalationTechniques || '',
@@ -133,9 +152,10 @@ export default function ProfileScreen() {
         medicAlertId: profile.medicAlertId || '',
         medicAlertHotline: profile.medicAlertHotline || '',
       });
-      if (!isKnownOption && savedMobility !== '') {
-        setMobilityOtherText(savedMobility);
-      }
+      setSelectedMobilityOptions(
+        hasCustomMobility ? [...knownSelections, 'Other'] : knownSelections,
+      );
+      setMobilityOtherText(customSelections.join(', '));
     }
   }, [profile]);
 
@@ -143,13 +163,176 @@ export default function ProfileScreen() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const formatDate = (date: Date): string => {
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const year = String(date.getFullYear());
+    return `${month}/${day}/${year}`;
+  };
+
+  const parseDate = (value: string): Date | null => {
+    const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+    if (!match) return null;
+
+    const month = Number(match[1]);
+    const day = Number(match[2]);
+    const year = Number(match[3]);
+    const parsed = new Date(year, month - 1, day);
+
+    if (
+      Number.isNaN(parsed.getTime()) ||
+      parsed.getFullYear() !== year ||
+      parsed.getMonth() !== month - 1 ||
+      parsed.getDate() !== day
+    ) {
+      return null;
+    }
+
+    return parsed;
+  };
+
+  const formatDobInput = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  };
+
+  const openDatePicker = () => {
+    const initialDate = parseDate(form.dateOfBirth) ?? new Date(1940, 0, 1);
+
+    if (Platform.OS === 'ios') {
+      setPendingDobDate(initialDate);
+      setShowIosDatePicker(true);
+      return;
+    }
+
+    setShowDatePicker(true);
+  };
+
+  const onAndroidDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+    setShowDatePicker(false);
+
+    if (event.type === 'dismissed' || !selectedDate) {
+      return;
+    }
+
+    updateField('dateOfBirth', formatDate(selectedDate));
+  };
+
+  const onIosDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    if (!selectedDate) return;
+    setPendingDobDate(selectedDate);
+  };
+
+  const applyIosDate = () => {
+    updateField('dateOfBirth', formatDate(pendingDobDate));
+    setShowIosDatePicker(false);
+  };
+
+  const formatHeightInput = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 3);
+    if (!digits) return '';
+    if (digits.length === 1) return digits;
+    if (digits.length === 2) return `${digits[0]}'${digits[1]}"`;
+    return `${digits[0]}'${digits.slice(1)}"`;
+  };
+
+  const formatWeightInput = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (!digits) return '';
+    return digits.length > 3 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits;
+  };
+
+  const formatMedicAlertIdInput = (value: string): string => {
+    const chars = value
+      .replace(/[^a-zA-Z0-9]/g, '')
+      .toUpperCase()
+      .slice(0, 16);
+    if (!chars) return '';
+
+    const chunks = chars.match(/.{1,4}/g);
+    return chunks ? chunks.join('-') : chars;
+  };
+
+  const formatFieldInput = (field: keyof typeof form, value: string): string => {
+    if (field === 'height') return formatHeightInput(value);
+    if (field === 'weight') return formatWeightInput(value);
+    if (field === 'medicAlertId') return formatMedicAlertIdInput(value);
+    if (field === 'medicAlertHotline') return formatPhoneInput(value);
+    return value;
+  };
+
+  const toggleMobilityOption = (option: MobilityOption) => {
+    setSelectedMobilityOptions((prev) => {
+      const isSelected = prev.includes(option);
+
+      if (isSelected) {
+        if (option === 'Other') {
+          setMobilityOtherText('');
+        }
+        return prev.filter((item) => item !== option);
+      }
+
+      return [...prev, option];
+    });
+  };
+
+  const getResolvedMobility = useCallback(() => {
+    const mobilitySelections = selectedMobilityOptions.filter((item) => item !== 'Other');
+    const hasOtherSelected = selectedMobilityOptions.includes('Other');
+    const resolvedMobilityParts = [
+      ...mobilitySelections,
+      ...(hasOtherSelected && mobilityOtherText.trim() ? [mobilityOtherText.trim()] : []),
+    ];
+    return resolvedMobilityParts.length > 0 ? resolvedMobilityParts.join(', ') : '';
+  }, [selectedMobilityOptions, mobilityOtherText]);
+
+  const currentSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        ...form,
+        mobilityLevel: getResolvedMobility(),
+      }),
+    [form, getResolvedMobility],
+  );
+
+  const hasUnsavedChanges = initialSnapshot !== '' && currentSnapshot !== initialSnapshot;
+
+  useEffect(() => {
+    if (!isLoading && initialSnapshot === '') {
+      setInitialSnapshot(currentSnapshot);
+    }
+  }, [isLoading, initialSnapshot, currentSnapshot]);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
+      if (!hasUnsavedChanges || isSaving) {
+        return;
+      }
+
+      event.preventDefault();
+
+      Alert.alert(
+        'Unsaved Changes',
+        'You have unsaved changes. If you leave now, your edits will be lost.',
+        [
+          { text: 'Keep Editing', style: 'cancel' },
+          {
+            text: 'Discard Changes',
+            style: 'destructive',
+            onPress: () => navigation.dispatch(event.data.action),
+          },
+        ],
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedChanges, isSaving]);
+
   const handleSave = async () => {
     setIsSaving(true);
-    // Resolve the actual mobility value — if "Other" is selected use the custom text
-    const resolvedMobility =
-      form.mobilityLevel === 'Other'
-        ? mobilityOtherText.trim() || undefined
-        : form.mobilityLevel || undefined;
+    const resolvedMobility = getResolvedMobility() || undefined;
     try {
       await saveProfile({
         name: form.name.trim() || undefined,
@@ -179,6 +362,7 @@ export default function ProfileScreen() {
         medicAlertId: form.medicAlertId.trim() || undefined,
         medicAlertHotline: form.medicAlertHotline.trim() || undefined,
       });
+      setInitialSnapshot(currentSnapshot);
       router.replace('/(tabs)');
     } catch (err) {
       console.error('Error saving profile:', err);
@@ -263,7 +447,7 @@ export default function ProfileScreen() {
     options?: {
       placeholder?: string;
       multiline?: boolean;
-      keyboardType?: 'default' | 'phone-pad' | 'email-address';
+      keyboardType?: 'default' | 'phone-pad' | 'email-address' | 'number-pad';
       hint?: string;
     },
   ) => (
@@ -277,6 +461,7 @@ export default function ProfileScreen() {
       <TextInput
         style={[
           styles.input,
+          !options?.multiline && styles.inputSingleLine,
           options?.multiline && styles.textArea,
           {
             backgroundColor: theme.card,
@@ -285,7 +470,7 @@ export default function ProfileScreen() {
           },
         ]}
         value={form[field] as string}
-        onChangeText={(v) => updateField(field, v)}
+        onChangeText={(v) => updateField(field, formatFieldInput(field, v))}
         placeholder={options?.placeholder}
         placeholderTextColor={theme.inputPlaceholder}
         multiline={options?.multiline}
@@ -300,7 +485,6 @@ export default function ProfileScreen() {
     title: string,
     icon: string,
     content: React.ReactNode,
-    filledCount?: number,
   ) => (
     <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Pressable style={styles.sectionHeader} onPress={() => toggleSection(key)}>
@@ -310,13 +494,6 @@ export default function ProfileScreen() {
         <ThemedText type="bodyBold" style={[styles.sectionTitle, { color: theme.text }]}>
           {title}
         </ThemedText>
-        {filledCount !== undefined && filledCount > 0 && (
-          <View style={[styles.completionBadge, { backgroundColor: theme.primaryLight }]}>
-            <ThemedText type="small" style={{ color: theme.primary, fontWeight: '700' }}>
-              {filledCount}
-            </ThemedText>
-          </View>
-        )}
         <IconSymbol
           name={expandedSection === key ? 'chevron.up' : 'chevron.down'}
           size={16}
@@ -341,7 +518,9 @@ export default function ProfileScreen() {
               style={[styles.saveButton, { backgroundColor: theme.tint }]}
               disabled={isSaving}
             >
-              <ThemedText style={styles.saveText}>{isSaving ? 'Saving...' : 'Save'}</ThemedText>
+              <ThemedText style={styles.saveText} numberOfLines={1}>
+                {isSaving ? 'Saving...' : 'Save'}
+              </ThemedText>
             </Pressable>
           }
         />
@@ -389,14 +568,59 @@ export default function ProfileScreen() {
               {renderInput('Nickname / Preferred Name', 'nickname', {
                 placeholder: 'What they prefer to be called',
               })}
-              {renderInput('Date of Birth', 'dateOfBirth', { placeholder: 'MM/DD/YYYY' })}
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: theme.text }]}>Date of Birth</ThemedText>
+                <View
+                  style={[
+                    styles.dateInputContainer,
+                    {
+                      backgroundColor: theme.card,
+                      borderColor: theme.border,
+                    },
+                  ]}
+                >
+                  <TextInput
+                    style={[
+                      styles.dateInput,
+                      {
+                        color: theme.text,
+                      },
+                    ]}
+                    value={form.dateOfBirth}
+                    onChangeText={(v) => updateField('dateOfBirth', formatDobInput(v))}
+                    placeholder="MM/DD/YYYY"
+                    placeholderTextColor={theme.inputPlaceholder}
+                    keyboardType="number-pad"
+                    maxLength={10}
+                  />
+                  <Pressable onPress={openDatePicker} style={styles.calendarHint} hitSlop={8}>
+                    <IconSymbol name="calendar" size={18} color={theme.textSecondary} />
+                  </Pressable>
+                </View>
+
+                {showDatePicker && Platform.OS !== 'ios' && (
+                  <DateTimePicker
+                    value={parseDate(form.dateOfBirth) ?? new Date(1940, 0, 1)}
+                    mode="date"
+                    display="default"
+                    maximumDate={new Date()}
+                    onChange={onAndroidDateChange}
+                  />
+                )}
+              </View>
 
               <View style={styles.row}>
                 <View style={styles.halfWidth}>
-                  {renderInput('Height', 'height', { placeholder: '5\'6"' })}
+                  {renderInput('Height', 'height', {
+                    placeholder: '5\'6"',
+                    keyboardType: 'number-pad',
+                  })}
                 </View>
                 <View style={styles.halfWidth}>
-                  {renderInput('Weight', 'weight', { placeholder: '150 lbs' })}
+                  {renderInput('Weight', 'weight', {
+                    placeholder: '150 lbs',
+                    keyboardType: 'number-pad',
+                  })}
                 </View>
               </View>
 
@@ -415,16 +639,6 @@ export default function ProfileScreen() {
                 hint: 'Anything that would help identify them',
               })}
             </>,
-            [
-              form.name,
-              form.nickname,
-              form.dateOfBirth,
-              form.height,
-              form.weight,
-              form.hairColor,
-              form.eyeColor,
-              form.identifyingMarks,
-            ].filter(Boolean).length,
           )}
 
           {/* Medical & Behavioral Section */}
@@ -491,17 +705,17 @@ export default function ProfileScreen() {
                       style={[
                         styles.chip,
                         { borderColor: theme.border },
-                        form.mobilityLevel === option && {
+                        selectedMobilityOptions.includes(option) && {
                           backgroundColor: theme.tint,
                           borderColor: theme.tint,
                         },
                       ]}
-                      onPress={() => updateField('mobilityLevel', option)}
+                      onPress={() => toggleMobilityOption(option)}
                     >
                       <ThemedText
                         style={[
                           styles.chipText,
-                          form.mobilityLevel === option && { color: '#fff' },
+                          selectedMobilityOptions.includes(option) && { color: '#fff' },
                         ]}
                       >
                         {option}
@@ -509,7 +723,7 @@ export default function ProfileScreen() {
                     </Pressable>
                   ))}
                 </View>
-                {form.mobilityLevel === 'Other' && (
+                {selectedMobilityOptions.includes('Other') && (
                   <TextInput
                     style={[
                       styles.input,
@@ -528,13 +742,6 @@ export default function ProfileScreen() {
                 )}
               </View>
             </>,
-            [
-              form.medicalConditions,
-              form.medications,
-              form.allergies,
-              form.cognitiveStatus,
-              form.mobilityLevel,
-            ].filter(Boolean).length,
           )}
 
           {/* Communication & De-escalation Section */}
@@ -576,15 +783,6 @@ export default function ProfileScreen() {
                 hint: 'Something only family would know',
               })}
             </>,
-            [
-              form.communicationPreference,
-              form.escalationSigns,
-              form.deescalationTechniques,
-              form.approachGuidance,
-              form.likes,
-              form.dislikesTriggers,
-              form.safeWord,
-            ].filter(Boolean).length,
           )}
 
           {/* Devices & IDs Section */}
@@ -593,10 +791,10 @@ export default function ProfileScreen() {
             'Devices & IDs',
             'location.fill',
             <>
-              {renderInput('GPS/Tracking Device', 'locativeDeviceInfo', {
-                placeholder: 'Apple AirTag in jacket, GPS watch...',
+              {renderInput('Personal Locator Device', 'locativeDeviceInfo', {
+                placeholder: 'Personal locator (e.g., AirTag on keys/bag, watch beacon)',
                 multiline: true,
-                hint: 'Any tracking technology they wear or carry',
+                hint: 'Optional: only include devices they already use',
               })}
               {renderInput('ID Bracelets', 'idBracelets', {
                 placeholder: 'MedicAlert, Project Lifesaver, RoadID...',
@@ -610,17 +808,60 @@ export default function ProfileScreen() {
                 keyboardType: 'phone-pad',
               })}
             </>,
-            [
-              form.locativeDeviceInfo,
-              form.idBracelets,
-              form.medicAlertId,
-              form.medicAlertHotline,
-            ].filter(Boolean).length,
           )}
 
           {/* Bottom padding */}
           <View style={{ height: 40 }} />
         </ScrollView>
+
+        <Modal
+          visible={showIosDatePicker}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setShowIosDatePicker(false)}
+        >
+          <View style={styles.dateModalBackdrop}>
+            <View
+              style={[
+                styles.dateModalSheet,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+            >
+              <ThemedText style={[styles.dateModalTitle, { color: theme.text }]}>
+                Date of Birth
+              </ThemedText>
+              <DateTimePicker
+                value={pendingDobDate}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()}
+                onChange={onIosDateChange}
+              />
+              <View style={styles.dateModalActions}>
+                <Pressable
+                  onPress={() => setShowIosDatePicker(false)}
+                  style={[
+                    styles.dateModalButton,
+                    styles.dateModalButtonSecondary,
+                    { borderColor: theme.border },
+                  ]}
+                >
+                  <ThemedText style={[styles.dateModalButtonText, { color: theme.textSecondary }]}>
+                    Cancel
+                  </ThemedText>
+                </Pressable>
+                <Pressable
+                  onPress={applyIosDate}
+                  style={[styles.dateModalButton, { backgroundColor: theme.tint }]}
+                >
+                  <ThemedText style={[styles.dateModalButtonText, { color: '#fff' }]}>
+                    Apply
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -642,6 +883,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.sm,
     borderRadius: Radius.md,
+    minWidth: 72,
+    alignItems: 'center',
   },
   saveText: {
     color: '#fff',
@@ -709,13 +952,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  completionBadge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
-    borderRadius: Radius.sm,
-    minWidth: 24,
-    alignItems: 'center',
-  },
   sectionTitle: {
     flex: 1,
   },
@@ -736,10 +972,16 @@ const styles = StyleSheet.create({
   },
   input: {
     ...Typography.body,
+    lineHeight: 20,
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
+    paddingVertical: 10,
+    minHeight: 44,
+  },
+  inputSingleLine: {
+    height: 44,
+    paddingVertical: 0,
   },
   textArea: {
     minHeight: 80,
@@ -748,6 +990,63 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     gap: Spacing.md,
+  },
+  dateInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    minHeight: 44,
+    paddingHorizontal: Spacing.md,
+  },
+  dateInput: {
+    flex: 1,
+    ...Typography.body,
+    lineHeight: 20,
+    height: 44,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+  },
+  calendarHint: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: Spacing.sm,
+    minHeight: 44,
+    minWidth: 44,
+  },
+  dateModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.35)',
+    justifyContent: 'center',
+    padding: Spacing.lg,
+  },
+  dateModalSheet: {
+    borderWidth: 1,
+    borderRadius: Radius.lg,
+    padding: Spacing.md,
+    gap: Spacing.md,
+  },
+  dateModalTitle: {
+    ...Typography.bodyBold,
+  },
+  dateModalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: Spacing.sm,
+  },
+  dateModalButton: {
+    minHeight: 40,
+    minWidth: 88,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.md,
+  },
+  dateModalButtonSecondary: {
+    borderWidth: 1,
+  },
+  dateModalButtonText: {
+    ...Typography.bodyBold,
   },
   halfWidth: {
     flex: 1,

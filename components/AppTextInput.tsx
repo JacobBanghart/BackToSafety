@@ -43,14 +43,13 @@ export function AppTextInput({
       </ThemedText>
 
       {hint != null && hint.length > 0 && (
-        <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
-          {hint}
-        </ThemedText>
+        <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>{hint}</ThemedText>
       )}
 
       <TextInput
         style={[
           styles.textInput,
+          !multiline && styles.textInputSingleLine,
           multiline && styles.textArea,
           {
             backgroundColor: theme.inputBackground,
@@ -88,11 +87,18 @@ const styles = StyleSheet.create({
   textInput: {
     borderWidth: 1,
     borderRadius: Radius.md,
-    padding: Spacing.md,
+    paddingHorizontal: Spacing.md,
     ...Typography.body,
+    lineHeight: 20,
+    minHeight: 44,
+  },
+  textInputSingleLine: {
+    height: 44,
+    paddingVertical: 0,
   },
   textArea: {
     minHeight: 80,
+    paddingVertical: Spacing.sm,
     textAlignVertical: 'top',
   },
 });

@@ -64,16 +64,18 @@ const styles = StyleSheet.create({
     minHeight: 52,
   },
   sideSlot: {
-    width: 44,
+    minWidth: 44,
     alignItems: 'flex-start',
     justifyContent: 'center',
   },
   rightSlot: {
     alignItems: 'flex-end',
+    flexShrink: 0,
   },
   headerTitle: {
     flex: 1,
     textAlign: 'center',
+    marginHorizontal: Spacing.sm,
     ...Typography.title,
   },
 });

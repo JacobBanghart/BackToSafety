@@ -101,46 +101,35 @@ export default function HomeScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* ── Header ── */}
         <View style={styles.header}>
-          {/* Profile card — avatar + name grouped together */}
-          <Pressable
-            onPress={() => router.push('/profile' as Href)}
-            style={[styles.profileCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-          >
-            {/* Avatar */}
-            <View style={styles.avatarWrapper}>
-              {profile?.photoUri ? (
-                <Image
-                  source={{ uri: profile.photoUri }}
-                  style={styles.avatar}
-                  contentFit="cover"
-                />
-              ) : (
-                <View
-                  style={[
-                    styles.avatar,
-                    styles.avatarPlaceholder,
-                    { backgroundColor: theme.primaryLight, borderColor: theme.border },
-                  ]}
-                >
-                  <ThemedText style={styles.avatarPlaceholderText}>👤</ThemedText>
-                </View>
-              )}
-              {/* Edit badge */}
-              <View style={[styles.avatarBadge, { backgroundColor: theme.tint }]}>
-                <IconSymbol name="pencil" size={10} color="#fff" />
-              </View>
-            </View>
-
-            {/* Name / label */}
-            <View style={styles.profileCardText}>
-              {hasProfile && (
-                <ThemedText style={[styles.caringLabel, { color: theme.textSecondary }]}>
-                  Caring for
-                </ThemedText>
-              )}
-              <ThemedText type="headline" style={{ color: theme.text }}>
-                {hasProfile ? profile.name : 'Wandering'}
+          <View style={styles.headerLeft}>
+            {hasProfile && (
+              <ThemedText style={[styles.caringLabel, { color: theme.textSecondary }]}>
+                Caring for
               </ThemedText>
+            )}
+            <ThemedText type="headline" style={{ color: theme.text }}>
+              {hasProfile ? profile.name : 'Wandering'}
+            </ThemedText>
+          </View>
+
+          {/* Avatar */}
+          <Pressable onPress={() => router.push('/profile' as Href)} style={styles.avatarWrapper}>
+            {profile?.photoUri ? (
+              <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
+            ) : (
+              <View
+                style={[
+                  styles.avatar,
+                  styles.avatarPlaceholder,
+                  { backgroundColor: theme.primaryLight, borderColor: theme.border },
+                ]}
+              >
+                <ThemedText style={styles.avatarPlaceholderText}>👤</ThemedText>
+              </View>
+            )}
+            {/* Edit badge */}
+            <View style={[styles.avatarBadge, { backgroundColor: theme.tint }]}>
+              <IconSymbol name="pencil" size={10} color="#fff" />
             </View>
           </Pressable>
         </View>
@@ -373,19 +362,13 @@ const styles = StyleSheet.create({
 
   // Header
   header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: Spacing.xl,
     paddingTop: Spacing.xs,
   },
-  profileCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    borderWidth: 1,
-    borderRadius: Radius.xl,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
-  },
-  profileCardText: {
+  headerLeft: {
     flex: 1,
     gap: Spacing.xxs,
   },
@@ -399,11 +382,12 @@ const styles = StyleSheet.create({
   // Avatar
   avatarWrapper: {
     position: 'relative',
+    marginLeft: Spacing.md,
   },
   avatar: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   avatarPlaceholder: {
     alignItems: 'center',
@@ -411,15 +395,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   avatarPlaceholderText: {
-    fontSize: 22,
+    fontSize: 24,
   },
   avatarBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 18,
-    height: 18,
-    borderRadius: 9,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,

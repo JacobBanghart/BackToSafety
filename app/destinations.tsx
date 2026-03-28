@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   Alert,
   Linking,
@@ -18,8 +19,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppModal } from '@/components/AppModal';
 import { AppTextInput } from '@/components/AppTextInput';
-import { PrimaryButton } from '@/components/PrimaryButton';
-import { SecondaryButton } from '@/components/SecondaryButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -86,6 +85,7 @@ const EMPTY_FORM: FormData = {
 };
 
 export default function DestinationsScreen() {
+  const navigation = useNavigation();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
@@ -94,6 +94,11 @@ export default function DestinationsScreen() {
   const [editingDestination, setEditingDestination] = useState<Destination | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [initialFormData, setInitialFormData] = useState<FormData>(EMPTY_FORM);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const hasUnsavedFormChanges =
+    showForm && JSON.stringify(formData) !== JSON.stringify(initialFormData);
 
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
@@ -116,6 +121,13 @@ export default function DestinationsScreen() {
     loadDestinations();
   }, [loadDestinations]);
 
+  const discardFormAndClose = () => {
+    setShowForm(false);
+    setEditingDestination(null);
+    setFormData(EMPTY_FORM);
+    setInitialFormData(EMPTY_FORM);
+  };
+
   const showAlert = (type: 'error' | 'validation', message: string) => {
     if (Platform.OS === 'web') {
       setModalType(type);
@@ -132,6 +144,7 @@ export default function DestinationsScreen() {
       return;
     }
 
+    setIsSaving(true);
     try {
       if (editingDestination?.id) {
         await updateDestination(editingDestination.id, {
@@ -156,18 +169,18 @@ export default function DestinationsScreen() {
       }
 
       await loadDestinations();
-      setShowForm(false);
-      setEditingDestination(null);
-      setFormData(EMPTY_FORM);
+      discardFormAndClose();
     } catch (error) {
       console.error('Failed to save destination:', error);
       showAlert('error', 'Failed to save location. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleEdit = (destination: Destination) => {
     setEditingDestination(destination);
-    setFormData({
+    const nextFormData = {
       name: destination.name,
       address: destination.address || '',
       category: destination.category || 'other',
@@ -175,7 +188,9 @@ export default function DestinationsScreen() {
       reason: destination.reason || '',
       distanceFromHome: destination.distanceFromHome || '',
       notes: destination.notes || '',
-    });
+    };
+    setFormData(nextFormData);
+    setInitialFormData(nextFormData);
     setShowForm(true);
   };
 
@@ -202,6 +217,9 @@ export default function DestinationsScreen() {
       if (destination.id) {
         await deleteDestination(destination.id);
         await loadDestinations();
+        if (editingDestination?.id === destination.id) {
+          discardFormAndClose();
+        }
       }
     } catch (error) {
       console.error('Failed to delete destination:', error);
@@ -232,14 +250,49 @@ export default function DestinationsScreen() {
   const handleAddNew = () => {
     setEditingDestination(null);
     setFormData(EMPTY_FORM);
+    setInitialFormData(EMPTY_FORM);
     setShowForm(true);
   };
 
   const handleCancel = () => {
-    setShowForm(false);
-    setEditingDestination(null);
-    setFormData(EMPTY_FORM);
+    if (!hasUnsavedFormChanges) {
+      discardFormAndClose();
+      return;
+    }
+
+    Alert.alert('Discard Changes?', 'You have unsaved changes to this location.', [
+      { text: 'Keep Editing', style: 'cancel' },
+      {
+        text: 'Discard',
+        style: 'destructive',
+        onPress: discardFormAndClose,
+      },
+    ]);
   };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
+      if (!hasUnsavedFormChanges || isSaving) {
+        return;
+      }
+
+      event.preventDefault();
+
+      Alert.alert('Discard Changes?', 'You have unsaved changes to this location.', [
+        { text: 'Keep Editing', style: 'cancel' },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: () => {
+            discardFormAndClose();
+            navigation.dispatch(event.data.action);
+          },
+        },
+      ]);
+    });
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedFormChanges, isSaving]);
 
   const getCategoryInfo = (category?: DestinationCategory) => {
     return CATEGORY_OPTIONS.find((c) => c.value === category) || CATEGORY_OPTIONS[7];
@@ -256,7 +309,7 @@ export default function DestinationsScreen() {
     const isWater = destination.category === 'water';
 
     return (
-      <View
+      <Pressable
         key={destination.id}
         style={[
           styles.card,
@@ -343,11 +396,7 @@ export default function DestinationsScreen() {
             </ThemedText>
           </View>
         )}
-
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(destination)}>
-          <ThemedText style={[styles.deleteText, { color: semantic.error }]}>Remove</ThemedText>
-        </TouchableOpacity>
-      </View>
+      </Pressable>
     );
   };
 
@@ -487,82 +536,125 @@ export default function DestinationsScreen() {
         onChangeText={(text) => setFormData({ ...formData, notes: text })}
       />
 
-      {/* Buttons */}
-      <View style={styles.formButtons}>
-        <SecondaryButton label="Cancel" onPress={handleCancel} style={{ flex: 1 }} />
-        <PrimaryButton
-          label={editingDestination ? 'Update' : 'Add'}
-          onPress={handleSave}
-          style={{ flex: 1 }}
-        />
-      </View>
-
-      <View style={{ height: 40 }} />
-    </ScrollView>
-  );
-
-  const renderDestinationList = () => (
-    <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
-      {/* Info Box */}
-      <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
-        <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
-        <ThemedText style={[styles.infoText, { color: theme.text }]}>
-          Most people with dementia are found within 1.5 miles of where they were last seen. Check
-          water sources first!
-        </ThemedText>
-      </View>
-
-      {destinations.length === 0 ? (
-        <View style={styles.emptyState}>
-          <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
-            <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
-          </View>
-          <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
-            No Destinations Added
+      {editingDestination && (
+        <TouchableOpacity
+          style={[styles.formDeleteButton, { borderColor: semantic.error }]}
+          onPress={() => handleDelete(editingDestination)}
+        >
+          <IconSymbol name="trash" size={14} color={semantic.error} />
+          <ThemedText style={[styles.formDeleteText, { color: semantic.error }]}>
+            Delete Location
           </ThemedText>
-          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
-            Add places your loved one may wander to, like former homes, favorite stores, or water
-            sources.
-          </ThemedText>
-          <Pressable
-            style={[styles.emptyButton, { backgroundColor: theme.primary }]}
-            onPress={handleAddNew}
-          >
-            <IconSymbol name="plus" size={18} color="#fff" />
-            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
-              Add First Location
-            </ThemedText>
-          </Pressable>
-        </View>
-      ) : (
-        <>
-          <View style={styles.listHeader}>
-            <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
-              {destinations.length} location{destinations.length !== 1 ? 's' : ''} • Sorted by
-              priority
-            </ThemedText>
-          </View>
-          {destinations.map(renderDestinationCard)}
-        </>
+        </TouchableOpacity>
       )}
 
-      <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: theme.primary }]}
-        onPress={handleAddNew}
-      >
-        <IconSymbol name="plus" size={20} color="#fff" />
-        <ThemedText style={styles.addButtonText}>Add Location</ThemedText>
-      </TouchableOpacity>
-
       <View style={{ height: 40 }} />
     </ScrollView>
   );
+
+  const renderDestinationList = () => {
+    if (destinations.length === 0) {
+      return (
+        <ScrollView
+          style={styles.listContainer}
+          contentContainerStyle={[styles.listContent, styles.emptyListContainer]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
+            <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
+            <ThemedText style={[styles.infoText, { color: theme.text }]}>
+              Most people with dementia are found within 1.5 miles of where they were last seen.
+              Check water sources first!
+            </ThemedText>
+          </View>
+
+          <View style={styles.emptyState}>
+            <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
+              <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
+            </View>
+            <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
+              No Destinations Added
+            </ThemedText>
+            <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
+              Add places your loved one may wander to, like former homes, favorite stores, or water
+              sources.
+            </ThemedText>
+            <Pressable
+              style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+              onPress={handleAddNew}
+            >
+              <IconSymbol name="plus" size={18} color="#fff" />
+              <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
+                Add First Location
+              </ThemedText>
+            </Pressable>
+          </View>
+        </ScrollView>
+      );
+    }
+
+    return (
+      <ScrollView
+        style={styles.listContainer}
+        contentContainerStyle={styles.listContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
+          <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
+          <ThemedText style={[styles.infoText, { color: theme.text }]}>
+            Most people with dementia are found within 1.5 miles of where they were last seen. Check
+            water sources first!
+          </ThemedText>
+        </View>
+
+        <View style={styles.listHeader}>
+          <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
+            {destinations.length} location{destinations.length !== 1 ? 's' : ''}
+          </ThemedText>
+        </View>
+
+        {destinations.map(renderDestinationCard)}
+
+        <TouchableOpacity
+          style={[styles.addButton, { backgroundColor: theme.primary }]}
+          onPress={handleAddNew}
+        >
+          <IconSymbol name="plus" size={20} color="#fff" />
+          <ThemedText style={styles.addButtonText}>Add Location</ThemedText>
+        </TouchableOpacity>
+
+        <View style={{ height: 40 }} />
+      </ScrollView>
+    );
+  };
 
   return (
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <ScreenHeader title="Likely Destinations" />
+        <ScreenHeader
+          title={
+            showForm
+              ? editingDestination
+                ? 'Edit Location'
+                : 'Add Location'
+              : 'Likely Destinations'
+          }
+          onBack={showForm ? handleCancel : undefined}
+          rightElement={
+            showForm ? (
+              <Pressable
+                onPress={handleSave}
+                style={[styles.headerSaveButton, { backgroundColor: theme.tint }]}
+                disabled={isSaving}
+              >
+                <ThemedText style={styles.headerSaveText} numberOfLines={1}>
+                  {isSaving ? 'Saving...' : editingDestination ? 'Update' : 'Add'}
+                </ThemedText>
+              </Pressable>
+            ) : undefined
+          }
+        />
 
         {/* Content */}
         {isLoading ? (
@@ -606,11 +698,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerSaveButton: {
+    minWidth: 72,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+  },
+  headerSaveText: {
+    color: '#fff',
+    ...Typography.bodyBold,
+  },
 
   // List styles
   listContainer: {
     flex: 1,
+  },
+  listContent: {
     padding: Spacing.lg,
+    paddingBottom: 0,
+    flexGrow: 1,
+  },
+  emptyListContainer: {
+    justifyContent: 'flex-start',
   },
   infoBox: {
     flexDirection: 'row',
@@ -763,16 +873,19 @@ const styles = StyleSheet.create({
     ...Typography.body,
     fontStyle: 'italic',
   },
-  deleteButton: {
+  formDeleteButton: {
     marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(128,128,128,0.2)',
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
   },
-  deleteText: {
-    ...Typography.body,
-    fontWeight: '500',
+  formDeleteText: {
+    ...Typography.bodyBold,
   },
   addButton: {
     flexDirection: 'row',
@@ -852,10 +965,5 @@ const styles = StyleSheet.create({
   riskOptionText: {
     ...Typography.body,
     fontWeight: '600',
-  },
-  formButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.xl,
   },
 });

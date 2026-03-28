@@ -3,8 +3,8 @@
  * Add, edit, and manage emergency contacts for the inner circle
  */
 
-import { router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import {
   Alert,
   Linking,
@@ -19,9 +19,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppModal } from '@/components/AppModal';
 import { AppTextInput } from '@/components/AppTextInput';
-import { PrimaryButton } from '@/components/PrimaryButton';
 import { ScreenHeader } from '@/components/ScreenHeader';
-import { SecondaryButton } from '@/components/SecondaryButton';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -37,7 +35,7 @@ import {
   getContacts,
   updateContact,
 } from '@/database/contacts';
-import { formatPhoneInput, formatPhoneNumber } from '@/utils/phone';
+import { formatPhoneInput } from '@/utils/phone';
 
 type ContactRole = 'primary_caregiver' | 'caregiver' | 'neighbor' | 'family' | 'friend' | 'other';
 
@@ -73,6 +71,7 @@ const EMPTY_FORM: FormData = {
 };
 
 export default function ContactsScreen() {
+  const navigation = useNavigation();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
@@ -87,6 +86,11 @@ export default function ContactsScreen() {
   const [editingContact, setEditingContact] = useState<Contact | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
+  const [initialFormData, setInitialFormData] = useState<FormData>(EMPTY_FORM);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const hasUnsavedFormChanges =
+    showForm && JSON.stringify(formData) !== JSON.stringify(initialFormData);
 
   const loadContacts = useCallback(async () => {
     try {
@@ -123,6 +127,7 @@ export default function ContactsScreen() {
       return;
     }
 
+    setIsSaving(true);
     try {
       if (editingContact?.id) {
         await updateContact(editingContact.id, {
@@ -149,18 +154,18 @@ export default function ContactsScreen() {
       }
 
       await loadContacts();
-      setShowForm(false);
-      setEditingContact(null);
-      setFormData(EMPTY_FORM);
+      discardFormAndClose();
     } catch (error) {
       console.error('Failed to save contact:', error);
       showAlert('error', 'Failed to save contact. Please try again.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleEdit = (contact: Contact) => {
     setEditingContact(contact);
-    setFormData({
+    const nextFormData = {
       name: contact.name,
       phone: contact.phone,
       relationship: contact.relationship || '',
@@ -169,7 +174,9 @@ export default function ContactsScreen() {
       notifyOnEmergency: contact.notifyOnEmergency,
       shareMedicalInfo: contact.shareMedicalInfo,
       notes: contact.notes || '',
-    });
+    };
+    setFormData(nextFormData);
+    setInitialFormData(nextFormData);
     setShowForm(true);
   };
 
@@ -196,6 +203,9 @@ export default function ContactsScreen() {
       if (contact.id) {
         await deleteContact(contact.id);
         await loadContacts();
+        if (editingContact?.id === contact.id) {
+          discardFormAndClose();
+        }
       }
     } catch (error) {
       console.error('Failed to delete contact:', error);
@@ -220,14 +230,56 @@ export default function ContactsScreen() {
   const handleAddNew = () => {
     setEditingContact(null);
     setFormData(EMPTY_FORM);
+    setInitialFormData(EMPTY_FORM);
     setShowForm(true);
   };
 
-  const handleCancel = () => {
+  const discardFormAndClose = () => {
     setShowForm(false);
     setEditingContact(null);
     setFormData(EMPTY_FORM);
+    setInitialFormData(EMPTY_FORM);
   };
+
+  const handleCancel = () => {
+    if (!hasUnsavedFormChanges) {
+      discardFormAndClose();
+      return;
+    }
+
+    Alert.alert('Discard Changes?', 'You have unsaved changes to this contact.', [
+      { text: 'Keep Editing', style: 'cancel' },
+      {
+        text: 'Discard',
+        style: 'destructive',
+        onPress: discardFormAndClose,
+      },
+    ]);
+  };
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
+      if (!hasUnsavedFormChanges) {
+        return;
+      }
+
+      event.preventDefault();
+
+      Alert.alert('Discard Changes?', 'You have unsaved changes to this contact.', [
+        { text: 'Keep Editing', style: 'cancel' },
+        {
+          text: 'Discard',
+          style: 'destructive',
+          onPress: () => {
+            discardFormAndClose();
+            navigation.dispatch(event.data.action);
+          },
+        },
+      ]);
+    });
+
+    return unsubscribe;
+  }, [navigation, hasUnsavedFormChanges]);
 
   const getRoleInfo = (role?: ContactRole) => {
     return ROLE_OPTIONS.find((r) => r.value === role) || ROLE_OPTIONS[5];
@@ -237,7 +289,7 @@ export default function ContactsScreen() {
     const roleInfo = getRoleInfo(contact.role);
 
     return (
-      <View
+      <Pressable
         key={contact.id}
         style={[
           styles.contactCard,
@@ -250,12 +302,10 @@ export default function ContactsScreen() {
         <View style={styles.contactHeader}>
           <View style={styles.contactInfo}>
             <ThemedText style={styles.contactName}>{contact.name}</ThemedText>
-            <View style={styles.roleRow}>
-              <IconSymbol name={roleInfo.icon as any} size={12} color={theme.icon} />
-              <ThemedText style={[styles.contactRole, { color: theme.textSecondary }]}>
-                {roleInfo.label}
-              </ThemedText>
-            </View>
+            <ThemedText style={[styles.contactMeta, { color: theme.textSecondary }]}>
+              {roleInfo.label}
+              {contact.relationship ? ` • ${contact.relationship}` : ''}
+            </ThemedText>
           </View>
 
           <View style={styles.contactActions}>
@@ -274,37 +324,17 @@ export default function ContactsScreen() {
           </View>
         </View>
 
-        <View style={styles.contactDetails}>
-          <View style={styles.detailRow}>
-            <IconSymbol name="phone" size={14} color={theme.icon} />
-            <ThemedText style={[styles.detailText, { color: theme.text }]}>
-              {formatPhoneNumber(contact.phone)}
-            </ThemedText>
-          </View>
-
-          {contact.relationship && (
-            <View style={styles.detailRow}>
-              <IconSymbol name="person" size={14} color={theme.icon} />
-              <ThemedText style={[styles.detailText, { color: theme.text }]}>
-                {contact.relationship}
-              </ThemedText>
-            </View>
-          )}
-
-          {contact.address && (
+        {contact.address && (
+          <View style={styles.contactDetails}>
             <View style={styles.detailRow}>
               <IconSymbol name="location" size={14} color={theme.icon} />
               <ThemedText style={[styles.detailText, { color: theme.text }]} numberOfLines={2}>
                 {contact.address}
               </ThemedText>
             </View>
-          )}
-        </View>
-
-        <TouchableOpacity style={styles.deleteButton} onPress={() => handleDelete(contact)}>
-          <ThemedText style={[styles.deleteText, { color: semantic.error }]}>Remove</ThemedText>
-        </TouchableOpacity>
-      </View>
+          </View>
+        )}
+      </Pressable>
     );
   };
 
@@ -359,8 +389,9 @@ export default function ContactsScreen() {
           {ROLE_OPTIONS.map((option) => {
             const isSelected = formData.role === option.value;
             return (
-              <TouchableOpacity
+              <Pressable
                 key={option.value}
+                hitSlop={6}
                 style={[
                   styles.roleOption,
                   {
@@ -368,7 +399,11 @@ export default function ContactsScreen() {
                     borderColor: isSelected ? theme.primary : theme.inputBorder,
                   },
                 ]}
-                onPress={() => setFormData({ ...formData, role: option.value })}
+                onPress={() =>
+                  setFormData((prev) =>
+                    prev.role === option.value ? prev : { ...prev, role: option.value },
+                  )
+                }
               >
                 <IconSymbol
                   name={option.icon as any}
@@ -383,7 +418,7 @@ export default function ContactsScreen() {
                 >
                   {option.label}
                 </ThemedText>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </View>
@@ -420,35 +455,6 @@ export default function ContactsScreen() {
         </View>
       </TouchableOpacity>
 
-      {/* Share Medical Info */}
-      <TouchableOpacity
-        style={[
-          styles.toggleField,
-          {
-            backgroundColor: theme.inputBackground,
-            borderColor: theme.inputBorder,
-          },
-        ]}
-        onPress={() => setFormData({ ...formData, shareMedicalInfo: !formData.shareMedicalInfo })}
-      >
-        <View style={styles.toggleInfo}>
-          <ThemedText style={styles.toggleLabel}>Share Medical Info</ThemedText>
-          <ThemedText style={[styles.toggleHint, { color: theme.textSecondary }]}>
-            Include medical details when alerting
-          </ThemedText>
-        </View>
-        <View
-          style={[
-            styles.toggle,
-            {
-              backgroundColor: formData.shareMedicalInfo ? semantic.success : theme.border,
-            },
-          ]}
-        >
-          <View style={[styles.toggleKnob, formData.shareMedicalInfo && styles.toggleKnobActive]} />
-        </View>
-      </TouchableOpacity>
-
       {/* Notes */}
       <AppTextInput
         label="Notes"
@@ -459,22 +465,30 @@ export default function ContactsScreen() {
         numberOfLines={3}
       />
 
-      {/* Buttons */}
-      <View style={styles.formButtons}>
-        <SecondaryButton label="Cancel" onPress={handleCancel} style={{ flex: 1 }} />
-        <PrimaryButton
-          label={editingContact ? 'Update' : 'Add'}
-          onPress={handleSave}
-          style={{ flex: 1 }}
-        />
-      </View>
-
+      {editingContact && (
+        <TouchableOpacity
+          style={[styles.formDeleteButton, { borderColor: semantic.error }]}
+          onPress={() => handleDelete(editingContact)}
+        >
+          <IconSymbol name="trash" size={14} color={semantic.error} />
+          <ThemedText style={[styles.formDeleteText, { color: semantic.error }]}>
+            Delete Contact
+          </ThemedText>
+        </TouchableOpacity>
+      )}
       <View style={{ height: 40 }} />
     </ScrollView>
   );
 
   const renderContactList = () => (
-    <ScrollView style={styles.listContainer} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.listContainer}
+      contentContainerStyle={[
+        styles.listContent,
+        contacts.length === 0 && styles.emptyListContainer,
+      ]}
+      showsVerticalScrollIndicator={false}
+    >
       {contacts.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
@@ -504,17 +518,16 @@ export default function ContactsScreen() {
             </ThemedText>
           </View>
           {contacts.map(renderContactCard)}
+
+          <TouchableOpacity
+            style={[styles.addButton, { backgroundColor: theme.primary }]}
+            onPress={handleAddNew}
+          >
+            <IconSymbol name="plus" size={20} color="#fff" />
+            <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
+          </TouchableOpacity>
         </>
       )}
-
-      <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: theme.primary }]}
-        onPress={handleAddNew}
-      >
-        <IconSymbol name="plus" size={20} color="#fff" />
-        <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
-      </TouchableOpacity>
-
       <View style={{ height: 40 }} />
     </ScrollView>
   );
@@ -523,7 +536,25 @@ export default function ContactsScreen() {
     <ThemedView style={styles.container}>
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
-        <ScreenHeader title="Emergency Contacts" />
+        <ScreenHeader
+          title={
+            showForm ? (editingContact ? 'Edit Contact' : 'Add Contact') : 'Emergency Contacts'
+          }
+          onBack={showForm ? handleCancel : undefined}
+          rightElement={
+            showForm ? (
+              <Pressable
+                onPress={handleSave}
+                style={[styles.headerSaveButton, { backgroundColor: theme.tint }]}
+                disabled={isSaving}
+              >
+                <ThemedText style={styles.headerSaveText} numberOfLines={1}>
+                  {isSaving ? 'Saving...' : editingContact ? 'Update' : 'Add'}
+                </ThemedText>
+              </Pressable>
+            ) : undefined
+          }
+        />
 
         {/* Content */}
         {isLoading ? (
@@ -567,11 +598,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  headerSaveButton: {
+    minWidth: 72,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+  },
+  headerSaveText: {
+    color: '#fff',
+    ...Typography.bodyBold,
+  },
 
   // List styles
   listContainer: {
     flex: 1,
+  },
+  listContent: {
     padding: Spacing.lg,
+    paddingBottom: 0,
+    flexGrow: 1,
+  },
+  emptyListContainer: {
+    justifyContent: 'flex-start',
   },
   listHeader: {
     marginBottom: Spacing.md,
@@ -624,24 +673,20 @@ const styles = StyleSheet.create({
   contactHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: Spacing.md,
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
   },
   contactInfo: {
     flex: 1,
+    paddingRight: Spacing.md,
   },
   contactName: {
     ...Typography.bodyLarge,
     fontWeight: '600',
   },
-  roleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginTop: 2,
-  },
-  contactRole: {
+  contactMeta: {
     ...Typography.caption,
+    marginTop: 4,
   },
   contactActions: {
     flexDirection: 'row',
@@ -666,16 +711,19 @@ const styles = StyleSheet.create({
     ...Typography.body,
     flex: 1,
   },
-  deleteButton: {
+  formDeleteButton: {
     marginTop: Spacing.md,
-    paddingTop: Spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(128,128,128,0.2)',
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    minHeight: 44,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    paddingHorizontal: Spacing.md,
   },
-  deleteText: {
-    ...Typography.body,
-    fontWeight: '500',
+  formDeleteText: {
+    ...Typography.bodyBold,
   },
   addButton: {
     flexDirection: 'row',
@@ -760,10 +808,5 @@ const styles = StyleSheet.create({
   },
   toggleKnobActive: {
     transform: [{ translateX: 20 }],
-  },
-  formButtons: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginTop: Spacing.xl,
   },
 });

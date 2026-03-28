@@ -66,7 +66,13 @@ export default function AppearanceScreen() {
           <View style={styles.progress}>
             <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
             <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]} />
+            <View
+              style={[
+                styles.progressDot,
+                styles.progressActive,
+                { backgroundColor: theme.primary },
+              ]}
+            />
             <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
           </View>
 
@@ -83,7 +89,14 @@ export default function AppearanceScreen() {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Height</ThemedText>
                 <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.inputBackground,
+                      borderColor: theme.inputBorder,
+                      color: theme.text,
+                    },
+                  ]}
                   value={height}
                   onChangeText={setHeight}
                   placeholder="5'6&quot;"
@@ -93,7 +106,14 @@ export default function AppearanceScreen() {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Weight</ThemedText>
                 <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.inputBackground,
+                      borderColor: theme.inputBorder,
+                      color: theme.text,
+                    },
+                  ]}
                   value={weight}
                   onChangeText={setWeight}
                   placeholder="150 lbs"
@@ -107,7 +127,14 @@ export default function AppearanceScreen() {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Hair Color</ThemedText>
                 <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.inputBackground,
+                      borderColor: theme.inputBorder,
+                      color: theme.text,
+                    },
+                  ]}
                   value={hairColor}
                   onChangeText={setHairColor}
                   placeholder="Gray, short"
@@ -117,7 +144,14 @@ export default function AppearanceScreen() {
               <View style={[styles.inputGroup, styles.halfWidth]}>
                 <ThemedText style={styles.label}>Eye Color</ThemedText>
                 <TextInput
-                  style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.inputBackground,
+                      borderColor: theme.inputBorder,
+                      color: theme.text,
+                    },
+                  ]}
                   value={eyeColor}
                   onChangeText={setEyeColor}
                   placeholder="Blue"
@@ -129,7 +163,15 @@ export default function AppearanceScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Identifying Marks</ThemedText>
               <TextInput
-                style={[styles.input, styles.textArea, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                style={[
+                  styles.input,
+                  styles.textArea,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
                 value={identifyingMarks}
                 onChangeText={setIdentifyingMarks}
                 placeholder="Tattoos, scars, birthmarks, glasses, hearing aids..."
@@ -143,9 +185,14 @@ export default function AppearanceScreen() {
 
         <View style={styles.footer}>
           <Pressable style={styles.skipButton} onPress={handleSkip}>
-            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>Skip for now</ThemedText>
+            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
+              Skip for now
+            </ThemedText>
           </Pressable>
-          <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleContinue}>
+          <Pressable
+            style={[styles.button, { backgroundColor: theme.primary }]}
+            onPress={handleContinue}
+          >
             <ThemedText style={styles.buttonText}>Continue</ThemedText>
           </Pressable>
         </View>
@@ -183,8 +230,7 @@ const styles = StyleSheet.create({
   progressActive: {
     width: 24,
   },
-  progressComplete: {
-  },
+  progressComplete: {},
   title: {
     marginBottom: Spacing.sm,
   },
@@ -213,11 +259,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
+    height: 48,
+    paddingVertical: 0,
     ...Typography.body,
+    lineHeight: 20,
   },
   textArea: {
     minHeight: 80,
+    height: 'auto',
+    paddingVertical: Spacing.sm,
     textAlignVertical: 'top',
   },
   footer: {

@@ -6,13 +6,13 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    TextInput,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -74,7 +74,13 @@ export default function ContactScreen() {
             <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
             <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
             <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]} />
+            <View
+              style={[
+                styles.progressDot,
+                styles.progressActive,
+                { backgroundColor: theme.primary },
+              ]}
+            />
           </View>
 
           <ThemedText type="title" style={styles.title}>
@@ -89,7 +95,14 @@ export default function ContactScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Contact Name *</ThemedText>
               <TextInput
-                style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
                 value={name}
                 onChangeText={(text) => {
                   setName(text);
@@ -105,7 +118,14 @@ export default function ContactScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Phone Number *</ThemedText>
               <TextInput
-                style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
                 value={phone}
                 onChangeText={(text) => {
                   setPhone(formatPhoneInput(text));
@@ -121,7 +141,14 @@ export default function ContactScreen() {
             <View style={styles.inputGroup}>
               <ThemedText style={styles.label}>Relationship</ThemedText>
               <TextInput
-                style={[styles.input, { backgroundColor: theme.inputBackground, borderColor: theme.inputBorder, color: theme.text }]}
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
                 value={relationship}
                 onChangeText={setRelationship}
                 placeholder="e.g., Son, Daughter, Neighbor"
@@ -130,11 +157,15 @@ export default function ContactScreen() {
               />
             </View>
 
-            {error ? <ThemedText style={[styles.error, { color: theme.error }]}>{error}</ThemedText> : null}
+            {error ? (
+              <ThemedText style={[styles.error, { color: theme.error }]}>{error}</ThemedText>
+            ) : null}
           </View>
 
           <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
-            <ThemedText style={[styles.infoTitle, { color: theme.text }]}>What happens in an emergency?</ThemedText>
+            <ThemedText style={[styles.infoTitle, { color: theme.text }]}>
+              What happens in an emergency?
+            </ThemedText>
             <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>
               • You&apos;ll have a one-tap button to text this contact{'\n'}• They&apos;ll receive
               the person&apos;s photo and last known location{'\n'}• You can add neighbors and
@@ -145,13 +176,21 @@ export default function ContactScreen() {
 
         <View style={styles.footer}>
           <Pressable style={styles.skipButton} onPress={handleSkip}>
-            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>Skip for now</ThemedText>
+            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
+              Skip for now
+            </ThemedText>
           </Pressable>
           <Pressable
-            style={[styles.button, { backgroundColor: theme.primary }, (!name.trim() || !phone.trim()) && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              { backgroundColor: theme.primary },
+              (!name.trim() || !phone.trim()) && styles.buttonDisabled,
+            ]}
             onPress={handleContinue}
           >
-            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>Continue</ThemedText>
+            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
+              Continue
+            </ThemedText>
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -209,8 +248,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: 14,
+    height: 48,
+    paddingVertical: 0,
     ...Typography.body,
+    lineHeight: 20,
   },
   error: {
     fontSize: 14,
