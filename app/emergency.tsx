@@ -467,7 +467,11 @@ export default function EmergencyScreen() {
                   Great news! Remember to use calm, reassuring language. Offer water and rest.
                 </ThemedText>
                 <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: semantic.success }]}
+                  style={[
+                    styles.modalButton,
+                    styles.modalButtonFullWidth,
+                    { backgroundColor: semantic.success },
+                  ]}
                   onPress={() => handleModalAction('dismiss')}
                 >
                   <ThemedText style={styles.modalButtonText}>OK</ThemedText>
@@ -487,6 +491,7 @@ export default function EmergencyScreen() {
                   <TouchableOpacity
                     style={[
                       styles.modalButton,
+                      styles.modalButtonRowItem,
                       styles.modalButtonOutline,
                       { borderColor: theme.border },
                     ]}
@@ -497,7 +502,11 @@ export default function EmergencyScreen() {
                     </ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.modalButton, { backgroundColor: theme.primary }]}
+                    style={[
+                      styles.modalButton,
+                      styles.modalButtonRowItem,
+                      { backgroundColor: theme.primary },
+                    ]}
                     onPress={() => handleModalAction('leave')}
                   >
                     <ThemedText style={styles.modalButtonText}>Leave</ThemedText>
@@ -527,7 +536,11 @@ export default function EmergencyScreen() {
                     : 'Could not open messaging app.'}
                 </ThemedText>
                 <TouchableOpacity
-                  style={[styles.modalButton, { backgroundColor: theme.primary }]}
+                  style={[
+                    styles.modalButton,
+                    styles.modalButtonFullWidth,
+                    { backgroundColor: theme.primary },
+                  ]}
                   onPress={() => setModalVisible(false)}
                 >
                   <ThemedText style={styles.modalButtonText}>OK</ThemedText>
@@ -1184,13 +1197,18 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   modalButton: {
-    flex: 1,
     paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderRadius: Radius.md,
     alignItems: 'center',
     minHeight: 48,
     justifyContent: 'center',
+  },
+  modalButtonFullWidth: {
+    width: '100%',
+  },
+  modalButtonRowItem: {
+    flex: 1,
   },
   modalButtonOutline: {
     backgroundColor: 'transparent',
