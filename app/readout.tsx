@@ -36,8 +36,6 @@ export default function ReadoutScreen() {
   const router = useRouter();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
-  const [containerH, setContainerH] = useState(0);
-  const [contentH, setContentH] = useState(0);
   const [isScriptExpanded, setIsScriptExpanded] = useState(false);
   const [copiedType, setCopiedType] = useState<'script' | 'all' | null>(null);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -236,8 +234,6 @@ export default function ReadoutScreen() {
     Linking.openURL('tel:911');
   };
 
-  const shouldScroll = contentH > containerH + 1;
-
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
@@ -271,16 +267,8 @@ export default function ReadoutScreen() {
     <SafeAreaView
       style={{ flex: 1, backgroundColor: theme.background }}
       edges={['top', 'left', 'right', 'bottom']}
-      onLayout={(e) => setContainerH(e.nativeEvent.layout.height)}
     >
-      <ScrollView
-        contentContainerStyle={styles.container}
-        onContentSizeChange={(_, h) => setContentH(h)}
-        scrollEnabled={shouldScroll}
-        bounces={shouldScroll}
-        showsVerticalScrollIndicator={shouldScroll}
-        overScrollMode={shouldScroll ? 'auto' : 'never'}
-      >
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator>
         <Pressable onPress={() => goBack('/(tabs)')} style={styles.backLink}>
           <IconSymbol name="chevron.left" size={20} color={theme.tint} />
           <ThemedText style={[styles.backText, { color: theme.tint }]}>Back</ThemedText>
