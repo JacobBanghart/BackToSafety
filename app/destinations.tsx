@@ -30,6 +30,7 @@ import { Colors, primary, semantic } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useTheme } from '@/context/ThemeContext';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import {
   createDestination,
   deleteDestination,
@@ -282,29 +283,15 @@ export default function DestinationsScreen() {
     ]);
   };
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-      if (!hasUnsavedFormChanges || isSaving) {
-        return;
-      }
-
-      event.preventDefault();
-
-      Alert.alert('Discard Changes?', 'You have unsaved changes to this location.', [
-        { text: 'Keep Editing', style: 'cancel' },
-        {
-          text: 'Discard',
-          style: 'destructive',
-          onPress: () => {
-            discardFormAndClose();
-            navigation.dispatch(event.data.action);
-          },
-        },
-      ]);
-    });
-
-    return unsubscribe;
-  }, [navigation, hasUnsavedFormChanges, isSaving]);
+  useUnsavedChangesGuard({
+    navigation,
+    hasUnsavedChanges: hasUnsavedFormChanges,
+    isSaving,
+    title: 'Discard Changes?',
+    message: 'You have unsaved changes to this location.',
+    confirmLabel: 'Discard',
+    onDiscard: discardFormAndClose,
+  });
 
   const getCategoryInfo = (category?: DestinationCategory) => {
     return CATEGORY_OPTIONS.find((c) => c.value === category) || CATEGORY_OPTIONS[7];

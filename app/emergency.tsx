@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Linking,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -28,6 +29,7 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
+import { getEmergencyContacts } from '@/database/contacts';
 import { Destination, getDestinations } from '@/database/destinations';
 import { getSetting, saveSetting } from '@/database/storage';
 
@@ -141,7 +143,7 @@ export default function EmergencyScreen() {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const isDark = colorScheme === 'dark';
-  const { setLastSeen, profile, emergencyContacts, addIncident } = useProfile();
+  const { setLastSeen, profile, addIncident } = useProfile();
 
   const [isLoading, setIsLoading] = useState(true);
   const [secondsLeft, setSecondsLeft] = useState<number>(SEARCH_WINDOW_SECONDS);
@@ -298,10 +300,24 @@ export default function EmergencyScreen() {
     return `${m}:${s}`;
   }, [secondsLeft]);
 
-  const toggleStep = useCallback((id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSteps((prev) => prev.map((s) => (s.id === id ? { ...s, checked: !s.checked } : s)));
-  }, []);
+  const toggleStep = useCallback(
+    (id: string) => {
+      const currentStep = steps.find((step) => step.id === id);
+      const isCheckingStep = currentStep ? !currentStep.checked : true;
+
+      if (Platform.OS !== 'web') {
+        const style = isCheckingStep
+          ? Haptics.ImpactFeedbackStyle.Medium
+          : Haptics.ImpactFeedbackStyle.Light;
+        void Haptics.impactAsync(style).catch(() => undefined);
+      }
+
+      setSteps((prev) =>
+        prev.map((step) => (step.id === id ? { ...step, checked: !step.checked } : step)),
+      );
+    },
+    [steps],
+  );
 
   const onMarkFound = async () => {
     // Clear state first and wait for it
@@ -332,7 +348,9 @@ export default function EmergencyScreen() {
   };
 
   const onAlertContacts = async () => {
-    if (emergencyContacts.length === 0) {
+    const contactsToNotify = await getEmergencyContacts();
+
+    if (contactsToNotify.length === 0) {
       setModalType('noContacts');
       setModalVisible(true);
       return;
@@ -340,15 +358,38 @@ export default function EmergencyScreen() {
 
     const message = `URGENT: ${profile?.name || 'Our loved one'} is missing. Last seen ${startedAt.toLocaleTimeString()}. ${wearing ? `Wearing: ${wearing}. ` : ''}Please help search or call if you see them.`;
 
-    // Open SMS with first contact
-    const firstContact = emergencyContacts[0];
-    const smsUrl = `sms:${firstContact.phone}?body=${encodeURIComponent(message)}`;
+    const recipients = contactsToNotify
+      .map((contact) => contact.phone.replace(/[^\d+]/g, '').trim())
+      .filter((phone) => phone.length > 0);
+
+    if (recipients.length === 0) {
+      setModalType('noContacts');
+      setModalVisible(true);
+      return;
+    }
+
+    const recipientList = recipients.join(',');
+    const bodySeparator = Platform.OS === 'ios' ? '&' : '?';
+    const smsUrl = `sms:${recipientList}${bodySeparator}body=${encodeURIComponent(message)}`;
 
     try {
       await Linking.openURL(smsUrl);
     } catch {
-      setModalType('smsError');
-      setModalVisible(true);
+      const firstRecipient = recipients[0];
+      if (!firstRecipient) {
+        setModalType('smsError');
+        setModalVisible(true);
+        return;
+      }
+
+      const fallbackSmsUrl = `sms:${firstRecipient}${bodySeparator}body=${encodeURIComponent(message)}`;
+
+      try {
+        await Linking.openURL(fallbackSmsUrl);
+      } catch {
+        setModalType('smsError');
+        setModalVisible(true);
+      }
     }
   };
 
@@ -942,10 +983,12 @@ const styles = StyleSheet.create({
   },
   wearingInput: {
     borderRadius: Radius.md,
-    padding: Spacing.md,
     ...Typography.body,
+    lineHeight: 20,
     borderWidth: 1,
     minHeight: 64,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     textAlignVertical: 'top',
   },
   wearingDismiss: {

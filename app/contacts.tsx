@@ -30,6 +30,7 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 
 import { useTheme } from '@/context/ThemeContext';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import {
   Contact,
   createContact,
@@ -269,29 +270,15 @@ export default function ContactsScreen() {
     ]);
   };
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-      if (!hasUnsavedFormChanges) {
-        return;
-      }
-
-      event.preventDefault();
-
-      Alert.alert('Discard Changes?', 'You have unsaved changes to this contact.', [
-        { text: 'Keep Editing', style: 'cancel' },
-        {
-          text: 'Discard',
-          style: 'destructive',
-          onPress: () => {
-            discardFormAndClose();
-            navigation.dispatch(event.data.action);
-          },
-        },
-      ]);
-    });
-
-    return unsubscribe;
-  }, [navigation, hasUnsavedFormChanges]);
+  useUnsavedChangesGuard({
+    navigation,
+    hasUnsavedChanges: hasUnsavedFormChanges,
+    isSaving,
+    title: 'Discard Changes?',
+    message: 'You have unsaved changes to this contact.',
+    confirmLabel: 'Discard',
+    onDiscard: discardFormAndClose,
+  });
 
   const getRoleInfo = (role?: ContactRole) => {
     return ROLE_OPTIONS.find((r) => r.value === role) || ROLE_OPTIONS[5];
@@ -344,6 +331,20 @@ export default function ContactsScreen() {
           },
         ]}
       >
+        {contact.notifyOnEmergency && (
+          <View
+            style={[
+              styles.emergencyBadgeTop,
+              { backgroundColor: theme.primaryLight, borderColor: theme.primary },
+            ]}
+          >
+            <IconSymbol name="checkmark.circle.fill" size={11} color={theme.primary} />
+            <ThemedText style={[styles.emergencyBadgeText, { color: theme.primary }]}>
+              IN ALERT CIRCLE
+            </ThemedText>
+          </View>
+        )}
+
         <View style={styles.contactHeader}>
           <View style={styles.contactInfo}>
             <ThemedText style={styles.contactName}>{contact.name}</ThemedText>
@@ -483,7 +484,7 @@ export default function ContactsScreen() {
         <View style={styles.toggleInfo}>
           <ThemedText style={styles.toggleLabel}>Notify in Emergency</ThemedText>
           <ThemedText style={[styles.toggleHint, { color: theme.textSecondary }]}>
-            Include in emergency SMS alerts
+            Adds this contact to your Alert Circle (people who get emergency SMS alerts)
           </ThemedText>
         </View>
         <View
@@ -547,7 +548,7 @@ export default function ContactsScreen() {
             <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
               {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
             </ThemedText>
-            <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}> 
+            <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}>
               Press and hold any contact card to reorder emergency priority.
             </ThemedText>
           </View>
@@ -760,6 +761,26 @@ const styles = StyleSheet.create({
   contactMeta: {
     ...Typography.caption,
     marginTop: 4,
+  },
+  emergencyBadgeTop: {
+    position: 'absolute',
+    top: -10,
+    right: Spacing.md,
+    zIndex: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 3,
+    borderRadius: Radius.md,
+    borderWidth: 1,
+  },
+  emergencyBadgeText: {
+    ...Typography.small,
+    fontWeight: '700',
+    fontSize: 10,
+    lineHeight: 12,
+    letterSpacing: 0.5,
   },
   contactActions: {
     flexDirection: 'row',

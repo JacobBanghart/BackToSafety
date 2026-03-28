@@ -34,7 +34,14 @@
       "expo-secure-store",
       "expo-font",
       "expo-web-browser",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Back to Safety to access your photos so you can choose or update a profile picture for emergency identification.",
+          "cameraPermission": "Allow Back to Safety to use your camera to take a profile photo for emergency identification."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true

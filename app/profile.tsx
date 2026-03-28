@@ -32,6 +32,7 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { formatPhoneInput } from '@/utils/phone';
 
 type SectionKey = 'personal' | 'medical' | 'communication' | 'devices';
@@ -47,6 +48,9 @@ const MOBILITY_OPTIONS = [
   'Has vehicle',
   'Other',
 ] as const;
+
+const WEB_CAMERA_UNAVAILABLE_MESSAGE =
+  'Taking a photo is only available in the mobile app. Please use "Choose Photo" on web.';
 
 type MobilityOption = (typeof MOBILITY_OPTIONS)[number];
 
@@ -305,30 +309,14 @@ export default function ProfileScreen() {
     }
   }, [isLoading, initialSnapshot, currentSnapshot]);
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('beforeRemove', (event) => {
-      if (!hasUnsavedChanges || isSaving) {
-        return;
-      }
-
-      event.preventDefault();
-
-      Alert.alert(
-        'Unsaved Changes',
-        'You have unsaved changes. If you leave now, your edits will be lost.',
-        [
-          { text: 'Keep Editing', style: 'cancel' },
-          {
-            text: 'Discard Changes',
-            style: 'destructive',
-            onPress: () => navigation.dispatch(event.data.action),
-          },
-        ],
-      );
-    });
-
-    return unsubscribe;
-  }, [navigation, hasUnsavedChanges, isSaving]);
+  useUnsavedChangesGuard({
+    navigation,
+    hasUnsavedChanges,
+    isSaving,
+    title: 'Unsaved Changes',
+    message: 'You have unsaved changes. If you leave now, your edits will be lost.',
+    confirmLabel: 'Discard Changes',
+  });
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -391,6 +379,11 @@ export default function ProfileScreen() {
   };
 
   const takePhoto = async () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Camera Not Available', WEB_CAMERA_UNAVAILABLE_MESSAGE);
+      return;
+    }
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       alert('We need camera access to take a photo.');

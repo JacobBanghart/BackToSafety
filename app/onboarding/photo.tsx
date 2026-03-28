@@ -19,6 +19,9 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
 
+const WEB_CAMERA_UNAVAILABLE_MESSAGE =
+  'Taking a photo is only available in the mobile app. Please use "Choose from Library" on web.';
+
 export default function PhotoScreen() {
   const router = useRouter();
   const { completeStep } = useOnboarding();
@@ -47,6 +50,11 @@ export default function PhotoScreen() {
   };
 
   const takePhoto = async () => {
+    if (Platform.OS === 'web') {
+      alert(WEB_CAMERA_UNAVAILABLE_MESSAGE);
+      return;
+    }
+
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
       alert('We need camera access to take a photo.');
@@ -111,7 +119,9 @@ export default function PhotoScreen() {
       <View style={styles.content}>
         <View style={styles.progress}>
           <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-          <View style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]} />
+          <View
+            style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]}
+          />
           <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
           <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
         </View>
@@ -129,19 +139,36 @@ export default function PhotoScreen() {
           {photoUri ? (
             <Image source={{ uri: photoUri }} style={styles.photo} contentFit="cover" />
           ) : (
-            <View style={[styles.photoPlaceholder, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            <View
+              style={[
+                styles.photoPlaceholder,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+              ]}
+            >
               <ThemedText style={styles.photoPlaceholderText}>📷</ThemedText>
-              <ThemedText style={[styles.photoPlaceholderHint, { color: theme.textSecondary }]}>No photo yet</ThemedText>
+              <ThemedText style={[styles.photoPlaceholderHint, { color: theme.textSecondary }]}>
+                No photo yet
+              </ThemedText>
             </View>
           )}
         </View>
 
         <View style={styles.photoButtons}>
-          <Pressable style={[styles.photoButton, { borderColor: theme.primary }]} onPress={takePhoto}>
-            <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>Take Photo</ThemedText>
+          <Pressable
+            style={[styles.photoButton, { borderColor: theme.primary }]}
+            onPress={takePhoto}
+          >
+            <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>
+              Take Photo
+            </ThemedText>
           </Pressable>
-          <Pressable style={[styles.photoButton, { borderColor: theme.primary }]} onPress={pickImage}>
-            <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>Choose from Library</ThemedText>
+          <Pressable
+            style={[styles.photoButton, { borderColor: theme.primary }]}
+            onPress={pickImage}
+          >
+            <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>
+              Choose from Library
+            </ThemedText>
           </Pressable>
         </View>
 
@@ -152,10 +179,16 @@ export default function PhotoScreen() {
 
       <View style={styles.footer}>
         <Pressable style={styles.skipButton} onPress={handleSkip}>
-          <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>Skip for now</ThemedText>
+          <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
+            Skip for now
+          </ThemedText>
         </Pressable>
         <Pressable
-          style={[styles.button, { backgroundColor: theme.primary }, !photoUri && styles.buttonDisabled]}
+          style={[
+            styles.button,
+            { backgroundColor: theme.primary },
+            !photoUri && styles.buttonDisabled,
+          ]}
           onPress={handleContinue}
           disabled={!photoUri || isLoading}
         >

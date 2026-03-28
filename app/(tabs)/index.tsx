@@ -35,7 +35,7 @@ type EmergencyState = {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { profile, emergencyContacts, refreshProfile, refreshContacts } = useProfile();
+  const { profile, contacts, refreshProfile, refreshContacts } = useProfile();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
@@ -86,7 +86,7 @@ export default function HomeScreen() {
   }, [activeEmergency]);
 
   const hasProfile = profile && profile.name;
-  const contactCount = emergencyContacts?.length || 0;
+  const contactCount = contacts?.length || 0;
 
   // Calculate emergency progress
   const emergencyProgress = activeEmergency
