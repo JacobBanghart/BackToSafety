@@ -166,7 +166,12 @@ export default function ContactScreen() {
         </ScrollView>
 
         <View style={styles.footer}>
-          <Pressable style={styles.skipButton} onPress={handleSkip}>
+          <Pressable
+            testID="onboarding-contact-skip"
+            accessibilityLabel="onboarding-contact-skip"
+            style={styles.skipButton}
+            onPress={handleSkip}
+          >
             <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
               Skip for now
             </ThemedText>

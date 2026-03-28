@@ -72,6 +72,8 @@ export default function CompleteScreen() {
 
       <View style={styles.footer}>
         <Pressable
+          testID="onboarding-complete-home"
+          accessibilityLabel="onboarding-complete-home"
           style={[styles.button, { backgroundColor: theme.primary }]}
           onPress={handleFinish}
         >

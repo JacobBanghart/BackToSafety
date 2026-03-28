@@ -162,6 +162,8 @@ export default function WelcomeScreen() {
           ↓ Scroll for more
         </ThemedText>
         <Pressable
+          testID="onboarding-get-started"
+          accessibilityLabel="onboarding-get-started"
           style={[styles.button, { backgroundColor: colors.buttonBg }]}
           onPress={handleContinue}
         >

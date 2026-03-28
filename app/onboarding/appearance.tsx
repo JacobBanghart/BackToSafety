@@ -197,6 +197,8 @@ export default function AppearanceScreen() {
             </ThemedText>
           </Pressable>
           <Pressable
+            testID="onboarding-appearance-continue"
+            accessibilityLabel="onboarding-appearance-continue"
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={handleContinue}
           >

@@ -553,6 +553,8 @@ export default function EmergencyScreen() {
 
       {/* Header */}
       <View
+        testID="emergency-screen"
+        accessibilityLabel="emergency-screen"
         style={[
           styles.header,
           { borderBottomColor: theme.border, backgroundColor: theme.card },

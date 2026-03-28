@@ -172,7 +172,12 @@ export default function PhotoScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable style={styles.skipButton} onPress={handleSkip}>
+        <Pressable
+          testID="onboarding-photo-skip"
+          accessibilityLabel="onboarding-photo-skip"
+          style={styles.skipButton}
+          onPress={handleSkip}
+        >
           <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
             Skip for now
           </ThemedText>

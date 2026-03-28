@@ -136,6 +136,8 @@ export default function HomeScreen() {
 
         {/* ── Emergency Button ── */}
         <Pressable
+          testID="home-start-emergency"
+          accessibilityLabel="home-start-emergency"
           style={[
             styles.emergencyButton,
             getShadow('md', colorScheme),
