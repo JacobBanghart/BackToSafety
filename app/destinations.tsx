@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import * as Haptics from 'expo-haptics';
 import {
   Alert,
   Linking,
@@ -138,6 +139,11 @@ export default function DestinationsScreen() {
       Alert.alert(type === 'validation' ? 'Required' : 'Error', message);
     }
   };
+
+  const triggerHaptic = useCallback((style: Haptics.ImpactFeedbackStyle) => {
+    if (Platform.OS === 'web') return;
+    void Haptics.impactAsync(style).catch(() => undefined);
+  }, []);
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
@@ -315,7 +321,10 @@ export default function DestinationsScreen() {
         previousSortOrder: destination.sortOrder,
         newSortOrder: index,
       }))
-      .filter((destination) => destination.id && destination.previousSortOrder !== destination.newSortOrder);
+      .filter(
+        (destination) =>
+          destination.id && destination.previousSortOrder !== destination.newSortOrder,
+      );
 
     const reordered = data.map((destination, index) => ({
       ...destination,
@@ -341,11 +350,14 @@ export default function DestinationsScreen() {
     }
   };
 
-  const renderDestinationCard = ({ item: destination, drag, isActive }: RenderItemParams<Destination>) => {
+  const renderDestinationCard = ({
+    item: destination,
+    drag,
+    isActive,
+  }: RenderItemParams<Destination>) => {
     const categoryInfo = getCategoryInfo(destination.category);
     const riskInfo = getRiskInfo(destination.riskLevel);
     const riskColor = semantic[riskInfo.color];
-    const isWater = destination.category === 'water';
 
     return (
       <Pressable
@@ -355,40 +367,45 @@ export default function DestinationsScreen() {
           styles.card,
           isActive && styles.cardActive,
           {
-            backgroundColor: theme.card,
-            borderColor: theme.border,
-            borderLeftColor: riskColor,
+            backgroundColor: isActive ? theme.primaryLight : theme.card,
+            borderColor: isActive ? theme.primary : theme.border,
           },
         ]}
       >
         <View style={styles.cardHeader}>
           <View style={styles.cardInfo}>
             <View style={styles.nameRow}>
-              <View
-                style={[
-                  styles.categoryIcon,
-                  { backgroundColor: isWater ? `${semantic.warning}20` : `${primary[600]}15` },
-                ]}
-              >
-                <IconSymbol
-                  name={categoryInfo.icon as any}
-                  size={16}
-                  color={isWater ? semantic.warning : primary[600]}
-                />
+              <View style={[styles.categoryIcon, { backgroundColor: `${primary[600]}15` }]}>
+                <IconSymbol name={categoryInfo.icon as any} size={16} color={primary[600]} />
               </View>
               <ThemedText style={styles.destinationName} numberOfLines={1}>
                 {destination.name}
               </ThemedText>
             </View>
             <View style={styles.metaRow}>
-              <View style={[styles.riskBadge, { backgroundColor: `${riskColor}20` }]}>
+              <View
+                style={[
+                  styles.riskBadge,
+                  {
+                    backgroundColor: `${riskColor}1A`,
+                    borderColor: `${riskColor}55`,
+                  },
+                ]}
+              >
                 <ThemedText style={[styles.riskText, { color: riskColor }]}>
                   {riskInfo.label}
                 </ThemedText>
               </View>
-              <ThemedText style={[styles.categoryText, { color: theme.textSecondary }]}>
-                {categoryInfo.label}
-              </ThemedText>
+              <View
+                style={[
+                  styles.categoryBadge,
+                  { backgroundColor: theme.surface, borderColor: theme.border },
+                ]}
+              >
+                <ThemedText style={[styles.categoryText, { color: theme.textSecondary }]}>
+                  {categoryInfo.label}
+                </ThemedText>
+              </View>
             </View>
           </View>
 
@@ -396,7 +413,7 @@ export default function DestinationsScreen() {
             style={[styles.editButton, { backgroundColor: `${primary[600]}15` }]}
             onPress={() => handleEdit(destination)}
           >
-            <IconSymbol name="pencil" size={14} color={primary[600]} />
+            <IconSymbol name="pencil" size={18} color={primary[600]} />
           </TouchableOpacity>
         </View>
 
@@ -410,32 +427,11 @@ export default function DestinationsScreen() {
               style={styles.addressText}
               lightColor={primary[700]}
               darkColor={primary[300]}
-              numberOfLines={2}
+              numberOfLines={1}
             >
               {destination.address}
             </ThemedText>
-            <IconSymbol name="arrow.up.right" size={12} color={primary[600]} />
           </TouchableOpacity>
-        )}
-
-        {destination.distanceFromHome && (
-          <View style={styles.detailRow}>
-            <IconSymbol name="arrow.left.arrow.right" size={12} color={theme.icon} />
-            <ThemedText style={[styles.detailText, { color: theme.textSecondary }]}>
-              {destination.distanceFromHome} from home
-            </ThemedText>
-          </View>
-        )}
-
-        {destination.reason && (
-          <View style={styles.reasonBox}>
-            <ThemedText style={[styles.reasonLabel, { color: theme.textSecondary }]}>
-              Why they might go here:
-            </ThemedText>
-            <ThemedText style={[styles.reasonText, { color: theme.text }]}>
-              {destination.reason}
-            </ThemedText>
-          </View>
         )}
       </Pressable>
     );
@@ -465,27 +461,24 @@ export default function DestinationsScreen() {
         <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Location Type</ThemedText>
         <View style={styles.optionGrid}>
           {CATEGORY_OPTIONS.map((option) => {
-            const isWater = option.value === 'water';
             const isSelected = formData.category === option.value;
+            const selectedColor = option.value === 'water' ? semantic.warning : primary[600];
             return (
-              <TouchableOpacity
+              <Pressable
                 key={option.value}
+                hitSlop={6}
                 style={[
                   styles.optionButton,
                   {
-                    backgroundColor: isSelected
-                      ? isWater
-                        ? semantic.warning
-                        : primary[600]
-                      : theme.inputBackground,
-                    borderColor: isSelected
-                      ? isWater
-                        ? semantic.warning
-                        : primary[600]
-                      : theme.inputBorder,
+                    backgroundColor: isSelected ? selectedColor : theme.inputBackground,
+                    borderColor: isSelected ? selectedColor : theme.inputBorder,
                   },
                 ]}
-                onPress={() => setFormData({ ...formData, category: option.value })}
+                onPress={() =>
+                  setFormData((prev) =>
+                    prev.category === option.value ? prev : { ...prev, category: option.value },
+                  )
+                }
               >
                 <IconSymbol
                   name={option.icon as any}
@@ -500,7 +493,7 @@ export default function DestinationsScreen() {
                 >
                   {option.label}
                 </ThemedText>
-              </TouchableOpacity>
+              </Pressable>
             );
           })}
         </View>
@@ -598,28 +591,33 @@ export default function DestinationsScreen() {
       data={destinations}
       keyExtractor={(destination: Destination) => String(destination.id ?? destination.name)}
       onDragEnd={handleDragEnd}
+      onDragBegin={() => triggerHaptic(Haptics.ImpactFeedbackStyle.Medium)}
+      onRelease={() => triggerHaptic(Haptics.ImpactFeedbackStyle.Light)}
       activationDistance={8}
       autoscrollThreshold={120}
       containerStyle={styles.listContainer}
-      contentContainerStyle={[styles.listContent, destinations.length === 0 && styles.emptyListContainer]}
+      contentContainerStyle={[
+        styles.listContent,
+        destinations.length === 0 && styles.emptyListContainer,
+      ]}
       showsVerticalScrollIndicator={false}
       renderItem={renderDestinationCard}
       ListHeaderComponent={
         <>
-          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}> 
+          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
             <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
-            <ThemedText style={[styles.infoText, { color: theme.text }]}> 
-              Most people with dementia are found within 1.5 miles of where they were last seen. Check
-              water sources first!
+            <ThemedText style={[styles.infoText, { color: theme.text }]}>
+              Most people with dementia are found within 1.5 miles of where they were last seen.
+              Check water sources first!
             </ThemedText>
           </View>
 
           {destinations.length > 0 && (
             <View style={styles.listHeader}>
-              <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}> 
+              <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
                 {destinations.length} location{destinations.length !== 1 ? 's' : ''}
               </ThemedText>
-              <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}> 
+              <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}>
                 Press and hold any location card to reorder search priority.
               </ThemedText>
             </View>
@@ -628,13 +626,13 @@ export default function DestinationsScreen() {
       }
       ListEmptyComponent={
         <View style={styles.emptyState}>
-          <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}> 
+          <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
             <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
           </View>
-          <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}> 
+          <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
             No Destinations Added
           </ThemedText>
-          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}> 
+          <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
             Add places your loved one may wander to, like former homes, favorite stores, or water
             sources.
           </ThemedText>
@@ -643,7 +641,7 @@ export default function DestinationsScreen() {
             onPress={handleAddNew}
           >
             <IconSymbol name="plus" size={18} color="#fff" />
-            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}> 
+            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
               Add First Location
             </ThemedText>
           </Pressable>
@@ -820,18 +818,23 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: Radius.lg,
     borderWidth: 1,
-    borderLeftWidth: 4,
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
   cardActive: {
-    opacity: 0.92,
+    opacity: 0.98,
+    transform: [{ scale: 1.02 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
+    marginBottom: Spacing.sm,
   },
   cardInfo: {
     flex: 1,
@@ -842,8 +845,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   categoryIcon: {
-    width: 32,
-    height: 32,
+    width: 28,
+    height: 28,
     borderRadius: Radius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -858,23 +861,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.sm,
     marginTop: 6,
-    marginLeft: 42,
   },
   riskBadge: {
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xxs,
     borderRadius: Radius.sm,
+    borderWidth: 1,
   },
   riskText: {
     ...Typography.small,
     fontWeight: '600',
   },
+  categoryBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xxs,
+    borderRadius: Radius.sm,
+    borderWidth: 1,
+  },
   categoryText: {
-    ...Typography.caption,
+    ...Typography.small,
+    fontWeight: '500',
   },
   editButton: {
-    width: 32,
-    height: 32,
+    width: 40,
+    height: 40,
     borderRadius: Radius.md,
     justifyContent: 'center',
     alignItems: 'center',
@@ -883,40 +893,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: Spacing.sm,
+    paddingVertical: Spacing.xs,
     paddingHorizontal: 10,
     borderRadius: Radius.md,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   addressText: {
     ...Typography.caption,
     flex: 1,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 6,
-  },
-  detailText: {
-    ...Typography.caption,
-  },
-  reasonBox: {
-    marginTop: Spacing.sm,
-    paddingTop: Spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(128,128,128,0.2)',
-  },
-  reasonLabel: {
-    ...Typography.small,
-    fontWeight: '500',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: Spacing.xxs,
-  },
-  reasonText: {
-    ...Typography.body,
-    fontStyle: 'italic',
   },
   formDeleteButton: {
     marginTop: Spacing.md,
