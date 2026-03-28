@@ -14,12 +14,36 @@ import {
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
- * Get or create the database connection
+ * Singleton initialization promise — resolves once initializeDatabase() completes.
+ * All DB calls wait on this so that no query runs before tables exist.
+ */
+let dbReadyResolve: (() => void) | null = null;
+let dbReadyReject: ((err: unknown) => void) | null = null;
+const dbReady = new Promise<void>((resolve, reject) => {
+  dbReadyResolve = resolve;
+  dbReadyReject = reject;
+});
+
+/**
+ * Get the database connection.
+ * Always waits for initializeDatabase() to have completed so that
+ * no query can run before tables exist.
  */
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
-  if (db) return db;
+  // Block until initializeDatabase() has finished setting up the schema
+  await dbReady;
+  if (!db) throw new Error('[DB] getDatabase called but db is null after ready');
+  return db;
+}
 
-  db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+/**
+ * Internal helper used only by initializeDatabase() — opens the connection
+ * without waiting for dbReady (which hasn't resolved yet at that point).
+ */
+async function openDatabase(): Promise<SQLite.SQLiteDatabase> {
+  if (!db) {
+    db = await SQLite.openDatabaseAsync(DATABASE_NAME);
+  }
   return db;
 }
 
@@ -74,35 +98,42 @@ async function runMigrations(
 }
 
 /**
- * Initialize the database with schema and default data
+ * Initialize the database with schema and default data.
+ * Must be called once at app startup before any other DB operations.
  */
 export async function initializeDatabase(): Promise<void> {
-  const database = await getDatabase();
+  try {
+    const database = await openDatabase();
 
-  const currentVersion = await getCurrentVersion(database);
-  console.log(`[DB] Current schema version: ${currentVersion}, target: ${SCHEMA_VERSION}`);
+    const currentVersion = await getCurrentVersion(database);
+    console.log(`[DB] Current schema version: ${currentVersion}, target: ${SCHEMA_VERSION}`);
 
-  if (currentVersion < SCHEMA_VERSION) {
-    await runMigrations(database, currentVersion, SCHEMA_VERSION);
+    if (currentVersion < SCHEMA_VERSION) {
+      await runMigrations(database, currentVersion, SCHEMA_VERSION);
+    }
+
+    // Insert default safety check items if not exists
+    for (const check of DEFAULT_SAFETY_CHECKS) {
+      await database.runAsync(
+        `INSERT OR IGNORE INTO safety_checks (category, item_key, completed) VALUES (?, ?, ?)`,
+        [check.category, check.item_key, check.completed],
+      );
+    }
+
+    // Insert onboarding steps if not exists
+    for (const step of ONBOARDING_STEPS) {
+      await database.runAsync(
+        `INSERT OR IGNORE INTO onboarding (step, completed, skipped) VALUES (?, 0, 0)`,
+        [step],
+      );
+    }
+
+    console.log('[DB] Database initialized successfully');
+    dbReadyResolve?.();
+  } catch (err) {
+    dbReadyReject?.(err);
+    throw err;
   }
-
-  // Insert default safety check items if not exists
-  for (const check of DEFAULT_SAFETY_CHECKS) {
-    await database.runAsync(
-      `INSERT OR IGNORE INTO safety_checks (category, item_key, completed) VALUES (?, ?, ?)`,
-      [check.category, check.item_key, check.completed],
-    );
-  }
-
-  // Insert onboarding steps if not exists
-  for (const step of ONBOARDING_STEPS) {
-    await database.runAsync(
-      `INSERT OR IGNORE INTO onboarding (step, completed, skipped) VALUES (?, 0, 0)`,
-      [step],
-    );
-  }
-
-  console.log('[DB] Database initialized successfully');
 }
 
 /**
@@ -141,7 +172,7 @@ export async function getCurrentOnboardingStep(): Promise<string | null> {
   const database = await getDatabase();
 
   const result = await database.getFirstAsync<{ step: string }>(
-    `SELECT step FROM onboarding WHERE completed = 0 AND skipped = 0 ORDER BY id LIMIT 1`,
+    `SELECT step FROM onboarding WHERE completed = 0 AND skipped = 0 ORDER BY rowid LIMIT 1`,
   );
 
   return result?.step ?? null;

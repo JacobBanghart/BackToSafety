@@ -38,6 +38,17 @@ export default function ReadoutScreen() {
   const [containerH, setContainerH] = useState(0);
   const [contentH, setContentH] = useState(0);
 
+  // Mobility values that imply a vehicle/aid to physically check nearby
+  const VEHICLE_MOBILITY_VALUES = [
+    'Motorized wheelchair',
+    'Mobility scooter',
+    'Bicycle',
+    'Has vehicle',
+    'Manual wheelchair',
+    'Uses walker',
+    'Uses cane',
+  ];
+
   // Build appearance string from profile fields
   const appearanceDesc = useMemo(() => {
     if (!profile) return '';
@@ -77,6 +88,18 @@ export default function ReadoutScreen() {
       profile.medications ? `Medications: ${profile.medications}` : undefined,
       profile.cognitiveStatus ? `Cognitive Status: ${profile.cognitiveStatus}` : undefined,
       profile.mobilityLevel ? `Mobility: ${profile.mobilityLevel}` : undefined,
+      profile.mobilityLevel &&
+      [
+        'motorized wheelchair',
+        'mobility scooter',
+        'bicycle',
+        'has vehicle',
+        'manual wheelchair',
+        'uses walker',
+        'uses cane',
+      ].some((v) => profile.mobilityLevel!.toLowerCase().includes(v))
+        ? `⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel`
+        : undefined,
       profile.communicationPreference
         ? `Communication: ${profile.communicationPreference}`
         : undefined,
@@ -283,6 +306,40 @@ export default function ReadoutScreen() {
                 <InfoChip label="Mobility" value={profile.mobilityLevel} theme={theme} />
               )}
             </View>
+            {profile.mobilityLevel &&
+              VEHICLE_MOBILITY_VALUES.some((v) =>
+                profile.mobilityLevel!.toLowerCase().includes(v.toLowerCase()),
+              ) && (
+                <View
+                  style={[
+                    styles.vehicleCheckNote,
+                    {
+                      backgroundColor: `${semantic.warning}15`,
+                      borderColor: `${semantic.warning}40`,
+                    },
+                  ]}
+                >
+                  <IconSymbol
+                    name="exclamationmark.triangle.fill"
+                    size={14}
+                    color={semantic.warning}
+                  />
+                  <ThemedText
+                    style={[
+                      styles.vehicleCheckText,
+                      { color: colorScheme === 'dark' ? secondary[100] : neutral[700] },
+                    ]}
+                  >
+                    Check nearby for their{' '}
+                    {['vehicle', 'bicycle', 'bike', 'scooter'].some((w) =>
+                      profile.mobilityLevel!.toLowerCase().includes(w),
+                    )
+                      ? 'vehicle or bike'
+                      : 'mobility aid (walker, wheelchair, or cane)'}{' '}
+                    — it may indicate where they went or provide shelter.
+                  </ThemedText>
+                </View>
+              )}
             {profile.identifyingMarks && (
               <InfoRow
                 icon="person.text.rectangle"
@@ -720,6 +777,22 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: Spacing.sm,
     marginBottom: Spacing.xs,
+  },
+
+  // Mobility vehicle check note
+  vehicleCheckNote: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    padding: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    marginTop: Spacing.sm,
+  },
+  vehicleCheckText: {
+    flex: 1,
+    ...Typography.body,
+    lineHeight: 20,
   },
 
   // Warn card

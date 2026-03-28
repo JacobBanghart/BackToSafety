@@ -585,7 +585,7 @@ export default function EmergencyScreen() {
               What are they wearing?
             </ThemedText>
             <ThemedText style={[styles.wearingHint, { color: theme.textSecondary }]}>
-              You'll need this for 911
+              {"You'll need this for 911"}
             </ThemedText>
             <TextInput
               style={[
