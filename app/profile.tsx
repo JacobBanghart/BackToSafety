@@ -31,6 +31,20 @@ import { useTheme } from '@/context/ThemeContext';
 
 type SectionKey = 'personal' | 'medical' | 'communication' | 'devices';
 
+const MOBILITY_OPTIONS = [
+  'Walks independently',
+  'Uses cane',
+  'Uses walker',
+  'Manual wheelchair',
+  'Motorized wheelchair',
+  'Mobility scooter',
+  'Bicycle',
+  'Has vehicle',
+  'Other',
+] as const;
+
+type MobilityOption = (typeof MOBILITY_OPTIONS)[number];
+
 export default function ProfileScreen() {
   const router = useRouter();
   const { profile, saveProfile, isLoading, refreshProfile } = useProfile();
@@ -39,6 +53,9 @@ export default function ProfileScreen() {
 
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>('personal');
   const [isSaving, setIsSaving] = useState(false);
+  // When mobilityLevel is set to a custom value not in MOBILITY_OPTIONS, we show "Other" selected
+  // and store the custom text in mobilityOtherText
+  const [mobilityOtherText, setMobilityOtherText] = useState('');
 
   // Form state
   const [form, setForm] = useState({
@@ -86,6 +103,8 @@ export default function ProfileScreen() {
   // Load profile data into form
   useEffect(() => {
     if (profile) {
+      const savedMobility = profile.mobilityLevel || '';
+      const isKnownOption = MOBILITY_OPTIONS.includes(savedMobility as MobilityOption);
       setForm({
         name: profile.name || '',
         nickname: profile.nickname || '',
@@ -101,7 +120,7 @@ export default function ProfileScreen() {
         allergies: profile.allergies || '',
         cognitiveStatus: profile.cognitiveStatus || '',
         dominantHand: profile.dominantHand || 'unknown',
-        mobilityLevel: profile.mobilityLevel || '',
+        mobilityLevel: isKnownOption || savedMobility === '' ? savedMobility : 'Other',
         communicationPreference: profile.communicationPreference || '',
         escalationSigns: profile.escalationSigns || '',
         deescalationTechniques: profile.deescalationTechniques || '',
@@ -114,6 +133,9 @@ export default function ProfileScreen() {
         medicAlertId: profile.medicAlertId || '',
         medicAlertHotline: profile.medicAlertHotline || '',
       });
+      if (!isKnownOption && savedMobility !== '') {
+        setMobilityOtherText(savedMobility);
+      }
     }
   }, [profile]);
 
@@ -123,6 +145,11 @@ export default function ProfileScreen() {
 
   const handleSave = async () => {
     setIsSaving(true);
+    // Resolve the actual mobility value — if "Other" is selected use the custom text
+    const resolvedMobility =
+      form.mobilityLevel === 'Other'
+        ? mobilityOtherText.trim() || undefined
+        : form.mobilityLevel || undefined;
     try {
       await saveProfile({
         name: form.name.trim() || undefined,
@@ -139,7 +166,7 @@ export default function ProfileScreen() {
         allergies: form.allergies.trim() || undefined,
         cognitiveStatus: form.cognitiveStatus.trim() || undefined,
         dominantHand: form.dominantHand,
-        mobilityLevel: form.mobilityLevel.trim() || undefined,
+        mobilityLevel: resolvedMobility,
         communicationPreference: form.communicationPreference.trim() || undefined,
         escalationSigns: form.escalationSigns.trim() || undefined,
         deescalationTechniques: form.deescalationTechniques.trim() || undefined,
@@ -453,9 +480,53 @@ export default function ProfileScreen() {
                 </View>
               </View>
 
-              {renderInput('Mobility Level', 'mobilityLevel', {
-                placeholder: 'Walks independently, uses walker, wheelchair...',
-              })}
+              <View style={styles.inputGroup}>
+                <ThemedText style={[styles.label, { color: theme.text }]}>
+                  Mobility Level
+                </ThemedText>
+                <View style={styles.chipGroup}>
+                  {MOBILITY_OPTIONS.map((option) => (
+                    <Pressable
+                      key={option}
+                      style={[
+                        styles.chip,
+                        { borderColor: theme.border },
+                        form.mobilityLevel === option && {
+                          backgroundColor: theme.tint,
+                          borderColor: theme.tint,
+                        },
+                      ]}
+                      onPress={() => updateField('mobilityLevel', option)}
+                    >
+                      <ThemedText
+                        style={[
+                          styles.chipText,
+                          form.mobilityLevel === option && { color: '#fff' },
+                        ]}
+                      >
+                        {option}
+                      </ThemedText>
+                    </Pressable>
+                  ))}
+                </View>
+                {form.mobilityLevel === 'Other' && (
+                  <TextInput
+                    style={[
+                      styles.input,
+                      {
+                        backgroundColor: theme.card,
+                        borderColor: theme.border,
+                        color: theme.text,
+                        marginTop: Spacing.sm,
+                      },
+                    ]}
+                    value={mobilityOtherText}
+                    onChangeText={setMobilityOtherText}
+                    placeholder="Describe mobility level..."
+                    placeholderTextColor={theme.inputPlaceholder}
+                  />
+                )}
+              </View>
             </>,
             [
               form.medicalConditions,
@@ -693,6 +764,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   optionText: {
+    ...Typography.body,
+    fontWeight: '500',
+  },
+  chipGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.sm,
+  },
+  chip: {
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    borderRadius: Radius.full,
+    borderWidth: 1,
+  },
+  chipText: {
     ...Typography.body,
     fontWeight: '500',
   },
