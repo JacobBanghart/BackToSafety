@@ -11,6 +11,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "prebuild": "expo prebuild",
     "prebuild:android": "expo prebuild --platform android",
     "prebuild:ios": "expo prebuild --platform ios",
@@ -67,6 +70,8 @@
     "eslint": "^9.39.2",
     "eslint-config-expo": "~10.0.0",
     "prettier": "^3.7.4",
+    "vitest": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4",
     "typescript": "~5.9.3"
   },
   "private": true
