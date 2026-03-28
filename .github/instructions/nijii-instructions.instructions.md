@@ -292,7 +292,7 @@ types/
 - Known-good snapshot before risky infra changes: create a clear rollback point before touching gesture/reanimated/native package wiring.
 - Drag UX standard: every drag-and-drop feature must include active-item visual state and haptics (when platform-supported).
 - Sort order consistency: reorderable entities must have ordered reads, append-on-create (`max+1`), selective updates on reorder, and native/web parity.
-- Branch safety: create a feature branch before the first commit when current branch is `main` or `develop`.
+- Solo-dev branch rule: default to working directly on `main`; only use a feature branch when explicitly instructed.
 - Dirty tree scoped commit: in a non-clean worktree, stage files explicitly (no broad adds) and verify unrelated files remain uncommitted.
 - Compact card hierarchy: use one visual signal per concept (e.g., severity) and avoid duplicate color cues in dense cards.
 - Mobile tap targets: actionable icon buttons should be at least `40x40`.
