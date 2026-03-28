@@ -120,8 +120,8 @@ const INITIAL_STEPS: ChecklistStep[] = [
   {
     id: 'share_info',
     step: 9,
-    title: 'Share medical/behavioral info',
-    description: 'Provide responders with conditions, medications, de-escalation tips',
+    title: 'Share relevant personal details',
+    description: 'Share useful details (appearance, routines, communication preferences)',
     checked: false,
   },
   {
@@ -611,7 +611,6 @@ export default function EmergencyScreen() {
               { backgroundColor: secondary[100], borderColor: secondary[300] },
             ]}
           >
-            <IconSymbol name="arrow.left.arrow.right" size={16} color={primary[800]} />
             <ThemedText style={[styles.hintText, { color: primary[800] }]}>
               {getDirectionHint()}
             </ThemedText>
@@ -960,9 +959,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
     padding: Spacing.md,
     borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
   },
   hintText: {
     ...Typography.bodyBold,

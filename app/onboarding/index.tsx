@@ -69,7 +69,7 @@ export default function WelcomeScreen() {
           </ThemedText>
 
           <ThemedText style={[styles.description, { color: colors.textSecondary }]}>
-            A guided emergency response app for caregivers when someone with dementia wanders.
+            A safety coordination app that helps families and supporters organize a search quickly.
           </ThemedText>
         </View>
 

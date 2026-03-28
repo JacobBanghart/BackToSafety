@@ -43,21 +43,41 @@ export default function CompleteScreen() {
           screen to start the guided search.
         </ThemedText>
 
-        <View style={[styles.nextSteps, { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 }]}>
+        <View
+          style={[
+            styles.nextSteps,
+            { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 },
+          ]}
+        >
           <ThemedText style={styles.nextStepsTitle}>You can add more later:</ThemedText>
           <View style={styles.nextStepsList}>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• Medical conditions & medications</ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• De-escalation techniques</ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• Likely destinations</ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• More emergency contacts</ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>• Safety checklist</ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
+              • Important personal details
+            </ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
+              • De-escalation techniques
+            </ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
+              • Likely destinations
+            </ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
+              • More emergency contacts
+            </ThemedText>
+            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
+              • Safety checklist
+            </ThemedText>
           </View>
         </View>
       </View>
 
       <View style={styles.footer}>
-        <Pressable style={[styles.button, { backgroundColor: theme.primary }]} onPress={handleFinish}>
-          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>Go to Home</ThemedText>
+        <Pressable
+          style={[styles.button, { backgroundColor: theme.primary }]}
+          onPress={handleFinish}
+        >
+          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
+            Go to Home
+          </ThemedText>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -65,7 +65,7 @@ export default function ReadoutScreen() {
     return parts.join(', ');
   }, [profile]);
 
-  // Build medical info string
+  // Build personal details string
   const medicalDesc = useMemo(() => {
     if (!profile) return '';
     const parts: string[] = [];
@@ -88,8 +88,8 @@ export default function ReadoutScreen() {
       `Name: ${profile.name}${profile.nickname ? ` (goes by "${profile.nickname}")` : ''}`,
       profile.dateOfBirth ? `DOB: ${profile.dateOfBirth}` : undefined,
       appearanceDesc ? `Appearance: ${appearanceDesc}` : undefined,
-      medicalDesc ? `Medical Conditions: ${medicalDesc}` : undefined,
-      profile.medications ? `Medications: ${profile.medications}` : undefined,
+      medicalDesc ? `Important Details: ${medicalDesc}` : undefined,
+      profile.medications ? `Routine Medications (optional): ${profile.medications}` : undefined,
       profile.cognitiveStatus ? `Cognitive Status: ${profile.cognitiveStatus}` : undefined,
       profile.mobilityLevel ? `Mobility: ${profile.mobilityLevel}` : undefined,
       profile.mobilityLevel &&
@@ -158,7 +158,7 @@ export default function ReadoutScreen() {
     }
 
     if (medicalDesc) {
-      scriptParts.push(`Medical conditions: ${medicalDesc}.`);
+      scriptParts.push(`Additional context: ${medicalDesc}.`);
     }
 
     if (profile.medicAlertId) {
@@ -179,7 +179,7 @@ export default function ReadoutScreen() {
     if (!lastSeen.time) missing.push('last seen time');
     if (!lastSeen.coords) missing.push('last known location');
     if (!appearanceDesc) missing.push('appearance details');
-    if (!medicalDesc) missing.push('medical details');
+    if (!medicalDesc) missing.push('important details');
 
     return missing;
   }, [profile, lastSeen, appearanceDesc, medicalDesc]);
@@ -491,7 +491,7 @@ export default function ReadoutScreen() {
           </ThemedText>
         </View>
 
-        {/* Medical Card */}
+        {/* Important Details Card */}
         {(profile.medicalConditions ||
           profile.medications ||
           profile.allergies ||
@@ -503,7 +503,7 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: semantic.error }]}
               >
-                Medical
+                Important Details
               </ThemedText>
             </View>
             {profile.medicalConditions && (
@@ -517,7 +517,7 @@ export default function ReadoutScreen() {
             {profile.medications && (
               <InfoRow
                 icon="pills.fill"
-                label="Medications"
+                label="Routine Medications (optional)"
                 value={profile.medications}
                 theme={theme}
               />

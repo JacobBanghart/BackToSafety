@@ -235,18 +235,6 @@ export default function HomeScreen() {
                 <ThemedText style={[styles.summaryTitle, { color: theme.text }]}>
                   Emergency Info
                 </ThemedText>
-                {!(
-                  profile.medicalConditions ||
-                  profile.medications ||
-                  profile.cognitiveStatus ||
-                  profile.deescalationTechniques
-                ) && (
-                  <Pressable onPress={() => router.push('/profile' as Href)}>
-                    <ThemedText style={[styles.summaryEmpty, { color: theme.tint }]}>
-                      + Add medical info
-                    </ThemedText>
-                  </Pressable>
-                )}
               </View>
               <View style={[styles.viewScriptButton, { backgroundColor: theme.primaryLight }]}>
                 <ThemedText style={[styles.viewScriptHint, { color: theme.tint }]}>
@@ -264,7 +252,7 @@ export default function HomeScreen() {
                 {profile.medicalConditions && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      Medical Conditions
+                      Health Notes
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}
@@ -277,7 +265,7 @@ export default function HomeScreen() {
                 {profile.medications && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      Medications
+                      Routine Medications (optional)
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}
@@ -524,10 +512,6 @@ const styles = StyleSheet.create({
   viewScriptHint: {
     ...Typography.caption,
     fontWeight: '600',
-  },
-  summaryEmpty: {
-    ...Typography.caption,
-    fontStyle: 'italic',
   },
   summaryGrid: {
     gap: Spacing.md,

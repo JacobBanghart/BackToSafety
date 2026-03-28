@@ -140,14 +140,6 @@ export default function SettingsScreen() {
                   >
                     {option.label}
                   </ThemedText>
-                  {isSelected && (
-                    <IconSymbol
-                      name="checkmark.circle.fill"
-                      size={14}
-                      color={theme.tint}
-                      style={styles.themeCheck}
-                    />
-                  )}
                 </Pressable>
               );
             })}
@@ -244,9 +236,6 @@ const styles = StyleSheet.create({
   },
   themeLabel: {
     fontSize: 14,
-  },
-  themeCheck: {
-    marginTop: Spacing.xs,
   },
   dangerButton: {
     backgroundColor: semantic.error,
