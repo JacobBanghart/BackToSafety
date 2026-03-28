@@ -108,7 +108,7 @@ export default function HomeScreen() {
               </ThemedText>
             )}
             <ThemedText type="headline" style={{ color: theme.text }}>
-              {hasProfile ? profile.name : 'Wandering'}
+              {hasProfile ? profile.name : 'Back to Safety'}
             </ThemedText>
           </View>
 
