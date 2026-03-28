@@ -3,10 +3,10 @@
 ## Must Do Before Submission
 
 - [ ] Add a public privacy policy URL for App Store Connect and Play Console.
-- [ ] Add `eas.json` with production build/submission profiles.
-- [ ] Fix branding fallback text in home screen (`app/(tabs)/index.tsx`) from `Wandering` to `Back to Safety`.
+- [x] Add `eas.json` with production build/submission profiles.
+- [x] Fix branding fallback text in home screen (`app/(tabs)/index.tsx`) from `Wandering` to `Back to Safety`.
 - [ ] Prepare store metadata package:
-  - [ ] App description
+  - [x] App description
   - [ ] Keywords
   - [ ] Support URL
   - [ ] Marketing URL
@@ -59,3 +59,8 @@
 3. [x] Fix remaining branding fallback text.
 4. [ ] Build TestFlight/Internal track release and run physical-device QA.
 5. [ ] Upload final metadata and screenshots for submission.
+
+## Recent Progress
+
+- [x] Set Android EAS submit track to `internal` for draft rollout (`eas.json`).
+- [x] Added Google Play listing copy template (`docs/google-play-listing-template.md`).
