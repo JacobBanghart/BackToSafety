@@ -11,6 +11,8 @@ import {
   SCHEMA_VERSION,
 } from './schema';
 
+const MIGRATION_ERROR_PREFIX = '[DB] Migration failed';
+
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
@@ -77,17 +79,38 @@ async function runMigrations(
   fromVersion: number,
   toVersion: number,
 ): Promise<void> {
+  validateMigrationPlan(fromVersion, toVersion);
+
   for (let v = fromVersion + 1; v <= toVersion; v++) {
     const migration = MIGRATIONS[v];
     if (!migration) {
       throw new Error(`Missing migration for version ${v}`);
     }
-    await database.execAsync(migration);
 
-    await database.runAsync(
-      `INSERT OR REPLACE INTO schema_version (version, migrated_at) VALUES (?, CURRENT_TIMESTAMP)`,
-      [v],
-    );
+    try {
+      await database.execAsync('BEGIN TRANSACTION');
+      await database.execAsync(migration);
+      await database.runAsync(
+        `INSERT OR REPLACE INTO schema_version (version, migrated_at) VALUES (?, CURRENT_TIMESTAMP)`,
+        [v],
+      );
+      await database.execAsync('COMMIT');
+    } catch (error) {
+      await database.execAsync('ROLLBACK');
+      throw new Error(`${MIGRATION_ERROR_PREFIX} v${v}: ${String(error)}`);
+    }
+  }
+}
+
+function validateMigrationPlan(fromVersion: number, toVersion: number): void {
+  if (fromVersion >= toVersion) {
+    return;
+  }
+
+  for (let version = fromVersion + 1; version <= toVersion; version++) {
+    if (!MIGRATIONS[version]) {
+      throw new Error(`Missing required migration for version ${version}`);
+    }
   }
 }
 
@@ -232,6 +255,11 @@ export async function closeDatabase(): Promise<void> {
     await db.closeAsync();
     db = null;
   }
+}
+
+export async function getDatabaseSchemaVersion(): Promise<number> {
+  const database = await getDatabase();
+  return getCurrentVersion(database);
 }
 
 // Platform identifier

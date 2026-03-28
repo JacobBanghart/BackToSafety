@@ -4,7 +4,7 @@
  */
 
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -17,7 +17,7 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { useOnboarding } from '@/context/OnboardingContext';
-import { clearAllData } from '@/database/storage';
+import { clearAllData, getDatabaseSchemaVersion } from '@/database/storage';
 import { getAppName, getAppVersionLabel } from '@/utils/appInfo';
 
 const IS_DEV = __DEV__;
@@ -32,8 +32,22 @@ export default function SettingsScreen() {
   const [devModeEnabled, setDevModeEnabled] = useState(IS_DEV);
   const [tapCount, setTapCount] = useState(0);
   const [lastTapTime, setLastTapTime] = useState(0);
+  const [dbSchemaVersion, setDbSchemaVersion] = useState<number | null>(null);
   const appName = getAppName();
   const appVersionLabel = getAppVersionLabel();
+
+  useEffect(() => {
+    async function loadSchemaVersion() {
+      try {
+        const version = await getDatabaseSchemaVersion();
+        setDbSchemaVersion(version);
+      } catch {
+        setDbSchemaVersion(null);
+      }
+    }
+
+    loadSchemaVersion();
+  }, []);
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
     { value: 'system', label: 'System', icon: '📱' },
@@ -192,8 +206,15 @@ export default function SettingsScreen() {
           <ListItem
             label="Theme"
             value={colorScheme}
-            style={{ borderBottomColor: 'transparent' }}
+            style={devModeEnabled ? undefined : { borderBottomColor: 'transparent' }}
           />
+          {devModeEnabled && (
+            <ListItem
+              label="DB Schema"
+              value={dbSchemaVersion === null ? 'Unknown' : String(dbSchemaVersion)}
+              style={{ borderBottomColor: 'transparent' }}
+            />
+          )}
         </AppCard>
       </ScrollView>
     </SafeAreaView>

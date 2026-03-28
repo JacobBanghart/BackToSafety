@@ -9,7 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.backtosafety.app",
+      "buildNumber": "1"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,6 +19,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "versionCode": 1,
       "permissions": ["READ_CONTACTS"],
       "package": "com.backtosafety.app"
     },

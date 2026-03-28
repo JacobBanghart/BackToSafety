@@ -161,6 +161,20 @@ export async function closeDatabase(): Promise<void> {
   // No-op for AsyncStorage
 }
 
+export async function getDatabaseSchemaVersion(): Promise<number> {
+  try {
+    const version = await AsyncStorage.getItem(STORAGE_KEYS.SCHEMA_VERSION);
+    if (!version) {
+      return 0;
+    }
+
+    const parsed = Number.parseInt(version, 10);
+    return Number.isFinite(parsed) ? parsed : 0;
+  } catch {
+    return 0;
+  }
+}
+
 // Platform identifier
 export const STORAGE_TYPE = 'asyncstorage' as const;
 
