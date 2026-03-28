@@ -672,25 +672,34 @@ export default function ContactsScreen() {
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
             Add family members, neighbors, or friends who can help in an emergency.
           </ThemedText>
-          <Pressable
-            style={[styles.emptyButton, { backgroundColor: theme.primary }]}
-            onPress={handleAddNew}
-          >
-            <IconSymbol name="plus" size={18} color="#fff" />
-            <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
-              Add First Contact
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            style={[styles.emptyImportButton, { borderColor: theme.border }]}
-            onPress={handleImportContact}
-            disabled={isImporting}
-          >
-            <IconSymbol name="square.and.arrow.down" size={18} color={theme.tint} />
-            <ThemedText style={[styles.emptyImportButtonText, { color: theme.text }]}>
-              {isImporting ? 'Importing...' : 'Import from Contacts'}
-            </ThemedText>
-          </Pressable>
+          <View style={styles.emptyActionsRow}>
+            <Pressable
+              style={[styles.addButton, styles.emptyAction, { backgroundColor: theme.primary }]}
+              onPress={handleAddNew}
+            >
+              <IconSymbol name="plus" size={20} color="#fff" />
+              <ThemedText style={styles.addButtonText} numberOfLines={1}>
+                Add Contact
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.importButton,
+                styles.emptyAction,
+                { backgroundColor: theme.card, borderColor: theme.border },
+              ]}
+              onPress={handleImportContact}
+              disabled={isImporting}
+            >
+              <IconSymbol name="square.and.arrow.down" size={18} color={theme.tint} />
+              <ThemedText
+                style={[styles.importButtonText, { color: theme.text }]}
+                numberOfLines={1}
+              >
+                {isImporting ? 'Importing...' : 'Import Contact'}
+              </ThemedText>
+            </Pressable>
+          </View>
         </View>
       }
       ListFooterComponent={
@@ -847,31 +856,15 @@ const styles = StyleSheet.create({
     ...Typography.body,
     textAlign: 'center',
   },
-  emptyButton: {
+  emptyActionsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    width: '100%',
     gap: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.lg,
     marginTop: Spacing.sm,
-    minHeight: 48,
+    maxWidth: 560,
   },
-  emptyButtonText: {
-    ...Typography.bodyBold,
-  },
-  emptyImportButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    minHeight: 48,
-  },
-  emptyImportButtonText: {
-    ...Typography.bodyBold,
+  emptyAction: {
+    flex: 1,
   },
 
   // Contact card
