@@ -127,7 +127,11 @@ export default function NameScreen() {
 
         <View style={styles.footer}>
           <Pressable
-            style={[styles.button, { backgroundColor: theme.primary }, !name.trim() && styles.buttonDisabled]}
+            style={[
+              styles.button,
+              { backgroundColor: theme.primary },
+              !name.trim() && styles.buttonDisabled,
+            ]}
             onPress={handleContinue}
             disabled={!name.trim()}
           >
@@ -190,7 +194,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: Radius.lg,
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
+    height: 48,
+    paddingVertical: 0,
+    lineHeight: 22,
   },
   hint: {
     ...Typography.body,

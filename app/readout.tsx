@@ -74,7 +74,7 @@ export default function ReadoutScreen() {
     if (!profile) return '';
 
     const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : 'Unknown';
-    const gps = lastSeen.coords
+    const coordinates = lastSeen.coords
       ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)} (±${
           lastSeen.coords.accuracy ?? '—'
         }m)`
@@ -111,8 +111,8 @@ export default function ReadoutScreen() {
       profile.approachGuidance ? `How to Approach: ${profile.approachGuidance}` : undefined,
       profile.safeWord ? `Family Safe Word: ${profile.safeWord}` : undefined,
       `Last seen: ${ls}`,
-      `GPS: ${gps}`,
-      profile.locativeDeviceInfo ? `Tracking Device: ${profile.locativeDeviceInfo}` : undefined,
+      `Coordinates: ${coordinates}`,
+      profile.locativeDeviceInfo ? `Personal Locator: ${profile.locativeDeviceInfo}` : undefined,
       profile.idBracelets ? `ID Bracelet: ${profile.idBracelets}` : undefined,
       profile.medicAlertId ? `MedicAlert ID: ${profile.medicAlertId}` : undefined,
       '',
@@ -126,7 +126,7 @@ export default function ReadoutScreen() {
     if (!profile) return '';
 
     const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : 'Unknown time';
-    const gpsText = lastSeen.coords
+    const locationText = lastSeen.coords
       ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)}`
       : 'Unknown location';
 
@@ -134,7 +134,7 @@ export default function ReadoutScreen() {
       ? `Age approximately ${new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear()}`
       : '';
 
-    return `I'm reporting a missing vulnerable adult with dementia. Name: ${profile.name}. ${age}. Last seen: ${ls}. Location: ${gpsText}. Appearance: ${appearanceDesc || 'N/A'}. Medical conditions: ${medicalDesc || 'N/A'}. ${profile.medicAlertId ? `MedicAlert ID: ${profile.medicAlertId}.` : ''} Photo available. Please advise about issuing a local Silver/Purple Alert.`;
+    return `I'm reporting a missing vulnerable adult with dementia. Name: ${profile.name}. ${age}. Last seen: ${ls}. Location: ${locationText}. Appearance: ${appearanceDesc || 'N/A'}. Medical conditions: ${medicalDesc || 'N/A'}. ${profile.medicAlertId ? `MedicAlert ID: ${profile.medicAlertId}.` : ''} Photo available. Please advise about issuing a local Silver/Purple Alert.`;
   }, [profile, lastSeen, appearanceDesc, medicalDesc]);
 
   const copyScript = async () => Clipboard.setStringAsync(script);
@@ -183,7 +183,7 @@ export default function ReadoutScreen() {
   }
 
   const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : null;
-  const gps = lastSeen.coords
+  const coordinates = lastSeen.coords
     ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)} (±${lastSeen.coords.accuracy ?? '—'}m)`
     : null;
 
@@ -247,7 +247,7 @@ export default function ReadoutScreen() {
         </View>
 
         {/* Last Seen Card */}
-        {(ls || gps) && (
+        {(ls || coordinates) && (
           <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
             <View style={styles.sectionLabel}>
               <IconSymbol name="clock.fill" size={14} color={theme.primary} />
@@ -259,7 +259,9 @@ export default function ReadoutScreen() {
               </ThemedText>
             </View>
             {ls && <InfoRow icon="clock" label="Time" value={ls} theme={theme} />}
-            {gps && <InfoRow icon="location.fill" label="GPS" value={gps} theme={theme} />}
+            {coordinates && (
+              <InfoRow icon="location.fill" label="Coordinates" value={coordinates} theme={theme} />
+            )}
             {lastSeen.coords && (
               <Pressable
                 style={[styles.mapsButton, { backgroundColor: semantic.success }]}
@@ -482,7 +484,7 @@ export default function ReadoutScreen() {
           </View>
         )}
 
-        {/* Tracking & ID Card */}
+        {/* Locator & ID Card */}
         {(profile.locativeDeviceInfo || profile.idBracelets || profile.medicAlertId) && (
           <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
             <View style={styles.sectionLabel}>
@@ -491,13 +493,13 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: theme.primary }]}
               >
-                Tracking &amp; ID
+                Locator &amp; ID
               </ThemedText>
             </View>
             {profile.locativeDeviceInfo && (
               <InfoRow
                 icon="antenna.radiowaves.left.and.right"
-                label="GPS Device"
+                label="Personal Locator"
                 value={profile.locativeDeviceInfo}
                 theme={theme}
               />
