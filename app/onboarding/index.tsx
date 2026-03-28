@@ -4,7 +4,7 @@
  */
 
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -31,7 +31,7 @@ export default function WelcomeScreen() {
 
   const handleContinue = async () => {
     await completeStep('welcome');
-    router.push('/onboarding/name' as any);
+    router.push('/onboarding/name' as Href);
   };
 
   // Map legacy `colors.*` references to theme tokens

@@ -25,7 +25,7 @@ import { AppTextInput } from '@/components/AppTextInput';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
 import { Colors, semantic } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
@@ -43,7 +43,7 @@ import { formatPhoneInput, normalizeSmsRecipient } from '@/utils/phone';
 
 type ContactRole = 'primary_caregiver' | 'caregiver' | 'neighbor' | 'family' | 'friend' | 'other';
 
-const ROLE_OPTIONS: { value: ContactRole; label: string; icon: string }[] = [
+const ROLE_OPTIONS: { value: ContactRole; label: string; icon: IconSymbolName }[] = [
   { value: 'primary_caregiver', label: 'Primary Caregiver', icon: 'star.fill' },
   { value: 'caregiver', label: 'Caregiver', icon: 'heart.fill' },
   { value: 'family', label: 'Family', icon: 'person.2.fill' },
@@ -558,11 +558,7 @@ export default function ContactsScreen() {
                   )
                 }
               >
-                <IconSymbol
-                  name={option.icon as any}
-                  size={14}
-                  color={isSelected ? '#fff' : theme.icon}
-                />
+                <IconSymbol name={option.icon} size={14} color={isSelected ? '#fff' : theme.icon} />
                 <ThemedText
                   style={[
                     styles.roleOptionText,

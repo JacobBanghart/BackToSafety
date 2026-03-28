@@ -16,7 +16,9 @@ import { Colors, semantic } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
+import { useOnboarding } from '@/context/OnboardingContext';
 import { clearAllData } from '@/database/storage';
+import { getAppName, getAppVersionLabel } from '@/utils/appInfo';
 
 const IS_DEV = __DEV__;
 const TAPS_TO_UNLOCK = 7;
@@ -24,11 +26,14 @@ const TAPS_TO_UNLOCK = 7;
 export default function SettingsScreen() {
   const router = useRouter();
   const { themePreference, setThemePreference, colorScheme } = useTheme();
+  const { refreshOnboardingState } = useOnboarding();
   const theme = Colors[colorScheme];
   const [isClearing, setIsClearing] = useState(false);
   const [devModeEnabled, setDevModeEnabled] = useState(IS_DEV);
   const [tapCount, setTapCount] = useState(0);
   const [lastTapTime, setLastTapTime] = useState(0);
+  const appName = getAppName();
+  const appVersionLabel = getAppVersionLabel();
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
     { value: 'system', label: 'System', icon: '📱' },
@@ -52,33 +57,29 @@ export default function SettingsScreen() {
         } else {
           Alert.alert('Developer Mode', 'Developer options are now enabled!');
         }
-      } else if (newCount >= 3 && newCount < TAPS_TO_UNLOCK && !devModeEnabled) {
-        // Give feedback on progress
-        const remaining = TAPS_TO_UNLOCK - newCount;
-        console.log(`${remaining} taps to enable developer mode`);
       }
     }
     setLastTapTime(now);
   };
 
   const handleClearData = async () => {
-    const confirmClear = () => {
+    const confirmClear = async () => {
       setIsClearing(true);
-      clearAllData()
-        .then(() => {
-          if (Platform.OS === 'web') {
-            window.location.reload();
-          } else {
-            router.replace('/onboarding');
-          }
-        })
-        .catch((err: Error) => {
-          console.error('Error clearing data:', err);
-          Alert.alert('Error', 'Failed to clear data. Please try again.');
-        })
-        .finally(() => {
-          setIsClearing(false);
-        });
+      try {
+        await clearAllData();
+        await refreshOnboardingState();
+
+        if (Platform.OS === 'web') {
+          window.location.reload();
+        } else {
+          router.replace('/onboarding');
+        }
+      } catch (err) {
+        console.error('Error clearing data:', err);
+        Alert.alert('Error', 'Failed to clear data. Please try again.');
+      } finally {
+        setIsClearing(false);
+      }
     };
 
     if (Platform.OS === 'web') {
@@ -181,10 +182,10 @@ export default function SettingsScreen() {
           <ThemedText type="subtitle" style={styles.sectionTitle}>
             About
           </ThemedText>
-          <ListItem label="App" value="Back to Safety" />
+          <ListItem label="App" value={appName} />
           <ListItem
             label="Version"
-            value={`0.1.0${devModeEnabled ? ' (Dev)' : ''}`}
+            value={`${appVersionLabel}${devModeEnabled ? ' (Dev)' : ''}`}
             onPress={handleVersionTap}
           />
           <ListItem label="Platform" value={Platform.OS} />

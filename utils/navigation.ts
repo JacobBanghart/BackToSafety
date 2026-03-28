@@ -4,32 +4,33 @@
  */
 
 import { router } from 'expo-router';
+import type { Href } from 'expo-router';
 
 // Simple in-memory store for the previous route
-let previousRoute: string | null = null;
+let previousRoute: Href | null = null;
 
 /**
  * Record the current route before navigating away
  */
-export function setPreviousRoute(route: string) {
+export function setPreviousRoute(route: Href) {
   previousRoute = route;
 }
 
 /**
  * Get the previous route, or null if none recorded
  */
-export function getPreviousRoute(): string | null {
+export function getPreviousRoute(): Href | null {
   return previousRoute;
 }
 
 /**
  * Navigate back to the previous route, or fallback to home
  */
-export function goBack(fallback: string = '/(tabs)') {
+export function goBack(fallback: Href = '/(tabs)') {
   if (previousRoute) {
-    router.replace(previousRoute as any);
+    router.replace(previousRoute);
     previousRoute = null; // Clear after use
   } else {
-    router.replace(fallback as any);
+    router.replace(fallback);
   }
 }

@@ -40,10 +40,6 @@ export async function initializeDatabase(): Promise<void> {
       onboardingState[step] = { completed: false, skipped: false };
     }
     await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING, JSON.stringify(onboardingState));
-
-    console.log('[Storage] Web storage initialized');
-  } else {
-    console.log(`[Storage] Web storage version: ${version}`);
   }
 }
 
@@ -128,8 +124,6 @@ export async function clearAllData(): Promise<void> {
 
   // Re-initialize with fresh state
   await initializeDatabase();
-
-  console.log('[Storage] All data cleared');
 }
 
 /**

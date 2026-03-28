@@ -77,23 +77,17 @@ async function runMigrations(
   fromVersion: number,
   toVersion: number,
 ): Promise<void> {
-  console.log(`[DB] Running migrations from v${fromVersion} to v${toVersion}`);
-
   for (let v = fromVersion + 1; v <= toVersion; v++) {
     const migration = MIGRATIONS[v];
     if (!migration) {
       throw new Error(`Missing migration for version ${v}`);
     }
-
-    console.log(`[DB] Applying migration v${v}...`);
     await database.execAsync(migration);
 
     await database.runAsync(
       `INSERT OR REPLACE INTO schema_version (version, migrated_at) VALUES (?, CURRENT_TIMESTAMP)`,
       [v],
     );
-
-    console.log(`[DB] Migration v${v} complete`);
   }
 }
 
@@ -106,7 +100,6 @@ export async function initializeDatabase(): Promise<void> {
     const database = await openDatabase();
 
     const currentVersion = await getCurrentVersion(database);
-    console.log(`[DB] Current schema version: ${currentVersion}, target: ${SCHEMA_VERSION}`);
 
     if (currentVersion < SCHEMA_VERSION) {
       await runMigrations(database, currentVersion, SCHEMA_VERSION);
@@ -128,7 +121,6 @@ export async function initializeDatabase(): Promise<void> {
       );
     }
 
-    console.log('[DB] Database initialized successfully');
     dbReadyResolve?.();
   } catch (err) {
     dbReadyReject?.(err);
@@ -207,8 +199,6 @@ export async function clearAllData(): Promise<void> {
       step,
     ]);
   }
-
-  console.log('[DB] All data cleared');
 }
 
 /**

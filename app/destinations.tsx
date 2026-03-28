@@ -24,7 +24,7 @@ import { AppTextInput } from '@/components/AppTextInput';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
 import { Colors, primary, semantic } from '@/constants/Colors';
 // neutral is intentionally not imported — all neutral refs use theme tokens
 import { Spacing, Radius } from '@/constants/Spacing';
@@ -50,7 +50,7 @@ type DestinationCategory =
   | 'other';
 type RiskLevel = 'high' | 'medium' | 'low';
 
-const CATEGORY_OPTIONS: { value: DestinationCategory; label: string; icon: string }[] = [
+const CATEGORY_OPTIONS: { value: DestinationCategory; label: string; icon: IconSymbolName }[] = [
   { value: 'water', label: 'Water/Pool', icon: 'drop.fill' },
   { value: 'former_workplace', label: 'Former Work', icon: 'briefcase.fill' },
   { value: 'church', label: 'Church', icon: 'building.columns.fill' },
@@ -363,7 +363,7 @@ export default function DestinationsScreen() {
           <View style={styles.cardInfo}>
             <View style={styles.nameRow}>
               <View style={[styles.categoryIcon, { backgroundColor: `${primary[600]}15` }]}>
-                <IconSymbol name={categoryInfo.icon as any} size={16} color={primary[600]} />
+                <IconSymbol name={categoryInfo.icon} size={16} color={primary[600]} />
               </View>
               <ThemedText style={styles.destinationName} numberOfLines={1}>
                 {destination.name}
@@ -467,11 +467,7 @@ export default function DestinationsScreen() {
                   )
                 }
               >
-                <IconSymbol
-                  name={option.icon as any}
-                  size={14}
-                  color={isSelected ? '#fff' : theme.icon}
-                />
+                <IconSymbol name={option.icon} size={14} color={isSelected ? '#fff' : theme.icon} />
                 <ThemedText
                   style={[
                     styles.optionText,

@@ -3,7 +3,7 @@
  * Physical description for 911 dispatch
  */
 
-import { useRouter } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -60,7 +60,7 @@ export default function AppearanceScreen() {
         identifyingMarks: identifyingMarks.trim() || undefined,
       });
       await completeStep('profile_appearance');
-      router.push('/onboarding/contact' as any);
+      router.push('/onboarding/contact' as Href);
     } catch (err) {
       console.error('Error saving appearance:', err);
     }
@@ -68,7 +68,7 @@ export default function AppearanceScreen() {
 
   const handleSkip = async () => {
     await completeStep('profile_appearance');
-    router.push('/onboarding/contact' as any);
+    router.push('/onboarding/contact' as Href);
   };
 
   return (

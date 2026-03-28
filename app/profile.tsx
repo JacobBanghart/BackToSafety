@@ -26,7 +26,7 @@ import { useNavigation } from '@react-navigation/native';
 
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
@@ -476,13 +476,13 @@ export default function ProfileScreen() {
   const renderSection = (
     key: SectionKey,
     title: string,
-    icon: string,
+    icon: IconSymbolName,
     content: React.ReactNode,
   ) => (
     <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <Pressable style={styles.sectionHeader} onPress={() => toggleSection(key)}>
         <View style={[styles.sectionIconWrap, { backgroundColor: theme.primaryLight }]}>
-          <IconSymbol name={icon as any} size={16} color={theme.primary} />
+          <IconSymbol name={icon} size={16} color={theme.primary} />
         </View>
         <ThemedText type="bodyBold" style={[styles.sectionTitle, { color: theme.text }]}>
           {title}

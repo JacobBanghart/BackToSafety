@@ -3,7 +3,7 @@
  * At least one person to call in emergency
  */
 
-import { useRouter } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -52,7 +52,7 @@ export default function ContactScreen() {
         shareMedicalInfo: true,
       });
       await completeStep('emergency_contact');
-      router.push('/onboarding/complete' as any);
+      router.push('/onboarding/complete' as Href);
     } catch (err) {
       console.error('Error saving contact:', err);
       setError('Failed to save. Please try again.');
@@ -61,7 +61,7 @@ export default function ContactScreen() {
 
   const handleSkip = async () => {
     await completeStep('emergency_contact');
-    router.push('/onboarding/complete' as any);
+    router.push('/onboarding/complete' as Href);
   };
 
   return (

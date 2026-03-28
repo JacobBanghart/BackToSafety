@@ -1,11 +1,10 @@
 import React from 'react';
 import { Modal, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { Colors } from '@/constants/Colors';
+import { Colors, semantic } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
-import { semantic } from '@/constants/Colors';
 
 type AppModalType = 'delete' | 'alert';
 
@@ -32,38 +31,24 @@ export function AppModal({
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
-  const resolvedConfirmLabel =
-    confirmLabel ?? (type === 'delete' ? 'Delete' : 'OK');
+  const resolvedConfirmLabel = confirmLabel ?? (type === 'delete' ? 'Delete' : 'OK');
 
-  const confirmBackgroundColor =
-    type === 'delete' ? semantic.error : theme.primary;
+  const confirmBackgroundColor = type === 'delete' ? semantic.error : theme.primary;
 
   return (
-    <Modal
-      animationType="fade"
-      transparent
-      visible={visible}
-      onRequestClose={onDismiss}
-    >
+    <Modal animationType="fade" transparent visible={visible} onRequestClose={onDismiss}>
       <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
         <View style={[styles.content, { backgroundColor: theme.card }]}>
           <ThemedText style={styles.title}>{title}</ThemedText>
           <ThemedText style={styles.message}>{message}</ThemedText>
 
-          <View
-            style={[
-              styles.buttons,
-              type !== 'delete' && styles.buttonsCentered,
-            ]}
-          >
+          <View style={[styles.buttons, type !== 'delete' && styles.buttonsCentered]}>
             {type === 'delete' && (
               <TouchableOpacity
                 style={[styles.button, styles.cancelButton, { borderColor: theme.border }]}
                 onPress={onDismiss}
               >
-                <ThemedText style={[styles.buttonText, { color: theme.text }]}>
-                  Cancel
-                </ThemedText>
+                <ThemedText style={[styles.buttonText, { color: theme.text }]}>Cancel</ThemedText>
               </TouchableOpacity>
             )}
 

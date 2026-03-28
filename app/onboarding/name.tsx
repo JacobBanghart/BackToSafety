@@ -3,7 +3,7 @@
  * Collect name and nickname (essential for 911 calls)
  */
 
-import { useRouter } from 'expo-router';
+import { Href, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -46,7 +46,7 @@ export default function NameScreen() {
         nickname: nickname.trim() || undefined,
       });
       await completeStep('profile_name');
-      router.push('/onboarding/photo' as any);
+      router.push('/onboarding/photo' as Href);
     } catch (err) {
       console.error('Error saving profile:', err);
       setError('Failed to save. Please try again.');
