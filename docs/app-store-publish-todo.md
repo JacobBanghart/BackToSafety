@@ -45,6 +45,13 @@
   - [ ] Add DNS records
   - [ ] Enable HTTPS in GitHub Pages settings
 
+## Public Repo Hardening
+
+- [x] Add CI secret scanning workflow (`.github/workflows/secret-scan.yml`).
+- [x] Add local pre-commit secret scan hook (`.githooks/pre-commit`).
+- [ ] Enable local hooks path: `git config core.hooksPath .githooks`.
+- [ ] Run one manual local secret scan before making repo public.
+
 ## Execution Order
 
 1. [x] Create `eas.json` with `preview` and `production` profiles.
