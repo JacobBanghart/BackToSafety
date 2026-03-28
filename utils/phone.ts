@@ -60,3 +60,38 @@ export function formatPhoneInput(value: string): string {
 export function stripPhoneFormatting(phone: string): string {
   return phone.replace(/\D/g, '');
 }
+
+export function normalizeSmsRecipient(phone: string): string {
+  const trimmed = phone.trim();
+
+  if (trimmed.length === 0) {
+    return '';
+  }
+
+  const hasLeadingPlus = trimmed.startsWith('+');
+  const digits = trimmed.replace(/\D/g, '');
+
+  if (digits.length === 0) {
+    return '';
+  }
+
+  return hasLeadingPlus ? `+${digits}` : digits;
+}
+
+export function normalizeUniqueSmsRecipients(phones: readonly string[]): string[] {
+  const normalizedRecipients = phones
+    .map((phone) => normalizeSmsRecipient(phone))
+    .filter((phone) => phone.length > 0);
+
+  const recipientsByKey = normalizedRecipients.reduce((acc, phone) => {
+    const dedupeKey = phone.replace(/^\+/, '');
+
+    if (!acc.has(dedupeKey)) {
+      acc.set(dedupeKey, phone);
+    }
+
+    return acc;
+  }, new Map<string, string>());
+
+  return Array.from(recipientsByKey.values());
+}

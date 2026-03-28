@@ -5,6 +5,7 @@
 
 import { goBack, setPreviousRoute } from '@/utils/navigation';
 import * as Haptics from 'expo-haptics';
+import * as SMS from 'expo-sms';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -32,6 +33,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { getEmergencyContacts } from '@/database/contacts';
 import { Destination, getDestinations } from '@/database/destinations';
 import { getSetting, saveSetting } from '@/database/storage';
+import { normalizeUniqueSmsRecipients } from '@/utils/phone';
 
 // Emergency state stored in settings
 const EMERGENCY_STATE_KEY = 'active_emergency';
@@ -358,9 +360,9 @@ export default function EmergencyScreen() {
 
     const message = `URGENT: ${profile?.name || 'Our loved one'} is missing. Last seen ${startedAt.toLocaleTimeString()}. ${wearing ? `Wearing: ${wearing}. ` : ''}Please help search or call if you see them.`;
 
-    const recipients = contactsToNotify
-      .map((contact) => contact.phone.replace(/[^\d+]/g, '').trim())
-      .filter((phone) => phone.length > 0);
+    const recipients = normalizeUniqueSmsRecipients(
+      contactsToNotify.map((contact) => contact.phone),
+    );
 
     if (recipients.length === 0) {
       setModalType('noContacts');
@@ -368,21 +370,20 @@ export default function EmergencyScreen() {
       return;
     }
 
-    const recipientList = recipients.join(',');
-    const bodySeparator = Platform.OS === 'ios' ? '&' : '?';
-    const smsUrl = `sms:${recipientList}${bodySeparator}body=${encodeURIComponent(message)}`;
-
     try {
-      await Linking.openURL(smsUrl);
-    } catch {
-      const firstRecipient = recipients[0];
-      if (!firstRecipient) {
+      const isSmsAvailable = await SMS.isAvailableAsync();
+
+      if (!isSmsAvailable) {
         setModalType('smsError');
         setModalVisible(true);
         return;
       }
 
-      const fallbackSmsUrl = `sms:${firstRecipient}${bodySeparator}body=${encodeURIComponent(message)}`;
+      await SMS.sendSMSAsync(recipients, message);
+    } catch {
+      const recipientList = recipients.join(',');
+      const bodySeparator = Platform.OS === 'ios' ? '&' : '?';
+      const fallbackSmsUrl = `sms:${recipientList}${bodySeparator}body=${encodeURIComponent(message)}`;
 
       try {
         await Linking.openURL(fallbackSmsUrl);

@@ -17,6 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
+      "permissions": ["READ_CONTACTS"],
       "package": "com.backtosafety.app"
     },
     "plugins": [
@@ -34,6 +35,12 @@
       "expo-secure-store",
       "expo-font",
       "expo-web-browser",
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Back to Safety to access your contacts so you can quickly import emergency contacts."
+        }
+      ],
       "@react-native-community/datetimepicker",
       [
         "expo-image-picker",

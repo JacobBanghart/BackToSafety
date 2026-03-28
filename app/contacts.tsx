@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import * as Contacts from 'expo-contacts';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
@@ -38,7 +39,7 @@ import {
   getContacts,
   updateContact,
 } from '@/database/contacts';
-import { formatPhoneInput } from '@/utils/phone';
+import { formatPhoneInput, normalizeSmsRecipient } from '@/utils/phone';
 
 type ContactRole = 'primary_caregiver' | 'caregiver' | 'neighbor' | 'family' | 'friend' | 'other';
 
@@ -91,6 +92,7 @@ export default function ContactsScreen() {
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [initialFormData, setInitialFormData] = useState<FormData>(EMPTY_FORM);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
   const hasUnsavedFormChanges =
     showForm && JSON.stringify(formData) !== JSON.stringify(initialFormData);
@@ -245,6 +247,111 @@ export default function ContactsScreen() {
     setFormData(EMPTY_FORM);
     setInitialFormData(EMPTY_FORM);
     setShowForm(true);
+  };
+
+  const getContactPhoneNumber = (contact: Contacts.Contact): string => {
+    const phoneEntry = contact.phoneNumbers?.find((entry) => {
+      const number = entry.number?.trim();
+      return typeof number === 'string' && number.length > 0;
+    });
+
+    return phoneEntry?.number?.trim() ?? '';
+  };
+
+  const getContactName = (contact: Contacts.Contact): string => {
+    const fullName = contact.name?.trim();
+    if (fullName) {
+      return fullName;
+    }
+
+    const fallbackName = [contact.firstName, contact.lastName].filter(Boolean).join(' ').trim();
+    return fallbackName;
+  };
+
+  const toPhoneKey = (phone: string): string => normalizeSmsRecipient(phone).replace(/^\+/, '');
+
+  const handleImportContact = async () => {
+    if (Platform.OS === 'web') {
+      showAlert('validation', 'Contact import is only available on iPhone and Android devices.');
+      return;
+    }
+
+    setIsImporting(true);
+
+    try {
+      const isAvailable = await Contacts.isAvailableAsync();
+      if (!isAvailable) {
+        showAlert('error', 'Contact import is not available on this device.');
+        return;
+      }
+
+      const permission = await Contacts.requestPermissionsAsync();
+
+      if (!permission.granted) {
+        Alert.alert(
+          'Contacts Permission Needed',
+          'Allow contacts access to import an emergency contact from your address book.',
+          [
+            { text: 'Not Now', style: 'cancel' },
+            {
+              text: 'Open Settings',
+              onPress: () => {
+                void Linking.openSettings();
+              },
+            },
+          ],
+        );
+        return;
+      }
+
+      const pickedContact = await Contacts.presentContactPickerAsync();
+
+      if (!pickedContact) {
+        return;
+      }
+
+      const importedPhone = getContactPhoneNumber(pickedContact);
+
+      if (!importedPhone) {
+        showAlert('validation', 'That contact has no phone number to import.');
+        return;
+      }
+
+      const importedName = getContactName(pickedContact);
+
+      if (!importedName) {
+        showAlert('validation', 'That contact has no name to import.');
+        return;
+      }
+
+      const existingPhoneKeys = new Set(
+        contacts
+          .map((contact) => toPhoneKey(contact.phone))
+          .filter((phoneKey) => phoneKey.length > 0),
+      );
+      const importedPhoneKey = toPhoneKey(importedPhone);
+
+      if (existingPhoneKeys.has(importedPhoneKey)) {
+        showAlert('validation', 'This phone number is already in your emergency contacts.');
+        return;
+      }
+
+      const nextFormData: FormData = {
+        ...EMPTY_FORM,
+        name: importedName,
+        phone: formatPhoneInput(importedPhone),
+      };
+
+      setEditingContact(null);
+      setFormData(nextFormData);
+      setInitialFormData(nextFormData);
+      setShowForm(true);
+    } catch (error) {
+      console.error('Failed to import contact:', error);
+      showAlert('error', 'Could not import contact. Please try again.');
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const discardFormAndClose = () => {
@@ -574,18 +681,44 @@ export default function ContactsScreen() {
               Add First Contact
             </ThemedText>
           </Pressable>
+          <Pressable
+            style={[styles.emptyImportButton, { borderColor: theme.border }]}
+            onPress={handleImportContact}
+            disabled={isImporting}
+          >
+            <IconSymbol name="square.and.arrow.down" size={18} color={theme.tint} />
+            <ThemedText style={[styles.emptyImportButtonText, { color: theme.text }]}>
+              {isImporting ? 'Importing...' : 'Import from Contacts'}
+            </ThemedText>
+          </Pressable>
         </View>
       }
       ListFooterComponent={
         <>
           {contacts.length > 0 && (
-            <TouchableOpacity
-              style={[styles.addButton, { backgroundColor: theme.primary }]}
-              onPress={handleAddNew}
-            >
-              <IconSymbol name="plus" size={20} color="#fff" />
-              <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
-            </TouchableOpacity>
+            <View style={styles.footerActionsRow}>
+              <TouchableOpacity
+                style={[styles.addButton, styles.footerAction, { backgroundColor: theme.primary }]}
+                onPress={handleAddNew}
+              >
+                <IconSymbol name="plus" size={20} color="#fff" />
+                <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.importButton,
+                  styles.footerAction,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+                onPress={handleImportContact}
+                disabled={isImporting}
+              >
+                <IconSymbol name="square.and.arrow.down" size={18} color={theme.tint} />
+                <ThemedText style={[styles.importButtonText, { color: theme.text }]}>
+                  {isImporting ? 'Importing...' : 'Import Contact'}
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           )}
           <View style={{ height: 40 }} />
         </>
@@ -727,6 +860,19 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     ...Typography.bodyBold,
   },
+  emptyImportButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+    minHeight: 48,
+  },
+  emptyImportButtonText: {
+    ...Typography.bodyBold,
+  },
 
   // Contact card
   contactCard: {
@@ -827,10 +973,29 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     padding: Spacing.lg,
     borderRadius: Radius.lg,
-    marginTop: Spacing.sm,
   },
   addButtonText: {
     color: '#fff',
+    ...Typography.bodyBold,
+  },
+  footerActionsRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+  },
+  footerAction: {
+    flex: 1,
+  },
+  importButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    padding: Spacing.lg,
+    borderRadius: Radius.lg,
+    borderWidth: 1,
+  },
+  importButtonText: {
     ...Typography.bodyBold,
   },
 
