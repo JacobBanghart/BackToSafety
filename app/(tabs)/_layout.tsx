@@ -10,21 +10,29 @@ import { useTheme } from '@/context/ThemeContext';
 
 export default function TabLayout() {
   const { colorScheme } = useTheme();
+  const isIOS = Platform.OS === 'ios';
 
   return (
     <Tabs
+      safeAreaInsets={isIOS ? { bottom: 0 } : undefined}
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        tabBarStyle: isIOS
+          ? {
+              position: 'absolute',
+              height: 64,
+              paddingTop: 8,
+              paddingBottom: 8,
+            }
+          : undefined,
+        tabBarItemStyle: isIOS
+          ? {
+              paddingVertical: 0,
+            }
+          : undefined,
       }}
     >
       <Tabs.Screen
