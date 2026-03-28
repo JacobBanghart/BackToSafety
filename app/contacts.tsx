@@ -10,12 +10,13 @@ import {
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
+  ScrollView,
   TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DraggableFlatList, { RenderItemParams } from '@/utils/draggable-flatlist';
 
 import { AppModal } from '@/components/AppModal';
 import { AppTextInput } from '@/components/AppTextInput';
@@ -141,6 +142,10 @@ export default function ContactsScreen() {
           notes: formData.notes || undefined,
         });
       } else {
+        const nextSortOrder = contacts.reduce((maxOrder, contact) => {
+          return Math.max(maxOrder, contact.sortOrder ?? 0);
+        }, -1);
+
         await createContact({
           name: formData.name,
           phone: formData.phone,
@@ -150,6 +155,7 @@ export default function ContactsScreen() {
           notifyOnEmergency: formData.notifyOnEmergency,
           shareMedicalInfo: formData.shareMedicalInfo,
           notes: formData.notes || undefined,
+          sortOrder: nextSortOrder + 1,
         });
       }
 
@@ -285,14 +291,47 @@ export default function ContactsScreen() {
     return ROLE_OPTIONS.find((r) => r.value === role) || ROLE_OPTIONS[5];
   };
 
-  const renderContactCard = (contact: Contact) => {
+  const handleDragEnd = async ({ data }: { data: Contact[] }) => {
+    const updates = data
+      .map((contact, index) => ({
+        id: contact.id,
+        previousSortOrder: contact.sortOrder,
+        newSortOrder: index,
+      }))
+      .filter((contact) => contact.id && contact.previousSortOrder !== contact.newSortOrder);
+
+    const reordered = data.map((contact, index) => ({
+      ...contact,
+      sortOrder: index,
+    }));
+    setContacts(reordered);
+
+    if (updates.length === 0) {
+      return;
+    }
+
+    try {
+      await Promise.all(
+        updates.map((contact) => updateContact(contact.id!, { sortOrder: contact.newSortOrder })),
+      );
+      await loadContacts();
+    } catch (error) {
+      console.error('Failed to reorder contacts:', error);
+      showAlert('error', 'Failed to save contact order. Please try again.');
+      await loadContacts();
+    }
+  };
+
+  const renderContactCard = ({ item: contact, drag, isActive }: RenderItemParams<Contact>) => {
     const roleInfo = getRoleInfo(contact.role);
 
     return (
       <Pressable
-        key={contact.id}
+        onLongPress={drag}
+        delayLongPress={180}
         style={[
           styles.contactCard,
+          isActive && styles.contactCardActive,
           {
             backgroundColor: theme.card,
             borderColor: theme.border,
@@ -481,15 +520,32 @@ export default function ContactsScreen() {
   );
 
   const renderContactList = () => (
-    <ScrollView
-      style={styles.listContainer}
+    <DraggableFlatList
+      data={contacts}
+      keyExtractor={(contact: Contact) => String(contact.id ?? contact.phone)}
+      onDragEnd={handleDragEnd}
+      activationDistance={8}
+      autoscrollThreshold={120}
+      containerStyle={styles.listContainer}
       contentContainerStyle={[
         styles.listContent,
         contacts.length === 0 && styles.emptyListContainer,
       ]}
       showsVerticalScrollIndicator={false}
-    >
-      {contacts.length === 0 ? (
+      renderItem={renderContactCard}
+      ListHeaderComponent={
+        contacts.length > 0 ? (
+          <View style={styles.listHeader}>
+            <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
+              {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
+            </ThemedText>
+            <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}> 
+              Press and hold any contact card to reorder emergency priority.
+            </ThemedText>
+          </View>
+        ) : null
+      }
+      ListEmptyComponent={
         <View style={styles.emptyState}>
           <View style={[styles.emptyIconWrap, { backgroundColor: theme.primaryLight }]}>
             <IconSymbol name="person.2.fill" size={40} color={theme.primary} />
@@ -510,26 +566,22 @@ export default function ContactsScreen() {
             </ThemedText>
           </Pressable>
         </View>
-      ) : (
+      }
+      ListFooterComponent={
         <>
-          <View style={styles.listHeader}>
-            <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
-              {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
-            </ThemedText>
-          </View>
-          {contacts.map(renderContactCard)}
-
-          <TouchableOpacity
-            style={[styles.addButton, { backgroundColor: theme.primary }]}
-            onPress={handleAddNew}
-          >
-            <IconSymbol name="plus" size={20} color="#fff" />
-            <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
-          </TouchableOpacity>
+          {contacts.length > 0 && (
+            <TouchableOpacity
+              style={[styles.addButton, { backgroundColor: theme.primary }]}
+              onPress={handleAddNew}
+            >
+              <IconSymbol name="plus" size={20} color="#fff" />
+              <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
+            </TouchableOpacity>
+          )}
+          <View style={{ height: 40 }} />
         </>
-      )}
-      <View style={{ height: 40 }} />
-    </ScrollView>
+      }
+    />
   );
 
   return (
@@ -628,6 +680,10 @@ const styles = StyleSheet.create({
   listCount: {
     ...Typography.body,
   },
+  listHint: {
+    ...Typography.caption,
+    marginTop: Spacing.xxs,
+  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
@@ -670,6 +726,9 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     marginBottom: Spacing.md,
   },
+  contactCardActive: {
+    opacity: 0.9,
+  },
   contactHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -691,6 +750,7 @@ const styles = StyleSheet.create({
   contactActions: {
     flexDirection: 'row',
     gap: Spacing.sm,
+    alignItems: 'center',
   },
   actionButton: {
     width: 44,

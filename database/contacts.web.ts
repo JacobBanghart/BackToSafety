@@ -69,11 +69,13 @@ export async function createContact(
 ): Promise<number> {
   const contacts = await getAllContacts();
   const maxId = contacts.reduce((max, c) => Math.max(max, c.id ?? 0), 0);
+  const maxSortOrder = contacts.reduce((max, c) => Math.max(max, c.sortOrder ?? -1), -1);
   const newId = maxId + 1;
 
   const newContact: Contact = {
     ...contact,
     id: newId,
+    sortOrder: contact.sortOrder ?? maxSortOrder + 1,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };

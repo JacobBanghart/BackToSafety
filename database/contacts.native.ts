@@ -56,6 +56,10 @@ export async function createContact(
   contact: Omit<Contact, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<number> {
   const db = await getDatabase();
+  const sortOrderResult = await db.getFirstAsync<{ maxSortOrder: number | null }>(
+    `SELECT MAX(sort_order) as maxSortOrder FROM contacts`,
+  );
+  const nextSortOrder = (sortOrderResult?.maxSortOrder ?? -1) + 1;
 
   const result = await db.runAsync(
     `INSERT INTO contacts (name, phone, relationship, role, address, notify_on_emergency, share_medical_info, notes, sort_order)
@@ -69,7 +73,7 @@ export async function createContact(
       contact.notifyOnEmergency ? 1 : 0,
       contact.shareMedicalInfo ? 1 : 0,
       contact.notes ?? null,
-      contact.sortOrder ?? 0,
+      contact.sortOrder ?? nextSortOrder,
     ],
   );
 
