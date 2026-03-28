@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Typography } from '@/constants/Typography';
@@ -70,18 +71,7 @@ export default function ContactScreen() {
         style={styles.keyboardView}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.progress}>
-            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View
-              style={[
-                styles.progressDot,
-                styles.progressActive,
-                { backgroundColor: theme.primary },
-              ]}
-            />
-          </View>
+          <OnboardingStepHeader activeStep={4} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
             Emergency contact
@@ -134,6 +124,7 @@ export default function ContactScreen() {
                 placeholder="(555) 123-4567"
                 placeholderTextColor={theme.inputPlaceholder}
                 keyboardType="phone-pad"
+                inputMode="tel"
                 autoComplete="tel"
               />
             </View>
@@ -213,21 +204,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
   },
-  progress: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: Radius.sm,
-  },
-  progressActive: {
-    width: 24,
-  },
-  progressComplete: {},
   title: {
     marginBottom: Spacing.sm,
   },
@@ -270,19 +246,19 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   footer: {
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxl,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.lg,
     gap: Spacing.md,
   },
   skipButton: {
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     alignItems: 'center',
   },
   skipButtonText: {
     ...Typography.body,
   },
   button: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radius.lg,
     alignItems: 'center',
   },

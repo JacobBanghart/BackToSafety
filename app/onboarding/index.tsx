@@ -9,7 +9,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
-import { Colors, neutral, primary } from '@/constants/Colors';
+import { Colors, neutral } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
@@ -54,7 +54,11 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator
+      >
         <View style={styles.heroSection}>
           <View style={styles.logoContainer}>
             <Image
@@ -154,6 +158,9 @@ export default function WelcomeScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
+        <ThemedText style={[styles.scrollHint, { color: colors.textFaint }]}>
+          ↓ Scroll for more
+        </ThemedText>
         <Pressable
           style={[styles.button, { backgroundColor: colors.buttonBg }]}
           onPress={handleContinue}
@@ -270,15 +277,22 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   footer: {
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxl,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.lg,
     gap: Spacing.lg,
   },
+  scrollHint: {
+    ...Typography.caption,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    fontWeight: '600',
+  },
   button: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radius.lg,
     alignItems: 'center',
-    minHeight: 52,
+    minHeight: 46,
     justifyContent: 'center',
   },
   buttonText: {

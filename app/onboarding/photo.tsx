@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
@@ -117,14 +118,7 @@ export default function PhotoScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
-        <View style={styles.progress}>
-          <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-          <View
-            style={[styles.progressDot, styles.progressActive, { backgroundColor: theme.primary }]}
-          />
-          <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
-          <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
-        </View>
+        <OnboardingStepHeader activeStep={2} totalSteps={4} />
 
         <ThemedText type="title" style={styles.title}>
           Add a recent photo
@@ -208,20 +202,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: 20,
   },
-  progress: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: Radius.sm,
-  },
-  progressActive: {
-    width: 24,
-  },
   title: {
     marginBottom: Spacing.sm,
   },
@@ -249,6 +229,8 @@ const styles = StyleSheet.create({
   },
   photoPlaceholderText: {
     fontSize: 48,
+    lineHeight: 56,
+    paddingTop: Spacing.xs,
   },
   photoPlaceholderHint: {
     marginTop: Spacing.sm,
@@ -272,19 +254,19 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   footer: {
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxl,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.lg,
     gap: Spacing.md,
   },
   skipButton: {
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     alignItems: 'center',
   },
   skipButtonText: {
     ...Typography.body,
   },
   button: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radius.lg,
     alignItems: 'center',
   },

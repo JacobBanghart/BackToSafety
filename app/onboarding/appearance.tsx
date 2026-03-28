@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
@@ -34,6 +35,20 @@ export default function AppearanceScreen() {
   const [hairColor, setHairColor] = useState('');
   const [eyeColor, setEyeColor] = useState('');
   const [identifyingMarks, setIdentifyingMarks] = useState('');
+
+  const formatHeightInput = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 3);
+    if (!digits) return '';
+    if (digits.length === 1) return digits;
+    if (digits.length === 2) return `${digits[0]}'${digits[1]}"`;
+    return `${digits[0]}'${digits.slice(1)}"`;
+  };
+
+  const formatWeightInput = (value: string): string => {
+    const digits = value.replace(/\D/g, '').slice(0, 4);
+    if (!digits) return '';
+    return digits.length > 3 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits;
+  };
 
   const handleContinue = async () => {
     try {
@@ -63,18 +78,7 @@ export default function AppearanceScreen() {
         style={styles.keyboardView}
       >
         <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          <View style={styles.progress}>
-            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View style={[styles.progressDot, { backgroundColor: theme.primary }]} />
-            <View
-              style={[
-                styles.progressDot,
-                styles.progressActive,
-                { backgroundColor: theme.primary },
-              ]}
-            />
-            <View style={[styles.progressDot, { backgroundColor: theme.border }]} />
-          </View>
+          <OnboardingStepHeader activeStep={3} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
             Physical description
@@ -98,9 +102,11 @@ export default function AppearanceScreen() {
                     },
                   ]}
                   value={height}
-                  onChangeText={setHeight}
+                  onChangeText={(value) => setHeight(formatHeightInput(value))}
                   placeholder="5'6&quot;"
                   placeholderTextColor={theme.inputPlaceholder}
+                  keyboardType="number-pad"
+                  inputMode="numeric"
                 />
               </View>
               <View style={[styles.inputGroup, styles.halfWidth]}>
@@ -115,10 +121,11 @@ export default function AppearanceScreen() {
                     },
                   ]}
                   value={weight}
-                  onChangeText={setWeight}
+                  onChangeText={(value) => setWeight(formatWeightInput(value))}
                   placeholder="150 lbs"
                   placeholderTextColor={theme.inputPlaceholder}
-                  keyboardType="default"
+                  keyboardType="number-pad"
+                  inputMode="numeric"
                 />
               </View>
             </View>
@@ -216,21 +223,6 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
   },
-  progress: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: Radius.sm,
-  },
-  progressActive: {
-    width: 24,
-  },
-  progressComplete: {},
   title: {
     marginBottom: Spacing.sm,
   },
@@ -271,19 +263,19 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   footer: {
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxl,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.lg,
     gap: Spacing.md,
   },
   skipButton: {
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.sm,
     alignItems: 'center',
   },
   skipButtonText: {
     ...Typography.body,
   },
   button: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radius.lg,
     alignItems: 'center',
   },

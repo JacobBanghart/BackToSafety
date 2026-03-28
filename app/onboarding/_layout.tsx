@@ -11,7 +11,7 @@ export default function OnboardingLayout() {
       screenOptions={{
         headerShown: false,
         animation: 'slide_from_right',
-        gestureEnabled: false, // Prevent swipe back during onboarding
+        gestureEnabled: false,
       }}
     >
       <Stack.Screen name="index" />

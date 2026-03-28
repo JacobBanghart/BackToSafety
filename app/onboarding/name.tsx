@@ -15,8 +15,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
 import { ThemedText } from '@/components/ThemedText';
-import { Colors, primary } from '@/constants/Colors';
+import { Colors } from '@/constants/Colors';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
@@ -59,12 +60,7 @@ export default function NameScreen() {
         style={styles.keyboardView}
       >
         <View style={styles.content}>
-          <View style={styles.progress}>
-            <View style={[styles.progressDot, styles.progressActive]} />
-            <View style={styles.progressDot} />
-            <View style={styles.progressDot} />
-            <View style={styles.progressDot} />
-          </View>
+          <OnboardingStepHeader activeStep={1} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
             Who are you caring for?
@@ -155,24 +151,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.xl,
     paddingTop: 20,
   },
-  progress: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    marginBottom: Spacing.xxl,
-  },
-  progressDot: {
-    width: 8,
-    height: 8,
-    borderRadius: Radius.sm,
-    backgroundColor: primary[300],
-    opacity: 0.4,
-  },
-  progressActive: {
-    backgroundColor: primary[700],
-    opacity: 1,
-    width: 24,
-  },
   title: {
     marginBottom: Spacing.sm,
   },
@@ -206,11 +184,11 @@ const styles = StyleSheet.create({
     color: '#ef4444',
   },
   footer: {
-    padding: Spacing.xl,
-    paddingBottom: Spacing.xxl,
+    padding: Spacing.lg,
+    paddingBottom: Spacing.lg,
   },
   button: {
-    paddingVertical: Spacing.lg,
+    paddingVertical: Spacing.md,
     borderRadius: Radius.lg,
     alignItems: 'center',
   },
