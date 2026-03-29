@@ -63,6 +63,12 @@ Output artifact:
 - AAB filename is versioned, for example:
   - `BackToSafety-v1.0.2.aab`
 
+Android app version metadata in CI:
+
+- `versionName` is set from the tag/release name (for example `internal-v1.0.0-build8`).
+- `versionCode` is derived from `buildX` when using `internal-v1.0.0-buildX` tags.
+- For non-tag manual runs, `versionCode` falls back to `GITHUB_RUN_NUMBER`.
+
 ## 4) Upload to Google Play
 
 Use Play Console:

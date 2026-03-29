@@ -81,8 +81,30 @@ jobs:
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
+      - name: Derive release version metadata from tag
+        id: release_meta
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+          elif [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="internal-build-${GITHUB_RUN_NUMBER}"
+          fi
+
+          VERSION_CODE="${GITHUB_RUN_NUMBER}"
+          if echo "$VERSION" | grep -Eq '^internal-v[0-9]+\.[0-9]+\.[0-9]+-build[0-9]+$'; then
+            VERSION_CODE="${VERSION##*build}"
+          fi
+
+          VERSION_NAME="$VERSION"
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+
       - name: Build signed Android App Bundle
-        run: ./gradlew bundleRelease --build-cache -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=16
+        run: ./gradlew bundleRelease -PRELEASE_VERSION_CODE=${{ steps.release_meta.outputs.version_code }} -PRELEASE_VERSION_NAME=${{ steps.release_meta.outputs.version_name }} --build-cache -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=16
         working-directory: android
         env:
           NODE_ENV: production
@@ -96,13 +118,7 @@ jobs:
       - name: Version AAB filename
         id: aab_meta
         run: |
-          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
-            VERSION="${GITHUB_REF_NAME}"
-          elif [ "${GITHUB_EVENT_NAME}" = "release" ]; then
-            VERSION="${{ github.event.release.tag_name }}"
-          else
-            VERSION="build-${GITHUB_RUN_NUMBER}"
-          fi
+          VERSION="${{ steps.release_meta.outputs.version }}"
 
           AAB_NAME="BackToSafety-${VERSION}.aab"
           cp android/app/build/outputs/bundle/release/app-release.aab "android/app/build/outputs/bundle/release/${AAB_NAME}"

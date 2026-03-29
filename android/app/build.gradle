@@ -73,6 +73,8 @@ def releaseStorePassword = findProperty('ANDROID_KEYSTORE_PASSWORD') ?: System.g
 def releaseKeyAlias = findProperty('ANDROID_KEY_ALIAS') ?: System.getenv('ANDROID_KEY_ALIAS')
 def releaseKeyPassword = findProperty('ANDROID_KEY_PASSWORD') ?: System.getenv('ANDROID_KEY_PASSWORD')
 def hasReleaseSigning = releaseStoreFile && releaseStorePassword && releaseKeyAlias && releaseKeyPassword
+def releaseVersionCodeProp = findProperty('RELEASE_VERSION_CODE')
+def releaseVersionNameProp = findProperty('RELEASE_VERSION_NAME')
 
 /**
  * The preferred build flavor of JavaScriptCore (JSC)
@@ -98,8 +100,8 @@ android {
         applicationId 'com.backtosafety.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 2
-        versionName "1.0.0"
+        versionCode(releaseVersionCodeProp ? releaseVersionCodeProp.toInteger() : 2)
+        versionName(releaseVersionNameProp ?: "1.0.0")
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
