@@ -32,6 +32,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Restore Gradle and Android build caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            android/.gradle
+            android/app/.cxx
+          key: ${{ runner.os }}-android-gradle-${{ hashFiles('**/*.gradle*', '**/gradle.properties', 'android/gradle/wrapper/gradle-wrapper.properties', 'package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-android-gradle-
+
       - name: Decode Android release keystore
         run: |
           mkdir -p android/app
@@ -40,7 +52,7 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
       - name: Build signed Android App Bundle
-        run: ./gradlew bundleRelease --no-daemon
+        run: ./gradlew bundleRelease --build-cache --parallel --no-daemon
         working-directory: android
         env:
           NODE_ENV: production

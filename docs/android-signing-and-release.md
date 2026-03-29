@@ -97,6 +97,10 @@ Suggested smoke test list:
   - `ANDROID_KEY_ALIAS`
   - `ANDROID_KEY_PASSWORD`
 - Debug signing for release is disabled by default (`android.useDebugSigningInRelease=false`).
+- CI build speed optimizations are enabled:
+  - Gradle build cache (`org.gradle.caching=true`)
+  - GitHub Actions cache for Gradle wrapper/caches and native `.cxx` outputs
+  - Build uses `--build-cache --parallel`
 - For local test-only signed release builds, you can temporarily pass:
 
 ```bash
