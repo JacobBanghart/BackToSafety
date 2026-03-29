@@ -35,6 +35,29 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      - name: Configure Android SDK path for Gradle
+        run: |
+          set -euo pipefail
+
+          SDK_PATH=""
+          for candidate in "${ANDROID_SDK_ROOT:-}" "${ANDROID_HOME:-}" "$HOME/Android/Sdk" "/usr/local/lib/android/sdk"; do
+            if [ -n "$candidate" ] && [ -d "$candidate/platforms" ]; then
+              SDK_PATH="$candidate"
+              break
+            fi
+          done
+
+          if [ -z "$SDK_PATH" ]; then
+            echo "Could not find Android SDK directory on runner"
+            echo "Checked: ANDROID_SDK_ROOT, ANDROID_HOME, $HOME/Android/Sdk, /usr/local/lib/android/sdk"
+            exit 1
+          fi
+
+          echo "Using Android SDK at: $SDK_PATH"
+          echo "ANDROID_SDK_ROOT=$SDK_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK_PATH" >> "$GITHUB_ENV"
+          printf 'sdk.dir=%s\n' "$SDK_PATH" > android/local.properties
+
       - name: Install dependencies
         run: npm ci
 

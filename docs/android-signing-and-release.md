@@ -110,6 +110,7 @@ Suggested smoke test list:
   - GitHub Actions cache for Gradle wrapper/caches and native `.cxx` outputs
   - Build uses `--build-cache --parallel`
 - CI initializes Android SDK in workflow (`android-actions/setup-android`) to avoid missing `ANDROID_HOME` errors.
+- CI also writes `android/local.properties` with detected `sdk.dir` for runners that do not propagate Android env vars reliably.
 - For local test-only signed release builds, you can temporarily pass:
 
 ```bash
