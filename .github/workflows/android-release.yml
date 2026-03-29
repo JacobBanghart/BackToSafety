@@ -48,7 +48,9 @@ jobs:
           SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/android-sdk}}"
           mkdir -p "$SDK_PATH"
 
+          set +o pipefail
           yes | "$SDKMANAGER_BIN" --sdk_root="$SDK_PATH" --licenses > /dev/null
+          set -o pipefail
           "$SDKMANAGER_BIN" --sdk_root="$SDK_PATH" \
             "platform-tools" \
             "platforms;android-36" \
