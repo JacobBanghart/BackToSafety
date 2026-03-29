@@ -64,15 +64,32 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
+      - name: Version AAB filename
+        id: aab_meta
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            VERSION="${GITHUB_REF_NAME}"
+          elif [ "${GITHUB_EVENT_NAME}" = "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            VERSION="build-${GITHUB_RUN_NUMBER}"
+          fi
+
+          AAB_NAME="BackToSafety-${VERSION}.aab"
+          cp android/app/build/outputs/bundle/release/app-release.aab "android/app/build/outputs/bundle/release/${AAB_NAME}"
+
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "aab_name=${AAB_NAME}" >> "$GITHUB_OUTPUT"
+
       - name: Upload signed AAB artifact
         uses: actions/upload-artifact@v4
         with:
-          name: app-release-aab
-          path: android/app/build/outputs/bundle/release/app-release.aab
+          name: app-release-aab-${{ steps.aab_meta.outputs.version }}
+          path: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
           if-no-files-found: error
 
       - name: Attach AAB to GitHub Release
         if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" android/app/build/outputs/bundle/release/app-release.aab --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" "android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -57,7 +57,10 @@ No GitHub Release object is required. Running the workflow manually is enough.
 
 Output artifact:
 
-- `app-release-aab` containing `app-release.aab`
+- Artifact name includes version context (tag or run number), for example:
+  - `app-release-aab-v1.0.2`
+- AAB filename is versioned, for example:
+  - `BackToSafety-v1.0.2.aab`
 
 ## 4) Upload to Google Play
 
