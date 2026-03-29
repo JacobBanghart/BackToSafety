@@ -14,7 +14,7 @@ permissions:
 
 jobs:
   build-android-aab:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -30,22 +30,9 @@ jobs:
         with:
           distribution: "temurin"
           java-version: "17"
-          cache: "gradle"
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Restore Gradle and Android build caches
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-            android/.gradle
-            android/app/.cxx
-          key: ${{ runner.os }}-android-gradle-${{ hashFiles('**/*.gradle*', '**/gradle.properties', 'android/gradle/wrapper/gradle-wrapper.properties', 'package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-android-gradle-
 
       - name: Decode Android release keystore
         run: |
@@ -55,7 +42,7 @@ jobs:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
 
       - name: Build signed Android App Bundle
-        run: ./gradlew bundleRelease --build-cache --parallel --no-daemon
+        run: ./gradlew bundleRelease --build-cache -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=16
         working-directory: android
         env:
           NODE_ENV: production
