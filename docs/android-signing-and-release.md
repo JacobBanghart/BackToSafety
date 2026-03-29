@@ -45,8 +45,10 @@ Workflow file: `.github/workflows/android-release.yml`
 
 Trigger options:
 
-- Manual: Actions -> `Android Release Build` -> Run workflow
-- Tag push: `git tag v1.0.1 && git push origin v1.0.1`
+- Manual (recommended): Actions -> `Android Release Build` -> Run workflow
+- Tag push (optional): `git tag v1.0.1 && git push origin v1.0.1`
+
+No GitHub Release object is required. Running the workflow manually is enough.
 
 Output artifact:
 
@@ -61,6 +63,31 @@ Use Play Console:
 3. Upload `app-release.aab`
 4. Add release notes
 5. Roll out to internal testers
+
+## 5) First-time Play Console flow (recommended)
+
+Use this order for your first Android app submission:
+
+1. Complete required Play declarations/forms first (or as prompted):
+   - Data safety
+   - Ads declaration
+   - Content rating
+   - Target audience
+   - App access
+2. Accept the policy declaration once the answers are accurate.
+3. Run GitHub Action `Android Release Build`.
+4. Download artifact `app-release-aab` from the workflow run.
+5. Create an Internal testing release in Play Console and upload the AAB.
+6. Add release notes and roll out to internal testers.
+7. Install from internal track on a real device and verify critical flows.
+
+Suggested smoke test list:
+
+- App opens and onboarding works
+- Contacts permission and import work
+- Camera/photo permission flows work
+- Emergency SMS handoff works
+- No unexpected permission prompts on startup
 
 ## Notes
 
