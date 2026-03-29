@@ -48,6 +48,11 @@ Trigger options:
 - Manual (recommended): Actions -> `Android Release Build` -> Run workflow
 - Tag push (optional): `git tag v1.0.1 && git push origin v1.0.1`
 
+GitHub Release integration:
+
+- Publishing a GitHub Release triggers this workflow and attaches `app-release.aab` to the release assets.
+- Tag pushes and manual runs still upload the AAB as a workflow artifact.
+
 No GitHub Release object is required. Running the workflow manually is enough.
 
 Output artifact:
