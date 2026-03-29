@@ -1,4 +1,4 @@
-package com.anonymous.nijiiapp
+package com.backtosafety.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

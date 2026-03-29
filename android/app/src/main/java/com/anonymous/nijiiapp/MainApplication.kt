@@ -1,4 +1,4 @@
-package com.anonymous.nijiiapp
+package com.backtosafety.app
 
 import android.app.Application
 import android.content.res.Configuration
