@@ -33,7 +33,8 @@ Privacy and data use:
 - Permissions are requested only when needed for app features (such as contacts, camera, photos, and SMS handoff)
 
 Privacy Policy: https://backtosafety.app/privacy.html
-Support: support@backtosafety.app
+Support URL: https://backtosafety.app/support/
+Support Email: support@backtosafety.app
 
 ## Suggested Keywords/Themes (for internal planning)
 

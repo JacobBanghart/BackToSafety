@@ -79,4 +79,4 @@ We may update this Privacy Policy from time to time. When updated, we will revis
 For privacy questions or support:
 
 - Email: support@backtosafety.app
-- Support URL: https://backtosafety.app/support
+- Support URL: https://backtosafety.app/support/
