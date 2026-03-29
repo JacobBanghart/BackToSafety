@@ -8,8 +8,12 @@ export function getAppName(): string {
 }
 
 export function getAppVersionLabel(): string {
-  const version = Constants.expoConfig?.version ?? Constants.nativeAppVersion ?? FALLBACK_VERSION;
+  const version = Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? FALLBACK_VERSION;
   const build = Constants.nativeBuildVersion;
+
+  if (version.startsWith('internal-')) {
+    return version;
+  }
 
   if (!build || build === version) {
     return version;
