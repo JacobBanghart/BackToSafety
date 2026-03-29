@@ -35,25 +35,26 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Configure Android SDK path for Gradle
+      - name: Configure Android SDK and local.properties
         run: |
           set -euo pipefail
 
-          SDK_PATH=""
-          for candidate in "${ANDROID_SDK_ROOT:-}" "${ANDROID_HOME:-}" "$HOME/Android/Sdk" "/usr/local/lib/android/sdk"; do
-            if [ -n "$candidate" ] && [ -d "$candidate/platforms" ]; then
-              SDK_PATH="$candidate"
-              break
-            fi
-          done
-
-          if [ -z "$SDK_PATH" ]; then
-            echo "Could not find Android SDK directory on runner"
-            echo "Checked: ANDROID_SDK_ROOT, ANDROID_HOME, $HOME/Android/Sdk, /usr/local/lib/android/sdk"
+          SDKMANAGER_BIN="$(command -v sdkmanager || true)"
+          if [ -z "$SDKMANAGER_BIN" ]; then
+            echo "sdkmanager was not found on PATH after setup-android"
             exit 1
           fi
 
-          echo "Using Android SDK at: $SDK_PATH"
+          SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/android-sdk}}"
+          mkdir -p "$SDK_PATH"
+
+          yes | "$SDKMANAGER_BIN" --sdk_root="$SDK_PATH" --licenses > /dev/null
+          "$SDKMANAGER_BIN" --sdk_root="$SDK_PATH" \
+            "platform-tools" \
+            "platforms;android-36" \
+            "build-tools;36.0.0"
+
+          echo "Using Android SDK at $SDK_PATH"
           echo "ANDROID_SDK_ROOT=$SDK_PATH" >> "$GITHUB_ENV"
           echo "ANDROID_HOME=$SDK_PATH" >> "$GITHUB_ENV"
           printf 'sdk.dir=%s\n' "$SDK_PATH" > android/local.properties
