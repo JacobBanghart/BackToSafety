@@ -119,6 +119,7 @@ jobs:
 
       - name: Attach AAB to GitHub Release
         if: github.event_name == 'release'
-        run: gh release upload "${{ github.event.release.tag_name }}" "android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}" --clobber
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}

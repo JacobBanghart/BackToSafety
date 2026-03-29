@@ -52,6 +52,7 @@ GitHub Release integration:
 
 - Publishing a GitHub Release triggers this workflow and attaches `app-release.aab` to the release assets.
 - Tag pushes and manual runs still upload the AAB as a workflow artifact.
+- Release attachment uses a GitHub Action (`softprops/action-gh-release`) so no runner-local `gh` CLI install is required.
 
 No GitHub Release object is required. Running the workflow manually is enough.
 
