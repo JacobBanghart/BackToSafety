@@ -96,8 +96,8 @@ jobs:
         run: |
           set -euo pipefail
           xcodebuild archive \
-            -workspace ios/backtosafety.xcworkspace \
-            -scheme backtosafety \
+            -workspace ios/BackToSafety.xcworkspace \
+            -scheme BackToSafety \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
             -destination "generic/platform=iOS" \
@@ -106,8 +106,7 @@ jobs:
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build_number }}" \
             MARKETING_VERSION="${{ steps.version.outputs.version_name }}" \
-            -allowProvisioningUpdates \
-            | xcpretty || true
+            -allowProvisioningUpdates
         env:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
 
@@ -161,14 +160,7 @@ jobs:
             --file "$IPA_PATH" \
             --apiKey "$ASC_API_KEY_ID" \
             --apiIssuer "$ASC_API_KEY_ISSUER_ID" \
-            2>&1 | tee /tmp/altool_output.txt
-
-          if grep -q "No errors uploading" /tmp/altool_output.txt; then
-            echo "Upload successful."
-          else
-            echo "Upload may have failed — check output above."
-            exit 1
-          fi
+            --verbose
         env:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
