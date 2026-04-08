@@ -1,0 +1,31 @@
+name: Runner Smoke Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    runs-on: [self-hosted, macOS]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check environment
+        run: |
+          echo "=== System ==="
+          sw_vers
+          echo ""
+          echo "=== Xcode ==="
+          xcodebuild -version
+          echo ""
+          echo "=== Node ==="
+          node --version || echo "Node not found"
+          echo ""
+          echo "=== npm ==="
+          npm --version || echo "npm not found"
+          echo ""
+          echo "=== Ruby ==="
+          ruby --version || echo "Ruby not found"
+          echo ""
+          echo "=== Homebrew ==="
+          brew --version || echo "Homebrew not found"

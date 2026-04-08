@@ -1,0 +1,189 @@
+name: iOS Release Build & Submit
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-submit-ios:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Expo prebuild (iOS)
+        run: npx expo prebuild --platform ios --clean
+        env:
+          EXPO_NO_TELEMETRY: 1
+
+      # ── Signing ──────────────────────────────────────────────────────────────
+      - name: Install distribution certificate
+        run: |
+          set -euo pipefail
+          CERT_PATH="$RUNNER_TEMP/dist_cert.p12"
+          printf '%s' "$IOS_CERTIFICATE_BASE64" | base64 --decode > "$CERT_PATH"
+
+          # Create a temporary keychain so we don't touch the login keychain
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain"
+          KEYCHAIN_PASSWORD="$(openssl rand -hex 16)"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Import certificate
+          security import "$CERT_PATH" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$IOS_CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign \
+            -T /usr/bin/security
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # Make it the default so Xcode finds it
+          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain
+
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
+        env:
+          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+
+      - name: Install provisioning profile
+        run: |
+          set -euo pipefail
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PP_DIR"
+          PP_PATH="$RUNNER_TEMP/app.mobileprovision"
+          printf '%s' "$IOS_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+
+          # Extract UUID so we can name the file correctly
+          UUID=$(security cms -D -i "$PP_PATH" 2>/dev/null \
+            | plutil -extract UUID raw - 2>/dev/null \
+            || /usr/libexec/PlistBuddy -c "Print :UUID" \
+               /dev/stdin <<< "$(security cms -D -i "$PP_PATH")")
+          cp "$PP_PATH" "$PP_DIR/${UUID}.mobileprovision"
+
+          echo "PROVISIONING_PROFILE_UUID=$UUID" >> "$GITHUB_ENV"
+        env:
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+
+      # ── Build ─────────────────────────────────────────────────────────────────
+      - name: Derive version metadata from tag
+        id: version
+        run: |
+          VERSION="${GITHUB_REF_NAME}"          # e.g. v1.2.3
+          BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
+          echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Build iOS archive (.xcarchive)
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -workspace ios/backtosafety.xcworkspace \
+            -scheme backtosafety \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Manual \
+            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_UUID" \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build_number }}" \
+            MARKETING_VERSION="${{ steps.version.outputs.version_name }}" \
+            -allowProvisioningUpdates \
+            | xcpretty || true
+        env:
+          PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
+
+      - name: Export IPA
+        run: |
+          set -euo pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" << 'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>REPLACE_WITH_YOUR_TEAM_ID</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
+            -exportPath "$RUNNER_TEMP/ipa" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
+      # ── Submit ────────────────────────────────────────────────────────────────
+      - name: Install App Store Connect API key
+        run: |
+          set -euo pipefail
+          KEY_DIR="$HOME/private_keys"
+          mkdir -p "$KEY_DIR"
+          printf '%s' "$ASC_API_KEY_BASE64" | base64 --decode \
+            > "$KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8"
+          chmod 600 "$KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8"
+          echo "ASC_KEY_PATH=$KEY_DIR/AuthKey_${ASC_API_KEY_ID}.p8" >> "$GITHUB_ENV"
+        env:
+          ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+
+      - name: Upload IPA to App Store Connect
+        run: |
+          set -euo pipefail
+          IPA_PATH=$(find "$RUNNER_TEMP/ipa" -name "*.ipa" | head -1)
+          echo "Uploading: $IPA_PATH"
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_API_KEY_ID" \
+            --apiIssuer "$ASC_API_KEY_ISSUER_ID" \
+            2>&1 | tee /tmp/altool_output.txt
+
+          if grep -q "No errors uploading" /tmp/altool_output.txt; then
+            echo "Upload successful."
+          else
+            echo "Upload may have failed — check output above."
+            exit 1
+          fi
+        env:
+          ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+
+      # ── Cleanup ───────────────────────────────────────────────────────────────
+      - name: Remove temporary keychain
+        if: always()
+        run: |
+          security delete-keychain "$KEYCHAIN_PATH" 2>/dev/null || true
+          # Remove the provisioning profile so it doesn't accumulate
+          PP_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          rm -f "$PP_DIR/${PROVISIONING_PROFILE_UUID}.mobileprovision" 2>/dev/null || true
+          # Remove API key
+          rm -f "$ASC_KEY_PATH" 2>/dev/null || true
+        env:
+          KEYCHAIN_PATH: ${{ env.KEYCHAIN_PATH }}
+          PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
+          ASC_KEY_PATH: ${{ env.ASC_KEY_PATH }}
