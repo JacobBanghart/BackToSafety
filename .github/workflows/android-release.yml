@@ -139,3 +139,11 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
+
+      - name: Upload to Google Play (internal track)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: com.backtosafety.app
+          releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
+          track: internal
