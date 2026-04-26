@@ -23,8 +23,10 @@ import { getSetting } from '@/database/storage';
 import { setPreviousRoute } from '@/utils/navigation';
 
 const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
-/** Dark red button background used when an emergency is active but the timer has not expired */
-const EMERGENCY_ACTIVE_BG = '#4A1515';
+/** Emergency button colours — hardcoded, never adapt to light/dark mode */
+const EMERGENCY_IDLE_BG = '#ef4444';
+const EMERGENCY_ACTIVE_BG = '#b91c1c';
+const EMERGENCY_SWEEP_COLOR = '#ef4444';
 
 type EmergencyState = {
   startedAt: string;
@@ -141,8 +143,8 @@ export default function HomeScreen() {
           style={[
             styles.emergencyButton,
             getShadow('md', colorScheme),
-            activeEmergency && {
-              backgroundColor: timerExpired ? semantic.error : EMERGENCY_ACTIVE_BG,
+            {
+              backgroundColor: activeEmergency ? EMERGENCY_ACTIVE_BG : EMERGENCY_IDLE_BG,
             },
           ]}
           onPress={() => {
@@ -399,7 +401,7 @@ const styles = StyleSheet.create({
 
   // Emergency button
   emergencyButton: {
-    backgroundColor: semantic.error,
+    backgroundColor: EMERGENCY_IDLE_BG,
     borderRadius: Radius.xl,
     paddingVertical: Spacing.lg,
     paddingHorizontal: Spacing.xl,
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: EMERGENCY_SWEEP_COLOR,
   },
   emergencyActiveContent: {
     flexDirection: 'row',
