@@ -1,9 +1,13 @@
 name: iOS Release Build & Submit
 
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
+  release:
+    types:
+      - published
 
 permissions:
   contents: read
@@ -110,31 +114,6 @@ jobs:
         env:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
 
-      - name: Export IPA
-        run: |
-          set -euo pipefail
-          cat > "$RUNNER_TEMP/ExportOptions.plist" << 'EOF'
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>teamID</key>
-            <string>REPLACE_WITH_YOUR_TEAM_ID</string>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
-
-          xcodebuild -exportArchive \
-            -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
-            -exportPath "$RUNNER_TEMP/ipa" \
-            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
-
       # ── Submit ────────────────────────────────────────────────────────────────
       - name: Install App Store Connect API key
         run: |
@@ -149,19 +128,38 @@ jobs:
           ASC_API_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
 
-      - name: Upload IPA to App Store Connect
+      - name: Export IPA and upload to App Store Connect
         run: |
           set -euo pipefail
-          IPA_PATH=$(find "$RUNNER_TEMP/ipa" -name "*.ipa" | head -1)
-          echo "Uploading: $IPA_PATH"
+          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>destination</key>
+            <string>upload</string>
+            <key>teamID</key>
+            <string>${IOS_TEAM_ID}</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+          </dict>
+          </plist>
+          EOF
 
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$IPA_PATH" \
-            --apiKey "$ASC_API_KEY_ID" \
-            --apiIssuer "$ASC_API_KEY_ISSUER_ID" \
-            --verbose
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
+            -exportPath "$RUNNER_TEMP/ipa" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -authenticationKeyPath "$ASC_KEY_PATH" \
+            -authenticationKeyID "$ASC_API_KEY_ID" \
+            -authenticationKeyIssuerID "$ASC_API_KEY_ISSUER_ID"
         env:
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          ASC_KEY_PATH: ${{ env.ASC_KEY_PATH }}
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
 
