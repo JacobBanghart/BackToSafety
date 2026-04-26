@@ -106,6 +106,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
             -destination "generic/platform=iOS" \
             CODE_SIGN_STYLE=Manual \
+            DEVELOPMENT_TEAM="$IOS_TEAM_ID" \
             PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_UUID" \
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build_number }}" \
@@ -113,6 +114,7 @@ jobs:
             -allowProvisioningUpdates
         env:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
 
       # ── Submit ────────────────────────────────────────────────────────────────
       - name: Install App Store Connect API key
