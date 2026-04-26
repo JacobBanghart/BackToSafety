@@ -97,6 +97,19 @@ jobs:
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
           echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
 
+      - name: Stamp version into app.json
+        run: |
+          VERSION="${{ steps.version.outputs.version_name }}"
+          BUILD_NUMBER="${{ steps.version.outputs.build_number }}"
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            cfg.expo.version = '$VERSION';
+            cfg.expo.ios.buildNumber = '$BUILD_NUMBER';
+            fs.writeFileSync('app.json', JSON.stringify(cfg, null, 2) + '\n');
+          "
+          echo "Stamped app.json: version=$VERSION buildNumber=$BUILD_NUMBER"
+
       - name: Build iOS archive (.xcarchive)
         run: |
           set -euo pipefail
