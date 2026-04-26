@@ -100,8 +100,8 @@ jobs:
         run: |
           set -euo pipefail
           xcodebuild archive \
-            -workspace ios/BackToSafety.xcworkspace \
-            -scheme BackToSafety \
+            -workspace ios/BacktoSafety.xcworkspace \
+            -scheme BacktoSafety \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
             -destination "generic/platform=iOS" \
