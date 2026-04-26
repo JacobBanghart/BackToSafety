@@ -134,23 +134,28 @@ jobs:
         run: |
           set -euo pipefail
           cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>app-store</string>
-            <key>destination</key>
-            <string>upload</string>
-            <key>teamID</key>
-            <string>${IOS_TEAM_ID}</string>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-          </dict>
-          </plist>
-          EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store-connect</string>
+  <key>destination</key>
+  <string>upload</string>
+  <key>teamID</key>
+  <string>${IOS_TEAM_ID}</string>
+  <key>uploadSymbols</key>
+  <true/>
+  <key>compileBitcode</key>
+  <false/>
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>com.backtosafety.app</key>
+    <string>${PROVISIONING_PROFILE_UUID}</string>
+  </dict>
+</dict>
+</plist>
+EOF
 
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
@@ -161,6 +166,7 @@ jobs:
             -authenticationKeyIssuerID "$ASC_API_KEY_ISSUER_ID"
         env:
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
           ASC_KEY_PATH: ${{ env.ASC_KEY_PATH }}
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
