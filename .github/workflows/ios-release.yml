@@ -91,7 +91,8 @@ jobs:
       - name: Derive version metadata from tag
         id: version
         run: |
-          VERSION="${GITHUB_REF_NAME}"          # e.g. v1.2.3
+          # Strip leading 'v' so Apple gets e.g. "1.0.1" not "v1.0.1"
+          VERSION="${GITHUB_REF_NAME#v}"
           BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
           echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
