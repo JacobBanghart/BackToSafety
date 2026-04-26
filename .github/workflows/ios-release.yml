@@ -116,6 +116,7 @@ jobs:
           xcodebuild archive \
             -workspace ios/BacktoSafety.xcworkspace \
             -scheme BacktoSafety \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
             -destination "generic/platform=iOS" \
