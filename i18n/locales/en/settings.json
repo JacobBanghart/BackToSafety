@@ -1,0 +1,46 @@
+{
+  "screenTitle": "Settings",
+  "languageSection": {
+    "title": "Language",
+    "description": "Spanish is experimental. Translations are incomplete."
+  },
+  "sections": {
+    "appearance": {
+      "title": "Appearance",
+      "description": "Choose your preferred color theme."
+    },
+    "devTools": {
+      "title": "Developer Tools",
+      "description": "These tools are for testing during development.",
+      "clearButton": "Clear All Data & Restart Onboarding",
+      "clearingButton": "Clearing...",
+      "clearWarning": "This will permanently delete all profile data, contacts, incidents, and settings."
+    },
+    "about": {
+      "title": "About",
+      "app": "App",
+      "version": "Version",
+      "platform": "Platform",
+      "theme": "Theme",
+      "dbSchema": "DB Schema",
+      "dbSchemaUnknown": "Unknown",
+      "devSuffix": " (Dev)"
+    }
+  },
+  "themeOptions": {
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark"
+  },
+  "clearDataModal": {
+    "title": "Clear All Data",
+    "message": "This will delete all data and restart onboarding. This cannot be undone.",
+    "confirm": "Clear Data",
+    "cancel": "Cancel"
+  },
+  "devModeAlert": {
+    "title": "Developer Mode",
+    "message": "Developer options are now enabled!"
+  },
+  "clearDataError": "Failed to clear data. Please try again."
+}

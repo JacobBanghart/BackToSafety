@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import {
@@ -51,20 +52,20 @@ type DestinationCategory =
 type RiskLevel = 'high' | 'medium' | 'low';
 
 const CATEGORY_OPTIONS: { value: DestinationCategory; label: string; icon: IconSymbolName }[] = [
-  { value: 'water', label: 'Water/Pool', icon: 'drop.fill' },
-  { value: 'former_workplace', label: 'Former Work', icon: 'briefcase.fill' },
-  { value: 'church', label: 'Church', icon: 'building.columns.fill' },
-  { value: 'store', label: 'Store', icon: 'cart.fill' },
-  { value: 'restaurant', label: 'Restaurant', icon: 'fork.knife' },
-  { value: 'friend_family', label: 'Friend/Family', icon: 'person.2.fill' },
-  { value: 'walking_route', label: 'Walking Route', icon: 'figure.walk' },
-  { value: 'other', label: 'Other', icon: 'mappin' },
+  { value: 'water', label: 'water', icon: 'drop.fill' },
+  { value: 'former_workplace', label: 'former_workplace', icon: 'briefcase.fill' },
+  { value: 'church', label: 'church', icon: 'building.columns.fill' },
+  { value: 'store', label: 'store', icon: 'cart.fill' },
+  { value: 'restaurant', label: 'restaurant', icon: 'fork.knife' },
+  { value: 'friend_family', label: 'friend_family', icon: 'person.2.fill' },
+  { value: 'walking_route', label: 'walking_route', icon: 'figure.walk' },
+  { value: 'other', label: 'other', icon: 'mappin' },
 ];
 
 const RISK_OPTIONS: { value: RiskLevel; label: string; color: keyof typeof semantic }[] = [
-  { value: 'high', label: 'High', color: 'error' },
-  { value: 'medium', label: 'Medium', color: 'warning' },
-  { value: 'low', label: 'Low', color: 'success' },
+  { value: 'high', label: 'high', color: 'error' },
+  { value: 'medium', label: 'medium', color: 'warning' },
+  { value: 'low', label: 'low', color: 'success' },
 ];
 
 interface FormData {
@@ -91,6 +92,7 @@ export default function DestinationsScreen() {
   const navigation = useNavigation();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+  const { t } = useTranslation('destinations');
 
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -137,7 +139,10 @@ export default function DestinationsScreen() {
       setModalMessage(message);
       setModalVisible(true);
     } else {
-      Alert.alert(type === 'validation' ? 'Required' : 'Error', message);
+      Alert.alert(
+        type === 'validation' ? t('required', { ns: 'common' }) : t('error', { ns: 'common' }),
+        message,
+      );
     }
   };
 
@@ -148,7 +153,7 @@ export default function DestinationsScreen() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      showAlert('validation', 'Please enter a name for this location.');
+      showAlert('validation', t('errors.nameRequired'));
       return;
     }
 
@@ -185,7 +190,7 @@ export default function DestinationsScreen() {
       discardFormAndClose();
     } catch (error) {
       console.error('Failed to save destination:', error);
-      showAlert('error', 'Failed to save location. Please try again.');
+      showAlert('error', t('errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -211,13 +216,13 @@ export default function DestinationsScreen() {
     if (Platform.OS === 'web') {
       setPendingDelete(destination);
       setModalType('delete');
-      setModalMessage(`Are you sure you want to remove "${destination.name}"?`);
+      setModalMessage(t('deleteModal.message', { name: destination.name }));
       setModalVisible(true);
     } else {
-      Alert.alert('Delete Location', `Are you sure you want to remove "${destination.name}"?`, [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(t('deleteModal.title'), t('deleteModal.message', { name: destination.name }), [
+        { text: t('deleteModal.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('deleteModal.confirm'),
           style: 'destructive',
           onPress: () => confirmDelete(destination),
         },
@@ -236,7 +241,7 @@ export default function DestinationsScreen() {
       }
     } catch (error) {
       console.error('Failed to delete destination:', error);
-      showAlert('error', 'Failed to delete location.');
+      showAlert('error', t('errors.deleteFailed'));
     }
   };
 
@@ -273,10 +278,10 @@ export default function DestinationsScreen() {
       return;
     }
 
-    Alert.alert('Discard Changes?', 'You have unsaved changes to this location.', [
-      { text: 'Keep Editing', style: 'cancel' },
+    Alert.alert(t('discardChanges', { ns: 'common' }), t('unsavedChanges', { ns: 'common' }), [
+      { text: t('keepEditing', { ns: 'common' }), style: 'cancel' },
       {
-        text: 'Discard',
+        text: t('discard', { ns: 'common' }),
         style: 'destructive',
         onPress: discardFormAndClose,
       },
@@ -287,9 +292,9 @@ export default function DestinationsScreen() {
     navigation,
     hasUnsavedChanges: hasUnsavedFormChanges,
     isSaving,
-    title: 'Discard Changes?',
-    message: 'You have unsaved changes to this location.',
-    confirmLabel: 'Discard',
+    title: t('discardChanges', { ns: 'common' }),
+    message: t('unsavedChanges', { ns: 'common' }),
+    confirmLabel: t('discard', { ns: 'common' }),
     onDiscard: discardFormAndClose,
   });
 
@@ -353,6 +358,7 @@ export default function DestinationsScreen() {
         style={[
           styles.card,
           isActive && styles.cardActive,
+          isActive && getShadow('md', colorScheme),
           {
             backgroundColor: isActive ? theme.primaryLight : theme.card,
             borderColor: isActive ? theme.primary : theme.border,
@@ -380,7 +386,7 @@ export default function DestinationsScreen() {
                 ]}
               >
                 <ThemedText style={[styles.riskText, { color: riskColor }]}>
-                  {riskInfo.label}
+                  {t(`riskLevels.${riskInfo.value}`)}
                 </ThemedText>
               </View>
               <View
@@ -390,7 +396,7 @@ export default function DestinationsScreen() {
                 ]}
               >
                 <ThemedText style={[styles.categoryText, { color: theme.textSecondary }]}>
-                  {categoryInfo.label}
+                  {t(`categories.${categoryInfo.value}`)}
                 </ThemedText>
               </View>
             </View>
@@ -427,7 +433,7 @@ export default function DestinationsScreen() {
   const renderForm = () => (
     <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
       <ThemedText style={styles.formTitle}>
-        {editingDestination ? 'Edit Location' : 'Add Likely Destination'}
+        {editingDestination ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
 
       <ThemedText style={[styles.formHint, { color: theme.textSecondary }]}>
@@ -436,16 +442,18 @@ export default function DestinationsScreen() {
 
       {/* Name */}
       <AppTextInput
-        label="Location Name"
+        label={t('form.nameLabel')}
         required
-        placeholder="e.g., Riverside Park, Old House on Maple St"
+        placeholder={t('form.namePlaceholder')}
         value={formData.name}
         onChangeText={(text) => setFormData({ ...formData, name: text })}
       />
 
       {/* Category */}
       <View style={styles.formField}>
-        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Location Type</ThemedText>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
+          {t('form.categoryLabel')}
+        </ThemedText>
         <View style={styles.optionGrid}>
           {CATEGORY_OPTIONS.map((option) => {
             const isSelected = formData.category === option.value;
@@ -474,7 +482,7 @@ export default function DestinationsScreen() {
                     isSelected ? { color: '#fff' } : { color: theme.text },
                   ]}
                 >
-                  {option.label}
+                  {t(`categories.${option.value}`)}
                 </ThemedText>
               </Pressable>
             );
@@ -492,7 +500,9 @@ export default function DestinationsScreen() {
 
       {/* Risk Level */}
       <View style={styles.formField}>
-        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Search Priority</ThemedText>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
+          {t('form.riskLabel')}
+        </ThemedText>
         <View style={styles.riskRow}>
           {RISK_OPTIONS.map((option) => {
             const color = semantic[option.color];
@@ -510,7 +520,7 @@ export default function DestinationsScreen() {
                 onPress={() => setFormData({ ...formData, riskLevel: option.value })}
               >
                 <ThemedText style={[styles.riskOptionText, { color: isSelected ? '#fff' : color }]}>
-                  {option.label}
+                  {t(`riskLevels.${option.value}`)}
                 </ThemedText>
               </TouchableOpacity>
             );
@@ -520,8 +530,8 @@ export default function DestinationsScreen() {
 
       {/* Address */}
       <AppTextInput
-        label="Address"
-        placeholder="Street address or description"
+        label={t('form.addressLabel')}
+        placeholder={t('form.addressPlaceholder')}
         multiline
         value={formData.address}
         onChangeText={(text) => setFormData({ ...formData, address: text })}
@@ -529,16 +539,16 @@ export default function DestinationsScreen() {
 
       {/* Distance */}
       <AppTextInput
-        label="Distance from Home"
-        placeholder="e.g., 0.5 miles, 2 blocks"
+        label={t('form.distanceLabel')}
+        placeholder={t('form.distancePlaceholder')}
         value={formData.distanceFromHome}
         onChangeText={(text) => setFormData({ ...formData, distanceFromHome: text })}
       />
 
       {/* Reason */}
       <AppTextInput
-        label="Why They Might Go Here"
-        placeholder="e.g., Lived here 30 years ago, Used to work here"
+        label={t('form.whyLabel')}
+        placeholder={t('form.whyPlaceholder')}
         multiline
         value={formData.reason}
         onChangeText={(text) => setFormData({ ...formData, reason: text })}
@@ -546,8 +556,8 @@ export default function DestinationsScreen() {
 
       {/* Notes */}
       <AppTextInput
-        label="Additional Notes"
-        placeholder="Any other helpful details..."
+        label={t('form.notesLabel')}
+        placeholder={t('form.notesPlaceholder')}
         multiline
         value={formData.notes}
         onChangeText={(text) => setFormData({ ...formData, notes: text })}
@@ -560,7 +570,7 @@ export default function DestinationsScreen() {
         >
           <IconSymbol name="trash" size={14} color={semantic.error} />
           <ThemedText style={[styles.formDeleteText, { color: semantic.error }]}>
-            Delete Location
+            {t('deleteModal.title')}
           </ThemedText>
         </TouchableOpacity>
       )}
@@ -613,11 +623,10 @@ export default function DestinationsScreen() {
             <IconSymbol name="mappin.and.ellipse" size={40} color={theme.primary} />
           </View>
           <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
-            No Destinations Added
+            {t('noDestinations.title')}
           </ThemedText>
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
-            Add places your loved one may wander to, like former homes, favorite stores, or water
-            sources.
+            {t('noDestinations.body')}
           </ThemedText>
           <Pressable
             style={[styles.emptyButton, { backgroundColor: theme.primary }]}
@@ -625,7 +634,7 @@ export default function DestinationsScreen() {
           >
             <IconSymbol name="plus" size={18} color="#fff" />
             <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
-              Add First Location
+              {t('noDestinations.button')}
             </ThemedText>
           </Pressable>
         </View>
@@ -638,7 +647,7 @@ export default function DestinationsScreen() {
               onPress={handleAddNew}
             >
               <IconSymbol name="plus" size={20} color="#fff" />
-              <ThemedText style={styles.addButtonText}>Add Location</ThemedText>
+              <ThemedText style={styles.addButtonText}>{t('addDestination')}</ThemedText>
             </TouchableOpacity>
           )}
           <View style={{ height: 40 }} />
@@ -655,9 +664,9 @@ export default function DestinationsScreen() {
           title={
             showForm
               ? editingDestination
-                ? 'Edit Location'
-                : 'Add Location'
-              : 'Likely Destinations'
+                ? t('form.editTitle')
+                : t('addDestination')
+              : t('screenTitle')
           }
           onBack={showForm ? handleCancel : undefined}
           rightElement={
@@ -668,7 +677,11 @@ export default function DestinationsScreen() {
                 disabled={isSaving}
               >
                 <ThemedText style={styles.headerSaveText} numberOfLines={1}>
-                  {isSaving ? 'Saving...' : editingDestination ? 'Update' : 'Add'}
+                  {isSaving
+                    ? t('saving', { ns: 'common' })
+                    : editingDestination
+                      ? t('update', { ns: 'common' })
+                      : t('add', { ns: 'common' })}
                 </ThemedText>
               </Pressable>
             ) : undefined
@@ -678,7 +691,7 @@ export default function DestinationsScreen() {
         {/* Content */}
         {isLoading ? (
           <View style={styles.loading}>
-            <ThemedText>Loading...</ThemedText>
+            <ThemedText>{t('loading', { ns: 'common' })}</ThemedText>
           </View>
         ) : showForm ? (
           renderForm()
@@ -692,10 +705,10 @@ export default function DestinationsScreen() {
         onDismiss={() => handleModalAction('cancel')}
         title={
           modalType === 'delete'
-            ? 'Delete Location'
+            ? t('deleteModal.title')
             : modalType === 'validation'
-              ? 'Required'
-              : 'Error'
+              ? t('required', { ns: 'common' })
+              : t('error', { ns: 'common' })
         }
         message={modalMessage}
         type={modalType === 'delete' ? 'delete' : 'alert'}
@@ -807,11 +820,6 @@ const styles = StyleSheet.create({
   cardActive: {
     opacity: 0.98,
     transform: [{ scale: 1.02 }],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
   },
   cardHeader: {
     flexDirection: 'row',

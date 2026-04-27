@@ -4,6 +4,7 @@
  * One-tap copy, maps integration, and Silver Alert guidance
  */
 
+import { useTranslation } from 'react-i18next';
 import { goBack } from '@/utils/navigation';
 import { formatPhoneNumber } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
@@ -36,6 +37,7 @@ export default function ReadoutScreen() {
   const router = useRouter();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+  const { t } = useTranslation('readout');
   const [isScriptExpanded, setIsScriptExpanded] = useState(false);
   const [copiedType, setCopiedType] = useState<'script' | 'all' | null>(null);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -208,7 +210,7 @@ export default function ReadoutScreen() {
       await Clipboard.setStringAsync(script);
       showCopyConfirmation('script');
     } catch {
-      Alert.alert('Copy Failed', 'Unable to copy the 911 script right now.');
+      Alert.alert(t('copyFailed'), t('copyScriptFailed'));
     }
   };
   const openMaps = () => {
@@ -226,7 +228,7 @@ export default function ReadoutScreen() {
       await Clipboard.setStringAsync(textBlock);
       showCopyConfirmation('all');
     } catch {
-      Alert.alert('Copy Failed', 'Unable to copy the full details right now.');
+      Alert.alert(t('copyFailed'), t('copyDetailsFailed'));
     }
   };
 
@@ -245,13 +247,13 @@ export default function ReadoutScreen() {
   if (!profile) {
     return (
       <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
-        <ThemedText>No profile found. Please complete onboarding first.</ThemedText>
+        <ThemedText>{t('noProfile')}</ThemedText>
         <Pressable
           style={[styles.button, { backgroundColor: theme.primary }]}
           onPress={() => router.push('/onboarding')}
         >
           <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-            Go to Onboarding
+            {t('goToOnboarding')}
           </ThemedText>
         </Pressable>
       </SafeAreaView>
@@ -271,16 +273,16 @@ export default function ReadoutScreen() {
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator>
         <Pressable onPress={() => goBack('/(tabs)')} style={styles.backLink}>
           <IconSymbol name="chevron.left" size={20} color={theme.tint} />
-          <ThemedText style={[styles.backText, { color: theme.tint }]}>Back</ThemedText>
+          <ThemedText style={[styles.backText, { color: theme.tint }]}>{t('back')}</ThemedText>
         </Pressable>
 
         <ThemedText type="title" style={{ color: theme.text }}>
-          Missing Person Description
+          {t('screenTitle')}
         </ThemedText>
 
         {/* Call 911 Button - Most prominent */}
         <Pressable style={[styles.emergencyButton, getShadow('sm', colorScheme)]} onPress={call911}>
-          <ThemedText style={styles.emergencyButtonText}>Call 911</ThemedText>
+          <ThemedText style={styles.emergencyButtonText}>{t('callButton')}</ThemedText>
         </Pressable>
 
         {/* 911 Script Card */}
@@ -295,7 +297,7 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: semantic.success }]}
               >
-                911 Call Script
+                {t('sections.script.label')}
               </ThemedText>
             </View>
             <IconSymbol
@@ -307,18 +309,20 @@ export default function ReadoutScreen() {
           {isScriptExpanded ? (
             <>
               <ThemedText style={[styles.scriptHint, { color: theme.textSecondary }]}>
-                Read this to dispatch:
+                {t('sections.script.hint')}
               </ThemedText>
               <ThemedText style={[styles.scriptText, { color: theme.text }]}>{script}</ThemedText>
               {missingScriptDetails.length > 0 && (
                 <ThemedText style={[styles.scriptMissingText, { color: semantic.warning }]}>
-                  Add for stronger script: {missingScriptDetails.join(', ')}.
+                  {t('sections.script.missingDetails', {
+                    details: missingScriptDetails.join(', '),
+                  })}
                 </ThemedText>
               )}
             </>
           ) : (
             <ThemedText style={[styles.scriptHint, { color: theme.textSecondary }]}>
-              Tap to expand
+              {t('sections.script.collapsed')}
             </ThemedText>
           )}
         </View>
@@ -339,14 +343,14 @@ export default function ReadoutScreen() {
               </ThemedText>
               {profile.nickname && (
                 <ThemedText style={[styles.nickname, { color: theme.textSecondary }]}>
-                  Goes by &ldquo;{profile.nickname}&rdquo;
+                  {t('sections.identity.goesBy', { nickname: profile.nickname })}
                 </ThemedText>
               )}
               {profile.dateOfBirth && (
                 <View style={styles.infoChip}>
                   <IconSymbol name="calendar" size={12} color={theme.textSecondary} />
                   <ThemedText type="caption" style={{ color: theme.textSecondary }}>
-                    DOB: {profile.dateOfBirth}
+                    {t('sections.identity.dob', { dob: profile.dateOfBirth })}
                   </ThemedText>
                 </View>
               )}
@@ -363,12 +367,19 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: theme.primary }]}
               >
-                Last Known Location
+                {t('sections.location.title')}
               </ThemedText>
             </View>
-            {ls && <InfoRow icon="clock" label="Time" value={ls} theme={theme} />}
+            {ls && (
+              <InfoRow icon="clock" label={t('sections.location.time')} value={ls} theme={theme} />
+            )}
             {coordinates && (
-              <InfoRow icon="location.fill" label="Coordinates" value={coordinates} theme={theme} />
+              <InfoRow
+                icon="location.fill"
+                label={t('sections.location.coordinates')}
+                value={coordinates}
+                theme={theme}
+              />
             )}
             {lastSeen.coords && (
               <Pressable
@@ -395,25 +406,51 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: theme.primary }]}
               >
-                Appearance
+                {t('sections.appearance.title')}
               </ThemedText>
             </View>
             <View style={styles.gridRow}>
-              {profile.height && <InfoChip label="Height" value={profile.height} theme={theme} />}
-              {profile.weight && <InfoChip label="Weight" value={profile.weight} theme={theme} />}
-              {profile.hairColor && (
-                <InfoChip label="Hair" value={profile.hairColor} theme={theme} />
+              {profile.height && (
+                <InfoChip
+                  label={t('sections.appearance.height')}
+                  value={profile.height}
+                  theme={theme}
+                />
               )}
-              {profile.eyeColor && <InfoChip label="Eyes" value={profile.eyeColor} theme={theme} />}
+              {profile.weight && (
+                <InfoChip
+                  label={t('sections.appearance.weight')}
+                  value={profile.weight}
+                  theme={theme}
+                />
+              )}
+              {profile.hairColor && (
+                <InfoChip
+                  label={t('sections.appearance.hair')}
+                  value={profile.hairColor}
+                  theme={theme}
+                />
+              )}
+              {profile.eyeColor && (
+                <InfoChip
+                  label={t('sections.appearance.eyes')}
+                  value={profile.eyeColor}
+                  theme={theme}
+                />
+              )}
               {profile.dominantHand && profile.dominantHand !== 'unknown' && (
                 <InfoChip
-                  label="Dominant Hand"
+                  label={t('sections.appearance.dominantHand')}
                   value={profile.dominantHand === 'left' ? 'Left' : 'Right'}
                   theme={theme}
                 />
               )}
               {profile.mobilityLevel && (
-                <InfoChip label="Mobility" value={profile.mobilityLevel} theme={theme} />
+                <InfoChip
+                  label={t('sections.appearance.mobility')}
+                  value={profile.mobilityLevel}
+                  theme={theme}
+                />
               )}
             </View>
             {profile.mobilityLevel &&
@@ -453,7 +490,7 @@ export default function ReadoutScreen() {
             {profile.identifyingMarks && (
               <InfoRow
                 icon="person.text.rectangle"
-                label="Identifying Marks"
+                label={t('sections.appearance.identifyingMarks')}
                 value={profile.identifyingMarks}
                 theme={theme}
               />
@@ -491,13 +528,13 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: semantic.error }]}
               >
-                Important Details
+                {t('sections.medical.title')}
               </ThemedText>
             </View>
             {profile.medicalConditions && (
               <InfoRow
                 icon="heart.fill"
-                label="Conditions"
+                label={t('sections.medical.conditions')}
                 value={profile.medicalConditions}
                 theme={theme}
               />
@@ -505,18 +542,23 @@ export default function ReadoutScreen() {
             {profile.medications && (
               <InfoRow
                 icon="pills.fill"
-                label="Routine Medications (optional)"
+                label={t('sections.medical.medications')}
                 value={profile.medications}
                 theme={theme}
               />
             )}
             {profile.allergies && (
-              <InfoRow icon="allergens" label="Allergies" value={profile.allergies} theme={theme} />
+              <InfoRow
+                icon="allergens"
+                label={t('sections.medical.allergies')}
+                value={profile.allergies}
+                theme={theme}
+              />
             )}
             {profile.cognitiveStatus && (
               <InfoRow
                 icon="brain.head.profile"
-                label="Cognitive Status"
+                label={t('sections.medical.cognitiveStatus')}
                 value={profile.cognitiveStatus}
                 theme={theme}
               />
@@ -538,13 +580,13 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: theme.primary }]}
               >
-                How to Approach
+                {t('sections.communication.title')}
               </ThemedText>
             </View>
             {profile.communicationPreference && (
               <InfoRow
                 icon="waveform"
-                label="Communication"
+                label={t('sections.communication.communication')}
                 value={profile.communicationPreference}
                 theme={theme}
               />
@@ -552,7 +594,7 @@ export default function ReadoutScreen() {
             {profile.approachGuidance && (
               <InfoRow
                 icon="figure.walk.motion"
-                label="Best Approach"
+                label={t('sections.communication.approach')}
                 value={profile.approachGuidance}
                 theme={theme}
               />
@@ -560,7 +602,7 @@ export default function ReadoutScreen() {
             {profile.deescalationTechniques && (
               <InfoRow
                 icon="hand.raised.fill"
-                label="De-escalation"
+                label={t('sections.communication.deescalation')}
                 value={profile.deescalationTechniques}
                 theme={theme}
               />
@@ -568,7 +610,7 @@ export default function ReadoutScreen() {
             {profile.likes && (
               <InfoRow
                 icon="heart.fill"
-                label="Likes / Comforts"
+                label={t('sections.communication.likes')}
                 value={profile.likes}
                 theme={theme}
               />
@@ -576,7 +618,7 @@ export default function ReadoutScreen() {
             {profile.dislikesTriggers && (
               <InfoRow
                 icon="exclamationmark.triangle.fill"
-                label="Avoid / Triggers"
+                label={t('sections.communication.triggers')}
                 value={profile.dislikesTriggers}
                 theme={theme}
               />
@@ -584,7 +626,7 @@ export default function ReadoutScreen() {
             {profile.safeWord && (
               <InfoRow
                 icon="key.fill"
-                label="Family Safe Word"
+                label={t('sections.communication.safeWord')}
                 value={profile.safeWord}
                 theme={theme}
               />
@@ -601,13 +643,13 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: theme.primary }]}
               >
-                Locator &amp; ID
+                {t('sections.devices.title')}
               </ThemedText>
             </View>
             {profile.locativeDeviceInfo && (
               <InfoRow
                 icon="antenna.radiowaves.left.and.right"
-                label="Personal Locator"
+                label={t('sections.devices.locator')}
                 value={profile.locativeDeviceInfo}
                 theme={theme}
               />
@@ -615,7 +657,7 @@ export default function ReadoutScreen() {
             {profile.idBracelets && (
               <InfoRow
                 icon="person.badge.shield.checkmark.fill"
-                label="ID Bracelet"
+                label={t('sections.devices.idBracelet')}
                 value={profile.idBracelets}
                 theme={theme}
               />
@@ -623,7 +665,7 @@ export default function ReadoutScreen() {
             {profile.medicAlertId && (
               <InfoRow
                 icon="staroflife.fill"
-                label="MedicAlert ID"
+                label={t('sections.devices.medicAlertId')}
                 value={profile.medicAlertId}
                 theme={theme}
               />
@@ -640,7 +682,7 @@ export default function ReadoutScreen() {
                 type="bodyBold"
                 style={[styles.sectionLabelText, { color: semantic.success }]}
               >
-                Emergency Contacts
+                {t('contacts.title')}
               </ThemedText>
             </View>
             {emergencyContacts.map((c) => (
@@ -829,7 +871,6 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.lg,
     borderRadius: Radius.lg,
     alignItems: 'center',
-    shadowColor: semantic.error,
   },
   emergencyButtonText: {
     color: '#fff',

@@ -23,9 +23,11 @@ import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
+import { useTranslation } from 'react-i18next';
 
 export default function NameScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -63,16 +65,16 @@ export default function NameScreen() {
           <OnboardingStepHeader activeStep={1} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
-            Who are you caring for?
+            {t('name.title')}
           </ThemedText>
 
           <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            This name will be used when calling 911 and alerting your circle.
+            {t('name.subtitle')}
           </ThemedText>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Full Name *</ThemedText>
+              <ThemedText style={styles.label}>{t('name.nameLabel')}</ThemedText>
               <TextInput
                 testID="onboarding-name-input"
                 accessibilityLabel="onboarding-name-input"
@@ -89,7 +91,7 @@ export default function NameScreen() {
                   setName(text);
                   setError('');
                 }}
-                placeholder="e.g., Jane Smith"
+                placeholder={t('name.namePlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 autoFocus
                 autoCapitalize="words"
@@ -98,7 +100,7 @@ export default function NameScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Nickname / Goes By</ThemedText>
+              <ThemedText style={styles.label}>{t('name.nicknameLabel')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
@@ -110,12 +112,12 @@ export default function NameScreen() {
                 ]}
                 value={nickname}
                 onChangeText={setNickname}
-                placeholder="e.g., Mom, Grandma, Jane"
+                placeholder={t('name.nicknamePlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
               />
               <ThemedText style={[styles.hint, { color: theme.textDisabled }]}>
-                What name do they respond to best?
+                {t('name.nicknameHint')}
               </ThemedText>
             </View>
 
@@ -135,7 +137,7 @@ export default function NameScreen() {
             onPress={handleContinue}
             disabled={!name.trim()}
           >
-            <ThemedText style={styles.buttonText}>Continue</ThemedText>
+            <ThemedText style={styles.buttonText}>{t('name.continue')}</ThemedText>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

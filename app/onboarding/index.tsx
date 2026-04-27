@@ -5,7 +5,9 @@
 
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
+import i18n from 'i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -14,9 +16,11 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
+import { saveSetting } from '@/database/storage';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { themePreference, setThemePreference, colorScheme } = useTheme();
 
@@ -24,9 +28,9 @@ export default function WelcomeScreen() {
   const theme = Colors[colorScheme];
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
-    { value: 'light', label: 'Light', icon: '☀️' },
-    { value: 'dark', label: 'Dark', icon: '🌙' },
-    { value: 'system', label: 'Auto', icon: '📱' },
+    { value: 'light', label: t('welcome.themeOptions.light'), icon: '☀️' },
+    { value: 'dark', label: t('welcome.themeOptions.dark'), icon: '🌙' },
+    { value: 'system', label: t('welcome.themeOptions.auto'), icon: '📱' },
   ];
 
   const handleContinue = async () => {
@@ -69,11 +73,11 @@ export default function WelcomeScreen() {
           </View>
 
           <ThemedText type="title" style={[styles.title, { color: colors.text }]}>
-            Be prepared.{'\n'}Stay calm.
+            {t('welcome.title')}
           </ThemedText>
 
           <ThemedText style={[styles.description, { color: colors.textSecondary }]}>
-            A safety coordination app that helps families and supporters organize a search quickly.
+            {t('welcome.description')}
           </ThemedText>
         </View>
 
@@ -84,10 +88,10 @@ export default function WelcomeScreen() {
             </View>
             <View style={styles.featureContent}>
               <ThemedText style={[styles.featureTitle, { color: colors.text }]}>
-                15-Minute Timer
+                {t('welcome.features.timer.title')}
               </ThemedText>
               <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>
-                Guided search protocol with step-by-step checklist
+                {t('welcome.features.timer.description')}
               </ThemedText>
             </View>
           </View>
@@ -97,10 +101,10 @@ export default function WelcomeScreen() {
             </View>
             <View style={styles.featureContent}>
               <ThemedText style={[styles.featureTitle, { color: colors.text }]}>
-                911 Ready
+                {t('welcome.features.readout.title')}
               </ThemedText>
               <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>
-                One-tap script with all critical info for dispatchers
+                {t('welcome.features.readout.description')}
               </ThemedText>
             </View>
           </View>
@@ -110,10 +114,10 @@ export default function WelcomeScreen() {
             </View>
             <View style={styles.featureContent}>
               <ThemedText style={[styles.featureTitle, { color: colors.text }]}>
-                100% Private
+                {t('welcome.features.privacy.title')}
               </ThemedText>
               <ThemedText style={[styles.featureText, { color: colors.textMuted }]}>
-                All data stays on your device. No accounts needed.
+                {t('welcome.features.privacy.description')}
               </ThemedText>
             </View>
           </View>
@@ -122,7 +126,7 @@ export default function WelcomeScreen() {
         {/* Theme Selector */}
         <View style={styles.themeSection}>
           <ThemedText style={[styles.themeLabel, { color: colors.textFaint }]}>
-            Choose your theme
+            {t('welcome.themeLabel')}
           </ThemedText>
           <View style={styles.themeOptions}>
             {themeOptions.map((option) => (
@@ -155,11 +159,56 @@ export default function WelcomeScreen() {
             ))}
           </View>
         </View>
+
+        {/* Language Selector — dev builds only */}
+        {__DEV__ && (
+          <View style={styles.themeSection}>
+            <ThemedText style={[styles.themeLabel, { color: colors.textFaint }]}>
+              {t('welcome.languageLabel')}
+            </ThemedText>
+            <View style={styles.themeOptions}>
+              {(['en', 'es'] as const).map((lang) => {
+                const isSelected = i18n.language === lang;
+                const label = lang === 'en' ? 'English' : 'Español';
+                return (
+                  <Pressable
+                    key={lang}
+                    style={[
+                      styles.themeOption,
+                      { backgroundColor: colors.optionBg },
+                      isSelected && {
+                        backgroundColor: colors.optionActiveBg,
+                        borderColor: colors.optionBorder,
+                      },
+                    ]}
+                    onPress={() => {
+                      void i18n.changeLanguage(lang);
+                      void saveSetting('language_preference', lang);
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.themeText,
+                        { color: colors.textMuted },
+                        isSelected && {
+                          color: colors.optionActiveText,
+                          fontWeight: '600',
+                        },
+                      ]}
+                    >
+                      {label}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       <View style={styles.footer}>
         <ThemedText style={[styles.scrollHint, { color: colors.textFaint }]}>
-          ↓ Scroll for more
+          {t('welcome.scrollHint')}
         </ThemedText>
         <Pressable
           testID="onboarding-get-started"
@@ -168,11 +217,11 @@ export default function WelcomeScreen() {
           onPress={handleContinue}
         >
           <ThemedText style={[styles.buttonText, { color: colors.buttonText }]}>
-            Get Started
+            {t('welcome.getStarted')}
           </ThemedText>
         </Pressable>
         <ThemedText style={[styles.privacy, { color: colors.textVeryFaint }]}>
-          Your information never leaves this device.
+          {t('welcome.privacy')}
         </ThemedText>
       </View>
     </SafeAreaView>

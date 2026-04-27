@@ -1,0 +1,107 @@
+{
+  "screenTitle": "",
+  "loading": "",
+  "timer": {
+    "labelActive": "",
+    "labelExpired": "",
+    "hintActive": "",
+    "hintExpired": "",
+    "stepsProgress": ""
+  },
+  "directionHint": {
+    "left": "",
+    "right": ""
+  },
+  "wearing": {
+    "label": "",
+    "hint": "",
+    "placeholder": "",
+    "dismiss": ""
+  },
+  "actions": {
+    "foundSafe": "",
+    "call911": "",
+    "infoSheet": "",
+    "alertCircle": ""
+  },
+  "checklist": {
+    "title": "",
+    "priority": "",
+    "savedPlaces": "",
+    "morePlaces": ""
+  },
+  "steps": {
+    "home_search": {
+      "title": "",
+      "description": "",
+      "hint": ""
+    },
+    "outside_immediate": {
+      "title": "",
+      "description": ""
+    },
+    "neighbors": {
+      "title": "",
+      "description": ""
+    },
+    "radius_search": {
+      "title": "",
+      "description": ""
+    },
+    "high_risk": {
+      "title": "",
+      "description": ""
+    },
+    "familiar_places": {
+      "title": "",
+      "description": ""
+    },
+    "call_911": {
+      "title": "",
+      "description": ""
+    },
+    "silver_alert": {
+      "title": "",
+      "description": ""
+    },
+    "share_info": {
+      "title": "",
+      "description": ""
+    },
+    "coordinate": {
+      "title": "",
+      "description": ""
+    },
+    "document": {
+      "title": "",
+      "description": ""
+    }
+  },
+  "tips": {
+    "title": "",
+    "body": ""
+  },
+  "smsMessage": "",
+  "smsWearing": "",
+  "modal": {
+    "found": {
+      "title": "",
+      "message": ""
+    },
+    "leave": {
+      "title": "",
+      "message": "",
+      "stay": "",
+      "leave": "",
+      "end": ""
+    },
+    "noContacts": {
+      "title": "",
+      "message": ""
+    },
+    "smsError": {
+      "title": "",
+      "message": ""
+    }
+  }
+}

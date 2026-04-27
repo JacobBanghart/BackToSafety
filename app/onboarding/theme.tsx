@@ -13,9 +13,11 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function ThemeScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { themePreference, setThemePreference, colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -26,9 +28,24 @@ export default function ThemeScreen() {
     icon: string;
     description: string;
   }[] = [
-    { value: 'system', label: 'System', icon: '📱', description: 'Match your device settings' },
-    { value: 'light', label: 'Light', icon: '☀️', description: 'Bright and clear' },
-    { value: 'dark', label: 'Dark', icon: '🌙', description: 'Easy on the eyes' },
+    {
+      value: 'system',
+      label: t('theme.options.system.label'),
+      icon: '📱',
+      description: t('theme.options.system.description'),
+    },
+    {
+      value: 'light',
+      label: t('theme.options.light.label'),
+      icon: '☀️',
+      description: t('theme.options.light.description'),
+    },
+    {
+      value: 'dark',
+      label: t('theme.options.dark.label'),
+      icon: '🌙',
+      description: t('theme.options.dark.description'),
+    },
   ];
 
   const handleContinue = async () => {
@@ -48,11 +65,11 @@ export default function ThemeScreen() {
         </View>
 
         <ThemedText type="title" style={styles.title}>
-          Choose your look
+          {t('theme.title')}
         </ThemedText>
 
         <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Select how you&apos;d like the app to appear. You can change this later in Settings.
+          {t('theme.subtitle')}
         </ThemedText>
 
         <View style={styles.options}>
@@ -100,7 +117,7 @@ export default function ThemeScreen() {
           style={[styles.button, { backgroundColor: theme.tint }]}
           onPress={handleContinue}
         >
-          <ThemedText style={styles.buttonText}>Continue</ThemedText>
+          <ThemedText style={styles.buttonText}>{t('theme.continue')}</ThemedText>
         </Pressable>
       </View>
     </SafeAreaView>

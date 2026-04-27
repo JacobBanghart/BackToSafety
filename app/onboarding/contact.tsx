@@ -25,9 +25,11 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 import { createContact } from '@/database/contacts';
 import { formatPhoneInput } from '@/utils/phone';
+import { useTranslation } from 'react-i18next';
 
 export default function ContactScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -74,16 +76,16 @@ export default function ContactScreen() {
           <OnboardingStepHeader activeStep={4} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
-            Emergency contact
+            {t('contact.title')}
           </ThemedText>
 
           <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            Who should we notify if they wander? You can add more contacts later.
+            {t('contact.subtitle')}
           </ThemedText>
 
           <View style={styles.form}>
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Contact Name *</ThemedText>
+              <ThemedText style={styles.label}>{t('contact.nameLabel')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
@@ -98,7 +100,7 @@ export default function ContactScreen() {
                   setName(text);
                   setError('');
                 }}
-                placeholder="e.g., John Smith"
+                placeholder={t('contact.namePlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
                 autoComplete="name"
@@ -106,7 +108,7 @@ export default function ContactScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Phone Number *</ThemedText>
+              <ThemedText style={styles.label}>{t('contact.phoneLabel')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
@@ -121,7 +123,7 @@ export default function ContactScreen() {
                   setPhone(formatPhoneInput(text));
                   setError('');
                 }}
-                placeholder="(555) 123-4567"
+                placeholder={t('contact.phonePlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 keyboardType="phone-pad"
                 inputMode="tel"
@@ -130,7 +132,7 @@ export default function ContactScreen() {
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Relationship</ThemedText>
+              <ThemedText style={styles.label}>{t('contact.relationshipLabel')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
@@ -142,7 +144,7 @@ export default function ContactScreen() {
                 ]}
                 value={relationship}
                 onChangeText={setRelationship}
-                placeholder="e.g., Son, Daughter, Neighbor"
+                placeholder={t('contact.relationshipPlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
               />
@@ -155,12 +157,10 @@ export default function ContactScreen() {
 
           <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
             <ThemedText style={[styles.infoTitle, { color: theme.text }]}>
-              What happens in an emergency?
+              {t('contact.infoBox.title')}
             </ThemedText>
             <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>
-              • You&apos;ll have a one-tap button to text this contact{'\n'}• They&apos;ll receive
-              the person&apos;s photo and last known location{'\n'}• You can add neighbors and
-              family later
+              {t('contact.infoBox.body')}
             </ThemedText>
           </View>
         </ScrollView>
@@ -173,7 +173,7 @@ export default function ContactScreen() {
             onPress={handleSkip}
           >
             <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
-              Skip for now
+              {t('contact.skip')}
             </ThemedText>
           </Pressable>
           <Pressable
@@ -185,7 +185,7 @@ export default function ContactScreen() {
             onPress={handleContinue}
           >
             <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-              Continue
+              {t('contact.continue')}
             </ThemedText>
           </Pressable>
         </View>

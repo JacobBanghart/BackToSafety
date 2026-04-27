@@ -1,0 +1,55 @@
+{
+  "screenTitle": "",
+  "loading": "",
+  "addContact": "",
+  "importContact": "",
+  "importing": "",
+  "importWebUnavailable": "",
+  "importDeviceUnavailable": "",
+  "notifyInEmergency": "",
+  "noContacts": {
+    "title": "",
+    "body": "",
+    "button": ""
+  },
+  "roles": {
+    "primary_caregiver": "",
+    "caregiver": "",
+    "family": "",
+    "neighbor": "",
+    "friend": "",
+    "other": ""
+  },
+  "form": {
+    "newTitle": "",
+    "editTitle": "",
+    "nameLabel": "",
+    "namePlaceholder": "",
+    "phoneLabel": "",
+    "phonePlaceholder": "",
+    "relationshipLabel": "",
+    "relationshipPlaceholder": "",
+    "addressLabel": "",
+    "addressPlaceholder": "",
+    "notesLabel": "",
+    "notesPlaceholder": "",
+    "roleLabel": ""
+  },
+  "actions": {
+    "call": "",
+    "edit": "",
+    "delete": ""
+  },
+  "deleteModal": {
+    "title": "",
+    "message": "",
+    "confirm": "",
+    "cancel": ""
+  },
+  "errors": {
+    "deleteFailed": "",
+    "saveFailed": "",
+    "nameRequired": "",
+    "phoneRequired": ""
+  }
+}

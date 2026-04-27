@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import * as Contacts from 'expo-contacts';
 import * as Haptics from 'expo-haptics';
@@ -44,12 +45,12 @@ import { formatPhoneInput, normalizeSmsRecipient } from '@/utils/phone';
 type ContactRole = 'primary_caregiver' | 'caregiver' | 'neighbor' | 'family' | 'friend' | 'other';
 
 const ROLE_OPTIONS: { value: ContactRole; label: string; icon: IconSymbolName }[] = [
-  { value: 'primary_caregiver', label: 'Primary Caregiver', icon: 'star.fill' },
-  { value: 'caregiver', label: 'Caregiver', icon: 'heart.fill' },
-  { value: 'family', label: 'Family', icon: 'person.2.fill' },
-  { value: 'neighbor', label: 'Neighbor', icon: 'house.fill' },
-  { value: 'friend', label: 'Friend', icon: 'person.fill' },
-  { value: 'other', label: 'Other', icon: 'ellipsis' },
+  { value: 'primary_caregiver', label: 'primary_caregiver', icon: 'star.fill' },
+  { value: 'caregiver', label: 'caregiver', icon: 'heart.fill' },
+  { value: 'family', label: 'family', icon: 'person.2.fill' },
+  { value: 'neighbor', label: 'neighbor', icon: 'house.fill' },
+  { value: 'friend', label: 'friend', icon: 'person.fill' },
+  { value: 'other', label: 'other', icon: 'ellipsis' },
 ];
 
 interface FormData {
@@ -78,6 +79,7 @@ export default function ContactsScreen() {
   const navigation = useNavigation();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+  const { t } = useTranslation('contacts');
 
   const [contacts, setContacts] = useState<Contact[]>([]);
 
@@ -118,7 +120,10 @@ export default function ContactsScreen() {
       setModalMessage(message);
       setModalVisible(true);
     } else {
-      Alert.alert(type === 'validation' ? 'Required' : 'Error', message);
+      Alert.alert(
+        type === 'validation' ? t('required', { ns: 'common' }) : t('error', { ns: 'common' }),
+        message,
+      );
     }
   };
 
@@ -129,11 +134,11 @@ export default function ContactsScreen() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      showAlert('validation', 'Please enter a name for this contact.');
+      showAlert('validation', t('errors.nameRequired'));
       return;
     }
     if (!formData.phone.trim()) {
-      showAlert('validation', 'Please enter a phone number.');
+      showAlert('validation', t('errors.phoneRequired'));
       return;
     }
 
@@ -172,7 +177,7 @@ export default function ContactsScreen() {
       discardFormAndClose();
     } catch (error) {
       console.error('Failed to save contact:', error);
-      showAlert('error', 'Failed to save contact. Please try again.');
+      showAlert('error', t('errors.saveFailed'));
     } finally {
       setIsSaving(false);
     }
@@ -199,13 +204,13 @@ export default function ContactsScreen() {
     if (Platform.OS === 'web') {
       setPendingDelete(contact);
       setModalType('delete');
-      setModalMessage(`Are you sure you want to remove ${contact.name}?`);
+      setModalMessage(t('deleteModal.message', { name: contact.name }));
       setModalVisible(true);
     } else {
-      Alert.alert('Delete Contact', `Are you sure you want to remove ${contact.name}?`, [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert(t('deleteModal.title'), t('deleteModal.message', { name: contact.name }), [
+        { text: t('deleteModal.cancel'), style: 'cancel' },
         {
-          text: 'Delete',
+          text: t('deleteModal.confirm'),
           style: 'destructive',
           onPress: () => confirmDelete(contact),
         },
@@ -224,7 +229,7 @@ export default function ContactsScreen() {
       }
     } catch (error) {
       console.error('Failed to delete contact:', error);
-      showAlert('error', 'Failed to delete contact.');
+      showAlert('error', t('errors.deleteFailed'));
     }
   };
 
@@ -272,7 +277,7 @@ export default function ContactsScreen() {
 
   const handleImportContact = async () => {
     if (Platform.OS === 'web') {
-      showAlert('validation', 'Contact import is only available on iPhone and Android devices.');
+      showAlert('validation', t('importWebUnavailable'));
       return;
     }
 
@@ -281,7 +286,7 @@ export default function ContactsScreen() {
     try {
       const isAvailable = await Contacts.isAvailableAsync();
       if (!isAvailable) {
-        showAlert('error', 'Contact import is not available on this device.');
+        showAlert('error', t('importDeviceUnavailable'));
         return;
       }
 
@@ -367,10 +372,10 @@ export default function ContactsScreen() {
       return;
     }
 
-    Alert.alert('Discard Changes?', 'You have unsaved changes to this contact.', [
-      { text: 'Keep Editing', style: 'cancel' },
+    Alert.alert(t('discardChanges', { ns: 'common' }), t('unsavedChanges', { ns: 'common' }), [
+      { text: t('keepEditing', { ns: 'common' }), style: 'cancel' },
       {
-        text: 'Discard',
+        text: t('discard', { ns: 'common' }),
         style: 'destructive',
         onPress: discardFormAndClose,
       },
@@ -381,9 +386,9 @@ export default function ContactsScreen() {
     navigation,
     hasUnsavedChanges: hasUnsavedFormChanges,
     isSaving,
-    title: 'Discard Changes?',
-    message: 'You have unsaved changes to this contact.',
-    confirmLabel: 'Discard',
+    title: t('discardChanges', { ns: 'common' }),
+    message: t('unsavedChanges', { ns: 'common' }),
+    confirmLabel: t('discard', { ns: 'common' }),
     onDiscard: discardFormAndClose,
   });
 
@@ -432,6 +437,7 @@ export default function ContactsScreen() {
         style={[
           styles.contactCard,
           isActive && styles.contactCardActive,
+          isActive && getShadow('md', colorScheme),
           {
             backgroundColor: isActive ? theme.primaryLight : theme.card,
             borderColor: isActive ? theme.primary : theme.border,
@@ -456,7 +462,7 @@ export default function ContactsScreen() {
           <View style={styles.contactInfo}>
             <ThemedText style={styles.contactName}>{contact.name}</ThemedText>
             <ThemedText style={[styles.contactMeta, { color: theme.textSecondary }]}>
-              {roleInfo.label}
+              {t(`roles.${roleInfo.value}`)}
               {contact.relationship ? ` • ${contact.relationship}` : ''}
             </ThemedText>
           </View>
@@ -494,24 +500,24 @@ export default function ContactsScreen() {
   const renderForm = () => (
     <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
       <ThemedText style={styles.formTitle}>
-        {editingContact ? 'Edit Contact' : 'Add Emergency Contact'}
+        {editingContact ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
 
       {/* Name */}
       <AppTextInput
-        label="Name"
+        label={t('form.nameLabel')}
         value={formData.name}
         onChangeText={(text) => setFormData({ ...formData, name: text })}
-        placeholder="Contact name"
+        placeholder={t('form.namePlaceholder')}
         required
       />
 
       {/* Phone */}
       <AppTextInput
-        label="Phone Number"
+        label={t('form.phoneLabel')}
         value={formData.phone}
         onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneInput(text) })}
-        placeholder="(555) 123-4567"
+        placeholder={t('form.phonePlaceholder')}
         keyboardType="phone-pad"
         autoComplete="tel"
         required
@@ -519,25 +525,27 @@ export default function ContactsScreen() {
 
       {/* Relationship */}
       <AppTextInput
-        label="Relationship"
+        label={t('form.relationshipLabel')}
         value={formData.relationship}
         onChangeText={(text) => setFormData({ ...formData, relationship: text })}
-        placeholder="e.g., Daughter, Next-door neighbor"
+        placeholder={t('form.relationshipPlaceholder')}
       />
 
       {/* Address */}
       <AppTextInput
-        label="Address"
+        label={t('form.addressLabel')}
         value={formData.address}
         onChangeText={(text) => setFormData({ ...formData, address: text })}
-        placeholder="Street address, city, state"
+        placeholder={t('form.addressPlaceholder')}
         multiline
         numberOfLines={2}
       />
 
       {/* Role */}
       <View style={styles.formField}>
-        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>Role</ThemedText>
+        <ThemedText style={[styles.fieldLabel, { color: theme.text }]}>
+          {t('form.roleLabel')}
+        </ThemedText>
         <View style={styles.roleGrid}>
           {ROLE_OPTIONS.map((option) => {
             const isSelected = formData.role === option.value;
@@ -565,7 +573,7 @@ export default function ContactsScreen() {
                     isSelected ? { color: '#fff' } : { color: theme.text },
                   ]}
                 >
-                  {option.label}
+                  {t(`roles.${option.value}`)}
                 </ThemedText>
               </Pressable>
             );
@@ -585,7 +593,7 @@ export default function ContactsScreen() {
         onPress={() => setFormData({ ...formData, notifyOnEmergency: !formData.notifyOnEmergency })}
       >
         <View style={styles.toggleInfo}>
-          <ThemedText style={styles.toggleLabel}>Notify in Emergency</ThemedText>
+          <ThemedText style={styles.toggleLabel}>{t('notifyInEmergency')}</ThemedText>
           <ThemedText style={[styles.toggleHint, { color: theme.textSecondary }]}>
             Adds this contact to your Alert Circle (people who get emergency SMS alerts)
           </ThemedText>
@@ -606,10 +614,10 @@ export default function ContactsScreen() {
 
       {/* Notes */}
       <AppTextInput
-        label="Notes"
+        label={t('form.notesLabel')}
         value={formData.notes}
         onChangeText={(text) => setFormData({ ...formData, notes: text })}
-        placeholder="Additional notes about this contact..."
+        placeholder={t('form.notesPlaceholder')}
         multiline
         numberOfLines={3}
       />
@@ -621,7 +629,7 @@ export default function ContactsScreen() {
         >
           <IconSymbol name="trash" size={14} color={semantic.error} />
           <ThemedText style={[styles.formDeleteText, { color: semantic.error }]}>
-            Delete Contact
+            {t('deleteModal.title')}
           </ThemedText>
         </TouchableOpacity>
       )}
@@ -663,10 +671,10 @@ export default function ContactsScreen() {
             <IconSymbol name="person.2.fill" size={40} color={theme.primary} />
           </View>
           <ThemedText type="title" style={[styles.emptyTitle, { color: theme.text }]}>
-            No Contacts Yet
+            {t('noContacts.title')}
           </ThemedText>
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
-            Add family members, neighbors, or friends who can help in an emergency.
+            {t('noContacts.body')}
           </ThemedText>
           <View style={styles.emptyActionsRow}>
             <Pressable
@@ -675,7 +683,7 @@ export default function ContactsScreen() {
             >
               <IconSymbol name="plus" size={20} color="#fff" />
               <ThemedText style={styles.addButtonText} numberOfLines={1}>
-                Add Contact
+                {t('addContact')}
               </ThemedText>
             </Pressable>
             <Pressable
@@ -692,7 +700,7 @@ export default function ContactsScreen() {
                 style={[styles.importButtonText, { color: theme.text }]}
                 numberOfLines={1}
               >
-                {isImporting ? 'Importing...' : 'Import Contact'}
+                {isImporting ? t('importing') : t('importContact')}
               </ThemedText>
             </Pressable>
           </View>
@@ -707,7 +715,7 @@ export default function ContactsScreen() {
                 onPress={handleAddNew}
               >
                 <IconSymbol name="plus" size={20} color="#fff" />
-                <ThemedText style={styles.addButtonText}>Add Contact</ThemedText>
+                <ThemedText style={styles.addButtonText}>{t('addContact')}</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -720,7 +728,7 @@ export default function ContactsScreen() {
               >
                 <IconSymbol name="square.and.arrow.down" size={18} color={theme.tint} />
                 <ThemedText style={[styles.importButtonText, { color: theme.text }]}>
-                  {isImporting ? 'Importing...' : 'Import Contact'}
+                  {isImporting ? t('importing') : t('importContact')}
                 </ThemedText>
               </TouchableOpacity>
             </View>
@@ -737,7 +745,7 @@ export default function ContactsScreen() {
         {/* Header */}
         <ScreenHeader
           title={
-            showForm ? (editingContact ? 'Edit Contact' : 'Add Contact') : 'Emergency Contacts'
+            showForm ? (editingContact ? t('form.editTitle') : t('addContact')) : t('screenTitle')
           }
           onBack={showForm ? handleCancel : undefined}
           rightElement={
@@ -748,7 +756,11 @@ export default function ContactsScreen() {
                 disabled={isSaving}
               >
                 <ThemedText style={styles.headerSaveText} numberOfLines={1}>
-                  {isSaving ? 'Saving...' : editingContact ? 'Update' : 'Add'}
+                  {isSaving
+                    ? t('saving', { ns: 'common' })
+                    : editingContact
+                      ? t('update', { ns: 'common' })
+                      : t('add', { ns: 'common' })}
                 </ThemedText>
               </Pressable>
             ) : undefined
@@ -758,7 +770,7 @@ export default function ContactsScreen() {
         {/* Content */}
         {isLoading ? (
           <View style={styles.loading}>
-            <ThemedText>Loading...</ThemedText>
+            <ThemedText>{t('loading', { ns: 'common' })}</ThemedText>
           </View>
         ) : showForm ? (
           renderForm()
@@ -772,10 +784,10 @@ export default function ContactsScreen() {
         onDismiss={() => handleModalAction('cancel')}
         title={
           modalType === 'delete'
-            ? 'Delete Contact'
+            ? t('deleteModal.title')
             : modalType === 'validation'
-              ? 'Required'
-              : 'Error'
+              ? t('required', { ns: 'common' })
+              : t('error', { ns: 'common' })
         }
         message={modalMessage}
         type={modalType === 'delete' ? 'delete' : 'alert'}
@@ -873,11 +885,6 @@ const styles = StyleSheet.create({
   contactCardActive: {
     opacity: 0.98,
     transform: [{ scale: 1.02 }],
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
   },
   contactHeader: {
     flexDirection: 'row',

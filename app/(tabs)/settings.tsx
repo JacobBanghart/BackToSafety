@@ -6,6 +6,8 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import i18n from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppCard } from '@/components/AppCard';
@@ -17,7 +19,7 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { useOnboarding } from '@/context/OnboardingContext';
-import { clearAllData, getDatabaseSchemaVersion } from '@/database/storage';
+import { clearAllData, getDatabaseSchemaVersion, saveSetting } from '@/database/storage';
 import { getAppName, getAppVersionLabel } from '@/utils/appInfo';
 
 const IS_DEV = __DEV__;
@@ -25,6 +27,7 @@ const TAPS_TO_UNLOCK = 7;
 
 export default function SettingsScreen() {
   const router = useRouter();
+  const { t } = useTranslation('settings');
   const { themePreference, setThemePreference, colorScheme } = useTheme();
   const { refreshOnboardingState } = useOnboarding();
   const theme = Colors[colorScheme];
@@ -50,9 +53,9 @@ export default function SettingsScreen() {
   }, []);
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
-    { value: 'system', label: 'System', icon: '📱' },
-    { value: 'light', label: 'Light', icon: '☀️' },
-    { value: 'dark', label: 'Dark', icon: '🌙' },
+    { value: 'system', label: t('themeOptions.system'), icon: '📱' },
+    { value: 'light', label: t('themeOptions.light'), icon: '☀️' },
+    { value: 'dark', label: t('themeOptions.dark'), icon: '🌙' },
   ];
 
   const handleVersionTap = () => {
@@ -69,7 +72,7 @@ export default function SettingsScreen() {
         if (Platform.OS === 'web') {
           // No alert needed, just show the section
         } else {
-          Alert.alert('Developer Mode', 'Developer options are now enabled!');
+          Alert.alert(t('devModeAlert.title'), t('devModeAlert.message'));
         }
       }
     }
@@ -90,7 +93,7 @@ export default function SettingsScreen() {
         }
       } catch (err) {
         console.error('Error clearing data:', err);
-        Alert.alert('Error', 'Failed to clear data. Please try again.');
+        Alert.alert(t('error', { ns: 'common' }), t('clearDataError'));
       } finally {
         setIsClearing(false);
       }
@@ -101,14 +104,10 @@ export default function SettingsScreen() {
         confirmClear();
       }
     } else {
-      Alert.alert(
-        'Clear All Data',
-        'This will delete all data and restart onboarding. This cannot be undone.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Clear Data', style: 'destructive', onPress: confirmClear },
-        ],
-      );
+      Alert.alert(t('clearDataModal.title'), t('clearDataModal.message'), [
+        { text: t('clearDataModal.cancel'), style: 'cancel' },
+        { text: t('clearDataModal.confirm'), style: 'destructive', onPress: confirmClear },
+      ]);
     }
   };
 
@@ -116,7 +115,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
         <ThemedText type="title" style={styles.title}>
-          Settings
+          {t('screenTitle')}
         </ThemedText>
 
         {/* Theme Section */}
@@ -124,11 +123,11 @@ export default function SettingsScreen() {
           <View style={styles.sectionHeader}>
             <IconSymbol name="paintbrush.fill" size={20} color={theme.text} />
             <ThemedText type="subtitle" style={styles.sectionTitle}>
-              Appearance
+              {t('sections.appearance.title')}
             </ThemedText>
           </View>
           <ThemedText style={[styles.sectionDescription, { color: theme.textSecondary }]}>
-            Choose your preferred color theme.
+            {t('sections.appearance.description')}
           </ThemedText>
 
           <View style={styles.themeOptions}>
@@ -167,12 +166,54 @@ export default function SettingsScreen() {
             <View style={styles.sectionHeader}>
               <IconSymbol name="wrench.fill" size={20} color={theme.text} />
               <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Developer Tools
+                {t('sections.devTools.title')}
               </ThemedText>
             </View>
             <ThemedText style={[styles.sectionDescription, { color: theme.textSecondary }]}>
-              These tools are for testing during development.
+              {t('sections.devTools.description')}
             </ThemedText>
+
+            {/* Language toggle (experimental) */}
+            <View style={styles.sectionHeader}>
+              <IconSymbol name="globe" size={20} color={theme.text} />
+              <ThemedText type="subtitle" style={styles.sectionTitle}>
+                {t('languageSection.title')}
+              </ThemedText>
+            </View>
+            <ThemedText style={[styles.sectionDescription, { color: theme.textSecondary }]}>
+              {t('languageSection.description')}
+            </ThemedText>
+            <View style={styles.themeOptions}>
+              {(['en', 'es'] as const).map((lang) => {
+                const isSelected = i18n.language === lang;
+                const langLabel = lang === 'en' ? 'English' : 'Español';
+                return (
+                  <Pressable
+                    key={lang}
+                    style={[
+                      styles.themeOption,
+                      {
+                        borderColor: isSelected ? theme.tint : theme.border,
+                        backgroundColor: isSelected ? theme.primaryLight : 'transparent',
+                      },
+                    ]}
+                    onPress={() => {
+                      void i18n.changeLanguage(lang);
+                      void saveSetting('language_preference', lang);
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.themeLabel,
+                        isSelected && { color: theme.tint, fontWeight: '600' },
+                      ]}
+                    >
+                      {langLabel}
+                    </ThemedText>
+                  </Pressable>
+                );
+              })}
+            </View>
 
             <Pressable
               style={[styles.dangerButton, isClearing && styles.buttonDisabled]}
@@ -181,12 +222,14 @@ export default function SettingsScreen() {
             >
               <IconSymbol name="trash.fill" size={18} color="#fff" />
               <ThemedText style={styles.dangerButtonText}>
-                {isClearing ? 'Clearing...' : 'Clear All Data & Restart Onboarding'}
+                {isClearing
+                  ? t('sections.devTools.clearingButton')
+                  : t('sections.devTools.clearButton')}
               </ThemedText>
             </Pressable>
 
             <ThemedText style={[styles.warning, { color: theme.textSecondary }]}>
-              This will permanently delete all profile data, contacts, incidents, and settings.
+              {t('sections.devTools.clearWarning')}
             </ThemedText>
           </AppCard>
         )}
@@ -194,24 +237,28 @@ export default function SettingsScreen() {
         {/* App Info */}
         <AppCard>
           <ThemedText type="subtitle" style={styles.sectionTitle}>
-            About
+            {t('sections.about.title')}
           </ThemedText>
-          <ListItem label="App" value={appName} />
+          <ListItem label={t('sections.about.app')} value={appName} />
           <ListItem
-            label="Version"
-            value={`${appVersionLabel}${devModeEnabled ? ' (Dev)' : ''}`}
+            label={t('sections.about.version')}
+            value={`${appVersionLabel}${devModeEnabled ? t('sections.about.devSuffix') : ''}`}
             onPress={handleVersionTap}
           />
-          <ListItem label="Platform" value={Platform.OS} />
+          <ListItem label={t('sections.about.platform')} value={Platform.OS} />
           <ListItem
-            label="Theme"
+            label={t('sections.about.theme')}
             value={colorScheme}
             style={devModeEnabled ? undefined : { borderBottomColor: 'transparent' }}
           />
           {devModeEnabled && (
             <ListItem
-              label="DB Schema"
-              value={dbSchemaVersion === null ? 'Unknown' : String(dbSchemaVersion)}
+              label={t('sections.about.dbSchema')}
+              value={
+                dbSchemaVersion === null
+                  ? t('sections.about.dbSchemaUnknown')
+                  : String(dbSchemaVersion)
+              }
               style={{ borderBottomColor: 'transparent' }}
             />
           )}

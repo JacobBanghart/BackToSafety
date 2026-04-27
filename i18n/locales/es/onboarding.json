@@ -1,0 +1,116 @@
+{
+  "welcome": {
+    "title": "",
+    "description": "",
+    "features": {
+      "timer": {
+        "title": "",
+        "description": ""
+      },
+      "readout": {
+        "title": "",
+        "description": ""
+      },
+      "privacy": {
+        "title": "",
+        "description": ""
+      }
+    },
+    "themeLabel": "",
+    "themeOptions": {
+      "light": "",
+      "dark": "",
+      "auto": ""
+    },
+    "languageLabel": "",
+    "scrollHint": "",
+    "getStarted": "",
+    "privacy": ""
+  },
+  "theme": {
+    "title": "",
+    "subtitle": "",
+    "options": {
+      "system": {
+        "label": "",
+        "description": ""
+      },
+      "light": {
+        "label": "",
+        "description": ""
+      },
+      "dark": {
+        "label": "",
+        "description": ""
+      }
+    },
+    "continue": ""
+  },
+  "name": {
+    "title": "",
+    "subtitle": "",
+    "nameLabel": "",
+    "namePlaceholder": "",
+    "nicknameLabel": "",
+    "nicknamePlaceholder": "",
+    "nicknameHint": "",
+    "continue": ""
+  },
+  "photo": {
+    "title": "",
+    "subtitle": "",
+    "noPhoto": "",
+    "takePhoto": "",
+    "chooseLibrary": "",
+    "tip": "",
+    "skip": "",
+    "continue": "",
+    "webCameraUnavailable": ""
+  },
+  "appearance": {
+    "title": "",
+    "subtitle": "",
+    "heightLabel": "",
+    "heightPlaceholder": "",
+    "weightLabel": "",
+    "weightPlaceholder": "",
+    "hairLabel": "",
+    "hairPlaceholder": "",
+    "eyeLabel": "",
+    "eyePlaceholder": "",
+    "marksLabel": "",
+    "marksPlaceholder": "",
+    "skip": "",
+    "continue": ""
+  },
+  "contact": {
+    "title": "",
+    "subtitle": "",
+    "nameLabel": "",
+    "namePlaceholder": "",
+    "phoneLabel": "",
+    "phonePlaceholder": "",
+    "relationshipLabel": "",
+    "relationshipPlaceholder": "",
+    "infoBox": {
+      "title": "",
+      "body": ""
+    },
+    "skip": "",
+    "continue": ""
+  },
+  "complete": {
+    "icon": "",
+    "title": "",
+    "description": "",
+    "addMoreLater": "",
+    "nextSteps": {
+      "details": "",
+      "deescalation": "",
+      "destinations": "",
+      "contacts": "",
+      "checklist": ""
+    },
+    "goHome": ""
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "screenTitle": "",
+  "languageSection": {
+    "title": "",
+    "description": ""
+  },
+  "sections": {
+    "appearance": {
+      "title": "",
+      "description": ""
+    },
+    "devTools": {
+      "title": "",
+      "description": "",
+      "clearButton": "",
+      "clearingButton": "",
+      "clearWarning": ""
+    },
+    "about": {
+      "title": "",
+      "app": "",
+      "version": "",
+      "platform": "",
+      "theme": "",
+      "dbSchema": "",
+      "dbSchemaUnknown": "",
+      "devSuffix": ""
+    }
+  },
+  "themeOptions": {
+    "system": "",
+    "light": "",
+    "dark": ""
+  },
+  "clearDataModal": {
+    "title": "",
+    "message": "",
+    "confirm": "",
+    "cancel": ""
+  },
+  "devModeAlert": {
+    "title": "",
+    "message": ""
+  },
+  "clearDataError": ""
+}

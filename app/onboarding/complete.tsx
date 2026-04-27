@@ -13,9 +13,11 @@ import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 export default function CompleteScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep, refreshOnboardingState } = useOnboarding();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -31,16 +33,15 @@ export default function CompleteScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.content}>
         <View style={styles.iconContainer}>
-          <ThemedText style={styles.icon}>✓</ThemedText>
+          <ThemedText style={styles.icon}>{t('complete.icon')}</ThemedText>
         </View>
 
         <ThemedText type="display" style={styles.title}>
-          You&apos;re ready!
+          {t('complete.title')}
         </ThemedText>
 
         <ThemedText style={[styles.description, { color: theme.textSecondary }]}>
-          You have the essential information set up. In an emergency, tap the big button on the home
-          screen to start the guided search.
+          {t('complete.description')}
         </ThemedText>
 
         <View
@@ -49,22 +50,22 @@ export default function CompleteScreen() {
             { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 },
           ]}
         >
-          <ThemedText style={styles.nextStepsTitle}>You can add more later:</ThemedText>
+          <ThemedText style={styles.nextStepsTitle}>{t('complete.addMoreLater')}</ThemedText>
           <View style={styles.nextStepsList}>
             <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              • Important personal details
+              {t('complete.nextSteps.details')}
             </ThemedText>
             <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              • De-escalation techniques
+              {t('complete.nextSteps.deescalation')}
             </ThemedText>
             <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              • Likely destinations
+              {t('complete.nextSteps.destinations')}
             </ThemedText>
             <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              • More emergency contacts
+              {t('complete.nextSteps.contacts')}
             </ThemedText>
             <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              • Safety checklist
+              {t('complete.nextSteps.checklist')}
             </ThemedText>
           </View>
         </View>
@@ -78,7 +79,7 @@ export default function CompleteScreen() {
           onPress={handleFinish}
         >
           <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-            Go to Home
+            {t('complete.goHome')}
           </ThemedText>
         </Pressable>
       </View>

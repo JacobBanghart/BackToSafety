@@ -2,7 +2,7 @@
   "expo": {
     "name": "Back to Safety",
     "slug": "back-to-safety",
-    "version": "1.0.0",
+    "version": "1.0.8",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "backtosafety",
@@ -63,7 +63,8 @@
           "photosPermission": "Allow Back to Safety to access your photos so you can choose or update a profile picture for emergency identification.",
           "cameraPermission": "Allow Back to Safety to use your camera to take a profile photo for emergency identification."
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

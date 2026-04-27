@@ -1,0 +1,55 @@
+{
+  "screenTitle": "Contacts",
+  "loading": "Loading...",
+  "addContact": "Add Contact",
+  "importContact": "Import from Phone",
+  "importing": "Importing...",
+  "importWebUnavailable": "Contact import is only available on iPhone and Android devices.",
+  "importDeviceUnavailable": "Contact import is not available on this device.",
+  "notifyInEmergency": "Notify in Emergency",
+  "noContacts": {
+    "title": "No Emergency Contacts",
+    "body": "Add people who should be alerted or contacted during an emergency.",
+    "button": "Add First Contact"
+  },
+  "roles": {
+    "primary_caregiver": "Primary Caregiver",
+    "caregiver": "Caregiver",
+    "family": "Family",
+    "neighbor": "Neighbor",
+    "friend": "Friend",
+    "other": "Other"
+  },
+  "form": {
+    "newTitle": "New Contact",
+    "editTitle": "Edit Contact",
+    "nameLabel": "Name",
+    "namePlaceholder": "Contact name",
+    "phoneLabel": "Phone Number",
+    "phonePlaceholder": "(555) 123-4567",
+    "relationshipLabel": "Relationship",
+    "relationshipPlaceholder": "e.g., Daughter, Next-door neighbor",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Street address, city, state",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Additional notes about this contact...",
+    "roleLabel": "Role"
+  },
+  "actions": {
+    "call": "Call",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "deleteModal": {
+    "title": "Delete Contact",
+    "message": "Are you sure you want to remove {{name}}?",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "deleteFailed": "Failed to delete contact.",
+    "saveFailed": "Failed to save contact. Please try again.",
+    "nameRequired": "Name is required.",
+    "phoneRequired": "Phone number is required."
+  }
+}

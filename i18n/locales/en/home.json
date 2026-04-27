@@ -1,0 +1,32 @@
+{
+  "appTitle": "Back to Safety",
+  "caringFor": "Caring for",
+  "emergencyButton": {
+    "startTitle": "Start Emergency Search",
+    "startSubtitle": "15-minute guided timer with checklist",
+    "activeTitle": "Emergency In Progress",
+    "timerExpiredTitle": "Timer Expired — Call {{emergencyNumber}}",
+    "timerExpiredSubtitle": "Tap to continue search protocol",
+    "remaining": "{{time}} remaining · {{checked}}/{{total}} steps"
+  },
+  "quickActions": {
+    "contacts": "Contacts",
+    "contactsNone": "None added",
+    "contactsSaved": "{{count}} saved",
+    "places": "Places",
+    "placesSubtitle": "Likely spots"
+  },
+  "emergencyInfo": {
+    "title": "Emergency Info",
+    "script911": "911 Script",
+    "healthNotes": "Health Notes",
+    "medications": "Routine Medications (optional)",
+    "cognitiveStatus": "Cognitive Status",
+    "deescalation": "De-escalation"
+  },
+  "setupCard": {
+    "title": "Complete Your Profile",
+    "body": "Add information about the person you care for. This will be used during emergencies to help 911 and searchers.",
+    "button": "Start Profile"
+  }
+}

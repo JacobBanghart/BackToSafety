@@ -1,0 +1,71 @@
+{
+  "screenTitle": "",
+  "noProfile": "",
+  "goToOnboarding": "",
+  "back": "",
+  "callButton": "",
+  "copyButton": "",
+  "copyFullButton": "",
+  "copyFailed": "",
+  "copyScriptFailed": "",
+  "copyDetailsFailed": "",
+  "sections": {
+    "script": {
+      "label": "",
+      "hint": "",
+      "collapsed": "",
+      "missingDetails": ""
+    },
+    "identity": {
+      "goesBy": "",
+      "dob": "",
+      "ageLabel": "",
+      "ageSuffix": ""
+    },
+    "appearance": {
+      "title": "",
+      "height": "",
+      "weight": "",
+      "hair": "",
+      "eyes": "",
+      "dominantHand": "",
+      "mobility": "",
+      "vehicleNote": "",
+      "lastSeen": "",
+      "identifyingMarks": ""
+    },
+    "location": {
+      "title": "",
+      "time": "",
+      "coordinates": ""
+    },
+    "medical": {
+      "title": "",
+      "conditions": "",
+      "medications": "",
+      "allergies": "",
+      "cognitiveStatus": ""
+    },
+    "communication": {
+      "title": "",
+      "communication": "",
+      "approach": "",
+      "deescalation": "",
+      "likes": "",
+      "triggers": "",
+      "safeWord": ""
+    },
+    "devices": {
+      "title": "",
+      "locator": "",
+      "idBracelet": "",
+      "medicAlertId": ""
+    }
+  },
+  "contacts": {
+    "title": "",
+    "call": "",
+    "noContacts": ""
+  },
+  "noInfoItem": ""
+}

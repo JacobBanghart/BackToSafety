@@ -1,0 +1,71 @@
+{
+  "screenTitle": "Missing Person Description",
+  "noProfile": "No profile found. Please complete onboarding first.",
+  "goToOnboarding": "Go to Onboarding",
+  "back": "Back",
+  "callButton": "Call 911",
+  "copyButton": "Copy",
+  "copyFullButton": "Copy Full Details",
+  "copyFailed": "Copy Failed",
+  "copyScriptFailed": "Unable to copy the 911 script right now.",
+  "copyDetailsFailed": "Unable to copy the full details right now.",
+  "sections": {
+    "script": {
+      "label": "911 Call Script",
+      "hint": "Read this to dispatch:",
+      "collapsed": "Tap to expand",
+      "missingDetails": "Add for stronger script: {{details}}."
+    },
+    "identity": {
+      "goesBy": "Goes by \"{{nickname}}\"",
+      "dob": "DOB: {{dob}}",
+      "ageLabel": "Age",
+      "ageSuffix": " yrs"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "height": "Height",
+      "weight": "Weight",
+      "hair": "Hair",
+      "eyes": "Eyes",
+      "dominantHand": "Dominant Hand",
+      "mobility": "Mobility",
+      "vehicleNote": "May be driving or operating a vehicle",
+      "lastSeen": "Last Seen Wearing",
+      "identifyingMarks": "Identifying Marks"
+    },
+    "location": {
+      "title": "Last Known Location",
+      "time": "Time",
+      "coordinates": "Coordinates"
+    },
+    "medical": {
+      "title": "Medical & Behavioral",
+      "conditions": "Conditions",
+      "medications": "Routine Medications (optional)",
+      "allergies": "Allergies",
+      "cognitiveStatus": "Cognitive Status"
+    },
+    "communication": {
+      "title": "Communication & De-escalation",
+      "communication": "Communication",
+      "approach": "Best Approach",
+      "deescalation": "De-escalation",
+      "likes": "Likes / Comforts",
+      "triggers": "Avoid / Triggers",
+      "safeWord": "Family Safe Word"
+    },
+    "devices": {
+      "title": "Devices & ID",
+      "locator": "Personal Locator",
+      "idBracelet": "ID Bracelet",
+      "medicAlertId": "MedicAlert ID"
+    }
+  },
+  "contacts": {
+    "title": "Emergency Contacts",
+    "call": "Call",
+    "noContacts": "No emergency contacts saved."
+  },
+  "noInfoItem": "Not provided"
+}

@@ -19,12 +19,11 @@ import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
-
-const WEB_CAMERA_UNAVAILABLE_MESSAGE =
-  'Taking a photo is only available in the mobile app. Please use "Choose from Library" on web.';
+import { useTranslation } from 'react-i18next';
 
 export default function PhotoScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -52,7 +51,7 @@ export default function PhotoScreen() {
 
   const takePhoto = async () => {
     if (Platform.OS === 'web') {
-      alert(WEB_CAMERA_UNAVAILABLE_MESSAGE);
+      alert(t('photo.webCameraUnavailable'));
       return;
     }
 
@@ -121,12 +120,11 @@ export default function PhotoScreen() {
         <OnboardingStepHeader activeStep={2} totalSteps={4} />
 
         <ThemedText type="title" style={styles.title}>
-          Add a recent photo
+          {t('photo.title')}
         </ThemedText>
 
         <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-          A clear, recent photo is critical for neighbors and first responders to identify them
-          quickly.
+          {t('photo.subtitle')}
         </ThemedText>
 
         <View style={styles.photoContainer}>
@@ -141,7 +139,7 @@ export default function PhotoScreen() {
             >
               <ThemedText style={styles.photoPlaceholderText}>📷</ThemedText>
               <ThemedText style={[styles.photoPlaceholderHint, { color: theme.textSecondary }]}>
-                No photo yet
+                {t('photo.noPhoto')}
               </ThemedText>
             </View>
           )}
@@ -153,7 +151,7 @@ export default function PhotoScreen() {
             onPress={takePhoto}
           >
             <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>
-              Take Photo
+              {t('photo.takePhoto')}
             </ThemedText>
           </Pressable>
           <Pressable
@@ -161,13 +159,13 @@ export default function PhotoScreen() {
             onPress={pickImage}
           >
             <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>
-              Choose from Library
+              {t('photo.chooseLibrary')}
             </ThemedText>
           </Pressable>
         </View>
 
         <ThemedText style={[styles.tip, { color: theme.textDisabled }]}>
-          💡 Tip: Use a photo from the last 3-6 months that shows their face clearly.
+          {t('photo.tip')}
         </ThemedText>
       </View>
 
@@ -179,7 +177,7 @@ export default function PhotoScreen() {
           onPress={handleSkip}
         >
           <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
-            Skip for now
+            {t('photo.skip')}
           </ThemedText>
         </Pressable>
         <Pressable
@@ -191,7 +189,9 @@ export default function PhotoScreen() {
           onPress={handleContinue}
           disabled={!photoUri || isLoading}
         >
-          <ThemedText style={styles.buttonText}>{isLoading ? 'Saving...' : 'Continue'}</ThemedText>
+          <ThemedText style={styles.buttonText}>
+            {isLoading ? 'Saving...' : t('photo.continue')}
+          </ThemedText>
         </Pressable>
       </View>
     </SafeAreaView>

@@ -24,9 +24,11 @@ import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
+import { useTranslation } from 'react-i18next';
 
 export default function AppearanceScreen() {
   const router = useRouter();
+  const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -81,17 +83,17 @@ export default function AppearanceScreen() {
           <OnboardingStepHeader activeStep={3} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
-            Physical description
+            {t('appearance.title')}
           </ThemedText>
 
           <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            This helps 911 and searchers identify them. Be as specific as possible.
+            {t('appearance.subtitle')}
           </ThemedText>
 
           <View style={styles.form}>
             <View style={styles.row}>
               <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>Height</ThemedText>
+                <ThemedText style={styles.label}>{t('appearance.heightLabel')}</ThemedText>
                 <TextInput
                   style={[
                     styles.input,
@@ -103,14 +105,14 @@ export default function AppearanceScreen() {
                   ]}
                   value={height}
                   onChangeText={(value) => setHeight(formatHeightInput(value))}
-                  placeholder="5'6&quot;"
+                  placeholder={t('appearance.heightPlaceholder')}
                   placeholderTextColor={theme.inputPlaceholder}
                   keyboardType="number-pad"
                   inputMode="numeric"
                 />
               </View>
               <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>Weight</ThemedText>
+                <ThemedText style={styles.label}>{t('appearance.weightLabel')}</ThemedText>
                 <TextInput
                   style={[
                     styles.input,
@@ -122,7 +124,7 @@ export default function AppearanceScreen() {
                   ]}
                   value={weight}
                   onChangeText={(value) => setWeight(formatWeightInput(value))}
-                  placeholder="150 lbs"
+                  placeholder={t('appearance.weightPlaceholder')}
                   placeholderTextColor={theme.inputPlaceholder}
                   keyboardType="number-pad"
                   inputMode="numeric"
@@ -132,7 +134,7 @@ export default function AppearanceScreen() {
 
             <View style={styles.row}>
               <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>Hair Color</ThemedText>
+                <ThemedText style={styles.label}>{t('appearance.hairLabel')}</ThemedText>
                 <TextInput
                   style={[
                     styles.input,
@@ -144,12 +146,12 @@ export default function AppearanceScreen() {
                   ]}
                   value={hairColor}
                   onChangeText={setHairColor}
-                  placeholder="Gray, short"
+                  placeholder={t('appearance.hairPlaceholder')}
                   placeholderTextColor={theme.inputPlaceholder}
                 />
               </View>
               <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>Eye Color</ThemedText>
+                <ThemedText style={styles.label}>{t('appearance.eyeLabel')}</ThemedText>
                 <TextInput
                   style={[
                     styles.input,
@@ -161,14 +163,14 @@ export default function AppearanceScreen() {
                   ]}
                   value={eyeColor}
                   onChangeText={setEyeColor}
-                  placeholder="Blue"
+                  placeholder={t('appearance.eyePlaceholder')}
                   placeholderTextColor={theme.inputPlaceholder}
                 />
               </View>
             </View>
 
             <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>Identifying Marks</ThemedText>
+              <ThemedText style={styles.label}>{t('appearance.marksLabel')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
@@ -181,7 +183,7 @@ export default function AppearanceScreen() {
                 ]}
                 value={identifyingMarks}
                 onChangeText={setIdentifyingMarks}
-                placeholder="Tattoos, scars, birthmarks, glasses, hearing aids..."
+                placeholder={t('appearance.marksPlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 multiline
                 numberOfLines={3}
@@ -193,7 +195,7 @@ export default function AppearanceScreen() {
         <View style={styles.footer}>
           <Pressable style={styles.skipButton} onPress={handleSkip}>
             <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
-              Skip for now
+              {t('appearance.skip')}
             </ThemedText>
           </Pressable>
           <Pressable
@@ -202,7 +204,7 @@ export default function AppearanceScreen() {
             style={[styles.button, { backgroundColor: theme.primary }]}
             onPress={handleContinue}
           >
-            <ThemedText style={styles.buttonText}>Continue</ThemedText>
+            <ThemedText style={styles.buttonText}>{t('appearance.continue')}</ThemedText>
           </Pressable>
         </View>
       </KeyboardAvoidingView>

@@ -1,0 +1,32 @@
+{
+  "appTitle": "",
+  "caringFor": "",
+  "emergencyButton": {
+    "startTitle": "",
+    "startSubtitle": "",
+    "activeTitle": "",
+    "timerExpiredTitle": "",
+    "timerExpiredSubtitle": "",
+    "remaining": ""
+  },
+  "quickActions": {
+    "contacts": "",
+    "contactsNone": "",
+    "contactsSaved": "",
+    "places": "",
+    "placesSubtitle": ""
+  },
+  "emergencyInfo": {
+    "title": "",
+    "script911": "",
+    "healthNotes": "",
+    "medications": "",
+    "cognitiveStatus": "",
+    "deescalation": ""
+  },
+  "setupCard": {
+    "title": "",
+    "body": "",
+    "button": ""
+  }
+}

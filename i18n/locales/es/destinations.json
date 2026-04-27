@@ -1,0 +1,53 @@
+{
+  "screenTitle": "",
+  "loading": "",
+  "addDestination": "",
+  "noDestinations": {
+    "title": "",
+    "body": "",
+    "button": ""
+  },
+  "riskLevels": {
+    "critical": "",
+    "high": "",
+    "medium": "",
+    "low": ""
+  },
+  "categories": {
+    "water": "",
+    "former_workplace": "",
+    "church": "",
+    "store": "",
+    "restaurant": "",
+    "friend_family": "",
+    "walking_route": "",
+    "other": ""
+  },
+  "form": {
+    "newTitle": "",
+    "editTitle": "",
+    "nameLabel": "",
+    "namePlaceholder": "",
+    "categoryLabel": "",
+    "riskLabel": "",
+    "addressLabel": "",
+    "addressPlaceholder": "",
+    "distanceLabel": "",
+    "distancePlaceholder": "",
+    "whyLabel": "",
+    "whyPlaceholder": "",
+    "notesLabel": "",
+    "notesPlaceholder": ""
+  },
+  "deleteModal": {
+    "title": "",
+    "message": "",
+    "confirm": "",
+    "cancel": ""
+  },
+  "errors": {
+    "deleteFailed": "",
+    "saveFailed": "",
+    "nameRequired": ""
+  }
+}

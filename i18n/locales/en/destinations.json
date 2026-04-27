@@ -1,0 +1,53 @@
+{
+  "screenTitle": "Places to Check",
+  "loading": "Loading...",
+  "addDestination": "Add Location",
+  "noDestinations": {
+    "title": "No Saved Places",
+    "body": "Add locations where {{name}} might go. These appear during an emergency search.",
+    "button": "Add First Place"
+  },
+  "riskLevels": {
+    "critical": "Critical",
+    "high": "High Risk",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "categories": {
+    "water": "Water/Pool",
+    "former_workplace": "Former Work",
+    "church": "Church",
+    "store": "Store",
+    "restaurant": "Restaurant",
+    "friend_family": "Friend/Family",
+    "walking_route": "Walking Route",
+    "other": "Other"
+  },
+  "form": {
+    "newTitle": "New Location",
+    "editTitle": "Edit Location",
+    "nameLabel": "Location Name",
+    "namePlaceholder": "e.g., Riverside Park, Old House on Maple St",
+    "categoryLabel": "Category",
+    "riskLabel": "Risk Level",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Street address or description",
+    "distanceLabel": "Distance from Home",
+    "distancePlaceholder": "e.g., 0.5 miles, 2 blocks",
+    "whyLabel": "Why They Might Go Here",
+    "whyPlaceholder": "e.g., Lived here 30 years ago, Used to work here",
+    "notesLabel": "Additional Notes",
+    "notesPlaceholder": "Any other helpful details..."
+  },
+  "deleteModal": {
+    "title": "Delete Location",
+    "message": "Are you sure you want to remove \"{{name}}\"?",
+    "confirm": "Delete",
+    "cancel": "Cancel"
+  },
+  "errors": {
+    "deleteFailed": "Failed to delete location.",
+    "saveFailed": "Failed to save location. Please try again.",
+    "nameRequired": "Location name is required."
+  }
+}

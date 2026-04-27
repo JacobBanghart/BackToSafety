@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 
@@ -15,12 +16,21 @@ import { primary } from '@/constants/Colors';
 import { OnboardingProvider, useOnboarding } from '@/context/OnboardingContext';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import i18n from '@/i18n';
+import { loadSavedLanguage } from '@/i18n';
 
 function RootLayoutNav() {
   const { colorScheme } = useTheme();
   const { isLoading, isOnboarded } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
+
+  // Load saved language preference once DB is ready
+  useEffect(() => {
+    if (!isLoading) {
+      void loadSavedLanguage();
+    }
+  }, [isLoading]);
 
   // Navigate based on onboarding state
   useEffect(() => {
@@ -69,12 +79,14 @@ function RootLayoutNav() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <OnboardingProvider>
-        <ProfileProvider>
-          <RootLayoutNav />
-        </ProfileProvider>
-      </OnboardingProvider>
-    </ThemeProvider>
+    <I18nextProvider i18n={i18n}>
+      <ThemeProvider>
+        <OnboardingProvider>
+          <ProfileProvider>
+            <RootLayoutNav />
+          </ProfileProvider>
+        </OnboardingProvider>
+      </ThemeProvider>
+    </I18nextProvider>
   );
 }

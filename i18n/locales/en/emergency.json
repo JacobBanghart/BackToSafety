@@ -1,0 +1,107 @@
+{
+  "screenTitle": "Emergency Search",
+  "loading": "Loading emergency state...",
+  "timer": {
+    "labelActive": "Time remaining",
+    "labelExpired": "TIME TO CALL {{emergencyNumber}}",
+    "hintActive": "Stay calm. Check each step systematically.",
+    "hintExpired": "Call {{emergencyNumber}} immediately and request a Silver Alert",
+    "stepsProgress": "{{checked}}/{{total}} steps complete"
+  },
+  "directionHint": {
+    "left": "← May veer left (left-handed)",
+    "right": "→ May veer right (right-handed)"
+  },
+  "wearing": {
+    "label": "What are they wearing?",
+    "hint": "You'll need this for {{emergencyNumber}}",
+    "placeholder": "e.g., Blue jacket, gray pants, white sneakers",
+    "dismiss": "Dismiss"
+  },
+  "actions": {
+    "foundSafe": "Found — Safe",
+    "call911": "📞 Call {{emergencyNumber}}",
+    "infoSheet": "📋 Info Sheet",
+    "alertCircle": "📱 Alert Circle"
+  },
+  "checklist": {
+    "title": "Search Protocol",
+    "priority": "PRIORITY",
+    "savedPlaces": "Saved places to check:",
+    "morePlaces": "+{{count}} more in Places"
+  },
+  "steps": {
+    "home_search": {
+      "title": "Search home thoroughly",
+      "description": "Check every room, closet, under beds, bathrooms, garage, basement, sheds",
+      "hint": "People often seek small, quiet spaces"
+    },
+    "outside_immediate": {
+      "title": "Check outside areas",
+      "description": "Yard, porches, paths, driveways, inside vehicles (locked or unlocked)"
+    },
+    "neighbors": {
+      "title": "Alert neighbors",
+      "description": "Show photo, ask them to call if seen. Check their yards too."
+    },
+    "radius_search": {
+      "title": "Search 1-1.5 mile radius",
+      "description": "Most people are found within this distance from home"
+    },
+    "high_risk": {
+      "title": "Check high-risk areas first",
+      "description": "Water (pools, ponds, streams), wooded areas, ditches, busy roads"
+    },
+    "familiar_places": {
+      "title": "Search familiar places",
+      "description": "Former home, church, old workplace, favorite walking routes"
+    },
+    "call_911": {
+      "title": "Call {{emergencyNumber}}",
+      "description": "If not found within 15 minutes, call immediately"
+    },
+    "silver_alert": {
+      "title": "Request Silver/Feather Alert",
+      "description": "Ask {{emergencyNumber}} dispatcher about activating state alert program"
+    },
+    "share_info": {
+      "title": "Share relevant personal details",
+      "description": "Share useful details (appearance, routines, communication preferences)"
+    },
+    "coordinate": {
+      "title": "Coordinate search efforts",
+      "description": "Assign areas to helpers, avoid duplicating coverage"
+    },
+    "document": {
+      "title": "Document everything",
+      "description": "Note times, areas checked, people contacted for responders"
+    }
+  },
+  "tips": {
+    "title": "When you find them",
+    "body": "• Approach calmly from the front\n• Speak slowly with short sentences\n• Give time to respond\n• Offer to walk with them\n• Don't argue or correct"
+  },
+  "smsMessage": "URGENT: {{name}} is missing. Last seen {{time}}. {{wearing}}Please help search or call if you see them.",
+  "smsWearing": "Wearing: {{wearing}}. ",
+  "modal": {
+    "found": {
+      "title": "Found!",
+      "message": "Great news! Remember to use calm, reassuring language. Offer water and rest."
+    },
+    "leave": {
+      "title": "Leave Emergency Search?",
+      "message": "The timer will continue in the background. You can return to resume.",
+      "stay": "Stay",
+      "leave": "Leave",
+      "end": "End Emergency"
+    },
+    "noContacts": {
+      "title": "No Contacts",
+      "message": "Add emergency contacts to send alerts."
+    },
+    "smsError": {
+      "title": "Error",
+      "message": "Could not open messaging app."
+    }
+  }
+}

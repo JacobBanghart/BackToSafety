@@ -3,6 +3,7 @@
  * Complete profile editor with all fields from Emergency ID Sheet
  */
 
+import { useTranslation } from 'react-i18next';
 import { File, Paths } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
@@ -49,8 +50,17 @@ const MOBILITY_OPTIONS = [
   'Other',
 ] as const;
 
-const WEB_CAMERA_UNAVAILABLE_MESSAGE =
-  'Taking a photo is only available in the mobile app. Please use "Choose Photo" on web.';
+const MOBILITY_OPTION_KEYS: Record<string, string> = {
+  'Walks independently': 'mobilityOptions.walksIndependently',
+  'Uses cane': 'mobilityOptions.usesCane',
+  'Uses walker': 'mobilityOptions.usesWalker',
+  'Manual wheelchair': 'mobilityOptions.manualWheelchair',
+  'Motorized wheelchair': 'mobilityOptions.motorizedWheelchair',
+  'Mobility scooter': 'mobilityOptions.mobilityScooter',
+  Bicycle: 'mobilityOptions.bicycle',
+  'Has vehicle': 'mobilityOptions.hasVehicle',
+  Other: 'mobilityOptions.other',
+};
 
 type MobilityOption = (typeof MOBILITY_OPTIONS)[number];
 
@@ -60,6 +70,7 @@ export default function ProfileScreen() {
   const { profile, saveProfile, isLoading, refreshProfile } = useProfile();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+  const { t } = useTranslation('profile');
 
   const [expandedSection, setExpandedSection] = useState<SectionKey | null>('personal');
   const [isSaving, setIsSaving] = useState(false);
@@ -114,7 +125,9 @@ export default function ProfileScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load profile data into form
+  // Load profile data into form and lock in the initial snapshot at the same time.
+  // The snapshot must be taken from the same data we populate the form with —
+  // if we set it in a separate effect it can race and capture the empty-form state.
   useEffect(() => {
     if (profile) {
       const savedMobility = profile.mobilityLevel || '';
@@ -129,7 +142,7 @@ export default function ProfileScreen() {
         (token) => !MOBILITY_OPTIONS.includes(token as MobilityOption),
       );
       const hasCustomMobility = customSelections.length > 0;
-      setForm({
+      const nextForm = {
         name: profile.name || '',
         nickname: profile.nickname || '',
         dateOfBirth: profile.dateOfBirth || '',
@@ -143,7 +156,7 @@ export default function ProfileScreen() {
         medications: profile.medications || '',
         allergies: profile.allergies || '',
         cognitiveStatus: profile.cognitiveStatus || '',
-        dominantHand: profile.dominantHand || 'unknown',
+        dominantHand: (profile.dominantHand || 'unknown') as 'left' | 'right' | 'unknown',
         communicationPreference: profile.communicationPreference || '',
         escalationSigns: profile.escalationSigns || '',
         deescalationTechniques: profile.deescalationTechniques || '',
@@ -155,11 +168,26 @@ export default function ProfileScreen() {
         idBracelets: profile.idBracelets || '',
         medicAlertId: profile.medicAlertId || '',
         medicAlertHotline: profile.medicAlertHotline || '',
-      });
-      setSelectedMobilityOptions(
-        hasCustomMobility ? [...knownSelections, 'Other'] : knownSelections,
+      };
+      const nextMobilityOptions = hasCustomMobility
+        ? ([...knownSelections, 'Other'] as MobilityOption[])
+        : knownSelections;
+      const nextOtherText = customSelections.join(', ');
+
+      setForm(nextForm);
+      setSelectedMobilityOptions(nextMobilityOptions);
+      setMobilityOtherText(nextOtherText);
+
+      // Lock in baseline here so it always matches the loaded data
+      setInitialSnapshot(
+        JSON.stringify({
+          ...nextForm,
+          mobilityLevel: [...nextMobilityOptions]
+            .map((o) => (o === 'Other' ? nextOtherText : o))
+            .filter(Boolean)
+            .join(', '),
+        }),
       );
-      setMobilityOtherText(customSelections.join(', '));
     }
   }, [profile]);
 
@@ -303,20 +331,51 @@ export default function ProfileScreen() {
 
   const hasUnsavedChanges = initialSnapshot !== '' && currentSnapshot !== initialSnapshot;
 
-  useEffect(() => {
-    if (!isLoading && initialSnapshot === '') {
-      setInitialSnapshot(currentSnapshot);
-    }
-  }, [isLoading, initialSnapshot, currentSnapshot]);
-
   useUnsavedChangesGuard({
     navigation,
     hasUnsavedChanges,
     isSaving,
-    title: 'Unsaved Changes',
-    message: 'You have unsaved changes. If you leave now, your edits will be lost.',
-    confirmLabel: 'Discard Changes',
+    title: t('unsavedChanges.title'),
+    message: t('unsavedChanges.message'),
+    confirmLabel: t('unsavedChanges.confirmLabel'),
   });
+
+  const navigateBack = () => {
+    // On web, router.back() calls window.history.back() which silently does
+    // nothing when there is no browser history (direct nav / page refresh).
+    // Always replace on web so the button reliably lands somewhere.
+    if (Platform.OS === 'web') {
+      router.replace('/(tabs)');
+      return;
+    }
+    try {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)');
+      }
+    } catch {
+      router.replace('/(tabs)');
+    }
+  };
+
+  const handleBack = () => {
+    if (hasUnsavedChanges && !isSaving) {
+      Alert.alert(t('unsavedChanges.title'), t('unsavedChanges.message'), [
+        {
+          text: t('unsavedChanges.cancelLabel', { defaultValue: 'Keep Editing' }),
+          style: 'cancel',
+        },
+        {
+          text: t('unsavedChanges.confirmLabel'),
+          style: 'destructive',
+          onPress: navigateBack,
+        },
+      ]);
+    } else {
+      navigateBack();
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -362,7 +421,7 @@ export default function ProfileScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('We need photo library access to update the photo.');
+      alert(t('photoLibraryPermission'));
       return;
     }
 
@@ -380,13 +439,13 @@ export default function ProfileScreen() {
 
   const takePhoto = async () => {
     if (Platform.OS === 'web') {
-      Alert.alert('Camera Not Available', WEB_CAMERA_UNAVAILABLE_MESSAGE);
+      Alert.alert('Camera Not Available', t('webCameraUnavailable'));
       return;
     }
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      alert('We need camera access to take a photo.');
+      alert(t('cameraPermission'));
       return;
     }
 
@@ -504,7 +563,8 @@ export default function ProfileScreen() {
         style={styles.keyboardView}
       >
         <ScreenHeader
-          title="Edit Profile"
+          title={t('screenTitle')}
+          onBack={handleBack}
           rightElement={
             <Pressable
               onPress={handleSave}
@@ -512,7 +572,7 @@ export default function ProfileScreen() {
               disabled={isSaving}
             >
               <ThemedText style={styles.saveText} numberOfLines={1}>
-                {isSaving ? 'Saving...' : 'Save'}
+                {isSaving ? t('saving') : t('save')}
               </ThemedText>
             </Pressable>
           }
@@ -540,13 +600,13 @@ export default function ProfileScreen() {
                 style={[styles.photoButton, { backgroundColor: theme.tint }]}
                 onPress={takePhoto}
               >
-                <ThemedText style={styles.photoButtonText}>Take Photo</ThemedText>
+                <ThemedText style={styles.photoButtonText}>{t('takePhoto')}</ThemedText>
               </Pressable>
               <Pressable
                 style={[styles.photoButton, { backgroundColor: theme.primary }]}
                 onPress={pickImage}
               >
-                <ThemedText style={styles.photoButtonText}>Choose Photo</ThemedText>
+                <ThemedText style={styles.photoButtonText}>{t('choosePhoto')}</ThemedText>
               </Pressable>
             </View>
           </View>
@@ -554,15 +614,17 @@ export default function ProfileScreen() {
           {/* Personal Info Section */}
           {renderSection(
             'personal',
-            'Personal Information',
+            t('sections.personal'),
             'person.fill',
             <>
-              {renderInput('Name', 'name', { placeholder: 'Full name (required)' })}
-              {renderInput('Nickname / Preferred Name', 'nickname', {
-                placeholder: 'What they prefer to be called',
+              {renderInput(t('fields.name'), 'name', { placeholder: t('fields.namePlaceholder') })}
+              {renderInput(t('fields.nickname'), 'nickname', {
+                placeholder: t('fields.nicknamePlaceholder'),
               })}
               <View style={styles.inputGroup}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>Date of Birth</ThemedText>
+                <ThemedText style={[styles.label, { color: theme.text }]}>
+                  {t('fields.dateOfBirth')}
+                </ThemedText>
                 <View
                   style={[
                     styles.dateInputContainer,
@@ -604,14 +666,14 @@ export default function ProfileScreen() {
 
               <View style={styles.row}>
                 <View style={styles.halfWidth}>
-                  {renderInput('Height', 'height', {
-                    placeholder: '5\'6"',
+                  {renderInput(t('fields.height'), 'height', {
+                    placeholder: t('fields.heightPlaceholder'),
                     keyboardType: 'number-pad',
                   })}
                 </View>
                 <View style={styles.halfWidth}>
-                  {renderInput('Weight', 'weight', {
-                    placeholder: '150 lbs',
+                  {renderInput(t('fields.weight'), 'weight', {
+                    placeholder: t('fields.weightPlaceholder'),
                     keyboardType: 'number-pad',
                   })}
                 </View>
@@ -619,17 +681,21 @@ export default function ProfileScreen() {
 
               <View style={styles.row}>
                 <View style={styles.halfWidth}>
-                  {renderInput('Hair Color', 'hairColor', { placeholder: 'Gray, short' })}
+                  {renderInput(t('fields.hairColor'), 'hairColor', {
+                    placeholder: t('fields.hairColorPlaceholder'),
+                  })}
                 </View>
                 <View style={styles.halfWidth}>
-                  {renderInput('Eye Color', 'eyeColor', { placeholder: 'Blue' })}
+                  {renderInput(t('fields.eyeColor'), 'eyeColor', {
+                    placeholder: t('fields.eyeColorPlaceholder'),
+                  })}
                 </View>
               </View>
 
-              {renderInput('Identifying Marks', 'identifyingMarks', {
-                placeholder: 'Tattoos, scars, birthmarks, glasses, hearing aids...',
+              {renderInput(t('fields.identifyingMarks'), 'identifyingMarks', {
+                placeholder: t('fields.identifyingMarksPlaceholder'),
                 multiline: true,
-                hint: 'Anything that would help identify them',
+                hint: t('fields.identifyingMarksHint'),
               })}
             </>,
           )}
@@ -637,31 +703,33 @@ export default function ProfileScreen() {
           {/* Medical & Behavioral Section */}
           {renderSection(
             'medical',
-            'Medical & Behavioral',
+            t('sections.medical'),
             'cross.fill',
             <>
-              {renderInput('Medical Conditions', 'medicalConditions', {
-                placeholder: "Alzheimer's, diabetes, heart condition...",
+              {renderInput(t('fields.medicalConditions'), 'medicalConditions', {
+                placeholder: t('fields.medicalConditionsPlaceholder'),
                 multiline: true,
               })}
-              {renderInput('Current Medications', 'medications', {
-                placeholder: 'List all current medications',
+              {renderInput(t('fields.medications'), 'medications', {
+                placeholder: t('fields.medicationsPlaceholder'),
                 multiline: true,
               })}
-              {renderInput('Allergies', 'allergies', {
-                placeholder: 'Drug allergies, food allergies, environmental...',
+              {renderInput(t('fields.allergies'), 'allergies', {
+                placeholder: t('fields.allergiesPlaceholder'),
                 multiline: true,
               })}
-              {renderInput('Cognitive Status', 'cognitiveStatus', {
-                placeholder: 'Moderate dementia; may be disoriented; responds to first name',
+              {renderInput(t('fields.cognitiveStatus'), 'cognitiveStatus', {
+                placeholder: t('fields.cognitiveStatusPlaceholder'),
                 multiline: true,
-                hint: 'How do they typically present? What should responders expect?',
+                hint: t('fields.cognitiveStatusHint'),
               })}
 
               <View style={styles.inputGroup}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>Dominant Hand</ThemedText>
+                <ThemedText style={[styles.label, { color: theme.text }]}>
+                  {t('fields.dominantHand')}
+                </ThemedText>
                 <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
-                  People often veer in the direction of their dominant hand when lost
+                  {t('fields.dominantHandHint')}
                 </ThemedText>
                 <View style={styles.buttonGroup}>
                   {(['left', 'right', 'unknown'] as const).map((hand) => (
@@ -680,7 +748,11 @@ export default function ProfileScreen() {
                       <ThemedText
                         style={[styles.optionText, form.dominantHand === hand && { color: '#fff' }]}
                       >
-                        {hand === 'left' ? '← Left' : hand === 'right' ? 'Right →' : 'Unknown'}
+                        {hand === 'left'
+                          ? t('fields.dominantHandLeft')
+                          : hand === 'right'
+                            ? t('fields.dominantHandRight')
+                            : t('fields.dominantHandUnknown')}
                       </ThemedText>
                     </Pressable>
                   ))}
@@ -689,7 +761,7 @@ export default function ProfileScreen() {
 
               <View style={styles.inputGroup}>
                 <ThemedText style={[styles.label, { color: theme.text }]}>
-                  Mobility Level
+                  {t('fields.mobilityLevel')}
                 </ThemedText>
                 <View style={styles.chipGroup}>
                   {MOBILITY_OPTIONS.map((option) => (
@@ -711,7 +783,7 @@ export default function ProfileScreen() {
                           selectedMobilityOptions.includes(option) && { color: '#fff' },
                         ]}
                       >
-                        {option}
+                        {t(MOBILITY_OPTION_KEYS[option])}
                       </ThemedText>
                     </Pressable>
                   ))}
@@ -729,7 +801,7 @@ export default function ProfileScreen() {
                     ]}
                     value={mobilityOtherText}
                     onChangeText={setMobilityOtherText}
-                    placeholder="Describe mobility level..."
+                    placeholder={t('fields.mobilityOtherPlaceholder')}
                     placeholderTextColor={theme.inputPlaceholder}
                   />
                 )}
@@ -740,40 +812,40 @@ export default function ProfileScreen() {
           {/* Communication & De-escalation Section */}
           {renderSection(
             'communication',
-            'Communication & De-escalation',
+            t('sections.communication'),
             'bubble.left.fill',
             <>
-              {renderInput('Communication Preference', 'communicationPreference', {
-                placeholder: 'Speaking, non-speaking, uses gestures, sign language...',
+              {renderInput(t('fields.communicationPreference'), 'communicationPreference', {
+                placeholder: t('fields.communicationPreferencePlaceholder'),
                 multiline: true,
               })}
-              {renderInput('What Escalation Looks Like', 'escalationSigns', {
-                placeholder: 'Crying, running, rocking, aggression, shutting down...',
+              {renderInput(t('fields.escalationSigns'), 'escalationSigns', {
+                placeholder: t('fields.escalationSignsPlaceholder'),
                 multiline: true,
-                hint: 'Signs that they are becoming distressed',
+                hint: t('fields.escalationSignsHint'),
               })}
-              {renderInput('De-escalation Techniques', 'deescalationTechniques', {
-                placeholder: 'Calm voice, short sentences, favorite song, show family photo...',
+              {renderInput(t('fields.deescalationTechniques'), 'deescalationTechniques', {
+                placeholder: t('fields.deescalationTechniquesPlaceholder'),
                 multiline: true,
-                hint: 'What has helped calm them in the past?',
+                hint: t('fields.deescalationTechniquesHint'),
               })}
-              {renderInput('Best Way to Approach', 'approachGuidance', {
-                placeholder: 'Approach slowly from the front, introduce yourself, keep distance...',
+              {renderInput(t('fields.approachGuidance'), 'approachGuidance', {
+                placeholder: t('fields.approachGuidancePlaceholder'),
                 multiline: true,
               })}
-              {renderInput('Likes / Comforts', 'likes', {
-                placeholder: 'Favorite music, TV shows, toys, foods, activities...',
+              {renderInput(t('fields.likes'), 'likes', {
+                placeholder: t('fields.likesPlaceholder'),
                 multiline: true,
-                hint: 'What makes them feel safe or happy?',
+                hint: t('fields.likesHint'),
               })}
-              {renderInput('Dislikes / Triggers', 'dislikesTriggers', {
-                placeholder: 'Loud noises, crowds, being touched, flashing lights...',
+              {renderInput(t('fields.dislikesTriggers'), 'dislikesTriggers', {
+                placeholder: t('fields.dislikesTriggersPlaceholder'),
                 multiline: true,
-                hint: 'What should be avoided?',
+                hint: t('fields.dislikesTriggersHint'),
               })}
-              {renderInput('Family Safe Word', 'safeWord', {
-                placeholder: 'A word or phrase that indicates you are a safe person',
-                hint: 'Something only family would know',
+              {renderInput(t('fields.safeWord'), 'safeWord', {
+                placeholder: t('fields.safeWordPlaceholder'),
+                hint: t('fields.safeWordHint'),
               })}
             </>,
           )}
@@ -781,23 +853,23 @@ export default function ProfileScreen() {
           {/* Devices & IDs Section */}
           {renderSection(
             'devices',
-            'Devices & IDs',
+            t('sections.devices'),
             'location.fill',
             <>
-              {renderInput('Personal Locator Device', 'locativeDeviceInfo', {
-                placeholder: 'Personal locator (e.g., AirTag on keys/bag, watch beacon)',
+              {renderInput(t('fields.locativeDeviceInfo'), 'locativeDeviceInfo', {
+                placeholder: t('fields.locativeDeviceInfoPlaceholder'),
                 multiline: true,
-                hint: 'Optional: only include devices they already use',
+                hint: t('fields.locativeDeviceInfoHint'),
               })}
-              {renderInput('ID Bracelets', 'idBracelets', {
-                placeholder: 'MedicAlert, Project Lifesaver, RoadID...',
-                hint: 'Medical or identification jewelry',
+              {renderInput(t('fields.idBracelets'), 'idBracelets', {
+                placeholder: t('fields.idBraceletsPlaceholder'),
+                hint: t('fields.idBraceletsHint'),
               })}
-              {renderInput('MedicAlert Member ID', 'medicAlertId', {
-                placeholder: 'Member ID number',
+              {renderInput(t('fields.medicAlertId'), 'medicAlertId', {
+                placeholder: t('fields.medicAlertIdPlaceholder'),
               })}
-              {renderInput('MedicAlert Hotline', 'medicAlertHotline', {
-                placeholder: '1-800-...',
+              {renderInput(t('fields.medicAlertHotline'), 'medicAlertHotline', {
+                placeholder: t('fields.medicAlertHotlinePlaceholder'),
                 keyboardType: 'phone-pad',
               })}
             </>,
@@ -821,7 +893,7 @@ export default function ProfileScreen() {
               ]}
             >
               <ThemedText style={[styles.dateModalTitle, { color: theme.text }]}>
-                Date of Birth
+                {t('dateModal.title')}
               </ThemedText>
               <DateTimePicker
                 value={pendingDobDate}
@@ -840,7 +912,7 @@ export default function ProfileScreen() {
                   ]}
                 >
                   <ThemedText style={[styles.dateModalButtonText, { color: theme.textSecondary }]}>
-                    Cancel
+                    {t('dateModal.cancel')}
                   </ThemedText>
                 </Pressable>
                 <Pressable
@@ -848,7 +920,7 @@ export default function ProfileScreen() {
                   style={[styles.dateModalButton, { backgroundColor: theme.tint }]}
                 >
                   <ThemedText style={[styles.dateModalButtonText, { color: '#fff' }]}>
-                    Apply
+                    {t('dateModal.apply')}
                   </ThemedText>
                 </Pressable>
               </View>

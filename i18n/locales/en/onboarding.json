@@ -1,0 +1,107 @@
+{
+  "welcome": {
+    "title": "Be prepared.\nStay calm.",
+    "description": "A safety coordination app that helps families and supporters organize a search quickly.",
+    "features": {
+      "timer": {
+        "title": "15-Minute Timer",
+        "description": "Guided search protocol with step-by-step checklist"
+      },
+      "readout": {
+        "title": "911 Ready",
+        "description": "One-tap script with all critical info for dispatchers"
+      },
+      "privacy": {
+        "title": "100% Private",
+        "description": "All data stays on your device. No accounts needed."
+      }
+    },
+    "themeLabel": "Choose your theme",
+    "themeOptions": {
+      "light": "Light",
+      "dark": "Dark",
+      "auto": "Auto"
+    },
+    "languageLabel": "Choose your language",
+    "scrollHint": "↓ Scroll for more",
+    "getStarted": "Get Started",
+    "privacy": "Your information never leaves this device."
+  },
+  "theme": {
+    "title": "Choose your look",
+    "subtitle": "Select how you'd like the app to appear. You can change this later in Settings.",
+    "options": {
+      "system": { "label": "System", "description": "Match your device settings" },
+      "light": { "label": "Light", "description": "Bright and clear" },
+      "dark": { "label": "Dark", "description": "Easy on the eyes" }
+    },
+    "continue": "Continue"
+  },
+  "name": {
+    "title": "Who are you caring for?",
+    "subtitle": "This name will be used when calling 911 and alerting your circle.",
+    "nameLabel": "Full Name *",
+    "namePlaceholder": "e.g., Jane Smith",
+    "nicknameLabel": "Nickname / Goes By",
+    "nicknamePlaceholder": "e.g., Mom, Grandma, Jane",
+    "nicknameHint": "What name do they respond to best?",
+    "continue": "Continue"
+  },
+  "photo": {
+    "title": "Add a recent photo",
+    "subtitle": "A clear, recent photo is critical for neighbors and first responders to identify them",
+    "noPhoto": "No photo yet",
+    "takePhoto": "Take Photo",
+    "chooseLibrary": "Choose from Library",
+    "tip": "💡 Tip: Use a photo from the last 3-6 months that shows their face clearly.",
+    "skip": "Skip for now",
+    "continue": "Continue",
+    "webCameraUnavailable": "Taking a photo is only available in the mobile app. Please use \"Choose from Library\" on web."
+  },
+  "appearance": {
+    "title": "Physical description",
+    "subtitle": "This helps 911 and searchers identify them. Be as specific as possible.",
+    "heightLabel": "Height",
+    "heightPlaceholder": "5'6\"",
+    "weightLabel": "Weight",
+    "weightPlaceholder": "150 lbs",
+    "hairLabel": "Hair Color",
+    "hairPlaceholder": "Gray, short",
+    "eyeLabel": "Eye Color",
+    "eyePlaceholder": "Blue",
+    "marksLabel": "Identifying Marks",
+    "marksPlaceholder": "Tattoos, scars, birthmarks, glasses, hearing aids...",
+    "skip": "Skip for now",
+    "continue": "Continue"
+  },
+  "contact": {
+    "title": "Emergency contact",
+    "subtitle": "Who should we notify if they wander? You can add more contacts later.",
+    "nameLabel": "Contact Name *",
+    "namePlaceholder": "e.g., John Smith",
+    "phoneLabel": "Phone Number *",
+    "phonePlaceholder": "(555) 123-4567",
+    "relationshipLabel": "Relationship",
+    "relationshipPlaceholder": "e.g., Son, Daughter, Neighbor",
+    "infoBox": {
+      "title": "What happens in an emergency?",
+      "body": "• You'll have a one-tap button to text this contact\n• They'll receive the person's photo and last known location\n• You can add neighbors and family later"
+    },
+    "skip": "Skip for now",
+    "continue": "Continue"
+  },
+  "complete": {
+    "icon": "✓",
+    "title": "You're ready!",
+    "description": "You have the essential information set up. In an emergency, tap the big button on the home screen to start the guided search.",
+    "addMoreLater": "You can add more later:",
+    "nextSteps": {
+      "details": "• Important personal details",
+      "deescalation": "• De-escalation techniques",
+      "destinations": "• Likely destinations",
+      "contacts": "• More emergency contacts",
+      "checklist": "• Safety checklist"
+    },
+    "goHome": "Go to Home"
+  }
+}

@@ -8,6 +8,7 @@ import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -40,6 +41,9 @@ export default function HomeScreen() {
   const { profile, contacts, refreshProfile, refreshContacts } = useProfile();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+  const { t } = useTranslation('home');
+  const { t: tCommon } = useTranslation('common');
+  const emergencyNumber = tCommon('emergencyNumber');
 
   const [activeEmergency, setActiveEmergency] = useState<EmergencyState | null>(null);
   const [emergencySecondsLeft, setEmergencySecondsLeft] = useState(0);
@@ -106,11 +110,11 @@ export default function HomeScreen() {
           <View style={styles.headerLeft}>
             {hasProfile && (
               <ThemedText style={[styles.caringLabel, { color: theme.textSecondary }]}>
-                Caring for
+                {t('caringFor')}
               </ThemedText>
             )}
             <ThemedText type="headline" style={{ color: theme.text }}>
-              {hasProfile ? profile.name : 'Back to Safety'}
+              {hasProfile ? profile.name : t('appTitle')}
             </ThemedText>
           </View>
 
@@ -170,12 +174,18 @@ export default function HomeScreen() {
                 </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>
-                    {timerExpired ? 'Timer Expired — Call 911' : 'Emergency In Progress'}
+                    {timerExpired
+                      ? t('emergencyButton.timerExpiredTitle', { emergencyNumber })
+                      : t('emergencyButton.activeTitle')}
                   </ThemedText>
                   <ThemedText style={styles.emergencySubtitle}>
                     {timerExpired
-                      ? 'Tap to continue search protocol'
-                      : `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')} remaining · ${activeEmergency.checkedSteps.length}/11 steps`}
+                      ? t('emergencyButton.timerExpiredSubtitle')
+                      : t('emergencyButton.remaining', {
+                          time: `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')}`,
+                          checked: activeEmergency.checkedSteps.length,
+                          total: 11,
+                        })}
                   </ThemedText>
                 </View>
               </View>
@@ -188,9 +198,11 @@ export default function HomeScreen() {
                   <IconSymbol name="exclamationmark.triangle.fill" size={28} color="#fff" />
                 </View>
                 <View style={styles.emergencyTextContainer}>
-                  <ThemedText style={styles.emergencyTitle}>Start Emergency Search</ThemedText>
+                  <ThemedText style={styles.emergencyTitle}>
+                    {t('emergencyButton.startTitle')}
+                  </ThemedText>
                   <ThemedText style={styles.emergencySubtitle}>
-                    15-minute guided timer with checklist
+                    {t('emergencyButton.startSubtitle')}
                   </ThemedText>
                 </View>
               </View>
@@ -208,9 +220,13 @@ export default function HomeScreen() {
             <View style={[styles.actionIconWrap, { backgroundColor: theme.primaryLight }]}>
               <ThemedText style={styles.actionIconEmoji}>📞</ThemedText>
             </View>
-            <ThemedText style={[styles.actionTitle, { color: theme.text }]}>Contacts</ThemedText>
+            <ThemedText style={[styles.actionTitle, { color: theme.text }]}>
+              {t('quickActions.contacts')}
+            </ThemedText>
             <ThemedText style={[styles.actionSubtitle, { color: theme.textSecondary }]}>
-              {contactCount === 0 ? 'None added' : `${contactCount} saved`}
+              {contactCount === 0
+                ? t('quickActions.contactsNone')
+                : t('quickActions.contactsSaved', { count: contactCount })}
             </ThemedText>
           </Pressable>
 
@@ -221,9 +237,11 @@ export default function HomeScreen() {
             <View style={[styles.actionIconWrap, { backgroundColor: theme.primaryLight }]}>
               <ThemedText style={styles.actionIconEmoji}>📍</ThemedText>
             </View>
-            <ThemedText style={[styles.actionTitle, { color: theme.text }]}>Places</ThemedText>
+            <ThemedText style={[styles.actionTitle, { color: theme.text }]}>
+              {t('quickActions.places')}
+            </ThemedText>
             <ThemedText style={[styles.actionSubtitle, { color: theme.textSecondary }]}>
-              Likely spots
+              {t('quickActions.placesSubtitle')}
             </ThemedText>
           </Pressable>
         </View>
@@ -237,12 +255,12 @@ export default function HomeScreen() {
             <View style={styles.summaryHeader}>
               <View style={styles.summaryHeaderLeft}>
                 <ThemedText style={[styles.summaryTitle, { color: theme.text }]}>
-                  Emergency Info
+                  {t('emergencyInfo.title')}
                 </ThemedText>
               </View>
               <View style={[styles.viewScriptButton, { backgroundColor: theme.primaryLight }]}>
                 <ThemedText style={[styles.viewScriptHint, { color: theme.tint }]}>
-                  911 Script
+                  {t('emergencyInfo.script911')}
                 </ThemedText>
                 <IconSymbol name="chevron.right" size={14} color={theme.tint} />
               </View>
@@ -256,7 +274,7 @@ export default function HomeScreen() {
                 {profile.medicalConditions && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      Health Notes
+                      {t('emergencyInfo.healthNotes')}
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}
@@ -269,7 +287,7 @@ export default function HomeScreen() {
                 {profile.medications && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      Routine Medications (optional)
+                      {t('emergencyInfo.medications')}
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}
@@ -282,7 +300,7 @@ export default function HomeScreen() {
                 {profile.cognitiveStatus && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      Cognitive Status
+                      {t('emergencyInfo.cognitiveStatus')}
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}
@@ -295,7 +313,7 @@ export default function HomeScreen() {
                 {profile.deescalationTechniques && (
                   <View style={styles.summaryItem}>
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
-                      De-escalation
+                      {t('emergencyInfo.deescalation')}
                     </ThemedText>
                     <ThemedText
                       style={[styles.summaryValue, { color: theme.text }]}
@@ -323,17 +341,16 @@ export default function HomeScreen() {
               <ThemedText style={styles.setupIconEmoji}>📝</ThemedText>
             </View>
             <ThemedText style={[styles.setupTitle, { color: theme.text }]}>
-              Complete Your Profile
+              {t('setupCard.title')}
             </ThemedText>
             <ThemedText style={[styles.setupText, { color: theme.textSecondary }]}>
-              Add information about the person you care for. This will be used during emergencies to
-              help 911 and searchers.
+              {t('setupCard.body')}
             </ThemedText>
             <Pressable
               style={[styles.setupButton, { backgroundColor: theme.primary }]}
               onPress={() => router.push('/profile' as Href)}
             >
-              <ThemedText style={styles.setupButtonText}>Start Profile</ThemedText>
+              <ThemedText style={styles.setupButtonText}>{t('setupCard.button')}</ThemedText>
               <IconSymbol name="chevron.right" size={16} color="#fff" />
             </Pressable>
           </View>

@@ -20,6 +20,7 @@ import {
   Vibration,
   View,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -57,85 +58,87 @@ type ChecklistStep = {
 
 const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
 
-const INITIAL_STEPS: ChecklistStep[] = [
+type TFunction = (key: string, opts?: Record<string, unknown>) => string;
+
+const buildInitialSteps = (t: TFunction, emergencyNumber: string): ChecklistStep[] => [
   {
     id: 'home_search',
     step: 1,
-    title: 'Search home thoroughly',
-    description: 'Check every room, closet, under beds, bathrooms, garage, basement, sheds',
-    hint: 'People often seek small, quiet spaces',
+    title: t('steps.home_search.title'),
+    description: t('steps.home_search.description'),
+    hint: t('steps.home_search.hint'),
     checked: false,
   },
   {
     id: 'outside_immediate',
     step: 2,
-    title: 'Check outside areas',
-    description: 'Yard, porches, paths, driveways, inside vehicles (locked or unlocked)',
+    title: t('steps.outside_immediate.title'),
+    description: t('steps.outside_immediate.description'),
     checked: false,
   },
   {
     id: 'neighbors',
     step: 3,
-    title: 'Alert neighbors',
-    description: 'Show photo, ask them to call if seen. Check their yards too.',
+    title: t('steps.neighbors.title'),
+    description: t('steps.neighbors.description'),
     checked: false,
   },
   {
     id: 'radius_search',
     step: 4,
-    title: 'Search 1-1.5 mile radius',
-    description: 'Most people are found within this distance from home',
+    title: t('steps.radius_search.title'),
+    description: t('steps.radius_search.description'),
     checked: false,
   },
   {
     id: 'high_risk',
     step: 5,
-    title: 'Check high-risk areas first',
-    description: 'Water (pools, ponds, streams), wooded areas, ditches, busy roads',
+    title: t('steps.high_risk.title'),
+    description: t('steps.high_risk.description'),
     urgent: true,
     checked: false,
   },
   {
     id: 'familiar_places',
     step: 6,
-    title: 'Search familiar places',
-    description: 'Former home, church, old workplace, favorite walking routes',
+    title: t('steps.familiar_places.title'),
+    description: t('steps.familiar_places.description'),
     checked: false,
   },
   {
     id: 'call_911',
     step: 7,
-    title: 'Call 911',
-    description: 'If not found within 15 minutes, call immediately',
+    title: t('steps.call_911.title', { emergencyNumber }),
+    description: t('steps.call_911.description'),
     urgent: true,
     checked: false,
   },
   {
     id: 'silver_alert',
     step: 8,
-    title: 'Request Silver/Feather Alert',
-    description: 'Ask 911 dispatcher about activating state alert program',
+    title: t('steps.silver_alert.title'),
+    description: t('steps.silver_alert.description', { emergencyNumber }),
     checked: false,
   },
   {
     id: 'share_info',
     step: 9,
-    title: 'Share relevant personal details',
-    description: 'Share useful details (appearance, routines, communication preferences)',
+    title: t('steps.share_info.title'),
+    description: t('steps.share_info.description'),
     checked: false,
   },
   {
     id: 'coordinate',
     step: 10,
-    title: 'Coordinate search efforts',
-    description: 'Assign areas to helpers, avoid duplicating coverage',
+    title: t('steps.coordinate.title'),
+    description: t('steps.coordinate.description'),
     checked: false,
   },
   {
     id: 'document',
     step: 11,
-    title: 'Document everything',
-    description: 'Note times, areas checked, people contacted for responders',
+    title: t('steps.document.title'),
+    description: t('steps.document.description'),
     checked: false,
   },
 ];
@@ -146,12 +149,15 @@ export default function EmergencyScreen() {
   const theme = Colors[colorScheme];
   const isDark = colorScheme === 'dark';
   const { setLastSeen, profile, addIncident } = useProfile();
+  const { t } = useTranslation('emergency');
+  const { t: tCommon } = useTranslation('common');
+  const emergencyNumber = tCommon('emergencyNumber');
 
   const [isLoading, setIsLoading] = useState(true);
   const [secondsLeft, setSecondsLeft] = useState<number>(SEARCH_WINDOW_SECONDS);
   const [startedAt, setStartedAt] = useState<Date>(new Date());
   const [wearing, setWearing] = useState('');
-  const [steps, setSteps] = useState<ChecklistStep[]>(INITIAL_STEPS);
+  const [steps, setSteps] = useState<ChecklistStep[]>(() => buildInitialSteps(t, emergencyNumber));
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [showWearingInput, setShowWearingInput] = useState(true);
 
@@ -358,7 +364,12 @@ export default function EmergencyScreen() {
       return;
     }
 
-    const message = `URGENT: ${profile?.name || 'Our loved one'} is missing. Last seen ${startedAt.toLocaleTimeString()}. ${wearing ? `Wearing: ${wearing}. ` : ''}Please help search or call if you see them.`;
+    const wearingText = wearing ? t('smsWearing', { wearing }) : '';
+    const message = t('smsMessage', {
+      name: profile?.name || 'Our loved one',
+      time: startedAt.toLocaleTimeString(),
+      wearing: wearingText,
+    });
 
     const recipients = normalizeUniqueSmsRecipients(
       contactsToNotify.map((contact) => contact.phone),
@@ -395,8 +406,8 @@ export default function EmergencyScreen() {
   };
 
   const getDirectionHint = () => {
-    if (profile?.dominantHand === 'left') return '← May veer left (left-handed)';
-    if (profile?.dominantHand === 'right') return '→ May veer right (right-handed)';
+    if (profile?.dominantHand === 'left') return t('directionHint.left');
+    if (profile?.dominantHand === 'right') return t('directionHint.right');
     return null;
   };
 
@@ -434,7 +445,7 @@ export default function EmergencyScreen() {
         edges={['top']}
       >
         <View style={styles.loadingContainer}>
-          <ThemedText style={{ color: theme.text }}>Loading emergency state...</ThemedText>
+          <ThemedText style={{ color: theme.text }}>{t('loading')}</ThemedText>
         </View>
       </SafeAreaView>
     );
@@ -462,9 +473,11 @@ export default function EmergencyScreen() {
                 <View style={[styles.modalIconWrap, { backgroundColor: `${semantic.success}20` }]}>
                   <IconSymbol name="checkmark.circle.fill" size={40} color={semantic.success} />
                 </View>
-                <ThemedText style={[styles.modalTitle, { color: theme.text }]}>Found!</ThemedText>
+                <ThemedText style={[styles.modalTitle, { color: theme.text }]}>
+                  {t('modal.found.title')}
+                </ThemedText>
                 <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
-                  Great news! Remember to use calm, reassuring language. Offer water and rest.
+                  {t('modal.found.message')}
                 </ThemedText>
                 <TouchableOpacity
                   style={[
@@ -474,7 +487,7 @@ export default function EmergencyScreen() {
                   ]}
                   onPress={() => handleModalAction('dismiss')}
                 >
-                  <ThemedText style={styles.modalButtonText}>OK</ThemedText>
+                  <ThemedText style={styles.modalButtonText}>{tCommon('ok')}</ThemedText>
                 </TouchableOpacity>
               </>
             )}
@@ -482,10 +495,10 @@ export default function EmergencyScreen() {
             {modalType === 'leave' && (
               <>
                 <ThemedText style={[styles.modalTitle, { color: theme.text }]}>
-                  Leave Emergency Search?
+                  {t('modal.leave.title')}
                 </ThemedText>
                 <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
-                  The timer will continue in the background. You can return to resume.
+                  {t('modal.leave.message')}
                 </ThemedText>
                 <View style={styles.modalButtons}>
                   <TouchableOpacity
@@ -498,7 +511,7 @@ export default function EmergencyScreen() {
                     onPress={() => setModalVisible(false)}
                   >
                     <ThemedText style={[styles.modalButtonText, { color: theme.text }]}>
-                      Stay
+                      {t('modal.leave.stay')}
                     </ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -509,7 +522,7 @@ export default function EmergencyScreen() {
                     ]}
                     onPress={() => handleModalAction('leave')}
                   >
-                    <ThemedText style={styles.modalButtonText}>Leave</ThemedText>
+                    <ThemedText style={styles.modalButtonText}>{t('modal.leave.leave')}</ThemedText>
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
@@ -519,7 +532,7 @@ export default function EmergencyScreen() {
                   <ThemedText
                     style={[styles.modalButtonDestructiveText, { color: semantic.error }]}
                   >
-                    End Emergency
+                    {t('modal.leave.end')}
                   </ThemedText>
                 </TouchableOpacity>
               </>
@@ -528,12 +541,14 @@ export default function EmergencyScreen() {
             {(modalType === 'noContacts' || modalType === 'smsError') && (
               <>
                 <ThemedText style={[styles.modalTitle, { color: theme.text }]}>
-                  {modalType === 'noContacts' ? 'No Contacts' : 'Error'}
+                  {modalType === 'noContacts'
+                    ? t('modal.noContacts.title')
+                    : t('modal.smsError.title')}
                 </ThemedText>
                 <ThemedText style={[styles.modalMessage, { color: theme.textSecondary }]}>
                   {modalType === 'noContacts'
-                    ? 'Add emergency contacts to send alerts.'
-                    : 'Could not open messaging app.'}
+                    ? t('modal.noContacts.message')
+                    : t('modal.smsError.message')}
                 </ThemedText>
                 <TouchableOpacity
                   style={[
@@ -543,7 +558,7 @@ export default function EmergencyScreen() {
                   ]}
                   onPress={() => setModalVisible(false)}
                 >
-                  <ThemedText style={styles.modalButtonText}>OK</ThemedText>
+                  <ThemedText style={styles.modalButtonText}>{tCommon('ok')}</ThemedText>
                 </TouchableOpacity>
               </>
             )}
@@ -573,7 +588,7 @@ export default function EmergencyScreen() {
           <View style={styles.headerTitleRow}>
             <IconSymbol name="exclamationmark.triangle.fill" size={18} color={semantic.error} />
             <ThemedText style={[styles.headerTitle, { color: theme.text }]}>
-              Emergency Search
+              {t('screenTitle')}
             </ThemedText>
           </View>
         </View>
@@ -597,13 +612,11 @@ export default function EmergencyScreen() {
           ]}
         >
           <ThemedText style={styles.timerLabel}>
-            {timerExpired ? 'TIME TO CALL 911' : 'Time remaining'}
+            {timerExpired ? t('timer.labelExpired', { emergencyNumber }) : t('timer.labelActive')}
           </ThemedText>
           <ThemedText style={styles.timerText}>{mmss}</ThemedText>
           <ThemedText style={styles.timerHint}>
-            {timerExpired
-              ? 'Call 911 immediately and request a Silver Alert'
-              : 'Stay calm. Check each step systematically.'}
+            {timerExpired ? t('timer.hintExpired', { emergencyNumber }) : t('timer.hintActive')}
           </ThemedText>
 
           {/* Progress bar */}
@@ -613,7 +626,7 @@ export default function EmergencyScreen() {
               <View style={{ flex: (100 - progress) / 100 }} />
             </View>
             <ThemedText style={styles.progressText}>
-              {checkedCount}/{steps.length} steps complete
+              {t('timer.stepsProgress', { checked: checkedCount, total: steps.length })}
             </ThemedText>
           </View>
         </View>
@@ -638,10 +651,10 @@ export default function EmergencyScreen() {
             style={[styles.wearingCard, { backgroundColor: theme.card, borderColor: theme.border }]}
           >
             <ThemedText style={[styles.wearingLabel, { color: theme.text }]}>
-              What are they wearing?
+              {t('wearing.label')}
             </ThemedText>
             <ThemedText style={[styles.wearingHint, { color: theme.textSecondary }]}>
-              {"You'll need this for 911"}
+              {t('wearing.hint', { emergencyNumber })}
             </ThemedText>
             <TextInput
               style={[
@@ -654,13 +667,13 @@ export default function EmergencyScreen() {
               ]}
               value={wearing}
               onChangeText={setWearing}
-              placeholder="e.g., Blue jacket, gray pants, white sneakers"
+              placeholder={t('wearing.placeholder')}
               placeholderTextColor={neutral[400]}
               multiline
             />
             <Pressable style={styles.wearingDismiss} onPress={() => setShowWearingInput(false)}>
               <ThemedText style={[styles.dismissText, { color: theme.textSecondary }]}>
-                Dismiss
+                {t('wearing.dismiss')}
               </ThemedText>
             </Pressable>
           </View>
@@ -679,7 +692,7 @@ export default function EmergencyScreen() {
             activeOpacity={0.8}
           >
             <IconSymbol name="checkmark.circle.fill" size={22} color="#fff" />
-            <ThemedText style={styles.actionButtonTextLarge}>Found — Safe</ThemedText>
+            <ThemedText style={styles.actionButtonTextLarge}>{t('actions.foundSafe')}</ThemedText>
           </TouchableOpacity>
 
           {/* 2. Call 911 — red, urgent state-aware */}
@@ -701,7 +714,7 @@ export default function EmergencyScreen() {
                 { color: timerExpired ? '#fff' : semantic.error },
               ]}
             >
-              📞 Call 911
+              {t('actions.call911', { emergencyNumber })}
             </ThemedText>
           </Pressable>
 
@@ -715,7 +728,7 @@ export default function EmergencyScreen() {
               onPress={onViewReadout}
             >
               <ThemedText style={[styles.actionButtonTextSmall, { color: theme.text }]}>
-                📋 Info Sheet
+                {t('actions.infoSheet')}
               </ThemedText>
             </Pressable>
 
@@ -727,7 +740,7 @@ export default function EmergencyScreen() {
               onPress={onAlertContacts}
             >
               <ThemedText style={[styles.actionButtonTextSmall, { color: theme.text }]}>
-                📱 Alert Circle
+                {t('actions.alertCircle')}
               </ThemedText>
             </Pressable>
           </View>
@@ -737,7 +750,7 @@ export default function EmergencyScreen() {
         <View style={styles.checklistSection}>
           <View style={styles.checklistHeader}>
             <ThemedText style={[styles.sectionTitle, { color: theme.text }]}>
-              Search Protocol
+              {t('checklist.title')}
             </ThemedText>
             <ThemedText style={[styles.checklistCount, { color: theme.textSecondary }]}>
               {checkedCount}/{steps.length}
@@ -813,7 +826,7 @@ export default function EmergencyScreen() {
                   </ThemedText>
                   {step.urgent && !step.checked && (
                     <View style={[styles.urgentBadge, { backgroundColor: semantic.error }]}>
-                      <ThemedText style={styles.urgentText}>PRIORITY</ThemedText>
+                      <ThemedText style={styles.urgentText}>{t('checklist.priority')}</ThemedText>
                     </View>
                   )}
                 </View>
@@ -822,7 +835,7 @@ export default function EmergencyScreen() {
                 </ThemedText>
                 {step.hint && (
                   <ThemedText style={[styles.stepHint, { color: primary[600] }]}>
-                    💡 {step.hint}
+                    {`💡 ${step.hint}`}
                   </ThemedText>
                 )}
 
@@ -830,19 +843,19 @@ export default function EmergencyScreen() {
                 {step.id === 'familiar_places' && destinations.length > 0 && !step.checked && (
                   <View style={[styles.destinationsList, { borderTopColor: theme.border }]}>
                     <ThemedText style={[styles.destinationsLabel, { color: theme.textSecondary }]}>
-                      Saved places to check:
+                      {t('checklist.savedPlaces')}
                     </ThemedText>
                     {destinations.slice(0, 3).map((dest) => (
                       <ThemedText
                         key={dest.id}
                         style={[styles.destinationItem, { color: primary[600] }]}
                       >
-                        • {dest.name} {dest.address ? `(${dest.address})` : ''}
+                        {`• ${dest.name}${dest.address ? ` (${dest.address})` : ''}`}
                       </ThemedText>
                     ))}
                     {destinations.length > 3 && (
                       <ThemedText style={[styles.destinationItem, { color: neutral[500] }]}>
-                        +{destinations.length - 3} more in Places
+                        {t('checklist.morePlaces', { count: destinations.length - 3 })}
                       </ThemedText>
                     )}
                   </View>
@@ -863,12 +876,12 @@ export default function EmergencyScreen() {
           ]}
         >
           <ThemedText style={[styles.tipsTitle, { color: isDark ? primary[200] : primary[800] }]}>
-            When you find them
+            {t('tips.title')}
           </ThemedText>
           <ThemedText style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]}>
-            • Approach calmly from the front{'\n'}• Speak slowly with short sentences{'\n'}• Give
-            time to respond{'\n'}• Offer to walk with them{'\n'}• Don&apos;t argue or correct
-            {profile?.deescalationTechniques ? `\n• ${profile.deescalationTechniques}` : ''}
+            {profile?.deescalationTechniques
+              ? `${t('tips.body')}\n• ${profile.deescalationTechniques}`
+              : t('tips.body')}
           </ThemedText>
         </View>
 
