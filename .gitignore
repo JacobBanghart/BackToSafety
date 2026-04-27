@@ -33,6 +33,7 @@ build/
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+bun.lock
 
 # macOS
 .DS_Store
