@@ -14,18 +14,17 @@ import PostHog from 'posthog-react-native';
 
 let client: PostHog | null = null;
 
-const POSTHOG_PROJECT_API_KEY = 'phc_bTE4VJlBKEdsfD5FuXi2PvUNKC81AgIi1rmk9rQpKa0';
 const DEFAULT_POSTHOG_HOST = 'https://posthog.backtosafety.app';
 
 export async function initAnalytics(deviceId: string): Promise<void> {
   const host = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? DEFAULT_POSTHOG_HOST;
-  if (!host) {
-    console.debug('[analytics] EXPO_PUBLIC_POSTHOG_HOST not set — analytics disabled');
+  const apiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
+  if (!host || !apiKey) {
+    console.debug('[analytics] PostHog env not set — analytics disabled');
     return;
   }
 
-  // PostHog project API keys are public client-side tokens, not secrets.
-  client = new PostHog(POSTHOG_PROJECT_API_KEY, {
+  client = new PostHog(apiKey, {
     host,
     enableSessionReplay: true,
     // Session replay: mask all text inputs and images to avoid capturing PII.
