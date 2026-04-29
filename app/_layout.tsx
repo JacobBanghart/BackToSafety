@@ -18,6 +18,9 @@ import { ProfileProvider } from '@/context/ProfileContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
 import i18n from '@/i18n';
 import { loadSavedLanguage } from '@/i18n';
+import { getOrCreateDeviceId } from '@/utils/device-id';
+import { initAnalytics } from '@/utils/analytics';
+import { initCrashReporting } from '@/utils/crash-reporting';
 
 function RootLayoutNav() {
   const { colorScheme } = useTheme();
@@ -25,10 +28,15 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
-  // Load saved language preference once DB is ready
+  // Load saved language preference and initialise analytics once DB is ready
   useEffect(() => {
     if (!isLoading) {
       void loadSavedLanguage();
+      void (async () => {
+        const deviceId = await getOrCreateDeviceId();
+        initAnalytics(deviceId);
+        initCrashReporting(deviceId);
+      })();
     }
   }, [isLoading]);
 

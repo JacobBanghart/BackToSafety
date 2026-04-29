@@ -17,6 +17,7 @@ import { Typography } from '@/constants/Typography';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { saveSetting } from '@/database/storage';
+import { track } from '@/utils/analytics';
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -34,6 +35,7 @@ export default function WelcomeScreen() {
   ];
 
   const handleContinue = async () => {
+    track('onboarding_step_completed', { step: 'welcome' });
     await completeStep('welcome');
     router.push('/onboarding/name' as Href);
   };

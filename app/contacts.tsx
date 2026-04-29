@@ -28,6 +28,7 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
 import { Colors, semantic } from '@/constants/Colors';
+import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 

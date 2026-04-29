@@ -7,6 +7,7 @@ import { File, Paths } from 'expo-file-system';
 import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useRouter } from 'expo-router';
+import { track } from '@/utils/analytics';
 import { useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -100,6 +101,7 @@ export default function PhotoScreen() {
       if (photoUri) {
         await saveProfile({ photoUri });
       }
+      track('onboarding_step_completed', { step: 'profile_photo', skipped: false });
       await completeStep('profile_photo');
       router.push('/onboarding/appearance' as Href);
     } catch (err) {
@@ -110,6 +112,7 @@ export default function PhotoScreen() {
   };
 
   const handleSkip = async () => {
+    track('onboarding_step_completed', { step: 'profile_photo', skipped: true });
     await completeStep('profile_photo');
     router.push('/onboarding/appearance' as Href);
   };

@@ -4,6 +4,7 @@
  */
 
 import { Href, useRouter } from 'expo-router';
+import { track } from '@/utils/analytics';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -53,6 +54,7 @@ export default function ContactScreen() {
         notifyOnEmergency: true,
         shareMedicalInfo: true,
       });
+      track('onboarding_step_completed', { step: 'emergency_contact', skipped: false });
       await completeStep('emergency_contact');
       router.push('/onboarding/complete' as Href);
     } catch (err) {
@@ -62,6 +64,7 @@ export default function ContactScreen() {
   };
 
   const handleSkip = async () => {
+    track('onboarding_step_completed', { step: 'emergency_contact', skipped: true });
     await completeStep('emergency_contact');
     router.push('/onboarding/complete' as Href);
   };

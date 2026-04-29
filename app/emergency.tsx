@@ -4,6 +4,7 @@
  */
 
 import { goBack, setPreviousRoute } from '@/utils/navigation';
+import { track } from '@/utils/analytics';
 import * as Haptics from 'expo-haptics';
 import * as SMS from 'expo-sms';
 import { Href, useRouter } from 'expo-router';
@@ -235,6 +236,7 @@ export default function EmergencyScreen() {
         const now = new Date();
         setStartedAt(now);
 
+        track('emergency_started');
         await saveEmergencyState({
           startedAt: now.toISOString(),
           wearing: '',
@@ -313,6 +315,10 @@ export default function EmergencyScreen() {
       const currentStep = steps.find((step) => step.id === id);
       const isCheckingStep = currentStep ? !currentStep.checked : true;
 
+      if (isCheckingStep) {
+        track('emergency_step_completed', { step: id });
+      }
+
       if (Platform.OS !== 'web') {
         const style = isCheckingStep
           ? Haptics.ImpactFeedbackStyle.Medium
@@ -330,6 +336,7 @@ export default function EmergencyScreen() {
   const onMarkFound = async () => {
     // Clear state first and wait for it
     await clearEmergencyState();
+    track('emergency_completed', { checked_count: steps.filter((s) => s.checked).length });
     addIncident({
       at: new Date().toISOString(),
       outcome: 'found',
@@ -434,6 +441,7 @@ export default function EmergencyScreen() {
       navigateBack();
     }
     if (action === 'end') {
+      track('emergency_cancelled', { checked_count: steps.filter((s) => s.checked).length });
       clearEmergencyState().then(() => navigateBack());
     }
   };

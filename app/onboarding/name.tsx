@@ -4,6 +4,7 @@
  */
 
 import { Href, useRouter } from 'expo-router';
+import { track } from '@/utils/analytics';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -47,6 +48,7 @@ export default function NameScreen() {
         name: name.trim(),
         nickname: nickname.trim() || undefined,
       });
+      track('onboarding_step_completed', { step: 'profile_name' });
       await completeStep('profile_name');
       router.push('/onboarding/photo' as Href);
     } catch (err) {

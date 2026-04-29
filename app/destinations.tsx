@@ -28,6 +28,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
 import { Colors, primary, semantic } from '@/constants/Colors';
 // neutral is intentionally not imported — all neutral refs use theme tokens
+import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useTheme } from '@/context/ThemeContext';

@@ -4,6 +4,7 @@
  */
 
 import { useRouter } from 'expo-router';
+import { track } from '@/utils/analytics';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,6 +24,8 @@ export default function CompleteScreen() {
   const theme = Colors[colorScheme];
 
   const handleFinish = async () => {
+    track('onboarding_step_completed', { step: 'complete' });
+    track('onboarding_completed');
     await completeStep('complete');
     await refreshOnboardingState();
     // Replace the navigation stack to go to main app

@@ -9,6 +9,7 @@ import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-
 import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { track } from '@/utils/analytics';
 
 import { AppCard } from '@/components/AppCard';
 import { ListItem } from '@/components/ListItem';
@@ -69,6 +70,7 @@ export default function SettingsScreen() {
 
       if (newCount >= TAPS_TO_UNLOCK && !devModeEnabled) {
         setDevModeEnabled(true);
+        track('settings_dev_mode_unlocked');
         if (Platform.OS === 'web') {
           // No alert needed, just show the section
         } else {
@@ -85,6 +87,7 @@ export default function SettingsScreen() {
       try {
         await clearAllData();
         await refreshOnboardingState();
+        track('settings_data_cleared');
 
         if (Platform.OS === 'web') {
           window.location.reload();
@@ -143,7 +146,10 @@ export default function SettingsScreen() {
                       backgroundColor: isSelected ? theme.primaryLight : 'transparent',
                     },
                   ]}
-                  onPress={() => setThemePreference(option.value)}
+                  onPress={() => {
+                    track('settings_theme_changed', { theme: option.value });
+                    setThemePreference(option.value);
+                  }}
                 >
                   <ThemedText style={styles.themeIcon}>{option.icon}</ThemedText>
                   <ThemedText
@@ -198,6 +204,7 @@ export default function SettingsScreen() {
                       },
                     ]}
                     onPress={() => {
+                      track('settings_language_changed', { language: lang });
                       void i18n.changeLanguage(lang);
                       void saveSetting('language_preference', lang);
                     }}

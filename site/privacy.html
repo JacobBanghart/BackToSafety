@@ -12,7 +12,7 @@
       <section class="hero">
         <div class="brand"><span class="dot"></span>Back to Safety</div>
         <h1>Privacy Policy</h1>
-        <p>Effective date: 2026-03-28</p>
+        <p>Effective date: 2026-04-26</p>
         <div class="actions">
           <a class="button" href="./index.html">Back to Home</a>
         </div>
@@ -25,12 +25,63 @@
           <li>We do not operate a cloud backend for your personal profile data.</li>
           <li>Your profile and emergency data are stored locally on your device.</li>
           <li>The app opens SMS or dialer actions only when you trigger them.</li>
+          <li>
+            The app collects anonymous usage analytics and crash reports to help us improve
+            reliability. No personally identifiable information is included.
+          </li>
         </ul>
 
         <h2>Information We Handle</h2>
         <p>
           Back to Safety may handle profile details, emergency contact details, destinations,
-          incidents, and app settings that you enter.
+          incidents, and app settings that you enter. This information is stored locally on your
+          device.
+        </p>
+
+        <h2>Analytics and Crash Reporting</h2>
+        <p>
+          To improve app quality and reliability, Back to Safety collects the following
+          automatically:
+        </p>
+        <h3>Anonymous usage analytics (PostHog)</h3>
+        <ul>
+          <li>
+            A randomly generated device identifier (UUID) is created on first launch and stored
+            locally. It is not linked to your name, email, or any other personal information.
+          </li>
+          <li>
+            Anonymous events are recorded when you navigate through onboarding, start or complete
+            an emergency search, and change app settings.
+          </li>
+          <li>
+            Session recordings may be captured with all text inputs and images masked — we see
+            interaction patterns only, not the content you type or your photos.
+          </li>
+          <li>
+            Analytics data is sent to our self-hosted PostHog instance at
+            <strong>posthog.backtosafety.app</strong>. Data does not leave our infrastructure.
+          </li>
+        </ul>
+        <h3>Crash reporting (Sentry)</h3>
+        <ul>
+          <li>
+            If the app crashes or encounters an unexpected error, a crash report is sent containing
+            the error message, stack trace, device type, OS version, and app version.
+          </li>
+          <li>
+            Reports are linked to the same anonymous device UUID used for analytics, so we can
+            correlate issues without knowing who you are.
+          </li>
+          <li>
+            Crash data is sent to our self-hosted Sentry instance at
+            <strong>sentry.backtosafety.app</strong>. Data does not leave our infrastructure.
+          </li>
+        </ul>
+        <p>
+          You cannot opt out of analytics and crash reporting in the current version of the app. If
+          you prefer no telemetry, you may block network access to
+          <code>posthog.backtosafety.app</code> and <code>sentry.backtosafety.app</code> at the
+          network or firewall level.
         </p>
 
         <h2>Device Permissions</h2>
@@ -44,19 +95,25 @@
         <h2>Data Sharing</h2>
         <p>
           We do not sell or rent personal data. If you send texts or place calls, those actions are
-          handled by your carrier and platform providers.
+          handled by your carrier and platform providers. Anonymous analytics and crash reports are
+          processed by our self-hosted infrastructure only and are not shared with third-party
+          analytics vendors.
         </p>
 
         <h2>Data Retention and Deletion</h2>
         <ul>
-          <li>Data remains on your device until you remove it.</li>
+          <li>Personal profile data remains on your device until you remove it.</li>
           <li>You can delete data in-app (where available) or by uninstalling the app.</li>
+          <li>
+            Anonymous analytics events and crash reports are retained on our self-hosted servers
+            for up to 12 months.
+          </li>
         </ul>
 
         <h2>Security</h2>
         <p>
-          We use platform-provided local storage mechanisms. Protect your device with passcode or
-          biometric lock when possible.
+          We use platform-provided local storage mechanisms. Anonymous telemetry is transmitted
+          over HTTPS. Protect your device with passcode or biometric lock when possible.
         </p>
 
         <h2>Contact</h2>

@@ -4,6 +4,7 @@
  */
 
 import { Href, useRouter } from 'expo-router';
+import { track } from '@/utils/analytics';
 import { useState } from 'react';
 import {
   KeyboardAvoidingView,
@@ -61,6 +62,7 @@ export default function AppearanceScreen() {
         eyeColor: eyeColor.trim() || undefined,
         identifyingMarks: identifyingMarks.trim() || undefined,
       });
+      track('onboarding_step_completed', { step: 'profile_appearance', skipped: false });
       await completeStep('profile_appearance');
       router.push('/onboarding/contact' as Href);
     } catch (err) {
@@ -69,6 +71,7 @@ export default function AppearanceScreen() {
   };
 
   const handleSkip = async () => {
+    track('onboarding_step_completed', { step: 'profile_appearance', skipped: true });
     await completeStep('profile_appearance');
     router.push('/onboarding/contact' as Href);
   };

@@ -4,6 +4,7 @@
  */
 
 import { Href, useRouter } from 'expo-router';
+import { track } from '@/utils/analytics';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -49,6 +50,7 @@ export default function ThemeScreen() {
   ];
 
   const handleContinue = async () => {
+    track('onboarding_step_completed', { step: 'theme' });
     await completeStep('welcome'); // Theme selection is part of welcome step
     router.push('/onboarding/name' as Href);
   };
