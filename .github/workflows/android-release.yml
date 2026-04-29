@@ -15,6 +15,10 @@ permissions:
 jobs:
   build-android-aab:
     runs-on: [self-hosted, linux]
+    env:
+      EXPO_PUBLIC_POSTHOG_HOST: ${{ vars.EXPO_PUBLIC_POSTHOG_HOST }}
+      EXPO_PUBLIC_POSTHOG_API_KEY: ${{ secrets.EXPO_PUBLIC_POSTHOG_API_KEY }}
+      EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -139,4 +143,3 @@ jobs:
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
-
