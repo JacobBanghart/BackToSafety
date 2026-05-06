@@ -61,6 +61,14 @@ jobs:
         env:
           EXPO_NO_TELEMETRY: 1
 
+      - name: Inject env vars into Xcode bundle phase
+        run: |
+          cat >> ios/.xcode.env.local << EOF
+          export EXPO_PUBLIC_SENTRY_DSN="${EXPO_PUBLIC_SENTRY_DSN}"
+          EOF
+        env:
+          EXPO_PUBLIC_SENTRY_DSN: ${{ secrets.EXPO_PUBLIC_SENTRY_DSN }}
+
       # ── Signing ──────────────────────────────────────────────────────────────
       - name: Install distribution certificate
         run: |
@@ -185,7 +193,7 @@ jobs:
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_API_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_API_KEY_ISSUER_ID"
+            -authenticationKeyIssuerID "$ASC_API_ISSUER_ID"
         env:
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
@@ -193,20 +201,12 @@ jobs:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
 
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: BackToSafety-${{ steps.version.outputs.version_name }}.ipa
-          path: ${{ runner.temp }}/ipa/BacktoSafety.ipa
-          if-no-files-found: error
-
       # ── Release ──────────────────────────────────────────────────────────────
-      - name: Create GitHub Release with IPA
+      - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          files: ${{ runner.temp }}/ipa/BacktoSafety.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
