@@ -193,7 +193,7 @@ jobs:
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_API_KEY_ID" \
-            -authenticationKeyIssuerID "$ASC_API_ISSUER_ID"
+            -authenticationKeyIssuerID "$ASC_API_KEY_ISSUER_ID"
         env:
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
