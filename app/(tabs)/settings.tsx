@@ -222,8 +222,37 @@ export default function SettingsScreen() {
               })}
             </View>
 
+            {/* Crash Reporting Test Button */}
+            <View style={styles.sectionHeader}>
+              <IconSymbol name="ant.fill" size={20} color={theme.text} />
+              <ThemedText type="subtitle" style={styles.sectionTitle}>
+                Crash Reporting
+              </ThemedText>
+            </View>
+            <ThemedText style={[styles.sectionDescription, { color: theme.textSecondary }]}>
+              Send a test error to Sentry
+            </ThemedText>
             <Pressable
-              style={[styles.dangerButton, isClearing && styles.buttonDisabled]}
+              style={[styles.testButton, { backgroundColor: '#ef4444' }]}
+              onPress={() => {
+                const Sentry = require('@sentry/react-native');
+                Sentry.captureException(new Error('Test error from dev mode'));
+                if (Platform.OS === 'web') {
+                  alert('Sentry error sent! Check your dashboard.');
+                } else {
+                  Alert.alert('Sentry', 'Test error sent! Check your dashboard.');
+                }
+              }}
+            >
+              <ThemedText style={styles.testButtonText}>🐛 Test Sentry</ThemedText>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.dangerButton,
+                isClearing && styles.buttonDisabled,
+                { marginTop: Spacing.xl },
+              ]}
               onPress={handleClearData}
               disabled={isClearing}
             >
@@ -334,5 +363,15 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     marginTop: Spacing.md,
     textAlign: 'center',
+  },
+  testButton: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: Radius.md,
+    alignItems: 'center',
+  },
+  testButtonText: {
+    color: '#fff',
+    ...Typography.bodyBold,
   },
 });

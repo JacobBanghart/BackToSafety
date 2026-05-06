@@ -1,45 +1,15 @@
 /**
- * PostHog analytics wrapper.
+ * Analytics stub with Sentry breadcrumb integration.
  *
- * Provides a typed `track()` helper and initialises PostHog with session replay
- * (text inputs and images masked). The host is read from the EXPO_PUBLIC_POSTHOG_HOST
- * environment variable — set this to your self-hosted instance (e.g.
- * https://posthog.backtosafety.app). If the variable is absent the module is a
- * no-op so development builds work without configuration.
+ * Provides a typed `track()` helper and initialises analytics.
+ * Analytics calls are no-ops (PostHog removed), but each event
+ * also adds a Sentry breadcrumb for crash context.
  *
  * Call `initAnalytics(deviceId)` once at app startup, then call `track()` anywhere.
  */
 
-import PostHog from 'posthog-react-native';
-
-let client: PostHog | null = null;
-
-const DEFAULT_POSTHOG_HOST = 'https://posthog.backtosafety.app';
-
-export async function initAnalytics(deviceId: string): Promise<void> {
-  const host = process.env.EXPO_PUBLIC_POSTHOG_HOST ?? DEFAULT_POSTHOG_HOST;
-  const apiKey = process.env.EXPO_PUBLIC_POSTHOG_API_KEY;
-  if (!host || !apiKey) {
-    console.debug('[analytics] PostHog env not set — analytics disabled');
-    return;
-  }
-
-  client = new PostHog(apiKey, {
-    host,
-    enableSessionReplay: true,
-    // Session replay: mask all text inputs and images to avoid capturing PII.
-    sessionReplayConfig: {
-      maskAllTextInputs: true,
-      maskAllImages: true,
-    },
-  });
-
-  client.identify(deviceId);
-}
-
-// ---------------------------------------------------------------------------
-// Event type definitions — extend this union as new events are added
-// ---------------------------------------------------------------------------
+import { addBreadcrumb } from '@/utils/crash-reporting';
+import { trackOpenReplayEvent } from '@/utils/openreplay';
 
 type AnalyticsEventName =
   | 'onboarding_step_completed'
@@ -55,11 +25,23 @@ type AnalyticsEventName =
 
 type AnalyticsProperties = Record<string, string | number | boolean | null>;
 
-/**
- * Fire an analytics event. Type-safe — TypeScript will reject unknown event names
- * or missing required properties.
- */
+let initialized = false;
+
+export async function initAnalytics(_deviceId: string): Promise<void> {
+  initialized = true;
+}
+
 export function track(name: AnalyticsEventName, properties?: AnalyticsProperties): void {
-  if (!client) return;
-  client.capture(name, properties ?? {});
+  if (!initialized) {
+    return;
+  }
+
+  addBreadcrumb({
+    category: 'analytics',
+    message: name,
+    level: 'info',
+    data: (properties as Record<string, string>) ?? {},
+  });
+
+  trackOpenReplayEvent(name, properties ?? undefined);
 }

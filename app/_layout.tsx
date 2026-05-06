@@ -5,6 +5,7 @@ import {
 } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import Constants from 'expo-constants';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -20,7 +21,12 @@ import i18n from '@/i18n';
 import { loadSavedLanguage } from '@/i18n';
 import { getOrCreateDeviceId } from '@/utils/device-id';
 import { initAnalytics } from '@/utils/analytics';
-import { initCrashReporting } from '@/utils/crash-reporting';
+import {
+  initCrashReporting,
+  setCrashReportingContext,
+  wrapAppWithSentry,
+} from '@/utils/crash-reporting';
+import { initOpenReplay, identifyOpenReplayUser } from '@/utils/openreplay';
 
 function RootLayoutNav() {
   const { colorScheme } = useTheme();
@@ -28,7 +34,6 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
 
-  // Load saved language preference and initialise analytics once DB is ready
   useEffect(() => {
     if (!isLoading) {
       void loadSavedLanguage();
@@ -36,6 +41,16 @@ function RootLayoutNav() {
         const deviceId = await getOrCreateDeviceId();
         initAnalytics(deviceId);
         initCrashReporting(deviceId);
+        initOpenReplay();
+        identifyOpenReplayUser(deviceId);
+        setCrashReportingContext({
+          locale: i18n.language,
+          theme: colorScheme,
+          onboarded: String(isOnboarded),
+          platform: String(
+            Constants.platform?.web ? 'web' : Constants.platform?.ios ? 'ios' : 'android',
+          ),
+        });
       })();
     }
   }, [isLoading]);
@@ -85,7 +100,7 @@ function RootLayoutNav() {
   );
 }
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
     <I18nextProvider i18n={i18n}>
       <ThemeProvider>
@@ -97,4 +112,6 @@ export default function RootLayout() {
       </ThemeProvider>
     </I18nextProvider>
   );
-}
+};
+
+export default wrapAppWithSentry(RootLayout);
