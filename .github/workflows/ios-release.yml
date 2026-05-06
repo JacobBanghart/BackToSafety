@@ -10,7 +10,7 @@ on:
       - published
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-and-submit-ios:
@@ -192,6 +192,16 @@ jobs:
           ASC_KEY_PATH: ${{ env.ASC_KEY_PATH }}
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
+
+      # ── Release ──────────────────────────────────────────────────────────────
+      - name: Create GitHub Release with IPA
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          files: ${{ runner.temp }}/ipa/*.ipa
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # ── Cleanup ───────────────────────────────────────────────────────────────
       - name: Remove temporary keychain
