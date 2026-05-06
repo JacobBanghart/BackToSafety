@@ -134,6 +134,7 @@ jobs:
         env:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          SENTRY_COPY_OPTIONS_FILE: "false"
 
       # ── Submit ────────────────────────────────────────────────────────────────
       - name: Install App Store Connect API key
