@@ -193,13 +193,20 @@ jobs:
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_KEY_ISSUER_ID: ${{ secrets.ASC_API_KEY_ISSUER_ID }}
 
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BackToSafety-${{ steps.version.outputs.version_name }}.ipa
+          path: ${{ runner.temp }}/ipa/BacktoSafety.ipa
+          if-no-files-found: error
+
       # ── Release ──────────────────────────────────────────────────────────────
       - name: Create GitHub Release with IPA
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
-          files: ${{ runner.temp }}/ipa/*.ipa
+          files: ${{ runner.temp }}/ipa/BacktoSafety.ipa
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
