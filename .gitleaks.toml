@@ -1,0 +1,8 @@
+[allowlist]
+  description = "PostHog public write-only project API key — safe to commit"
+  regexes = [
+    '''phc_[A-Za-z0-9]{43}''',
+  ]
+  paths = [
+    '''.env.example''',
+  ]
