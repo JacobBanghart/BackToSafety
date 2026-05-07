@@ -5,7 +5,7 @@
 
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -39,6 +39,10 @@ export default function AppearanceScreen() {
   const [eyeColor, setEyeColor] = useState('');
   const [identifyingMarks, setIdentifyingMarks] = useState('');
 
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'profile_appearance' });
+  }, []);
+
   const formatHeightInput = (value: string): string => {
     const digits = value.replace(/\D/g, '').slice(0, 3);
     if (!digits) return '';
@@ -62,7 +66,7 @@ export default function AppearanceScreen() {
         eyeColor: eyeColor.trim() || undefined,
         identifyingMarks: identifyingMarks.trim() || undefined,
       });
-      track('onboarding_step_completed', { step: 'profile_appearance', skipped: false });
+      track('onboarding_step_completed', { step: 'profile_appearance' });
       await completeStep('profile_appearance');
       router.push('/onboarding/contact' as Href);
     } catch (err) {
@@ -71,7 +75,7 @@ export default function AppearanceScreen() {
   };
 
   const handleSkip = async () => {
-    track('onboarding_step_completed', { step: 'profile_appearance', skipped: true });
+    track('onboarding_step_skipped', { step: 'profile_appearance' });
     await completeStep('profile_appearance');
     router.push('/onboarding/contact' as Href);
   };

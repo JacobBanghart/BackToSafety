@@ -18,12 +18,17 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { saveSetting } from '@/database/storage';
 import { track } from '@/utils/analytics';
+import { useEffect } from 'react';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { themePreference, setThemePreference, colorScheme } = useTheme();
+
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'welcome' });
+  }, []);
 
   const isDark = colorScheme === 'dark';
   const theme = Colors[colorScheme];

@@ -8,7 +8,7 @@ import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -30,6 +30,10 @@ export default function PhotoScreen() {
   const theme = Colors[colorScheme];
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'profile_photo' });
+  }, []);
 
   const pickImage = async () => {
     track('profile_photo_chosen');
@@ -103,7 +107,7 @@ export default function PhotoScreen() {
       if (photoUri) {
         await saveProfile({ photoUri });
       }
-      track('onboarding_step_completed', { step: 'profile_photo', skipped: false });
+      track('onboarding_step_completed', { step: 'profile_photo' });
       await completeStep('profile_photo');
       router.push('/onboarding/appearance' as Href);
     } catch (err) {
@@ -114,7 +118,7 @@ export default function PhotoScreen() {
   };
 
   const handleSkip = async () => {
-    track('onboarding_step_completed', { step: 'profile_photo', skipped: true });
+    track('onboarding_step_skipped', { step: 'profile_photo' });
     await completeStep('profile_photo');
     router.push('/onboarding/appearance' as Href);
   };

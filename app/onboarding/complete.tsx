@@ -6,6 +6,7 @@
 import { useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { posthog } from '@/utils/posthog';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -23,6 +24,10 @@ export default function CompleteScreen() {
   const { completeStep, refreshOnboardingState } = useOnboarding();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'complete' });
+  }, []);
 
   const handleFinish = async () => {
     track('onboarding_step_completed', { step: 'complete' });

@@ -8,7 +8,9 @@
 import { posthog } from '@/utils/posthog';
 
 type AnalyticsEventName =
+  | 'onboarding_step_viewed'
   | 'onboarding_step_completed'
+  | 'onboarding_step_skipped'
   | 'onboarding_completed'
   | 'emergency_started'
   | 'emergency_step_completed'

@@ -5,7 +5,7 @@
 
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -39,6 +39,10 @@ export default function ContactScreen() {
   const [relationship, setRelationship] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'emergency_contact' });
+  }, []);
+
   const handleContinue = async () => {
     if (!name.trim() || !phone.trim()) {
       setError('Name and phone number are required');
@@ -54,7 +58,7 @@ export default function ContactScreen() {
         notifyOnEmergency: true,
         shareMedicalInfo: true,
       });
-      track('onboarding_step_completed', { step: 'emergency_contact', skipped: false });
+      track('onboarding_step_completed', { step: 'emergency_contact' });
       await completeStep('emergency_contact');
       router.push('/onboarding/complete' as Href);
     } catch (err) {
@@ -64,7 +68,7 @@ export default function ContactScreen() {
   };
 
   const handleSkip = async () => {
-    track('onboarding_step_completed', { step: 'emergency_contact', skipped: true });
+    track('onboarding_step_skipped', { step: 'emergency_contact' });
     await completeStep('emergency_contact');
     router.push('/onboarding/complete' as Href);
   };

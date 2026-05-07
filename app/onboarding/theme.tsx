@@ -5,6 +5,7 @@
 
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
+import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -22,6 +23,10 @@ export default function ThemeScreen() {
   const { completeStep } = useOnboarding();
   const { themePreference, setThemePreference, colorScheme } = useTheme();
   const theme = Colors[colorScheme];
+
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'theme' });
+  }, []);
 
   const themeOptions: {
     value: ThemePreference;

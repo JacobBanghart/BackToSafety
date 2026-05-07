@@ -5,7 +5,7 @@
 
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -36,6 +36,10 @@ export default function NameScreen() {
   const [name, setName] = useState('');
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    track('onboarding_step_viewed', { step: 'profile_name' });
+  }, []);
 
   const handleContinue = async () => {
     if (!name.trim()) {
