@@ -32,9 +32,7 @@
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.ACCESS_BACKGROUND_LOCATION"
       ],
-      "permissions": [
-        "READ_CONTACTS"
-      ],
+      "permissions": ["READ_CONTACTS"],
       "package": "com.backtosafety.app"
     },
     "plugins": [
@@ -66,15 +64,7 @@
           "cameraPermission": "Allow Back to Safety to use your camera to take a profile photo for emergency identification."
         }
       ],
-      "expo-localization",
-      [
-        "@sentry/react-native/expo",
-        {
-          "organization": "sentry",
-          "project": "internal",
-          "url": "https://sentry.backtosafety.app"
-        }
-      ]
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

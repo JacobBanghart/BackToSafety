@@ -26,8 +26,9 @@
           <li>Your profile and emergency data are stored locally on your device.</li>
           <li>The app opens SMS or dialer actions only when you trigger them.</li>
           <li>
-            The app collects anonymous usage analytics and crash reports to help us improve
-            reliability. No personally identifiable information is included.
+            The app collects anonymous usage analytics to help us improve
+            reliability. Analytics data is sent to PostHog, our analytics provider.
+            No personally identifiable information is included.
           </li>
         </ul>
 
@@ -38,12 +39,12 @@
           device.
         </p>
 
-        <h2>Analytics and Crash Reporting</h2>
+        <h2>Analytics</h2>
         <p>
-          To improve app quality and reliability, Back to Safety collects the following
+          To improve app quality and reliability, Back to Safety collects anonymous usage analytics
           automatically:
         </p>
-        <h3>Anonymous usage analytics (PostHog)</h3>
+        <h3>Anonymous usage analytics</h3>
         <ul>
           <li>
             A randomly generated device identifier (UUID) is created on first launch and stored
@@ -58,30 +59,13 @@
             interaction patterns only, not the content you type or your photos.
           </li>
           <li>
-            Analytics data is sent to our self-hosted PostHog instance at
-            <strong>posthog.backtosafety.app</strong>. Data does not leave our infrastructure.
-          </li>
-        </ul>
-        <h3>Crash reporting (Sentry)</h3>
-        <ul>
-          <li>
-            If the app crashes or encounters an unexpected error, a crash report is sent containing
-            the error message, stack trace, device type, OS version, and app version.
-          </li>
-          <li>
-            Reports are linked to the same anonymous device UUID used for analytics, so we can
-            correlate issues without knowing who you are.
-          </li>
-          <li>
-            Crash data is sent to our self-hosted Sentry instance at
-            <strong>sentry.backtosafety.app</strong>. Data does not leave our infrastructure.
+            Analytics data is processed by PostHog, a third-party analytics provider. Data is
+            transmitted over HTTPS and subject to PostHog's privacy practices.
           </li>
         </ul>
         <p>
-          You cannot opt out of analytics and crash reporting in the current version of the app. If
-          you prefer no telemetry, you may block network access to
-          <code>posthog.backtosafety.app</code> and <code>sentry.backtosafety.app</code> at the
-          network or firewall level.
+          You cannot opt out of analytics. All analytics data is anonymous and does not contain
+          personally identifiable information.
         </p>
 
         <h2>Device Permissions</h2>
@@ -95,9 +79,9 @@
         <h2>Data Sharing</h2>
         <p>
           We do not sell or rent personal data. If you send texts or place calls, those actions are
-          handled by your carrier and platform providers. Anonymous analytics and crash reports are
-          processed by our self-hosted infrastructure only and are not shared with third-party
-          analytics vendors.
+          handled by your carrier and platform providers. Anonymous analytics data is sent to
+          PostHog, our analytics provider, for the purpose of understanding app usage and improving
+          reliability. PostHog processes this data on our behalf as a service provider.
         </p>
 
         <h2>Data Retention and Deletion</h2>
@@ -105,8 +89,7 @@
           <li>Personal profile data remains on your device until you remove it.</li>
           <li>You can delete data in-app (where available) or by uninstalling the app.</li>
           <li>
-            Anonymous analytics events and crash reports are retained on our self-hosted servers
-            for up to 12 months.
+            Anonymous analytics events are retained for up to 12 months.
           </li>
         </ul>
 

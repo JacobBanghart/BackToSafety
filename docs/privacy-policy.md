@@ -10,7 +10,7 @@ Back to Safety is designed to keep sensitive safety information on your device. 
 - We do not operate a cloud backend for your personal profile data.
 - Your emergency profile, contacts, destinations, and incident notes are stored locally on your device.
 - The app may open system services (SMS, phone dialer) only when you explicitly trigger those actions.
-- The app collects anonymous usage analytics and crash reports to help us improve reliability. No personally identifiable information is included.
+- The app collects anonymous usage analytics to help us improve reliability. Analytics data is sent to PostHog, our analytics provider. No personally identifiable information is included.
 
 ## Information We Handle
 
@@ -24,24 +24,18 @@ Back to Safety may handle the following categories of data you provide:
 
 This information is stored in local on-device storage (SQLite on native platforms, equivalent local storage on web).
 
-## Analytics and Crash Reporting
+## Analytics
 
-To improve app quality and reliability, Back to Safety collects the following automatically:
+To improve app quality and reliability, Back to Safety collects anonymous usage analytics automatically:
 
-**Anonymous usage analytics (PostHog)**
+**Anonymous usage analytics**
 
 - A randomly generated device identifier (UUID) is created on first launch and stored locally. It is not linked to your name, email, or any other personal information.
 - Anonymous events are recorded when you navigate through onboarding, start or complete an emergency search, and change app settings.
 - Session recordings may be captured with all text inputs and images masked — we see interaction patterns only, not the content you type or your photos.
-- Analytics data is sent to our self-hosted PostHog instance at **posthog.backtosafety.app**. Data does not leave our infrastructure.
+- Analytics data is processed by PostHog, a third-party analytics provider. Data is transmitted over HTTPS and subject to PostHog's privacy practices.
 
-**Crash reporting (Sentry)**
-
-- If the app crashes or encounters an unexpected error, a crash report is sent containing the error message, stack trace, device type, OS version, and app version.
-- Reports are linked to the same anonymous device UUID used for analytics, so we can correlate issues without knowing who you are.
-- Crash data is sent to our self-hosted Sentry instance at **sentry.backtosafety.app**. Data does not leave our infrastructure.
-
-You cannot opt out of analytics and crash reporting in the current version of the app. If you prefer no telemetry, you may block network access to `posthog.backtosafety.app` and `sentry.backtosafety.app` at the network or firewall level.
+You cannot opt out of analytics in the current version of the app. All analytics data is anonymous and does not contain personally identifiable information.
 
 ## Device Permissions
 
@@ -62,7 +56,7 @@ Data is used only to provide app features, including:
 - Showing profile information during search flows
 - Opening messages to alert your emergency circle
 - Maintaining your local setup and preferences
-- Identifying and fixing crashes and usability issues (analytics/crash data only)
+- Identifying and fixing usability issues (analytics data only)
 
 ## Data Sharing
 
@@ -70,13 +64,13 @@ We do not sell or rent personal data.
 
 The app does not automatically send your personal profile data to our servers. If you choose to send a text message or make a call, data included in that message/call is processed by your mobile carrier and platform providers.
 
-Anonymous analytics and crash reports are processed by our self-hosted infrastructure only. They are not shared with third-party analytics vendors.
+Anonymous analytics data is sent to PostHog, our analytics provider, for the purpose of understanding app usage and improving reliability. PostHog processes this data on our behalf as a service provider.
 
 ## Data Retention and Deletion
 
 - Personal profile data remains on your device until you modify or delete it.
 - You can clear app data using in-app developer reset tools (if enabled) or by uninstalling the app.
-- Anonymous analytics events and crash reports are retained on our self-hosted servers for up to 12 months.
+- Anonymous analytics events are retained for up to 12 months.
 
 ## Children and Sensitive Information
 

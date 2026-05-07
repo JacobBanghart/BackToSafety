@@ -24,7 +24,8 @@
       "theme": "Theme",
       "dbSchema": "DB Schema",
       "dbSchemaUnknown": "Unknown",
-      "devSuffix": " (Dev)"
+      "devSuffix": " (Dev)",
+      "deviceId": "Device ID"
     }
   },
   "themeOptions": {

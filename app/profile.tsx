@@ -35,6 +35,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { formatPhoneInput } from '@/utils/phone';
+import { track } from '@/utils/analytics';
 
 type SectionKey = 'personal' | 'medical' | 'communication' | 'devices';
 
@@ -408,6 +409,11 @@ export default function ProfileScreen() {
         idBracelets: form.idBracelets.trim() || undefined,
         medicAlertId: form.medicAlertId.trim() || undefined,
         medicAlertHotline: form.medicAlertHotline.trim() || undefined,
+      });
+      track('profile_saved', {
+        has_photo: !!form.photoUri,
+        has_medical: !!form.medicalConditions,
+        has_medications: !!form.medications,
       });
       setInitialSnapshot(currentSnapshot);
       router.replace('/(tabs)');

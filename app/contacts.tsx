@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { track } from '@/utils/analytics';
 import * as Contacts from 'expo-contacts';
 import * as Haptics from 'expo-haptics';
 import {
@@ -174,6 +175,11 @@ export default function ContactsScreen() {
         });
       }
 
+      track('contact_saved', {
+        is_edit: !!editingContact?.id,
+        role: formData.role,
+        notify_on_emergency: formData.notifyOnEmergency,
+      });
       await loadContacts();
       discardFormAndClose();
     } catch (error) {
@@ -223,6 +229,7 @@ export default function ContactsScreen() {
     try {
       if (contact.id) {
         await deleteContact(contact.id);
+        track('contact_deleted');
         await loadContacts();
         if (editingContact?.id === contact.id) {
           discardFormAndClose();
@@ -348,6 +355,7 @@ export default function ContactsScreen() {
         phone: formatPhoneInput(importedPhone),
       };
 
+      track('contact_imported');
       setEditingContact(null);
       setFormData(nextFormData);
       setInitialFormData(nextFormData);

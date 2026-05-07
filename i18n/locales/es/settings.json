@@ -24,7 +24,8 @@
       "theme": "",
       "dbSchema": "",
       "dbSchemaUnknown": "",
-      "devSuffix": ""
+      "devSuffix": "",
+      "deviceId": ""
     }
   },
   "themeOptions": {

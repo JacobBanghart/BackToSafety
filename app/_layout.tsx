@@ -3,15 +3,15 @@ import {
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
 } from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, usePathname, useGlobalSearchParams, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import Constants from 'expo-constants';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { I18nextProvider } from 'react-i18next';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
+import { PostHogProvider } from 'posthog-react-native';
 
 import { primary } from '@/constants/Colors';
 import { OnboardingProvider, useOnboarding } from '@/context/OnboardingContext';
@@ -21,18 +21,16 @@ import i18n from '@/i18n';
 import { loadSavedLanguage } from '@/i18n';
 import { getOrCreateDeviceId } from '@/utils/device-id';
 import { initAnalytics } from '@/utils/analytics';
-import {
-  initCrashReporting,
-  setCrashReportingContext,
-  wrapAppWithSentry,
-} from '@/utils/crash-reporting';
-import { initOpenReplay, identifyOpenReplayUser } from '@/utils/openreplay';
+import { posthog } from '@/utils/posthog';
 
 function RootLayoutNav() {
   const { colorScheme } = useTheme();
   const { isLoading, isOnboarded } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const previousPathname = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!isLoading) {
@@ -40,20 +38,20 @@ function RootLayoutNav() {
       void (async () => {
         const deviceId = await getOrCreateDeviceId();
         initAnalytics(deviceId);
-        initCrashReporting(deviceId);
-        initOpenReplay();
-        identifyOpenReplayUser(deviceId);
-        setCrashReportingContext({
-          locale: i18n.language,
-          theme: colorScheme,
-          onboarded: String(isOnboarded),
-          platform: String(
-            Constants.platform?.web ? 'web' : Constants.platform?.ios ? 'ios' : 'android',
-          ),
-        });
       })();
     }
   }, [isLoading]);
+
+  // Manual screen tracking for Expo Router
+  useEffect(() => {
+    if (previousPathname.current !== pathname) {
+      posthog.screen(pathname, {
+        previous_screen: previousPathname.current ?? null,
+        ...params,
+      });
+      previousPathname.current = pathname;
+    }
+  }, [pathname, params]);
 
   // Navigate based on onboarding state
   useEffect(() => {
@@ -106,7 +104,16 @@ const RootLayout = () => {
       <ThemeProvider>
         <OnboardingProvider>
           <ProfileProvider>
-            <RootLayoutNav />
+            <PostHogProvider
+              client={posthog}
+              autocapture={{
+                captureScreens: false,
+                captureTouches: true,
+                propsToCapture: ['testID'],
+              }}
+            >
+              <RootLayoutNav />
+            </PostHogProvider>
           </ProfileProvider>
         </OnboardingProvider>
       </ThemeProvider>
@@ -114,4 +121,4 @@ const RootLayout = () => {
   );
 };
 
-export default wrapAppWithSentry(RootLayout);
+export default RootLayout;

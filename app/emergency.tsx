@@ -348,6 +348,10 @@ export default function EmergencyScreen() {
 
   const onCall911 = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    track('emergency_911_called', {
+      seconds_elapsed: SEARCH_WINDOW_SECONDS - secondsLeft,
+      checked_count: checkedCount,
+    });
     toggleStep('call_911');
     addIncident({
       at: new Date().toISOString(),
@@ -398,6 +402,7 @@ export default function EmergencyScreen() {
       }
 
       await SMS.sendSMSAsync(recipients, message);
+      track('emergency_contacts_alerted', { recipient_count: recipients.length });
     } catch {
       const recipientList = recipients.join(',');
       const bodySeparator = Platform.OS === 'ios' ? '&' : '?';

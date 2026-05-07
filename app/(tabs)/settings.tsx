@@ -5,7 +5,7 @@
 
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Clipboard, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -22,6 +22,7 @@ import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { useOnboarding } from '@/context/OnboardingContext';
 import { clearAllData, getDatabaseSchemaVersion, saveSetting } from '@/database/storage';
 import { getAppName, getAppVersionLabel } from '@/utils/appInfo';
+import { getOrCreateDeviceId } from '@/utils/device-id';
 
 const IS_DEV = __DEV__;
 const TAPS_TO_UNLOCK = 7;
@@ -37,6 +38,7 @@ export default function SettingsScreen() {
   const [tapCount, setTapCount] = useState(0);
   const [lastTapTime, setLastTapTime] = useState(0);
   const [dbSchemaVersion, setDbSchemaVersion] = useState<number | null>(null);
+  const [deviceId, setDeviceId] = useState<string | null>(null);
   const appName = getAppName();
   const appVersionLabel = getAppVersionLabel();
 
@@ -50,7 +52,17 @@ export default function SettingsScreen() {
       }
     }
 
+    async function loadDeviceId() {
+      try {
+        const id = await getOrCreateDeviceId();
+        setDeviceId(id);
+      } catch {
+        setDeviceId(null);
+      }
+    }
+
     loadSchemaVersion();
+    loadDeviceId();
   }, []);
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
@@ -222,31 +234,6 @@ export default function SettingsScreen() {
               })}
             </View>
 
-            {/* Crash Reporting Test Button */}
-            <View style={styles.sectionHeader}>
-              <IconSymbol name="ant.fill" size={20} color={theme.text} />
-              <ThemedText type="subtitle" style={styles.sectionTitle}>
-                Crash Reporting
-              </ThemedText>
-            </View>
-            <ThemedText style={[styles.sectionDescription, { color: theme.textSecondary }]}>
-              Send a test error to Sentry
-            </ThemedText>
-            <Pressable
-              style={[styles.testButton, { backgroundColor: '#ef4444' }]}
-              onPress={() => {
-                const Sentry = require('@sentry/react-native');
-                Sentry.captureException(new Error('Test error from dev mode'));
-                if (Platform.OS === 'web') {
-                  alert('Sentry error sent! Check your dashboard.');
-                } else {
-                  Alert.alert('Sentry', 'Test error sent! Check your dashboard.');
-                }
-              }}
-            >
-              <ThemedText style={styles.testButtonText}>🐛 Test Sentry</ThemedText>
-            </Pressable>
-
             <Pressable
               style={[
                 styles.dangerButton,
@@ -282,11 +269,7 @@ export default function SettingsScreen() {
             onPress={handleVersionTap}
           />
           <ListItem label={t('sections.about.platform')} value={Platform.OS} />
-          <ListItem
-            label={t('sections.about.theme')}
-            value={colorScheme}
-            style={devModeEnabled ? undefined : { borderBottomColor: 'transparent' }}
-          />
+          <ListItem label={t('sections.about.theme')} value={colorScheme} />
           {devModeEnabled && (
             <ListItem
               label={t('sections.about.dbSchema')}
@@ -295,9 +278,23 @@ export default function SettingsScreen() {
                   ? t('sections.about.dbSchemaUnknown')
                   : String(dbSchemaVersion)
               }
-              style={{ borderBottomColor: 'transparent' }}
             />
           )}
+          <ListItem
+            label={t('sections.about.deviceId')}
+            value={deviceId ?? '—'}
+            onPress={() => {
+              if (deviceId) {
+                Clipboard.setString(deviceId);
+                if (Platform.OS === 'web') {
+                  alert('Device ID copied!');
+                } else {
+                  Alert.alert('Copied', 'Device ID copied to clipboard.');
+                }
+              }
+            }}
+            style={{ borderBottomColor: 'transparent' }}
+          />
         </AppCard>
       </ScrollView>
     </SafeAreaView>
@@ -363,15 +360,5 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     marginTop: Spacing.md,
     textAlign: 'center',
-  },
-  testButton: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderRadius: Radius.md,
-    alignItems: 'center',
-  },
-  testButtonText: {
-    color: '#fff',
-    ...Typography.bodyBold,
   },
 });

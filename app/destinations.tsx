@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
+import { track } from '@/utils/analytics';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
@@ -187,6 +188,11 @@ export default function DestinationsScreen() {
         });
       }
 
+      track('destination_saved', {
+        is_edit: !!editingDestination?.id,
+        category: formData.category,
+        risk_level: formData.riskLevel,
+      });
       await loadDestinations();
       discardFormAndClose();
     } catch (error) {
@@ -235,6 +241,10 @@ export default function DestinationsScreen() {
     try {
       if (destination.id) {
         await deleteDestination(destination.id);
+        track('destination_deleted', {
+          category: destination.category ?? null,
+          risk_level: destination.riskLevel ?? null,
+        });
         await loadDestinations();
         if (editingDestination?.id === destination.id) {
           discardFormAndClose();
