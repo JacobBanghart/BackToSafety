@@ -130,8 +130,7 @@ jobs:
             -allowProvisioningUpdates
         env:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
-IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
-          PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
 
       # ── Submit ────────────────────────────────────────────────────────────────
       - name: Install App Store Connect API key
