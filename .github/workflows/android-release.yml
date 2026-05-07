@@ -108,6 +108,8 @@ jobs:
         working-directory: android
         env:
           NODE_ENV: production
+          EXPO_PUBLIC_POSTHOG_KEY: phc_yiHs692GvzSjuCHNUTpSGx99UrD5cnCmJD7mjD7WBoJN
+          EXPO_PUBLIC_POSTHOG_HOST: https://us.i.posthog.com
           ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
