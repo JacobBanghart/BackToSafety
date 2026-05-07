@@ -8,6 +8,7 @@ export const posthog = new PostHog(apiKey ?? '', {
   disabled: !apiKey,
   captureAppLifecycleEvents: true,
   preloadFeatureFlags: true,
+  personProfiles: 'identified_only',
   flushAt: 20,
   flushInterval: 10000,
   maxBatchSize: 100,
