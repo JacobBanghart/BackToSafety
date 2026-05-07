@@ -22,6 +22,8 @@ import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { getSetting } from '@/database/storage';
 import { setPreviousRoute } from '@/utils/navigation';
+import { posthog } from '@/utils/posthog';
+import { track } from '@/utils/analytics';
 
 const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
 /** Emergency button colours — hardcoded, never adapt to light/dark mode */
@@ -74,6 +76,7 @@ export default function HomeScreen() {
   // Refresh data when screen is focused (coming back from other screens)
   useFocusEffect(
     useCallback(() => {
+      posthog.screen('home');
       refreshProfile();
       refreshContacts();
       checkEmergency();
@@ -119,7 +122,13 @@ export default function HomeScreen() {
           </View>
 
           {/* Avatar */}
-          <Pressable onPress={() => router.push('/profile' as Href)} style={styles.avatarWrapper}>
+          <Pressable
+            onPress={() => {
+              track('screen_viewed', { screen: 'profile', source: 'home' });
+              router.push('/profile' as Href);
+            }}
+            style={styles.avatarWrapper}
+          >
             {profile?.photoUri ? (
               <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
             ) : (
@@ -152,6 +161,7 @@ export default function HomeScreen() {
             },
           ]}
           onPress={() => {
+            track('emergency_started');
             setPreviousRoute('/(tabs)');
             router.push('/emergency' as Href);
           }}
@@ -215,7 +225,10 @@ export default function HomeScreen() {
         <View style={styles.quickActions}>
           <Pressable
             style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-            onPress={() => router.push('/contacts' as Href)}
+            onPress={() => {
+              track('screen_viewed', { screen: 'contacts', source: 'home' });
+              router.push('/contacts' as Href);
+            }}
           >
             <View style={[styles.actionIconWrap, { backgroundColor: theme.primaryLight }]}>
               <ThemedText style={styles.actionIconEmoji}>📞</ThemedText>
@@ -232,7 +245,10 @@ export default function HomeScreen() {
 
           <Pressable
             style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-            onPress={() => router.push('/destinations' as Href)}
+            onPress={() => {
+              track('destination_add_tapped', { source: 'home' });
+              router.push('/destinations' as Href);
+            }}
           >
             <View style={[styles.actionIconWrap, { backgroundColor: theme.primaryLight }]}>
               <ThemedText style={styles.actionIconEmoji}>📍</ThemedText>
@@ -250,7 +266,10 @@ export default function HomeScreen() {
         {hasProfile && (
           <Pressable
             style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
-            onPress={() => router.push('/readout' as Href)}
+            onPress={() => {
+              track('screen_viewed', { screen: 'readout', source: 'home' });
+              router.push('/readout' as Href);
+            }}
           >
             <View style={styles.summaryHeader}>
               <View style={styles.summaryHeaderLeft}>
@@ -348,10 +367,12 @@ export default function HomeScreen() {
             </ThemedText>
             <Pressable
               style={[styles.setupButton, { backgroundColor: theme.primary }]}
-              onPress={() => router.push('/profile' as Href)}
+              onPress={() => {
+                track('screen_viewed', { screen: 'profile', source: 'home_setup' });
+                router.push('/profile' as Href);
+              }}
             >
               <ThemedText style={styles.setupButtonText}>{t('setupCard.button')}</ThemedText>
-              <IconSymbol name="chevron.right" size={16} color="#fff" />
             </Pressable>
           </View>
         )}

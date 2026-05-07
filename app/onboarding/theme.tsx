@@ -90,7 +90,10 @@ export default function ThemeScreen() {
                       : theme.card,
                 },
               ]}
-              onPress={() => setThemePreference(option.value)}
+              onPress={() => {
+                track('settings_theme_changed', { theme: option.value, source: 'onboarding' });
+                setThemePreference(option.value);
+              }}
             >
               <ThemedText style={styles.optionIcon}>{option.icon}</ThemedText>
               <View style={styles.optionText}>

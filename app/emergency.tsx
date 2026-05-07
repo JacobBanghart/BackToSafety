@@ -362,6 +362,7 @@ export default function EmergencyScreen() {
   };
 
   const onViewReadout = () => {
+    track('screen_viewed', { screen: 'readout', source: 'emergency' });
     setPreviousRoute('/emergency');
     router.push('/readout' as Href);
   };
@@ -533,7 +534,10 @@ export default function EmergencyScreen() {
                       styles.modalButtonRowItem,
                       { backgroundColor: theme.primary },
                     ]}
-                    onPress={() => handleModalAction('leave')}
+                    onPress={() => {
+                      track('emergency_leave');
+                      handleModalAction('leave');
+                    }}
                   >
                     <ThemedText style={styles.modalButtonText}>{t('modal.leave.leave')}</ThemedText>
                   </TouchableOpacity>

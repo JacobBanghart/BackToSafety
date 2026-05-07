@@ -32,6 +32,7 @@ export default function PhotoScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const pickImage = async () => {
+    track('profile_photo_chosen');
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       alert('We need photo library access to save a photo for emergencies.');
@@ -51,6 +52,7 @@ export default function PhotoScreen() {
   };
 
   const takePhoto = async () => {
+    track('profile_photo_taken');
     if (Platform.OS === 'web') {
       alert(t('photo.webCameraUnavailable'));
       return;

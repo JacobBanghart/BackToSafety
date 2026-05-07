@@ -191,6 +191,7 @@ export default function ContactsScreen() {
   };
 
   const handleEdit = (contact: Contact) => {
+    track('contact_edit_tapped');
     setEditingContact(contact);
     const nextFormData = {
       name: contact.name,
@@ -252,10 +253,12 @@ export default function ContactsScreen() {
   };
 
   const handleCall = (phone: string) => {
+    track('contact_call_tapped');
     Linking.openURL(`tel:${phone}`);
   };
 
   const handleAddNew = () => {
+    track('contact_add_tapped');
     setEditingContact(null);
     setFormData(EMPTY_FORM);
     setInitialFormData(EMPTY_FORM);

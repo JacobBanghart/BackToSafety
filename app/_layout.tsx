@@ -3,9 +3,9 @@ import {
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
 } from '@react-navigation/native';
-import { Stack, usePathname, useGlobalSearchParams, useRouter, useSegments } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { I18nextProvider } from 'react-i18next';
@@ -28,9 +28,6 @@ function RootLayoutNav() {
   const { isLoading, isOnboarded } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
-  const pathname = usePathname();
-  const params = useGlobalSearchParams();
-  const previousPathname = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!isLoading) {
@@ -41,17 +38,6 @@ function RootLayoutNav() {
       })();
     }
   }, [isLoading]);
-
-  // Manual screen tracking for Expo Router
-  useEffect(() => {
-    if (previousPathname.current !== pathname) {
-      posthog.screen(pathname, {
-        previous_screen: previousPathname.current ?? null,
-        ...params,
-      });
-      previousPathname.current = pathname;
-    }
-  }, [pathname, params]);
 
   // Navigate based on onboarding state
   useEffect(() => {
@@ -107,7 +93,7 @@ const RootLayout = () => {
             <PostHogProvider
               client={posthog}
               autocapture={{
-                captureScreens: false,
+                captureScreens: true,
                 captureTouches: true,
                 propsToCapture: ['testID'],
               }}

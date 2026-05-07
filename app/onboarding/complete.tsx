@@ -5,6 +5,7 @@
 
 import { useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
+import { posthog } from '@/utils/posthog';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -26,6 +27,7 @@ export default function CompleteScreen() {
   const handleFinish = async () => {
     track('onboarding_step_completed', { step: 'complete' });
     track('onboarding_completed');
+    posthog.screen('home', { source: 'onboarding' });
     await completeStep('complete');
     await refreshOnboardingState();
     // Replace the navigation stack to go to main app

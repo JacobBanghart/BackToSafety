@@ -4,9 +4,10 @@
  */
 
 import { useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Alert, Clipboard, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import i18n from 'i18next';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { track } from '@/utils/analytics';
@@ -23,6 +24,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { clearAllData, getDatabaseSchemaVersion, saveSetting } from '@/database/storage';
 import { getAppName, getAppVersionLabel } from '@/utils/appInfo';
 import { getOrCreateDeviceId } from '@/utils/device-id';
+import { posthog } from '@/utils/posthog';
 
 const IS_DEV = __DEV__;
 const TAPS_TO_UNLOCK = 7;
@@ -64,6 +66,12 @@ export default function SettingsScreen() {
     loadSchemaVersion();
     loadDeviceId();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      posthog.screen('settings');
+    }, []),
+  );
 
   const themeOptions: { value: ThemePreference; label: string; icon: string }[] = [
     { value: 'system', label: t('themeOptions.system'), icon: '📱' },

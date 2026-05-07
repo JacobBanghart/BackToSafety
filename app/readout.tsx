@@ -7,6 +7,7 @@
 import { useTranslation } from 'react-i18next';
 import { goBack } from '@/utils/navigation';
 import { formatPhoneNumber } from '@/utils/phone';
+import { track } from '@/utils/analytics';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -208,6 +209,7 @@ export default function ReadoutScreen() {
   const copyScript = async () => {
     try {
       await Clipboard.setStringAsync(script);
+      track('readout_script_copied');
       showCopyConfirmation('script');
     } catch {
       Alert.alert(t('copyFailed'), t('copyScriptFailed'));
@@ -215,6 +217,7 @@ export default function ReadoutScreen() {
   };
   const openMaps = () => {
     if (!lastSeen.coords) return;
+    track('readout_open_in_maps');
     const { lat, lon } = lastSeen.coords;
     const url = Platform.select({
       ios: `http://maps.apple.com/?ll=${lat},${lon}`,
@@ -226,6 +229,7 @@ export default function ReadoutScreen() {
   const copyAll = async () => {
     try {
       await Clipboard.setStringAsync(textBlock);
+      track('readout_details_copied');
       showCopyConfirmation('all');
     } catch {
       Alert.alert(t('copyFailed'), t('copyDetailsFailed'));
@@ -233,6 +237,7 @@ export default function ReadoutScreen() {
   };
 
   const call911 = () => {
+    track('readout_911_called');
     Linking.openURL('tel:911');
   };
 
@@ -250,7 +255,10 @@ export default function ReadoutScreen() {
         <ThemedText>{t('noProfile')}</ThemedText>
         <Pressable
           style={[styles.button, { backgroundColor: theme.primary }]}
-          onPress={() => router.push('/onboarding')}
+          onPress={() => {
+            track('screen_viewed', { screen: 'onboarding', source: 'readout_no_profile' });
+            router.push('/onboarding');
+          }}
         >
           <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
             {t('goToOnboarding')}
@@ -271,7 +279,13 @@ export default function ReadoutScreen() {
       edges={['top', 'left', 'right', 'bottom']}
     >
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator>
-        <Pressable onPress={() => goBack('/(tabs)')} style={styles.backLink}>
+        <Pressable
+          onPress={() => {
+            track('screen_viewed', { screen: 'home', source: 'readout_back' });
+            goBack('/(tabs)');
+          }}
+          style={styles.backLink}
+        >
           <IconSymbol name="chevron.left" size={20} color={theme.tint} />
           <ThemedText style={[styles.backText, { color: theme.tint }]}>{t('back')}</ThemedText>
         </Pressable>
@@ -697,7 +711,10 @@ export default function ReadoutScreen() {
                 </View>
                 <Pressable
                   style={[styles.callButton, { backgroundColor: semantic.success }]}
-                  onPress={() => Linking.openURL(`tel:${c.phone}`)}
+                  onPress={() => {
+                    track('readout_contact_called');
+                    Linking.openURL(`tel:${c.phone}`);
+                  }}
                 >
                   <IconSymbol name="phone.fill" size={14} color="#fff" />
                   <ThemedText style={styles.callButtonText}>

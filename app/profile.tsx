@@ -425,6 +425,7 @@ export default function ProfileScreen() {
   };
 
   const pickImage = async () => {
+    track('profile_photo_chosen');
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
       alert(t('photoLibraryPermission'));
@@ -444,6 +445,7 @@ export default function ProfileScreen() {
   };
 
   const takePhoto = async () => {
+    track('profile_photo_taken');
     if (Platform.OS === 'web') {
       Alert.alert('Camera Not Available', t('webCameraUnavailable'));
       return;

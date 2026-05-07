@@ -142,7 +142,13 @@ export default function WelcomeScreen() {
                     borderColor: colors.optionBorder,
                   },
                 ]}
-                onPress={() => setThemePreference(option.value)}
+                onPress={() => {
+                  track('settings_theme_changed', {
+                    theme: option.value,
+                    source: 'onboarding_welcome',
+                  });
+                  setThemePreference(option.value);
+                }}
               >
                 <ThemedText style={styles.themeIcon}>{option.icon}</ThemedText>
                 <ThemedText

@@ -204,6 +204,7 @@ export default function DestinationsScreen() {
   };
 
   const handleEdit = (destination: Destination) => {
+    track('destination_edit_tapped');
     setEditingDestination(destination);
     const nextFormData = {
       name: destination.name,
@@ -267,6 +268,7 @@ export default function DestinationsScreen() {
   };
 
   const handleOpenMaps = (address: string) => {
+    track('destination_open_in_maps');
     const encoded = encodeURIComponent(address);
     const url = Platform.select({
       ios: `maps:?q=${encoded}`,
@@ -277,6 +279,7 @@ export default function DestinationsScreen() {
   };
 
   const handleAddNew = () => {
+    track('destination_add_tapped');
     setEditingDestination(null);
     setFormData(EMPTY_FORM);
     setInitialFormData(EMPTY_FORM);
