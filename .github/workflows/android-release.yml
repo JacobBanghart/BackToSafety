@@ -103,6 +103,21 @@ jobs:
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
+      - name: Stamp version into app.json
+        run: |
+          VERSION="${{ steps.release_meta.outputs.version_name }}"
+          # Strip leading 'v' so the app displays e.g. "1.3.3" not "v1.3.3"
+          VERSION="${VERSION#v}"
+          VERSION_CODE="${{ steps.release_meta.outputs.version_code }}"
+          node -e "
+            const fs = require('fs');
+            const cfg = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+            cfg.expo.version = '$VERSION';
+            cfg.expo.android.versionCode = parseInt('$VERSION_CODE', 10);
+            fs.writeFileSync('app.json', JSON.stringify(cfg, null, 2) + '\n');
+          "
+          echo "Stamped app.json: version=$VERSION versionCode=$VERSION_CODE"
+
       - name: Build signed Android App Bundle
         run: ./gradlew bundleRelease -PRELEASE_VERSION_CODE=${{ steps.release_meta.outputs.version_code }} -PRELEASE_VERSION_NAME=${{ steps.release_meta.outputs.version_name }} --build-cache -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=16
         working-directory: android
