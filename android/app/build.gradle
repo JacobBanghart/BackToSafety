@@ -92,8 +92,8 @@ android {
         applicationId 'com.backtosafety.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-versionCode 5
-versionName "1.1.2"
+versionCode (findProperty('RELEASE_VERSION_CODE') as Integer) ?: 5
+versionName (findProperty('RELEASE_VERSION_NAME') ?: "1.1.2")
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
