@@ -45,14 +45,14 @@ export function ListItem({ label, value, onPress, rightElement, style }: ListIte
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
     paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
   },
   label: {
-    ...Typography.body,
+    ...Typography.caption,
+    marginBottom: 2,
   },
   value: {
     ...Typography.body,
