@@ -2,7 +2,7 @@
   "screenTitle": "Contacts",
   "loading": "Loading...",
   "addContact": "Add Contact",
-  "importContact": "Import from Phone",
+  "importContact": "Import",
   "importing": "Importing...",
   "importWebUnavailable": "Contact import is only available on iPhone and Android devices.",
   "importDeviceUnavailable": "Contact import is not available on this device.",
