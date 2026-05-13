@@ -4,14 +4,14 @@
  * One-tap copy, maps integration, and Silver Alert guidance
  */
 
-import { useTranslation } from 'react-i18next';
+import { track } from '@/utils/analytics';
 import { goBack } from '@/utils/navigation';
 import { formatPhoneNumber } from '@/utils/phone';
-import { track } from '@/utils/analytics';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ActivityIndicator,
   Alert,
@@ -24,11 +24,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors, neutral, primary, secondary, semantic } from '@/constants/Colors';
 import { getShadow } from '@/constants/Shadows';
-import { Spacing, Radius } from '@/constants/Spacing';
+import { Radius, Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
@@ -276,23 +277,16 @@ export default function ReadoutScreen() {
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: theme.background }}
-      edges={['top', 'left', 'right', 'bottom']}
+      edges={['top']}
     >
-      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator>
-        <Pressable
-          onPress={() => {
-            track('screen_viewed', { screen: 'home', source: 'readout_back' });
-            goBack('/(tabs)');
-          }}
-          style={styles.backLink}
-        >
-          <IconSymbol name="chevron.left" size={20} color={theme.tint} />
-          <ThemedText style={[styles.backText, { color: theme.tint }]}>{t('back')}</ThemedText>
-        </Pressable>
-
-        <ThemedText type="title" style={{ color: theme.text }}>
-          {t('screenTitle')}
-        </ThemedText>
+      <ScreenHeader
+        title={t('screenTitle')}
+        onBack={() => {
+          track('screen_viewed', { screen: 'home', source: 'readout_back' });
+          goBack('/');
+        }}
+      />
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
 
         {/* Call 911 Button - Most prominent */}
         <Pressable style={[styles.emergencyButton, getShadow('sm', colorScheme)]} onPress={call911}>
@@ -872,17 +866,7 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.md,
   },
-  backLink: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.xxs,
-    gap: Spacing.xs,
-  },
-  backText: {
-    fontWeight: '600',
-  },
+
   emergencyButton: {
     backgroundColor: semantic.error,
     paddingVertical: Spacing.lg,

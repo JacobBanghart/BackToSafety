@@ -68,7 +68,7 @@ export default function WelcomeScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.heroSection}>
           <View style={styles.logoContainer}>

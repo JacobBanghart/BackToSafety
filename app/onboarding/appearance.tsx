@@ -86,7 +86,7 @@ export default function AppearanceScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <OnboardingStepHeader activeStep={3} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>

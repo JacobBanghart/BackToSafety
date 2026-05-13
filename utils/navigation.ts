@@ -26,7 +26,7 @@ export function getPreviousRoute(): Href | null {
 /**
  * Navigate back to the previous route, or fallback to home
  */
-export function goBack(fallback: Href = '/(tabs)') {
+export function goBack(fallback: Href = '/') {
   if (previousRoute) {
     router.replace(previousRoute);
     previousRoute = null; // Clear after use

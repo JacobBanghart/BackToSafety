@@ -24,6 +24,7 @@
     "cognitiveStatus": "Cognitive Status",
     "deescalation": "De-escalation"
   },
+  "settingsLink": "Settings",
   "setupCard": {
     "title": "Complete Your Profile",
     "body": "Add information about the person you care for. This will be used during emergencies to help 911 and searchers.",

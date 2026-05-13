@@ -50,7 +50,7 @@ function RootLayoutNav() {
       router.replace('/onboarding');
     } else if (isOnboarded && inOnboarding) {
       // User completed onboarding but is still on onboarding screens
-      router.replace('/(tabs)');
+      router.replace('/');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isOnboarded, segments]);
@@ -68,6 +68,7 @@ function RootLayoutNav() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="emergency" options={{ headerShown: false }} />
@@ -75,6 +76,7 @@ function RootLayoutNav() {
             <Stack.Screen name="profile" options={{ headerShown: false }} />
             <Stack.Screen name="contacts" options={{ headerShown: false }} />
             <Stack.Screen name="destinations" options={{ headerShown: false }} />
+            <Stack.Screen name="settings" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

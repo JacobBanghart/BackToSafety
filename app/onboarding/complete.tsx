@@ -36,7 +36,7 @@ export default function CompleteScreen() {
     await completeStep('complete');
     await refreshOnboardingState();
     // Replace the navigation stack to go to main app
-    router.replace('/(tabs)');
+    router.replace('/');
   };
 
   return (

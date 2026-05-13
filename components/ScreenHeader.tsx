@@ -3,19 +3,25 @@ import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
-import { getShadow } from '@/constants/Shadows';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 
+interface TitleIcon {
+  name: string;
+  color: string;
+  size?: number;
+}
+
 interface ScreenHeaderProps {
   title: string;
   onBack?: () => void;
   rightElement?: ReactNode;
+  titleIcon?: TitleIcon;
 }
 
-export function ScreenHeader({ title, onBack, rightElement }: ScreenHeaderProps) {
+export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenHeaderProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const router = useRouter();
@@ -34,21 +40,31 @@ export function ScreenHeader({ title, onBack, rightElement }: ScreenHeaderProps)
     <View
       style={[
         styles.header,
-        { borderBottomColor: theme.border, backgroundColor: theme.card },
-        getShadow('sm', colorScheme),
+        { backgroundColor: theme.background },
       ]}
     >
-      {/* Left: back button — fixed 44px wide for balance */}
+      {/* Left: back button */}
       <TouchableOpacity style={styles.sideSlot} onPress={handleBack} hitSlop={8}>
         <IconSymbol name="chevron.left" size={22} color={theme.tint} />
       </TouchableOpacity>
 
-      {/* Center: title */}
-      <ThemedText style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
-        {title}
-      </ThemedText>
+      {/* Center: absolutely positioned so it centers against the full header width */}
+      <View style={styles.titleOverlay} pointerEvents="none">
+        {titleIcon ? (
+          <View style={styles.titleRow}>
+            <IconSymbol name={titleIcon.name as any} size={titleIcon.size ?? 18} color={titleIcon.color} />
+            <ThemedText style={[styles.titleRowText, { color: theme.text }]} numberOfLines={1}>
+              {title}
+            </ThemedText>
+          </View>
+        ) : (
+          <ThemedText style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+            {title}
+          </ThemedText>
+        )}
+      </View>
 
-      {/* Right: action or spacer — same width as left for visual balance */}
+      {/* Right: action or spacer */}
       <View style={[styles.sideSlot, styles.rightSlot]}>{rightElement ?? null}</View>
     </View>
   );
@@ -58,9 +74,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
     minHeight: 52,
   },
   sideSlot: {
@@ -72,10 +88,24 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     flexShrink: 0,
   },
+  titleOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 44 + Spacing.md,
+  },
   headerTitle: {
-    flex: 1,
     textAlign: 'center',
-    marginHorizontal: Spacing.sm,
     ...Typography.title,
+  },
+  titleRowText: {
+    ...Typography.title,
+    flexShrink: 1,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
   },
 });

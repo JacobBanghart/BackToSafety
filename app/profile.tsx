@@ -346,17 +346,17 @@ export default function ProfileScreen() {
     // nothing when there is no browser history (direct nav / page refresh).
     // Always replace on web so the button reliably lands somewhere.
     if (Platform.OS === 'web') {
-      router.replace('/(tabs)');
+      router.replace('/');
       return;
     }
     try {
       if (router.canGoBack()) {
         router.back();
       } else {
-        router.replace('/(tabs)');
+        router.replace('/');
       }
     } catch {
-      router.replace('/(tabs)');
+      router.replace('/');
     }
   };
 
@@ -416,7 +416,7 @@ export default function ProfileScreen() {
         has_medications: !!form.medications,
       });
       setInitialSnapshot(currentSnapshot);
-      router.replace('/(tabs)');
+      router.replace('/');
     } catch (err) {
       console.error('Error saving profile:', err);
     } finally {
@@ -586,7 +586,7 @@ export default function ProfileScreen() {
           }
         />
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Photo Section */}
           <View style={styles.photoSection}>
             <View style={styles.photoContainer}>

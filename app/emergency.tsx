@@ -26,6 +26,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { ScreenHeader } from '@/components/ScreenHeader';
 import { Colors, semantic, primary, neutral, secondary } from '@/constants/Colors';
 import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
@@ -434,7 +435,7 @@ export default function EmergencyScreen() {
 
     const navigateBack = () => {
       // Go back to where we came from, or home as fallback
-      goBack('/(tabs)');
+      goBack('/');
     };
 
     if (action === 'dismiss') {
@@ -466,7 +467,7 @@ export default function EmergencyScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+    <SafeAreaView testID="emergency-screen" accessibilityLabel="emergency-screen" style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       {/* Modal */}
       <Modal
         visible={modalVisible}
@@ -583,34 +584,11 @@ export default function EmergencyScreen() {
         </View>
       </Modal>
 
-      {/* Header */}
-      <View
-        testID="emergency-screen"
-        accessibilityLabel="emergency-screen"
-        style={[
-          styles.header,
-          { borderBottomColor: theme.border, backgroundColor: theme.card },
-          getShadow('sm', colorScheme),
-        ]}
-      >
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={onBackPress}
-          activeOpacity={0.7}
-          hitSlop={8}
-        >
-          <IconSymbol name="chevron.left" size={22} color={theme.tint} />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <View style={styles.headerTitleRow}>
-            <IconSymbol name="exclamationmark.triangle.fill" size={18} color={semantic.error} />
-            <ThemedText style={[styles.headerTitle, { color: theme.text }]}>
-              {t('screenTitle')}
-            </ThemedText>
-          </View>
-        </View>
-        <View style={styles.headerRight} />
-      </View>
+      <ScreenHeader
+        title={t('screenTitle')}
+        onBack={onBackPress}
+        titleIcon={{ name: 'exclamationmark.triangle.fill', color: semantic.error, size: 18 }}
+      />
 
       <ScrollView
         ref={scrollRef}
@@ -912,35 +890,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    minHeight: 52,
-  },
-  backButton: {
-    width: 44,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  headerTitle: {
-    ...Typography.title,
-  },
-  headerRight: {
-    width: 44,
-  },
+
   scrollView: {
     flex: 1,
   },
