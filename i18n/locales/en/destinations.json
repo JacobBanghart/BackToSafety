@@ -34,6 +34,8 @@
     "addressPlaceholder": "Street address or description",
     "distanceLabel": "Distance from Home",
     "distancePlaceholder": "e.g., 0.5 miles, 2 blocks",
+    "otherCategoryLabel": "Describe this location type",
+    "otherCategoryPlaceholder": "e.g., Coffee shop, Park, Hospital...",
     "whyLabel": "Why They Might Go Here",
     "whyPlaceholder": "e.g., Lived here 30 years ago, Used to work here",
     "notesLabel": "Additional Notes",

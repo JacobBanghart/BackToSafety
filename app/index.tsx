@@ -492,11 +492,13 @@ const styles = StyleSheet.create({
   summaryValue: { ...Typography.body },
   settingsCard: {
     marginBottom: Spacing.sm,
+    padding: 0,
   },
   settingsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
+    padding: Spacing.lg,
   },
   settingsLabel: {
     ...Typography.body,

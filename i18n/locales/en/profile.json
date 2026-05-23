@@ -68,8 +68,8 @@
     "dislikesTriggersPlaceholder": "Loud noises, crowds, being touched, flashing lights...",
     "dislikesTriggersHint": "What should be avoided?",
     "safeWord": "Family Safe Word",
-    "safeWordPlaceholder": "A word or phrase that indicates you are a safe person",
-    "safeWordHint": "Something only family would know",
+    "safeWordPlaceholder": "e.g., Pineapple, Sunshine",
+    "safeWordHint": "A word or phrase only family would know — signals to them that you are safe",
     "locativeDeviceInfo": "Personal Locator Device",
     "locativeDeviceInfoPlaceholder": "Personal locator (e.g., AirTag on keys/bag, watch beacon)",
     "locativeDeviceInfoHint": "Optional: only include devices they already use",
@@ -79,7 +79,8 @@
     "medicAlertId": "MedicAlert Member ID",
     "medicAlertIdPlaceholder": "Member ID number",
     "medicAlertHotline": "MedicAlert Hotline",
-    "medicAlertHotlinePlaceholder": "1-800-..."
+    "medicAlertHotlinePlaceholder": "1-800-432-5378",
+    "medicAlertHotlineHint": "The MedicAlert Foundation 24/7 emergency line — first responders call this to access medical records"
   },
   "mobilityOptions": {
     "walksIndependently": "Walks independently",

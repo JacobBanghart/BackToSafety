@@ -76,7 +76,7 @@
   },
   "contact": {
     "title": "Emergency contact",
-    "subtitle": "Who should we notify if they wander? You can add more contacts later.",
+    "subtitle": "Who should we notify if they wander? This should be someone other than yourself — you can add more contacts later.",
     "nameLabel": "Contact Name *",
     "namePlaceholder": "e.g., John Smith",
     "phoneLabel": "Phone Number *",
@@ -96,11 +96,11 @@
     "description": "You have the essential information set up. In an emergency, tap the big button on the home screen to start the guided search.",
     "addMoreLater": "You can add more later:",
     "nextSteps": {
-      "details": "• Important personal details",
-      "deescalation": "• De-escalation techniques",
-      "destinations": "• Likely destinations",
-      "contacts": "• More emergency contacts",
-      "checklist": "• Safety checklist"
+      "details": "Important personal details",
+      "deescalation": "De-escalation techniques",
+      "destinations": "Likely destinations",
+      "contacts": "More emergency contacts",
+      "checklist": "Safety checklist"
     },
     "goHome": "Go to Home"
   }

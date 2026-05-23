@@ -37,19 +37,24 @@ export function formatPhoneNumber(phone: string): string {
  * @returns Formatted value for display in input
  */
 export function formatPhoneInput(value: string): string {
-  // Remove all non-digit characters
+  const hasCountryCode = value.trimStart().startsWith('+');
   const digits = value.replace(/\D/g, '');
 
-  // Format as user types
-  if (digits.length <= 3) {
-    return digits;
+  // When the value came in with a + prefix (e.g. imported contact), keep +1 visible
+  if (hasCountryCode && digits.startsWith('1')) {
+    const local = digits.slice(1);
+    if (local.length === 0) return '+1 ';
+    if (local.length <= 3) return `+1 ${local}`;
+    if (local.length <= 6) return `+1 (${local.slice(0, 3)}) ${local.slice(3)}`;
+    return `+1 (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6, 10)}`;
   }
 
-  if (digits.length <= 6) {
-    return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-  }
+  // Standard 10-digit US format (strip leading 1 if accidentally included without +)
+  const localDigits = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
 
-  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+  if (localDigits.length <= 3) return localDigits;
+  if (localDigits.length <= 6) return `(${localDigits.slice(0, 3)}) ${localDigits.slice(3)}`;
+  return `(${localDigits.slice(0, 3)}) ${localDigits.slice(3, 6)}-${localDigits.slice(6, 10)}`;
 }
 
 /**

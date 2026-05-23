@@ -872,6 +872,7 @@ export default function ProfileScreen() {
               {renderInput(t('fields.idBracelets'), 'idBracelets', {
                 placeholder: t('fields.idBraceletsPlaceholder'),
                 hint: t('fields.idBraceletsHint'),
+                multiline: true,
               })}
               {renderInput(t('fields.medicAlertId'), 'medicAlertId', {
                 placeholder: t('fields.medicAlertIdPlaceholder'),
@@ -879,6 +880,7 @@ export default function ProfileScreen() {
               {renderInput(t('fields.medicAlertHotline'), 'medicAlertHotline', {
                 placeholder: t('fields.medicAlertHotlinePlaceholder'),
                 keyboardType: 'phone-pad',
+                hint: t('fields.medicAlertHotlineHint'),
               })}
             </>,
           )}

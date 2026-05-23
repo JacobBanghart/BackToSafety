@@ -10,7 +10,9 @@ import { track } from '@/utils/analytics';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
+  KeyboardAvoidingView,
   Linking,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -75,6 +77,7 @@ interface FormData {
   address: string;
   category: DestinationCategory;
   riskLevel: RiskLevel;
+  otherCategoryLabel: string;
   reason: string;
   distanceFromHome: string;
   notes: string;
@@ -85,6 +88,7 @@ const EMPTY_FORM: FormData = {
   address: '',
   category: 'other',
   riskLevel: 'medium',
+  otherCategoryLabel: '',
   reason: '',
   distanceFromHome: '',
   notes: '',
@@ -99,6 +103,7 @@ export default function DestinationsScreen() {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingDestination, setEditingDestination] = useState<Destination | null>(null);
+  const [viewingDestination, setViewingDestination] = useState<Destination | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState<FormData>(EMPTY_FORM);
   const [initialFormData, setInitialFormData] = useState<FormData>(EMPTY_FORM);
@@ -153,11 +158,33 @@ export default function DestinationsScreen() {
     void Haptics.impactAsync(style).catch(() => undefined);
   }, []);
 
+  const parseOtherLabelFromNotes = (category: string | undefined, notes: string): { otherCategoryLabel: string; remainingNotes: string } => {
+    if (category !== 'other' || !notes.startsWith('[Type:')) {
+      return { otherCategoryLabel: '', remainingNotes: notes };
+    }
+    const closingBracket = notes.indexOf(']');
+    if (closingBracket === -1) return { otherCategoryLabel: '', remainingNotes: notes };
+    const label = notes.slice(7, closingBracket).trim();
+    const remainingNotes = notes.slice(closingBracket + 1).replace(/^\n/, '');
+    return { otherCategoryLabel: label, remainingNotes };
+  };
+
+  const buildNotesWithOtherLabel = (otherLabel: string, baseNotes: string): string => {
+    const prefix = otherLabel.trim() ? `[Type: ${otherLabel.trim()}]` : '';
+    if (!prefix) return baseNotes;
+    return baseNotes.trim() ? `${prefix}\n${baseNotes}` : prefix;
+  };
+
   const handleSave = async () => {
     if (!formData.name.trim()) {
       showAlert('validation', t('errors.nameRequired'));
       return;
     }
+
+    const resolvedNotes =
+      formData.category === 'other'
+        ? buildNotesWithOtherLabel(formData.otherCategoryLabel, formData.notes) || undefined
+        : formData.notes || undefined;
 
     setIsSaving(true);
     try {
@@ -169,7 +196,7 @@ export default function DestinationsScreen() {
           riskLevel: formData.riskLevel,
           reason: formData.reason || undefined,
           distanceFromHome: formData.distanceFromHome || undefined,
-          notes: formData.notes || undefined,
+          notes: resolvedNotes,
         });
       } else {
         const nextSortOrder = destinations.reduce((maxOrder, destination) => {
@@ -183,7 +210,7 @@ export default function DestinationsScreen() {
           riskLevel: formData.riskLevel,
           reason: formData.reason || undefined,
           distanceFromHome: formData.distanceFromHome || undefined,
-          notes: formData.notes || undefined,
+          notes: resolvedNotes,
           sortOrder: nextSortOrder + 1,
         });
       }
@@ -206,14 +233,20 @@ export default function DestinationsScreen() {
   const handleEdit = (destination: Destination) => {
     track('destination_edit_tapped');
     setEditingDestination(destination);
+    setViewingDestination(null);
+    const { otherCategoryLabel, remainingNotes } = parseOtherLabelFromNotes(
+      destination.category,
+      destination.notes || '',
+    );
     const nextFormData = {
       name: destination.name,
       address: destination.address || '',
       category: destination.category || 'other',
       riskLevel: destination.riskLevel || 'medium',
+      otherCategoryLabel,
       reason: destination.reason || '',
       distanceFromHome: destination.distanceFromHome || '',
-      notes: destination.notes || '',
+      notes: remainingNotes,
     };
     setFormData(nextFormData);
     setInitialFormData(nextFormData);
@@ -367,6 +400,7 @@ export default function DestinationsScreen() {
 
     return (
       <Pressable
+        onPress={() => setViewingDestination(destination)}
         onLongPress={drag}
         delayLongPress={180}
         style={[
@@ -445,7 +479,11 @@ export default function DestinationsScreen() {
   };
 
   const renderForm = () => (
-    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={{ flex: 1 }}
+    >
+    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
       <ThemedText style={styles.formTitle}>
         {editingDestination ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
@@ -508,6 +546,16 @@ export default function DestinationsScreen() {
             <ThemedText style={[styles.warningText, { color: semantic.warning }]}>
               Water locations are high priority. Always check water first!
             </ThemedText>
+          </View>
+        )}
+        {formData.category === 'other' && (
+          <View style={{ marginTop: Spacing.sm }}>
+            <AppTextInput
+              label={t('form.otherCategoryLabel')}
+              placeholder={t('form.otherCategoryPlaceholder')}
+              value={formData.otherCategoryLabel}
+              onChangeText={(text) => setFormData((prev) => ({ ...prev, otherCategoryLabel: text }))}
+            />
           </View>
         )}
       </View>
@@ -591,6 +639,7 @@ export default function DestinationsScreen() {
 
       <View style={{ height: 40 }} />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 
   const renderDestinationList = () => (
@@ -728,6 +777,108 @@ export default function DestinationsScreen() {
         type={modalType === 'delete' ? 'delete' : 'alert'}
         onConfirm={() => handleModalAction('confirm')}
       />
+
+      {/* Read-only destination detail modal */}
+      {viewingDestination && (
+        <Modal
+          visible={!!viewingDestination}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setViewingDestination(null)}
+        >
+          <View style={styles.detailModalBackdrop}>
+            <View style={[styles.detailModalSheet, { backgroundColor: theme.card, borderColor: theme.border }]}>
+              {(() => {
+                const dest = viewingDestination;
+                const categoryInfo = getCategoryInfo(dest.category);
+                const riskInfo = getRiskInfo(dest.riskLevel);
+                const riskColor = semantic[riskInfo.color];
+                const { otherCategoryLabel: parsedOtherLabel } = parseOtherLabelFromNotes(dest.category, dest.notes || '');
+                const { remainingNotes: parsedNotes } = parseOtherLabelFromNotes(dest.category, dest.notes || '');
+                return (
+                  <>
+                    <View style={styles.detailModalHeader}>
+                      <View style={[styles.categoryIcon, { backgroundColor: `${primary[600]}15` }]}>
+                        <IconSymbol name={categoryInfo.icon} size={18} color={primary[600]} />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <ThemedText style={[styles.detailModalTitle, { color: theme.text }]}>
+                          {dest.name}
+                        </ThemedText>
+                        <View style={styles.detailModalBadges}>
+                          <View style={[styles.riskBadge, { backgroundColor: `${riskColor}1A`, borderColor: `${riskColor}55` }]}>
+                            <ThemedText style={[styles.riskText, { color: riskColor }]}>
+                              {t(`riskLevels.${riskInfo.value}`)}
+                            </ThemedText>
+                          </View>
+                          <View style={[styles.categoryBadge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                            <ThemedText style={[styles.categoryText, { color: theme.textSecondary }]}>
+                              {t(`categories.${categoryInfo.value}`)}
+                              {parsedOtherLabel ? `: ${parsedOtherLabel}` : ''}
+                            </ThemedText>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+
+                    <ScrollView style={styles.detailModalBody} showsVerticalScrollIndicator={false}>
+                      {dest.address ? (
+                        <TouchableOpacity
+                          style={[styles.detailRow, { borderBottomColor: theme.border }]}
+                          onPress={() => handleOpenMaps(dest.address!)}
+                        >
+                          <IconSymbol name="location" size={14} color={primary[600]} />
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Address</ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: primary[600] }]} lightColor={primary[700]} darkColor={primary[300]}>
+                            {dest.address}
+                          </ThemedText>
+                        </TouchableOpacity>
+                      ) : null}
+                      {dest.distanceFromHome ? (
+                        <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
+                          <IconSymbol name="figure.walk" size={14} color={theme.textSecondary} />
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Distance</ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{dest.distanceFromHome}</ThemedText>
+                        </View>
+                      ) : null}
+                      {dest.reason ? (
+                        <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
+                          <IconSymbol name="questionmark.circle" size={14} color={theme.textSecondary} />
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Why they go here</ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{dest.reason}</ThemedText>
+                        </View>
+                      ) : null}
+                      {parsedNotes ? (
+                        <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
+                          <IconSymbol name="note.text" size={14} color={theme.textSecondary} />
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Notes</ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{parsedNotes}</ThemedText>
+                        </View>
+                      ) : null}
+                    </ScrollView>
+
+                    <View style={styles.detailModalActions}>
+                      <Pressable
+                        style={[styles.detailModalButton, { borderColor: theme.border, borderWidth: 1 }]}
+                        onPress={() => setViewingDestination(null)}
+                      >
+                        <ThemedText style={[styles.detailModalButtonText, { color: theme.textSecondary }]}>Close</ThemedText>
+                      </Pressable>
+                      <Pressable
+                        style={[styles.detailModalButton, { backgroundColor: theme.tint }]}
+                        onPress={() => handleEdit(dest)}
+                      >
+                        <IconSymbol name="pencil" size={14} color="#fff" />
+                        <ThemedText style={[styles.detailModalButtonText, { color: '#fff' }]}>Edit</ThemedText>
+                      </Pressable>
+                    </View>
+                  </>
+                );
+              })()}
+            </View>
+          </View>
+        </Modal>
+      )}
     </ThemedView>
   );
 }
@@ -999,5 +1150,71 @@ const styles = StyleSheet.create({
   riskOptionText: {
     ...Typography.body,
     fontWeight: '600',
+  },
+
+  // Detail modal styles
+  detailModalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  detailModalSheet: {
+    borderTopLeftRadius: Radius.xl,
+    borderTopRightRadius: Radius.xl,
+    borderWidth: 1,
+    maxHeight: '80%',
+    paddingTop: Spacing.lg,
+  },
+  detailModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  detailModalTitle: {
+    ...Typography.headline,
+    marginBottom: Spacing.xs,
+  },
+  detailModalBadges: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.xs,
+  },
+  detailModalBody: {
+    paddingHorizontal: Spacing.lg,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  detailRowLabel: {
+    ...Typography.caption,
+    width: 100,
+    paddingTop: 2,
+  },
+  detailRowValue: {
+    ...Typography.body,
+    flex: 1,
+  },
+  detailModalActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    padding: Spacing.lg,
+  },
+  detailModalButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.xs,
+    minHeight: 44,
+    borderRadius: Radius.md,
+  },
+  detailModalButtonText: {
+    ...Typography.bodyBold,
   },
 });

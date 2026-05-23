@@ -18,13 +18,14 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { ThemePreference, useTheme } from '@/context/ThemeContext';
 import { saveSetting } from '@/database/storage';
 import { track } from '@/utils/analytics';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function WelcomeScreen() {
   const router = useRouter();
   const { t } = useTranslation('onboarding');
   const { completeStep } = useOnboarding();
   const { themePreference, setThemePreference, colorScheme } = useTheme();
+  const [hasScrolled, setHasScrolled] = useState(false);
 
   useEffect(() => {
     track('onboarding_step_viewed', { step: 'welcome' });
@@ -69,6 +70,12 @@ export default function WelcomeScreen() {
         style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        onScroll={(e) => {
+          if (!hasScrolled && e.nativeEvent.contentOffset.y > 10) {
+            setHasScrolled(true);
+          }
+        }}
+        scrollEventThrottle={16}
       >
         <View style={styles.heroSection}>
           <View style={styles.logoContainer}>
@@ -220,9 +227,11 @@ export default function WelcomeScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <ThemedText style={[styles.scrollHint, { color: colors.textFaint }]}>
-          {t('welcome.scrollHint')}
-        </ThemedText>
+        {!hasScrolled && (
+          <ThemedText style={[styles.scrollHint, { color: colors.textFaint }]}>
+            {t('welcome.scrollHint')}
+          </ThemedText>
+        )}
         <Pressable
           testID="onboarding-get-started"
           accessibilityLabel="onboarding-get-started"

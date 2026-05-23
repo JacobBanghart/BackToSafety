@@ -54,30 +54,26 @@ export default function CompleteScreen() {
           {t('complete.description')}
         </ThemedText>
 
-        <View
-          style={[
-            styles.nextSteps,
-            { backgroundColor: theme.card, borderColor: theme.border, borderWidth: 1 },
-          ]}
-        >
-          <ThemedText style={styles.nextStepsTitle}>{t('complete.addMoreLater')}</ThemedText>
-          <View style={styles.nextStepsList}>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              {t('complete.nextSteps.details')}
-            </ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              {t('complete.nextSteps.deescalation')}
-            </ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              {t('complete.nextSteps.destinations')}
-            </ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              {t('complete.nextSteps.contacts')}
-            </ThemedText>
-            <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
-              {t('complete.nextSteps.checklist')}
-            </ThemedText>
-          </View>
+        <View style={styles.nextSteps}>
+          <ThemedText style={[styles.nextStepsTitle, { color: theme.text }]}>
+            {t('complete.addMoreLater')}
+          </ThemedText>
+          {[
+            t('complete.nextSteps.details'),
+            t('complete.nextSteps.deescalation'),
+            t('complete.nextSteps.destinations'),
+            t('complete.nextSteps.contacts'),
+            t('complete.nextSteps.checklist'),
+          ].map((item) => (
+            <View
+              key={item}
+              style={[styles.nextStepRow, { borderLeftColor: theme.border }]}
+            >
+              <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
+                {item}
+              </ThemedText>
+            </View>
+          ))}
         </View>
       </View>
 
@@ -130,18 +126,22 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xxl,
   },
   nextSteps: {
-    borderRadius: Radius.lg,
-    padding: 20,
-  },
-  nextStepsTitle: {
-    ...Typography.bodyBold,
-    marginBottom: Spacing.md,
-  },
-  nextStepsList: {
+    width: '100%',
     gap: Spacing.sm,
   },
+  nextStepsTitle: {
+    ...Typography.title,
+    marginBottom: Spacing.xs,
+  },
+  nextStepRow: {
+    borderLeftWidth: 3,
+    borderRadius: 2,
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+  },
   nextStepItem: {
-    fontSize: 15,
+    ...Typography.bodyBold,
+    flex: 1,
   },
   footer: {
     padding: Spacing.xl,
