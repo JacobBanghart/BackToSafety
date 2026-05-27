@@ -1,53 +1,103 @@
-# Welcome to your Expo app 👋
+# Back to Safety
 
-Privacy Policy: https://backtosafety.app/privacy
-GitHub Pages: https://jacobbanghart.github.io/BackToSafety/
+A React Native / Expo app for caregivers of people with dementia or other wandering risks. Profiles, emergency contacts, and familiar destinations are stored locally on device.
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+- Privacy policy: https://backtosafety.app/privacy
+- GitHub Pages: https://jacobbanghart.github.io/BackToSafety/
 
-## Get started
+---
 
-1. Install dependencies
+## Features
 
-   ```bash
-   npm install
-   ```
+- Emergency protocol: 11-step guided checklist with a 15-minute countdown timer, haptic alerts, one-tap 911 calling, and SMS alerts to emergency contacts
+- Profile: name, photo, medical conditions, medications, cognitive status, and de-escalation techniques
+- Emergency contacts: import from the device address book or add manually
+- Familiar destinations: saved places surfaced during the emergency checklist
+- Readout: formatted profile summary for first responders, one tap away during an emergency
+- Onboarding flow for first-time setup
+- i18n via `i18next` / `react-i18next`
+- Automatic light/dark theme
 
-2. Start the app
+---
 
-   ```bash
-   npx expo start
-   ```
+## Tech Stack
 
-In the output, you'll find options to open the app in a
+| Layer | Technology |
+|-------|------------|
+| Framework | Expo SDK 54 (React Native 0.81) |
+| Navigation | Expo Router (file-based) |
+| Local storage | SQLite via `expo-sqlite`, secure values via `expo-secure-store` |
+| Analytics | PostHog (session replay + events) |
+| Testing | Vitest (unit), Playwright (e2e web) |
+| CI / Releases | EAS Build + EAS Submit |
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Getting Started
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Run on a specific target:
 
-## Learn more
+```bash
+npm run android   # Android emulator
+npm run ios       # iOS simulator
+npm run web       # Browser
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+---
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Scripts
 
-## Join the community
+| Script | Description |
+|--------|-------------|
+| `npm start` | Start Expo dev server |
+| `npm run android` | Run on Android emulator |
+| `npm run ios` | Run on iOS simulator |
+| `npm run web` | Run in browser |
+| `npm test` | Run unit tests (Vitest) |
+| `npm run test:coverage` | Unit tests with coverage report |
+| `npm run e2e` | Run Playwright end-to-end tests |
+| `npm run lint` | Lint with ESLint |
+| `npm run typecheck` | TypeScript type check |
+| `npm run format` | Format with Prettier |
+| `npm run prebuild` | Generate native Android/iOS projects |
+| `npm run build:apk` | Build release APK locally |
+| `npm run build:aab` | Build release AAB locally |
 
-Join our community of developers creating universal apps.
+---
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## Project Structure
+
+```
+app/               # Expo Router screens (file-based routing)
+  (tabs)/          # Tab navigator screens
+  onboarding/      # Onboarding flow
+  emergency.tsx    # Emergency protocol screen
+  contacts.tsx     # Emergency contacts
+  destinations.tsx # Familiar places
+  profile.tsx      # Profile editor
+  readout.tsx      # First-responder info sheet
+  settings.tsx     # App settings
+components/        # Shared UI components
+constants/         # Colors, typography, spacing, shadows
+context/           # React contexts (Profile, Theme, Onboarding)
+database/          # SQLite data layer (profile, contacts, destinations, incidents)
+i18n/              # Localization strings
+utils/             # Analytics, navigation helpers, phone utilities
+docs/              # Release guides, signing docs, store listing templates
+```
+
+---
+
+## Releases
+
+Builds use EAS with auto-incrementing build numbers. See [`docs/release-step-by-step.md`](docs/release-step-by-step.md) for the release process and [`docs/android-signing-and-release.md`](docs/android-signing-and-release.md) for Android signing setup.
+
+Current version: 1.3.3 (build 13)
+
+- Android package: `com.backtosafety.app`
+- iOS bundle ID: `com.backtosafety.app`
