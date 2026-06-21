@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     fontSize: 18,
     fontWeight: '600',
   },

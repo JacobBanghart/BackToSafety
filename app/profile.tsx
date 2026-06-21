@@ -754,7 +754,7 @@ export default function ProfileScreen() {
                       onPress={() => updateField('dominantHand', hand)}
                     >
                       <ThemedText
-                        style={[styles.optionText, form.dominantHand === hand && { color: '#fff' }]}
+                        style={[styles.optionText, form.dominantHand === hand && { color: Colors.light.textOnPrimary }]}
                       >
                         {hand === 'left'
                           ? t('fields.dominantHandLeft')
@@ -788,7 +788,7 @@ export default function ProfileScreen() {
                       <ThemedText
                         style={[
                           styles.chipText,
-                          selectedMobilityOptions.includes(option) && { color: '#fff' },
+                          selectedMobilityOptions.includes(option) && { color: Colors.light.textOnPrimary },
                         ]}
                       >
                         {t(MOBILITY_OPTION_KEYS[option])}
@@ -929,7 +929,7 @@ export default function ProfileScreen() {
                   onPress={applyIosDate}
                   style={[styles.dateModalButton, { backgroundColor: theme.tint }]}
                 >
-                  <ThemedText style={[styles.dateModalButtonText, { color: '#fff' }]}>
+                  <ThemedText style={[styles.dateModalButtonText, { color: Colors.light.textOnPrimary }]}>
                     {t('dateModal.apply')}
                   </ThemedText>
                 </Pressable>
@@ -962,7 +962,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   saveText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
   scrollView: {
@@ -1002,7 +1002,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   photoButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
   section: {

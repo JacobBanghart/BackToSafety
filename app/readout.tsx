@@ -394,7 +394,7 @@ export default function ReadoutScreen() {
                 style={[styles.mapsButton, { backgroundColor: semantic.success }]}
                 onPress={openMaps}
               >
-                <IconSymbol name="map.fill" size={16} color="#fff" />
+                <IconSymbol name="map.fill" size={16} color={Colors.light.textOnPrimary} />
                 <ThemedText style={styles.mapsButtonText}>Open in Maps</ThemedText>
               </Pressable>
             )}
@@ -710,7 +710,7 @@ export default function ReadoutScreen() {
                     Linking.openURL(`tel:${c.phone}`);
                   }}
                 >
-                  <IconSymbol name="phone.fill" size={14} color="#fff" />
+                  <IconSymbol name="phone.fill" size={14} color={Colors.light.textOnPrimary} />
                   <ThemedText style={styles.callButtonText}>
                     {formatPhoneNumber(c.phone)}
                   </ThemedText>
@@ -729,7 +729,7 @@ export default function ReadoutScreen() {
             <IconSymbol
               name={copiedType === 'script' ? 'checkmark.circle.fill' : 'doc.on.clipboard.fill'}
               size={18}
-              color="#fff"
+              color={Colors.light.textOnPrimary}
             />
             <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
               {copiedType === 'script' ? 'Copied 911 Script' : 'Copy 911 Script'}
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emergencyButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyLarge,
     fontWeight: '700',
   },
@@ -997,7 +997,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   callButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
 
@@ -1012,7 +1012,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
   },
   mapsButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
 

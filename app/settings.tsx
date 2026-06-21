@@ -247,7 +247,7 @@ export default function SettingsScreen() {
               onPress={handleClearData}
               disabled={isClearing}
             >
-              <IconSymbol name="trash.fill" size={18} color="#fff" />
+              <IconSymbol name="trash.fill" size={18} color={Colors.light.textOnPrimary} />
               <ThemedText style={styles.dangerButtonText}>
                 {isClearing
                   ? t('sections.devTools.clearingButton')
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
   },
   dangerButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
   buttonDisabled: {

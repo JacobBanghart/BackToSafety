@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     fontSize: 18,
     fontWeight: '600',
   },

@@ -686,7 +686,7 @@ export default function EmergencyScreen() {
             onPress={onMarkFound}
             activeOpacity={0.8}
           >
-            <IconSymbol name="checkmark.circle.fill" size={22} color="#fff" />
+            <IconSymbol name="checkmark.circle.fill" size={22} color={Colors.light.textOnPrimary} />
             <ThemedText style={styles.actionButtonTextLarge}>{t('actions.foundSafe')}</ThemedText>
           </TouchableOpacity>
 
@@ -706,7 +706,7 @@ export default function EmergencyScreen() {
             <ThemedText
               style={[
                 styles.actionButtonTextLarge,
-                { color: timerExpired ? '#fff' : semantic.error },
+                { color: timerExpired ? Colors.light.textOnPrimary : semantic.error },
               ]}
             >
               {t('actions.call911', { emergencyNumber })}
@@ -793,7 +793,7 @@ export default function EmergencyScreen() {
                 ]}
               >
                 {step.checked ? (
-                  <IconSymbol name="checkmark" size={14} color="#fff" />
+                  <IconSymbol name="checkmark" size={14} color={Colors.light.textOnPrimary} />
                 ) : (
                   <ThemedText
                     style={[
@@ -914,7 +914,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   timerText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     fontSize: 60,
     fontWeight: '700',
     letterSpacing: 2,
@@ -940,7 +940,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.light.textOnPrimary,
     borderRadius: 3,
   },
   progressText: {
@@ -1006,7 +1006,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   actionButtonTextLarge: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
     fontSize: 18,
   },
@@ -1096,7 +1096,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.sm,
   },
   urgentText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.small,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -1205,6 +1205,6 @@ const styles = StyleSheet.create({
   },
   modalButtonText: {
     ...Typography.bodyBold,
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
   },
 });

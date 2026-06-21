@@ -36,7 +36,7 @@ export function PrimaryButton({
       activeOpacity={0.8}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={Colors.light.textOnPrimary} />
       ) : (
         <ThemedText style={styles.label}>{label}</ThemedText>
       )}
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
 });

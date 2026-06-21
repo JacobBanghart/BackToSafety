@@ -56,7 +56,7 @@ export function AppModal({
               style={[styles.button, { backgroundColor: confirmBackgroundColor }]}
               onPress={onConfirm ?? onDismiss}
             >
-              <ThemedText style={[styles.buttonText, { color: '#fff' }]}>
+              <ThemedText style={[styles.buttonText, { color: Colors.light.textOnPrimary }]}>
                 {resolvedConfirmLabel}
               </ThemedText>
             </TouchableOpacity>

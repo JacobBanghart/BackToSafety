@@ -107,14 +107,14 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#22c55e',
+    backgroundColor: Colors.light.success,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: Spacing.xxl,
   },
   icon: {
     fontSize: 48,
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
   },
   title: {
     marginBottom: Spacing.lg,
@@ -141,7 +141,6 @@ const styles = StyleSheet.create({
   },
   nextStepItem: {
     ...Typography.bodyBold,
-    flex: 1,
   },
   footer: {
     padding: Spacing.xl,

@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
   },
   error: {
     ...Typography.body,
-    color: '#ef4444',
+    color: Colors.light.error,
   },
   footer: {
     padding: Spacing.lg,
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyLarge,
     fontWeight: '600',
   },

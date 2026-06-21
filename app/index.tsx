@@ -138,7 +138,7 @@ export default function HomeScreen() {
               </View>
             )}
             <View style={[styles.avatarBadge, { backgroundColor: theme.tint }]}>
-              <IconSymbol name="pencil" size={10} color="#fff" />
+              <IconSymbol name="pencil" size={10} color={Colors.light.textOnPrimary} />
             </View>
           </Pressable>
         </View>
@@ -171,7 +171,7 @@ export default function HomeScreen() {
             <View style={styles.emergencyActiveContent}>
               <View style={styles.emergencyContent}>
                 <View style={styles.emergencyIconWrap}>
-                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color="#fff" />
+                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color={Colors.light.textOnPrimary} />
                 </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>
@@ -196,7 +196,7 @@ export default function HomeScreen() {
             <View style={styles.emergencyActiveContent}>
               <View style={styles.emergencyContent}>
                 <View style={styles.emergencyIconWrap}>
-                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color="#fff" />
+                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color={Colors.light.textOnPrimary} />
                 </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: '#fff',
+    borderColor: Colors.light.textOnPrimary,
   },
   emergencyButton: {
     backgroundColor: EMERGENCY_IDLE_BG,
@@ -430,7 +430,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emergencyTextContainer: { flex: 1 },
-  emergencyTitle: { color: '#fff', ...Typography.bodyBold, marginBottom: 2 },
+  emergencyTitle: { color: Colors.light.textOnPrimary, ...Typography.bodyBold, marginBottom: 2 },
   emergencySubtitle: { color: 'rgba(255,255,255,0.8)', ...Typography.caption },
   emergencyProgressFill: { position: 'absolute', top: 0, left: 0, bottom: 0, backgroundColor: EMERGENCY_SWEEP_COLOR },
   emergencyActiveContent: {
@@ -533,5 +533,5 @@ const styles = StyleSheet.create({
     marginTop: Spacing.xs,
     minHeight: 48,
   },
-  setupButtonText: { color: '#fff', ...Typography.bodyBold },
+  setupButtonText: { color: Colors.light.textOnPrimary, ...Typography.bodyBold },
 });

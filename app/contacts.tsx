@@ -484,13 +484,13 @@ export default function ContactsScreen() {
               style={[styles.actionButton, { backgroundColor: semantic.success }]}
               onPress={() => handleCall(contact.phone)}
             >
-              <IconSymbol name="phone.fill" size={16} color="#fff" />
+              <IconSymbol name="phone.fill" size={16} color={Colors.light.textOnPrimary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: theme.primary }]}
               onPress={() => handleEdit(contact)}
             >
-              <IconSymbol name="pencil" size={16} color="#fff" />
+              <IconSymbol name="pencil" size={16} color={Colors.light.textOnPrimary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -578,11 +578,11 @@ export default function ContactsScreen() {
                   )
                 }
               >
-                <IconSymbol name={option.icon} size={14} color={isSelected ? '#fff' : theme.icon} />
+                <IconSymbol name={option.icon} size={14} color={isSelected ? Colors.light.textOnPrimary : theme.icon} />
                 <ThemedText
                   style={[
                     styles.roleOptionText,
-                    isSelected ? { color: '#fff' } : { color: theme.text },
+                    isSelected ? { color: Colors.light.textOnPrimary } : { color: theme.text },
                   ]}
                 >
                   {t(`roles.${option.value}`)}
@@ -693,7 +693,7 @@ export default function ContactsScreen() {
               style={[styles.addButton, styles.emptyAction, { backgroundColor: theme.primary }]}
               onPress={handleAddNew}
             >
-              <IconSymbol name="plus" size={20} color="#fff" />
+              <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
               <ThemedText style={styles.addButtonText} numberOfLines={1}>
                 {t('addContact')}
               </ThemedText>
@@ -726,7 +726,7 @@ export default function ContactsScreen() {
                 style={[styles.addButton, styles.footerAction, { backgroundColor: theme.primary }]}
                 onPress={handleAddNew}
               >
-                <IconSymbol name="plus" size={20} color="#fff" />
+                <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
                 <ThemedText style={styles.addButtonText}>{t('addContact')}</ThemedText>
               </TouchableOpacity>
               <TouchableOpacity
@@ -829,7 +829,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerSaveText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
 
@@ -983,7 +983,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.lg,
   },
   addButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
   footerActionsRow: {
@@ -1072,7 +1072,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.light.background,
   },
   toggleKnobActive: {
     transform: [{ translateX: 20 }],

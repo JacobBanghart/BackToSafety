@@ -527,11 +527,11 @@ export default function DestinationsScreen() {
                   )
                 }
               >
-                <IconSymbol name={option.icon} size={14} color={isSelected ? '#fff' : theme.icon} />
+                <IconSymbol name={option.icon} size={14} color={isSelected ? Colors.light.textOnPrimary : theme.icon} />
                 <ThemedText
                   style={[
                     styles.optionText,
-                    isSelected ? { color: '#fff' } : { color: theme.text },
+                    isSelected ? { color: Colors.light.textOnPrimary } : { color: theme.text },
                   ]}
                 >
                   {t(`categories.${option.value}`)}
@@ -581,7 +581,7 @@ export default function DestinationsScreen() {
                 ]}
                 onPress={() => setFormData({ ...formData, riskLevel: option.value })}
               >
-                <ThemedText style={[styles.riskOptionText, { color: isSelected ? '#fff' : color }]}>
+                <ThemedText style={[styles.riskOptionText, { color: isSelected ? Colors.light.textOnPrimary : color }]}>
                   {t(`riskLevels.${option.value}`)}
                 </ThemedText>
               </TouchableOpacity>
@@ -695,7 +695,7 @@ export default function DestinationsScreen() {
             style={[styles.emptyButton, { backgroundColor: theme.primary }]}
             onPress={handleAddNew}
           >
-            <IconSymbol name="plus" size={18} color="#fff" />
+            <IconSymbol name="plus" size={18} color={Colors.light.textOnPrimary} />
             <ThemedText style={[styles.emptyButtonText, { color: theme.textOnPrimary }]}>
               {t('noDestinations.button')}
             </ThemedText>
@@ -709,7 +709,7 @@ export default function DestinationsScreen() {
               style={[styles.addButton, { backgroundColor: theme.primary }]}
               onPress={handleAddNew}
             >
-              <IconSymbol name="plus" size={20} color="#fff" />
+              <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
               <ThemedText style={styles.addButtonText}>{t('addDestination')}</ThemedText>
             </TouchableOpacity>
           )}
@@ -868,8 +868,8 @@ export default function DestinationsScreen() {
                         style={[styles.detailModalButton, { backgroundColor: theme.tint }]}
                         onPress={() => handleEdit(dest)}
                       >
-                        <IconSymbol name="pencil" size={14} color="#fff" />
-                        <ThemedText style={[styles.detailModalButtonText, { color: '#fff' }]}>Edit</ThemedText>
+                        <IconSymbol name="pencil" size={14} color={Colors.light.textOnPrimary} />
+                        <ThemedText style={[styles.detailModalButtonText, { color: Colors.light.textOnPrimary }]}>Edit</ThemedText>
                       </Pressable>
                     </View>
                   </>
@@ -903,7 +903,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerSaveText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
 
@@ -1082,7 +1082,7 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
   },
   addButtonText: {
-    color: '#fff',
+    color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
 
