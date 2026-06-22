@@ -33,7 +33,7 @@ jobs:
           cache: "gradle"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Configure Android SDK and local.properties
         run: |
@@ -152,7 +152,7 @@ jobs:
 
       - name: Attach AAB to GitHub Release
         if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name || github.ref_name }}
           files: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
