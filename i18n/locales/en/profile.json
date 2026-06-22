@@ -43,7 +43,7 @@
     "allergiesPlaceholder": "Drug allergies, food allergies, environmental...",
     "cognitiveStatus": "Cognitive Status",
     "cognitiveStatusPlaceholder": "Moderate dementia; may be disoriented; responds to first name",
-    "cognitiveStatusHint": "How do they typically present? What should responders expect?",
+    "cognitiveStatusHint": "Describe how they present and what responders should expect.",
     "dominantHand": "Dominant Hand",
     "dominantHandHint": "People often veer in the direction of their dominant hand when lost",
     "dominantHandLeft": "← Left",
@@ -69,7 +69,7 @@
     "dislikesTriggersHint": "What should be avoided?",
     "safeWord": "Family Safe Word",
     "safeWordPlaceholder": "e.g., Pineapple, Sunshine",
-    "safeWordHint": "A word or phrase only family would know — signals to them that you are safe",
+    "safeWordHint": "A word only family knows. It tells them the person approaching is safe.",
     "locativeDeviceInfo": "Personal Locator Device",
     "locativeDeviceInfoPlaceholder": "Personal locator (e.g., AirTag on keys/bag, watch beacon)",
     "locativeDeviceInfoHint": "Optional: only include devices they already use",
@@ -80,7 +80,7 @@
     "medicAlertIdPlaceholder": "Member ID number",
     "medicAlertHotline": "MedicAlert Hotline",
     "medicAlertHotlinePlaceholder": "1-800-432-5378",
-    "medicAlertHotlineHint": "The MedicAlert Foundation 24/7 emergency line — first responders call this to access medical records"
+    "medicAlertHotlineHint": "The MedicAlert Foundation 24/7 emergency line. First responders call it to access medical records."
   },
   "mobilityOptions": {
     "walksIndependently": "Walks independently",

@@ -61,39 +61,41 @@ export default function ReadoutScreen() {
     const parts: string[] = [];
     if (profile.height) parts.push(profile.height);
     if (profile.weight) parts.push(profile.weight);
-    if (profile.hairColor) parts.push(`${profile.hairColor} hair`);
-    if (profile.eyeColor) parts.push(`${profile.eyeColor} eyes`);
+    if (profile.hairColor) parts.push(t('copyBlock.hairColor', { color: profile.hairColor }));
+    if (profile.eyeColor) parts.push(t('copyBlock.eyeColor', { color: profile.eyeColor }));
     if (profile.identifyingMarks) parts.push(profile.identifyingMarks);
     return parts.join(', ');
-  }, [profile]);
+  }, [profile, t]);
 
   // Build personal details string
   const medicalDesc = useMemo(() => {
     if (!profile) return '';
     const parts: string[] = [];
     if (profile.medicalConditions) parts.push(profile.medicalConditions);
-    if (profile.allergies) parts.push(`Allergies: ${profile.allergies}`);
+    if (profile.allergies) parts.push(t('copyBlock.allergies', { value: profile.allergies }));
     return parts.join('. ');
-  }, [profile]);
+  }, [profile, t]);
 
   const textBlock = useMemo(() => {
     if (!profile) return '';
 
-    const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : 'Unknown';
+    const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : t('copyBlock.unknown');
     const coordinates = lastSeen.coords
       ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)} (±${
           lastSeen.coords.accuracy ?? '—'
         }m)`
-      : 'Unknown';
+      : t('copyBlock.unknown');
 
     return [
-      `Name: ${profile.name}${profile.nickname ? ` (goes by "${profile.nickname}")` : ''}`,
-      profile.dateOfBirth ? `DOB: ${profile.dateOfBirth}` : undefined,
-      appearanceDesc ? `Appearance: ${appearanceDesc}` : undefined,
-      medicalDesc ? `Important Details: ${medicalDesc}` : undefined,
-      profile.medications ? `Routine Medications (optional): ${profile.medications}` : undefined,
-      profile.cognitiveStatus ? `Cognitive Status: ${profile.cognitiveStatus}` : undefined,
-      profile.mobilityLevel ? `Mobility: ${profile.mobilityLevel}` : undefined,
+      profile.nickname
+        ? t('copyBlock.nameWithNickname', { name: profile.name, nickname: profile.nickname })
+        : t('copyBlock.name', { name: profile.name }),
+      profile.dateOfBirth ? t('copyBlock.dob', { dob: profile.dateOfBirth }) : undefined,
+      appearanceDesc ? t('copyBlock.appearance', { desc: appearanceDesc }) : undefined,
+      medicalDesc ? t('copyBlock.importantDetails', { desc: medicalDesc }) : undefined,
+      profile.medications ? t('copyBlock.medications', { value: profile.medications }) : undefined,
+      profile.cognitiveStatus ? t('copyBlock.cognitiveStatus', { value: profile.cognitiveStatus }) : undefined,
+      profile.mobilityLevel ? t('copyBlock.mobility', { value: profile.mobilityLevel }) : undefined,
       profile.mobilityLevel &&
       [
         'motorized wheelchair',
@@ -104,74 +106,74 @@ export default function ReadoutScreen() {
         'uses walker',
         'uses cane',
       ].some((v) => profile.mobilityLevel!.toLowerCase().includes(v))
-        ? `⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel`
+        ? t('copyBlock.mobilityVehicleNote')
         : undefined,
       profile.communicationPreference
-        ? `Communication: ${profile.communicationPreference}`
+        ? t('copyBlock.communication', { value: profile.communicationPreference })
         : undefined,
-      profile.dislikesTriggers ? `Triggers/Dislikes: ${profile.dislikesTriggers}` : undefined,
+      profile.dislikesTriggers ? t('copyBlock.triggers', { value: profile.dislikesTriggers }) : undefined,
       profile.deescalationTechniques
-        ? `De-escalation: ${profile.deescalationTechniques}`
+        ? t('copyBlock.deescalation', { value: profile.deescalationTechniques })
         : undefined,
-      profile.likes ? `Likes/Soothers: ${profile.likes}` : undefined,
-      profile.approachGuidance ? `How to Approach: ${profile.approachGuidance}` : undefined,
-      profile.safeWord ? `Family Safe Word: ${profile.safeWord}` : undefined,
-      `Last seen: ${ls}`,
-      `Coordinates: ${coordinates}`,
-      profile.locativeDeviceInfo ? `Personal Locator: ${profile.locativeDeviceInfo}` : undefined,
-      profile.idBracelets ? `ID Bracelet: ${profile.idBracelets}` : undefined,
-      profile.medicAlertId ? `MedicAlert ID: ${profile.medicAlertId}` : undefined,
+      profile.likes ? t('copyBlock.likes', { value: profile.likes }) : undefined,
+      profile.approachGuidance ? t('copyBlock.approach', { value: profile.approachGuidance }) : undefined,
+      profile.safeWord ? t('copyBlock.safeWord', { value: profile.safeWord }) : undefined,
+      t('copyBlock.lastSeen', { time: ls }),
+      t('copyBlock.coordinates', { coords: coordinates }),
+      profile.locativeDeviceInfo ? t('copyBlock.locator', { value: profile.locativeDeviceInfo }) : undefined,
+      profile.idBracelets ? t('copyBlock.idBracelet', { value: profile.idBracelets }) : undefined,
+      profile.medicAlertId ? t('copyBlock.medicAlertId', { value: profile.medicAlertId }) : undefined,
       '',
-      '⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)',
+      t('copyBlock.wearingReminder'),
     ]
       .filter(Boolean)
       .join('\n');
-  }, [profile, lastSeen, appearanceDesc, medicalDesc]);
+  }, [profile, lastSeen, appearanceDesc, medicalDesc, t]);
 
   const script = useMemo(() => {
     if (!profile) return '';
 
     const scriptParts: string[] = [
-      "I'm reporting a missing vulnerable adult who may be disoriented or at risk.",
-      `Name: ${profile.name}.`,
+      t('script.opening'),
+      t('script.name', { name: profile.name }),
     ];
 
     if (profile.dateOfBirth) {
       const age = new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear();
-      scriptParts.push(`Age approximately ${age}.`);
+      scriptParts.push(t('script.age', { age }));
     }
 
     if (lastSeen.time) {
-      scriptParts.push(`Last seen: ${new Date(lastSeen.time).toLocaleString()}.`);
+      scriptParts.push(t('script.lastSeenTime', { time: new Date(lastSeen.time).toLocaleString() }));
     } else {
-      scriptParts.push('Last seen: [fill in time].');
+      scriptParts.push(t('script.lastSeenUnknown'));
     }
 
     if (lastSeen.coords) {
       scriptParts.push(
-        `Last known location: ${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)}.`,
+        t('script.locationCoords', { lat: lastSeen.coords.lat.toFixed(5), lon: lastSeen.coords.lon.toFixed(5) }),
       );
     } else {
-      scriptParts.push('Last known location: [fill in location].');
+      scriptParts.push(t('script.locationUnknown'));
     }
 
     if (appearanceDesc) {
-      scriptParts.push(`Appearance: ${appearanceDesc}.`);
+      scriptParts.push(t('script.appearance', { desc: appearanceDesc }));
     }
 
     if (medicalDesc) {
-      scriptParts.push(`Additional context: ${medicalDesc}.`);
+      scriptParts.push(t('script.additionalContext', { desc: medicalDesc }));
     }
 
     if (profile.medicAlertId) {
-      scriptParts.push(`MedicAlert ID: ${profile.medicAlertId}.`);
+      scriptParts.push(t('script.medicAlertId', { id: profile.medicAlertId }));
     }
 
-    scriptParts.push('Photo available.');
-    scriptParts.push('Please advise about issuing a local Silver/Purple Alert.');
+    scriptParts.push(t('script.photoAvailable'));
+    scriptParts.push(t('script.silverAlert'));
 
     return scriptParts.join(' ');
-  }, [profile, lastSeen, appearanceDesc, medicalDesc]);
+  }, [profile, lastSeen, appearanceDesc, medicalDesc, t]);
 
   const missingScriptDetails = useMemo(() => {
     if (!profile) return [];
@@ -395,7 +397,7 @@ export default function ReadoutScreen() {
                 onPress={openMaps}
               >
                 <IconSymbol name="map.fill" size={16} color={Colors.light.textOnPrimary} />
-                <ThemedText style={styles.mapsButtonText}>Open in Maps</ThemedText>
+                <ThemedText style={styles.mapsButtonText}>{t('openInMaps')}</ThemedText>
               </Pressable>
             )}
           </View>

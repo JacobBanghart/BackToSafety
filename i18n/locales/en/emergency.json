@@ -66,7 +66,7 @@
     },
     "share_info": {
       "title": "Share relevant personal details",
-      "description": "Share useful details (appearance, routines, communication preferences)"
+      "description": "Share their appearance, daily routines, and communication needs with responders."
     },
     "coordinate": {
       "title": "Coordinate search efforts",
@@ -79,14 +79,14 @@
   },
   "tips": {
     "title": "When you find them",
-    "body": "• Approach calmly from the front\n• Speak slowly with short sentences\n• Give time to respond\n• Offer to walk with them\n• Don't argue or correct"
+    "body": "• Approach from the front\n• Speak slowly, with short sentences\n• Give them time to respond\n• Offer to walk with them\n• Don't argue or correct"
   },
   "smsMessage": "URGENT: {{name}} is missing. Last seen {{time}}. {{wearing}}Please help search or call if you see them.",
   "smsWearing": "Wearing: {{wearing}}. ",
   "modal": {
     "found": {
       "title": "Found!",
-      "message": "Great news! Remember to use calm, reassuring language. Offer water and rest."
+      "message": "Use a calm voice. Offer water and rest."
     },
     "leave": {
       "title": "Leave Emergency Search?",

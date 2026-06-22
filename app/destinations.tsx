@@ -100,6 +100,7 @@ export default function DestinationsScreen() {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const { t } = useTranslation('destinations');
+  const { t: tCommon } = useTranslation('common');
   const { height: windowHeight } = useWindowDimensions();
 
   const [destinations, setDestinations] = useState<Destination[]>([]);
@@ -488,7 +489,7 @@ export default function DestinationsScreen() {
       </ThemedText>
 
       <ThemedText style={[styles.formHint, { color: theme.textSecondary }]}>
-        Add places your loved one may wander to. These will be checked during a search.
+        {t('form.hint')}
       </ThemedText>
 
       {/* Name */}
@@ -827,7 +828,7 @@ export default function DestinationsScreen() {
                           onPress={() => handleOpenMaps(dest.address!)}
                         >
                           <IconSymbol name="location" size={14} color={primary[600]} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Address</ThemedText>
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.address')}</ThemedText>
                           <ThemedText style={[styles.detailRowValue, { color: primary[600] }]} lightColor={primary[700]} darkColor={primary[300]}>
                             {dest.address}
                           </ThemedText>
@@ -836,21 +837,21 @@ export default function DestinationsScreen() {
                       {dest.distanceFromHome ? (
                         <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
                           <IconSymbol name="figure.walk" size={14} color={theme.textSecondary} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Distance</ThemedText>
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.distance')}</ThemedText>
                           <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{dest.distanceFromHome}</ThemedText>
                         </View>
                       ) : null}
                       {dest.reason ? (
                         <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
                           <IconSymbol name="questionmark.circle" size={14} color={theme.textSecondary} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Why they go here</ThemedText>
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.why')}</ThemedText>
                           <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{dest.reason}</ThemedText>
                         </View>
                       ) : null}
                       {parsedNotes ? (
                         <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
                           <IconSymbol name="note.text" size={14} color={theme.textSecondary} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>Notes</ThemedText>
+                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.notes')}</ThemedText>
                           <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{parsedNotes}</ThemedText>
                         </View>
                       ) : null}
@@ -861,14 +862,14 @@ export default function DestinationsScreen() {
                         style={[styles.detailModalButton, { borderColor: theme.border, borderWidth: 1 }]}
                         onPress={() => setViewingDestination(null)}
                       >
-                        <ThemedText style={[styles.detailModalButtonText, { color: theme.textSecondary }]}>Close</ThemedText>
+                        <ThemedText style={[styles.detailModalButtonText, { color: theme.textSecondary }]}>{tCommon('close')}</ThemedText>
                       </Pressable>
                       <Pressable
                         style={[styles.detailModalButton, { backgroundColor: theme.tint }]}
                         onPress={() => handleEdit(dest)}
                       >
                         <IconSymbol name="pencil" size={14} color={Colors.light.textOnPrimary} />
-                        <ThemedText style={[styles.detailModalButtonText, { color: Colors.light.textOnPrimary }]}>Edit</ThemedText>
+                        <ThemedText style={[styles.detailModalButtonText, { color: Colors.light.textOnPrimary }]}>{tCommon('edit')}</ThemedText>
                       </Pressable>
                     </View>
                   </>

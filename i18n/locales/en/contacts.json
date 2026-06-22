@@ -9,7 +9,7 @@
   "notifyInEmergency": "Notify in Emergency",
   "noContacts": {
     "title": "No Emergency Contacts",
-    "body": "Add people who should be alerted or contacted during an emergency.",
+    "body": "Add people to call or text when they wander.",
     "button": "Add First Contact"
   },
   "roles": {

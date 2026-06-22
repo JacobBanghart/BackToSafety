@@ -23,9 +23,16 @@
     "walking_route": "Walking Route",
     "other": "Other"
   },
+  "detail": {
+    "address": "Address",
+    "distance": "Distance",
+    "why": "Why they go here",
+    "notes": "Notes"
+  },
   "form": {
     "newTitle": "New Location",
     "editTitle": "Edit Location",
+    "hint": "Add places they might go. These show up during an emergency search.",
     "nameLabel": "Location Name",
     "namePlaceholder": "e.g., Riverside Park, Old House on Maple St",
     "categoryLabel": "Category",

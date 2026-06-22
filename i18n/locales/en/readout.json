@@ -67,5 +67,47 @@
     "call": "Call",
     "noContacts": "No emergency contacts saved."
   },
-  "noInfoItem": "Not provided"
+  "noInfoItem": "Not provided",
+  "openInMaps": "Open in Maps",
+  "copyBlock": {
+    "name": "Name: {{name}}",
+    "nameWithNickname": "Name: {{name}} (goes by \"{{nickname}}\")",
+    "dob": "DOB: {{dob}}",
+    "appearance": "Appearance: {{desc}}",
+    "importantDetails": "Important Details: {{desc}}",
+    "medications": "Routine Medications (optional): {{value}}",
+    "cognitiveStatus": "Cognitive Status: {{value}}",
+    "mobility": "Mobility: {{value}}",
+    "mobilityVehicleNote": "⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel",
+    "communication": "Communication: {{value}}",
+    "triggers": "Triggers/Dislikes: {{value}}",
+    "deescalation": "De-escalation: {{value}}",
+    "likes": "Likes/Soothers: {{value}}",
+    "approach": "How to Approach: {{value}}",
+    "safeWord": "Family Safe Word: {{value}}",
+    "lastSeen": "Last seen: {{time}}",
+    "coordinates": "Coordinates: {{coords}}",
+    "locator": "Personal Locator: {{value}}",
+    "idBracelet": "ID Bracelet: {{value}}",
+    "medicAlertId": "MedicAlert ID: {{value}}",
+    "wearingReminder": "⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)",
+    "unknown": "Unknown",
+    "allergies": "Allergies: {{value}}",
+    "hairColor": "{{color}} hair",
+    "eyeColor": "{{color}} eyes"
+  },
+  "script": {
+    "opening": "I'm reporting a missing vulnerable adult who may be disoriented or at risk.",
+    "name": "Name: {{name}}.",
+    "age": "Age approximately {{age}}.",
+    "lastSeenTime": "Last seen: {{time}}.",
+    "lastSeenUnknown": "Last seen: [fill in time].",
+    "locationCoords": "Last known location: {{lat}}, {{lon}}.",
+    "locationUnknown": "Last known location: [fill in location].",
+    "appearance": "Appearance: {{desc}}.",
+    "additionalContext": "Additional context: {{desc}}.",
+    "medicAlertId": "MedicAlert ID: {{id}}.",
+    "photoAvailable": "Photo available.",
+    "silverAlert": "Please advise about issuing a local Silver/Purple Alert."
+  }
 }
