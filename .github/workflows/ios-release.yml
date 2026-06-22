@@ -27,8 +27,11 @@ jobs:
           node-version: "24"
           cache: "npm"
 
+      - name: Sync lockfile for platform
+        run: npm install --package-lock-only --ignore-scripts
+
       - name: Install dependencies
-        run: npm ci --omit=optional
+        run: npm ci
 
       # ── Version ───────────────────────────────────────────────────────────────
       - name: Derive version metadata from tag
