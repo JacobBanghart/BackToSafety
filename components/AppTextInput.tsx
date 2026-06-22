@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, KeyboardTypeOptions, TextInputProps } from 'react-native';
+import { View, TextInput, StyleSheet, KeyboardTypeOptions, TextInputProps, Platform } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
     ...Typography.body,
-    lineHeight: 20,
+    lineHeight: Platform.OS === 'ios' ? undefined : 20,
     minHeight: 44,
   },
   textInputSingleLine: {
@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
   },
   textArea: {
     minHeight: 80,
+    maxHeight: 120,
     paddingVertical: Spacing.sm,
     textAlignVertical: 'top',
   },

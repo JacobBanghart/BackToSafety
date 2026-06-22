@@ -15,9 +15,10 @@ import {
   Modal,
   Platform,
   Pressable,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -99,6 +100,7 @@ export default function DestinationsScreen() {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const { t } = useTranslation('destinations');
+  const { height: windowHeight } = useWindowDimensions();
 
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -479,11 +481,8 @@ export default function DestinationsScreen() {
   };
 
   const renderForm = () => (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
-    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
+    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
       <ThemedText style={styles.formTitle}>
         {editingDestination ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
@@ -787,7 +786,7 @@ export default function DestinationsScreen() {
           onRequestClose={() => setViewingDestination(null)}
         >
           <View style={styles.detailModalBackdrop}>
-            <View style={[styles.detailModalSheet, { backgroundColor: theme.card, borderColor: theme.border }]}>
+            <View style={[styles.detailModalSheet, { backgroundColor: theme.card, borderColor: theme.border, maxHeight: windowHeight * 0.8 }]}>
               {(() => {
                 const dest = viewingDestination;
                 const categoryInfo = getCategoryInfo(dest.category);
@@ -1162,7 +1161,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: Radius.xl,
     borderTopRightRadius: Radius.xl,
     borderWidth: 1,
-    maxHeight: '80%',
     paddingTop: Spacing.lg,
   },
   detailModalHeader: {

@@ -7,7 +7,6 @@ import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
   Pressable,
   StyleSheet,
@@ -63,11 +62,7 @@ export default function NameScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <View style={styles.content}>
+        <View style={[styles.keyboardView, styles.content]}>
           <OnboardingStepHeader activeStep={1} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
@@ -102,6 +97,8 @@ export default function NameScreen() {
                 autoFocus
                 autoCapitalize="words"
                 autoComplete="name"
+                multiline={false}
+                numberOfLines={1}
               />
             </View>
 
@@ -121,6 +118,8 @@ export default function NameScreen() {
                 placeholder={t('name.nicknamePlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
                 autoCapitalize="words"
+                multiline={false}
+                numberOfLines={1}
               />
               <ThemedText style={[styles.hint, { color: theme.textDisabled }]}>
                 {t('name.nicknameHint')}
@@ -146,7 +145,6 @@ export default function NameScreen() {
             <ThemedText style={styles.buttonText}>{t('name.continue')}</ThemedText>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -186,7 +184,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     height: 48,
     paddingVertical: 0,
-    lineHeight: 22,
+    lineHeight: Platform.OS === 'ios' ? undefined : 22,
   },
   hint: {
     ...Typography.body,

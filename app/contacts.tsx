@@ -11,11 +11,12 @@ import * as Contacts from 'expo-contacts';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
+  KeyboardAvoidingView,
   Linking,
   Platform,
   Pressable,
-  StyleSheet,
   ScrollView,
+  StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -472,8 +473,8 @@ export default function ContactsScreen() {
 
         <View style={styles.contactHeader}>
           <View style={styles.contactInfo}>
-            <ThemedText style={styles.contactName}>{contact.name}</ThemedText>
-            <ThemedText style={[styles.contactMeta, { color: theme.textSecondary }]}>
+            <ThemedText style={styles.contactName} numberOfLines={1} ellipsizeMode="tail">{contact.name}</ThemedText>
+            <ThemedText style={[styles.contactMeta, { color: theme.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
               {t(`roles.${roleInfo.value}`)}
               {contact.relationship ? ` • ${contact.relationship}` : ''}
             </ThemedText>
@@ -510,7 +511,8 @@ export default function ContactsScreen() {
   };
 
   const renderForm = () => (
-    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
+    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
       <ThemedText style={styles.formTitle}>
         {editingContact ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
@@ -647,6 +649,7 @@ export default function ContactsScreen() {
       )}
       <View style={{ height: 40 }} />
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 
   const renderContactList = () => (

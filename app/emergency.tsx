@@ -840,19 +840,10 @@ export default function EmergencyScreen() {
                     <ThemedText style={[styles.destinationsLabel, { color: theme.textSecondary }]}>
                       {t('checklist.savedPlaces')}
                     </ThemedText>
-                    {destinations.slice(0, 3).map((dest) => (
-                      <ThemedText
-                        key={dest.id}
-                        style={[styles.destinationItem, { color: primary[600] }]}
-                      >
-                        {`• ${dest.name}${dest.address ? ` (${dest.address})` : ''}`}
-                      </ThemedText>
-                    ))}
-                    {destinations.length > 3 && (
-                      <ThemedText style={[styles.destinationItem, { color: neutral[500] }]}>
-                        {t('checklist.morePlaces', { count: destinations.length - 3 })}
-                      </ThemedText>
-                    )}
+                    <ThemedText style={[styles.destinationItem, { color: primary[600] }]} numberOfLines={2} ellipsizeMode="tail">
+                      {destinations.slice(0, 5).map((d) => d.name).join(' • ')}
+                      {destinations.length > 5 ? ` +${destinations.length - 5}` : ''}
+                    </ThemedText>
                   </View>
                 )}
               </View>
@@ -873,7 +864,7 @@ export default function EmergencyScreen() {
           <ThemedText style={[styles.tipsTitle, { color: isDark ? primary[200] : primary[800] }]}>
             {t('tips.title')}
           </ThemedText>
-          <ThemedText style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]}>
+          <ThemedText style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]} numberOfLines={5} ellipsizeMode="tail">
             {profile?.deescalationTechniques
               ? `${t('tips.body')}\n• ${profile.deescalationTechniques}`
               : t('tips.body')}
@@ -979,6 +970,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     borderWidth: 1,
     minHeight: 64,
+    maxHeight: 120,
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     textAlignVertical: 'top',

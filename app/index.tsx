@@ -111,7 +111,7 @@ export default function HomeScreen() {
                 {t('caringFor')}
               </ThemedText>
             )}
-            <ThemedText type="headline" style={{ color: theme.text }}>
+            <ThemedText type="headline" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
               {hasProfile ? profile.name : t('appTitle')}
             </ThemedText>
           </View>

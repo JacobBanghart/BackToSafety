@@ -75,11 +75,8 @@ export default function ContactScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
+        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
           <OnboardingStepHeader activeStep={4} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
@@ -171,6 +168,7 @@ export default function ContactScreen() {
             </ThemedText>
           </View>
         </ScrollView>
+        </KeyboardAvoidingView>
 
         <View style={styles.footer}>
           <Pressable
@@ -196,7 +194,6 @@ export default function ContactScreen() {
             </ThemedText>
           </Pressable>
         </View>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -239,7 +236,7 @@ const styles = StyleSheet.create({
     height: 48,
     paddingVertical: 0,
     ...Typography.body,
-    lineHeight: 20,
+    lineHeight: Platform.OS === 'ios' ? undefined : 20,
   },
   error: {
     fontSize: 14,

@@ -346,11 +346,11 @@ export default function ReadoutScreen() {
               </View>
             )}
             <View style={styles.identityInfo}>
-              <ThemedText type="headline" style={{ color: theme.text }}>
+              <ThemedText type="headline" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
                 {profile.name}
               </ThemedText>
               {profile.nickname && (
-                <ThemedText style={[styles.nickname, { color: theme.textSecondary }]}>
+                <ThemedText style={[styles.nickname, { color: theme.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
                   {t('sections.identity.goesBy', { nickname: profile.nickname })}
                 </ThemedText>
               )}
@@ -696,10 +696,10 @@ export default function ReadoutScreen() {
             {emergencyContacts.map((c) => (
               <View key={c.id} style={[styles.contactRow, { borderTopColor: theme.border }]}>
                 <View style={styles.contactInfo}>
-                  <ThemedText type="bodyBold" style={{ color: theme.text }}>
+                  <ThemedText type="bodyBold" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
                     {c.name}
                   </ThemedText>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary }}>
+                  <ThemedText type="caption" style={{ color: theme.textSecondary }} numberOfLines={1} ellipsizeMode="tail">
                     {c.relationship || c.role}
                   </ThemedText>
                 </View>
@@ -806,7 +806,7 @@ function InfoRow({
       <ThemedText type="caption" style={[infoRowStyles.label, { color: theme.textSecondary }]}>
         {label}
       </ThemedText>
-      <ThemedText style={[infoRowStyles.value, { color: theme.text }]}>{value}</ThemedText>
+      <ThemedText style={[infoRowStyles.value, { color: theme.text }]} numberOfLines={4} ellipsizeMode="tail">{value}</ThemedText>
     </View>
   );
 }
@@ -819,7 +819,7 @@ function InfoChip({ label, value, theme }: { label: string; value: string; theme
       <ThemedText type="small" style={{ color: theme.textSecondary }}>
         {label}
       </ThemedText>
-      <ThemedText type="bodyBold" style={{ color: theme.text }}>
+      <ThemedText type="bodyBold" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
         {value}
       </ThemedText>
     </View>
@@ -851,6 +851,7 @@ const infoChipStyles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     minWidth: 80,
+    maxWidth: 160,
   },
 });
 

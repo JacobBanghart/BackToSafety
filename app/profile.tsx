@@ -566,10 +566,6 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
         <ScreenHeader
           title={t('screenTitle')}
           onBack={handleBack}
@@ -586,7 +582,8 @@ export default function ProfileScreen() {
           }
         />
 
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <KeyboardAvoidingView style={styles.scrollView} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
+        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
           {/* Photo Section */}
           <View style={styles.photoSection}>
             <View style={styles.photoContainer}>
@@ -888,6 +885,7 @@ export default function ProfileScreen() {
           {/* Bottom padding */}
           <View style={{ height: 40 }} />
         </ScrollView>
+        </KeyboardAvoidingView>
 
         <Modal
           visible={showIosDatePicker}
@@ -937,7 +935,6 @@ export default function ProfileScreen() {
             </View>
           </View>
         </Modal>
-      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -1044,7 +1041,7 @@ const styles = StyleSheet.create({
   },
   input: {
     ...Typography.body,
-    lineHeight: 20,
+    lineHeight: Platform.OS === 'ios' ? undefined : 20,
     borderWidth: 1,
     borderRadius: Radius.md,
     paddingHorizontal: Spacing.md,
@@ -1074,7 +1071,7 @@ const styles = StyleSheet.create({
   dateInput: {
     flex: 1,
     ...Typography.body,
-    lineHeight: 20,
+    lineHeight: Platform.OS === 'ios' ? undefined : 20,
     height: 44,
     paddingVertical: 0,
     paddingHorizontal: 0,
