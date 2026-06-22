@@ -28,7 +28,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       # ── Version ───────────────────────────────────────────────────────────────
       - name: Derive version metadata from tag
