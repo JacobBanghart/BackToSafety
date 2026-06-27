@@ -15,6 +15,10 @@ permissions:
 jobs:
   build-android-aab:
     runs-on: [self-hosted, linux]
+    env:
+      GRADLE_USER_HOME: /opt/hostedtoolcache/gradle
+      ANDROID_SDK_ROOT: /opt/hostedtoolcache/android-sdk
+      ANDROID_HOME: /opt/hostedtoolcache/android-sdk
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -45,7 +49,7 @@ jobs:
             exit 1
           fi
 
-          SDK_PATH="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-$HOME/android-sdk}}"
+          SDK_PATH="${ANDROID_SDK_ROOT}"
           mkdir -p "$SDK_PATH"
 
           set +o pipefail
@@ -57,8 +61,6 @@ jobs:
             "build-tools;36.0.0"
 
           echo "Using Android SDK at $SDK_PATH"
-          echo "ANDROID_SDK_ROOT=$SDK_PATH" >> "$GITHUB_ENV"
-          echo "ANDROID_HOME=$SDK_PATH" >> "$GITHUB_ENV"
           printf 'sdk.dir=%s\n' "$SDK_PATH" > android/local.properties
 
       - name: Install dependencies
@@ -125,8 +127,6 @@ jobs:
           NODE_ENV: production
           EXPO_PUBLIC_POSTHOG_KEY: phc_yiHs692GvzSjuCHNUTpSGx99UrD5cnCmJD7mjD7WBoJN
           EXPO_PUBLIC_POSTHOG_HOST: https://t.backtosafety.app
-          ANDROID_HOME: ${{ env.ANDROID_SDK_ROOT }}
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_SDK_ROOT }}
           ANDROID_KEYSTORE_FILE: ${{ github.workspace }}/android/app/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
