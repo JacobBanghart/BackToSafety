@@ -9,12 +9,15 @@
       "title": "Appearance",
       "description": "Choose your preferred color theme."
     },
+    "deleteAccount": {
+      "title": "Delete Account",
+      "description": "Permanently delete all data stored on this device, including the profile, contacts, and incident history. This cannot be undone.",
+      "button": "Delete Account",
+      "deletingButton": "Deleting..."
+    },
     "devTools": {
       "title": "Developer Tools",
-      "description": "These tools are for testing during development.",
-      "clearButton": "Clear All Data & Restart Onboarding",
-      "clearingButton": "Clearing...",
-      "clearWarning": "This will permanently delete all profile data, contacts, incidents, and settings."
+      "description": "These tools are for testing during development."
     },
     "about": {
       "title": "About",
@@ -33,15 +36,15 @@
     "light": "Light",
     "dark": "Dark"
   },
-  "clearDataModal": {
-    "title": "Clear All Data",
-    "message": "This will delete all data and restart onboarding. This cannot be undone.",
-    "confirm": "Clear Data",
+"deleteAccountModal": {
+    "title": "Delete Account",
+    "message": "This will permanently delete all data stored on this device. This action cannot be undone.",
+    "confirm": "Delete Account",
     "cancel": "Cancel"
   },
   "devModeAlert": {
     "title": "Developer Mode",
     "message": "Developer options are now enabled!"
   },
-  "clearDataError": "Failed to clear data. Please try again."
+"deleteAccountError": "Failed to delete account. Please try again."
 }

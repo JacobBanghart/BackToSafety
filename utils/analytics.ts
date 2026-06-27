@@ -21,6 +21,7 @@ type AnalyticsEventName =
   | 'emergency_leave'
   | 'settings_dev_mode_unlocked'
   | 'settings_data_cleared'
+  | 'settings_account_deleted'
   | 'settings_theme_changed'
   | 'settings_language_changed'
   | 'contact_saved'

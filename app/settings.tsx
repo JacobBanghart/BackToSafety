@@ -36,7 +36,7 @@ export default function SettingsScreen() {
   const { themePreference, setThemePreference, colorScheme } = useTheme();
   const { refreshOnboardingState } = useOnboarding();
   const theme = Colors[colorScheme];
-  const [isClearing, setIsClearing] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [devModeEnabled, setDevModeEnabled] = useState(IS_DEV);
   const [tapCount, setTapCount] = useState(0);
   const [lastTapTime, setLastTapTime] = useState(0);
@@ -99,13 +99,13 @@ export default function SettingsScreen() {
     setLastTapTime(now);
   };
 
-  const handleClearData = async () => {
-    const confirmClear = async () => {
-      setIsClearing(true);
+  const handleDeleteAccount = async () => {
+    const confirmDelete = async () => {
+      setIsDeletingAccount(true);
       try {
         await clearAllData();
         await refreshOnboardingState();
-        track('settings_data_cleared');
+        track('settings_account_deleted');
 
         if (Platform.OS === 'web') {
           window.location.reload();
@@ -113,26 +113,26 @@ export default function SettingsScreen() {
           router.replace('/onboarding');
         }
       } catch (err) {
-        console.error('Error clearing data:', err);
-        Alert.alert(t('error', { ns: 'common' }), t('clearDataError'));
+        console.error('Error deleting account:', err);
+        Alert.alert(t('error', { ns: 'common' }), t('deleteAccountError'));
       } finally {
-        setIsClearing(false);
+        setIsDeletingAccount(false);
       }
     };
 
     if (Platform.OS === 'web') {
-      if (confirm('This will delete all data and restart onboarding. Are you sure?')) {
-        confirmClear();
+      if (confirm('This will permanently delete all data on this device. Are you sure?')) {
+        confirmDelete();
       }
     } else {
-      Alert.alert(t('clearDataModal.title'), t('clearDataModal.message'), [
-        { text: t('clearDataModal.cancel'), style: 'cancel' },
-        { text: t('clearDataModal.confirm'), style: 'destructive', onPress: confirmClear },
+      Alert.alert(t('deleteAccountModal.title'), t('deleteAccountModal.message'), [
+        { text: t('deleteAccountModal.cancel'), style: 'cancel' },
+        { text: t('deleteAccountModal.confirm'), style: 'destructive', onPress: confirmDelete },
       ]);
     }
   };
 
-  return (
+return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <ScreenHeader title={t('screenTitle')} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -180,6 +180,31 @@ export default function SettingsScreen() {
               );
             })}
           </View>
+        </AppCard>
+
+        {/* Delete Account Section */}
+        <AppCard>
+          <View style={styles.sectionHeader}>
+            <IconSymbol name="trash.fill" size={20} color={semantic.error} />
+            <ThemedText type="subtitle" style={styles.sectionTitle}>
+              {t('sections.deleteAccount.title')}
+            </ThemedText>
+          </View>
+          <ThemedText style={[styles.sectionDescription, { color: theme.textSecondary }]}>
+            {t('sections.deleteAccount.description')}
+          </ThemedText>
+          <Pressable
+            style={[styles.dangerButton, isDeletingAccount && styles.buttonDisabled]}
+            onPress={handleDeleteAccount}
+            disabled={isDeletingAccount}
+          >
+            <IconSymbol name="trash.fill" size={18} color={Colors.light.textOnPrimary} />
+            <ThemedText style={styles.dangerButtonText}>
+              {isDeletingAccount
+                ? t('sections.deleteAccount.deletingButton')
+                : t('sections.deleteAccount.button')}
+            </ThemedText>
+          </Pressable>
         </AppCard>
 
         {/* Dev Mode Section - Only visible when enabled */}
@@ -238,26 +263,6 @@ export default function SettingsScreen() {
               })}
             </View>
 
-            <Pressable
-              style={[
-                styles.dangerButton,
-                isClearing && styles.buttonDisabled,
-                { marginTop: Spacing.xl },
-              ]}
-              onPress={handleClearData}
-              disabled={isClearing}
-            >
-              <IconSymbol name="trash.fill" size={18} color={Colors.light.textOnPrimary} />
-              <ThemedText style={styles.dangerButtonText}>
-                {isClearing
-                  ? t('sections.devTools.clearingButton')
-                  : t('sections.devTools.clearButton')}
-              </ThemedText>
-            </Pressable>
-
-            <ThemedText style={[styles.warning, { color: theme.textSecondary }]}>
-              {t('sections.devTools.clearWarning')}
-            </ThemedText>
           </AppCard>
         )}
 

@@ -9,12 +9,15 @@
       "title": "",
       "description": ""
     },
+    "deleteAccount": {
+      "title": "Eliminar cuenta",
+      "description": "Elimina permanentemente todos los datos almacenados en este dispositivo, incluyendo el perfil, contactos e historial de incidentes. Esta acción no se puede deshacer.",
+      "button": "Eliminar cuenta",
+      "deletingButton": "Eliminando..."
+    },
     "devTools": {
       "title": "",
-      "description": "",
-      "clearButton": "",
-      "clearingButton": "",
-      "clearWarning": ""
+      "description": ""
     },
     "about": {
       "title": "",
@@ -33,15 +36,15 @@
     "light": "",
     "dark": ""
   },
-  "clearDataModal": {
-    "title": "",
-    "message": "",
-    "confirm": "",
-    "cancel": ""
+"deleteAccountModal": {
+    "title": "Eliminar cuenta",
+    "message": "Esto eliminará permanentemente todos los datos almacenados en este dispositivo. Esta acción no se puede deshacer.",
+    "confirm": "Eliminar cuenta",
+    "cancel": "Cancelar"
   },
   "devModeAlert": {
     "title": "",
     "message": ""
   },
-  "clearDataError": ""
+"deleteAccountError": "No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo."
 }
