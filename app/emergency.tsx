@@ -24,6 +24,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { ScreenHeader } from '@/components/ScreenHeader';
@@ -590,11 +591,10 @@ export default function EmergencyScreen() {
         titleIcon={{ name: 'exclamationmark.triangle.fill', color: semantic.error, size: 18 }}
       />
 
-      <ScrollView
+      <KeyboardAvoidingScroll
         ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
       >
         {/* Timer Card */}
         <View
@@ -872,7 +872,7 @@ export default function EmergencyScreen() {
         </View>
 
         <View style={{ height: Spacing.xxl }} />
-      </ScrollView>
+      </KeyboardAvoidingScroll>
     </SafeAreaView>
   );
 }

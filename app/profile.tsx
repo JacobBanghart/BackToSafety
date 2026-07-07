@@ -13,11 +13,9 @@ import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/dat
 import {
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
@@ -25,6 +23,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 
+import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
@@ -582,8 +581,7 @@ export default function ProfileScreen() {
           }
         />
 
-        <KeyboardAvoidingView style={styles.scrollView} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <KeyboardAvoidingScroll style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
           {/* Photo Section */}
           <View style={styles.photoSection}>
             <View style={styles.photoContainer}>
@@ -884,8 +882,7 @@ export default function ProfileScreen() {
 
           {/* Bottom padding */}
           <View style={{ height: 40 }} />
-        </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAvoidingScroll>
 
         <Modal
           visible={showIosDatePicker}

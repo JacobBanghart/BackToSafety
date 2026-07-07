@@ -11,11 +11,9 @@ import * as Contacts from 'expo-contacts';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
-  KeyboardAvoidingView,
   Linking,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -25,6 +23,7 @@ import DraggableFlatList, { RenderItemParams } from '@/utils/draggable-flatlist'
 
 import { AppModal } from '@/components/AppModal';
 import { AppTextInput } from '@/components/AppTextInput';
+import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -511,8 +510,7 @@ export default function ContactsScreen() {
   };
 
   const renderForm = () => (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
-    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+    <KeyboardAvoidingScroll style={styles.formContainer}>
       <ThemedText style={styles.formTitle}>
         {editingContact ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
@@ -648,8 +646,7 @@ export default function ContactsScreen() {
         </TouchableOpacity>
       )}
       <View style={{ height: 40 }} />
-    </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingScroll>
   );
 
   const renderContactList = () => (

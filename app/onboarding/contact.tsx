@@ -7,16 +7,15 @@ import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   TextInput,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
@@ -75,8 +74,36 @@ export default function ContactScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
-        <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+        <KeyboardAvoidingScroll
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          footer={
+            <View style={styles.footer}>
+              <Pressable
+                testID="onboarding-contact-skip"
+                accessibilityLabel="onboarding-contact-skip"
+                style={styles.skipButton}
+                onPress={handleSkip}
+              >
+                <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
+                  {t('contact.skip')}
+                </ThemedText>
+              </Pressable>
+              <Pressable
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.primary },
+                  (!name.trim() || !phone.trim()) && styles.buttonDisabled,
+                ]}
+                onPress={handleContinue}
+              >
+                <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
+                  {t('contact.continue')}
+                </ThemedText>
+              </Pressable>
+            </View>
+          }
+        >
           <OnboardingStepHeader activeStep={4} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
@@ -167,33 +194,7 @@ export default function ContactScreen() {
               {t('contact.infoBox.body')}
             </ThemedText>
           </View>
-        </ScrollView>
-        </KeyboardAvoidingView>
-
-        <View style={styles.footer}>
-          <Pressable
-            testID="onboarding-contact-skip"
-            accessibilityLabel="onboarding-contact-skip"
-            style={styles.skipButton}
-            onPress={handleSkip}
-          >
-            <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
-              {t('contact.skip')}
-            </ThemedText>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.button,
-              { backgroundColor: theme.primary },
-              (!name.trim() || !phone.trim()) && styles.buttonDisabled,
-            ]}
-            onPress={handleContinue}
-          >
-            <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-              {t('contact.continue')}
-            </ThemedText>
-          </Pressable>
-        </View>
+        </KeyboardAvoidingScroll>
     </SafeAreaView>
   );
 }

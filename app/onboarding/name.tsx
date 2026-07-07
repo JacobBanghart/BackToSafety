@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { Colors } from '@/constants/Colors';
@@ -62,7 +63,27 @@ export default function NameScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <View style={[styles.keyboardView, styles.content]}>
+        <KeyboardAvoidingScroll
+          style={styles.scrollView}
+          contentContainerStyle={styles.content}
+          footer={
+            <View style={styles.footer}>
+              <Pressable
+                testID="onboarding-name-continue"
+                accessibilityLabel="onboarding-name-continue"
+                style={[
+                  styles.button,
+                  { backgroundColor: theme.primary },
+                  !name.trim() && styles.buttonDisabled,
+                ]}
+                onPress={handleContinue}
+                disabled={!name.trim()}
+              >
+                <ThemedText style={styles.buttonText}>{t('name.continue')}</ThemedText>
+              </Pressable>
+            </View>
+          }
+        >
           <OnboardingStepHeader activeStep={1} totalSteps={4} />
 
           <ThemedText type="title" style={styles.title}>
@@ -128,23 +149,7 @@ export default function NameScreen() {
 
             {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
           </View>
-        </View>
-
-        <View style={styles.footer}>
-          <Pressable
-            testID="onboarding-name-continue"
-            accessibilityLabel="onboarding-name-continue"
-            style={[
-              styles.button,
-              { backgroundColor: theme.primary },
-              !name.trim() && styles.buttonDisabled,
-            ]}
-            onPress={handleContinue}
-            disabled={!name.trim()}
-          >
-            <ThemedText style={styles.buttonText}>{t('name.continue')}</ThemedText>
-          </Pressable>
-        </View>
+        </KeyboardAvoidingScroll>
     </SafeAreaView>
   );
 }
@@ -156,8 +161,10 @@ const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
   },
-  content: {
+  scrollView: {
     flex: 1,
+  },
+  content: {
     paddingHorizontal: Spacing.xl,
     paddingTop: 20,
   },

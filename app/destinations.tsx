@@ -10,7 +10,6 @@ import { track } from '@/utils/analytics';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
-  KeyboardAvoidingView,
   Linking,
   Modal,
   Platform,
@@ -26,6 +25,7 @@ import DraggableFlatList, { RenderItemParams } from '@/utils/draggable-flatlist'
 
 import { AppModal } from '@/components/AppModal';
 import { AppTextInput } from '@/components/AppTextInput';
+import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
@@ -482,8 +482,7 @@ export default function DestinationsScreen() {
   };
 
   const renderForm = () => (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? undefined : 'height'}>
-    <ScrollView style={styles.formContainer} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+    <KeyboardAvoidingScroll style={styles.formContainer}>
       <ThemedText style={styles.formTitle}>
         {editingDestination ? t('form.editTitle') : t('form.newTitle')}
       </ThemedText>
@@ -638,8 +637,7 @@ export default function DestinationsScreen() {
       )}
 
       <View style={{ height: 40 }} />
-    </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingScroll>
   );
 
   const renderDestinationList = () => (

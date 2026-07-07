@@ -75,6 +75,29 @@ Used for grouped content blocks, summary cards, and modal-style sections.
 
 ---
 
+### `KeyboardAvoidingScroll`
+
+Wraps `KeyboardAvoidingView` + `ScrollView` so scrollable forms behave consistently when the keyboard opens. **Any screen with a `TextInput`/`AppTextInput` must render it inside this component** — do not hand-roll `KeyboardAvoidingView`/`ScrollView` directly. See `CLAUDE.md` at the repo root for the full rationale; this has regressed twice already (missing wrapper, then double keyboard-inset compensation).
+
+**Props:** (extends `ScrollViewProps`, forwards a `ScrollView` ref)
+
+- `footer?: React.ReactNode` — content pinned below the scroll area (e.g. a bottom CTA button) that must also lift above the keyboard. Passing this switches iOS to `'padding'` behavior and disables the ScrollView's own `automaticallyAdjustKeyboardInsets` (both active at once double-pads the bottom).
+- All other `ScrollView` props (`style`, `contentContainerStyle`, etc.) pass through.
+
+**Usage:**
+
+```tsx
+<KeyboardAvoidingScroll
+  style={styles.scrollView}
+  contentContainerStyle={styles.content}
+  footer={<View style={styles.footer}>{/* CTA button */}</View>}
+>
+  {/* form fields */}
+</KeyboardAvoidingScroll>
+```
+
+---
+
 ## 3. Inputs
 
 ### `AppTextInput`
