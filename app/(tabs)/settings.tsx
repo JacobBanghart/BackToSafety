@@ -9,7 +9,7 @@ export default function SettingsTabRedirect() {
   useFocusEffect(
     useCallback(() => {
       router.replace('/settings');
-    }, []),
+    }, [router]),
   );
 
   return <View style={{ flex: 1 }} />;

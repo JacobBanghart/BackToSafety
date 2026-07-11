@@ -72,7 +72,6 @@ export async function hasProfile(): Promise<boolean> {
  * Create or update the profile
  */
 export async function saveProfile(profile: Partial<Profile>): Promise<void> {
-  const db = await getDatabase();
   const exists = await hasProfile();
 
   if (exists) {

@@ -8,7 +8,7 @@ export default function HomeTabRedirect() {
   useFocusEffect(
     useCallback(() => {
       router.replace('/');
-    }, []),
+    }, [router]),
   );
   return <View style={{ flex: 1 }} />;
 }

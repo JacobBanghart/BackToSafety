@@ -820,7 +820,7 @@ export default function ReadoutScreen() {
 type ThemeColors = typeof Colors.light;
 
 function InfoRow({
-  icon,
+  icon: _icon,
   label,
   value,
   theme,

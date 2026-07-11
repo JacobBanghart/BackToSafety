@@ -1,8 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
-import { EventArg, NavigationProp, ParamListBase } from '@react-navigation/native';
-
-type BeforeRemoveEvent = EventArg<'beforeRemove', true, { action: unknown }>;
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
 
 type UseUnsavedChangesGuardOptions = {
   navigation: Pick<NavigationProp<ParamListBase>, 'addListener' | 'dispatch'>;

@@ -84,5 +84,14 @@
     "vite-plus": "^0.2.4",
     "vitest": "^4.1.10"
   },
-  "private": true
+  "private": true,
+  "expo": {
+    "doctor": {
+      "reactNativeDirectoryCheck": {
+        "exclude": [
+          "posthog-react-native-session-replay"
+        ]
+      }
+    }
+  }
 }
