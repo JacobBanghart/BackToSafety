@@ -132,11 +132,10 @@ export default function SettingsScreen() {
     }
   };
 
-return (
+  return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
       <ScreenHeader title={t('screenTitle')} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-
         {/* Theme Section */}
         <AppCard>
           <View style={styles.sectionHeader}>
@@ -262,7 +261,6 @@ return (
                 );
               })}
             </View>
-
           </AppCard>
         )}
 

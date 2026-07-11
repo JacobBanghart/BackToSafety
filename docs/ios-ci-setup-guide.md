@@ -133,14 +133,14 @@ base64 -i AuthKey_XXXXXXXXXX.p8 | pbcopy
 Go to your GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**
 and add each of these:
 
-| Secret name | Value |
-|-------------|-------|
-| `IOS_CERTIFICATE_BASE64` | base64 output from dist_cert.p12 |
-| `IOS_CERTIFICATE_PASSWORD` | password you chose when exporting the .p12 |
+| Secret name                       | Value                                        |
+| --------------------------------- | -------------------------------------------- |
+| `IOS_CERTIFICATE_BASE64`          | base64 output from dist_cert.p12             |
+| `IOS_CERTIFICATE_PASSWORD`        | password you chose when exporting the .p12   |
 | `IOS_PROVISIONING_PROFILE_BASE64` | base64 output from the .mobileprovision file |
-| `ASC_API_KEY_ID` | Key ID from Account Holder (Step 3) |
-| `ASC_API_KEY_ISSUER_ID` | Issuer ID from Account Holder (Step 3) |
-| `ASC_API_KEY_BASE64` | base64 output from the .p8 file |
+| `ASC_API_KEY_ID`                  | Key ID from Account Holder (Step 3)          |
+| `ASC_API_KEY_ISSUER_ID`           | Issuer ID from Account Holder (Step 3)       |
+| `ASC_API_KEY_BASE64`              | base64 output from the .p8 file              |
 
 ### Update the Workflow with Your Team ID
 

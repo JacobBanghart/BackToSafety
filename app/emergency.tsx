@@ -468,7 +468,12 @@ export default function EmergencyScreen() {
   }
 
   return (
-    <SafeAreaView testID="emergency-screen" accessibilityLabel="emergency-screen" style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
+    <SafeAreaView
+      testID="emergency-screen"
+      accessibilityLabel="emergency-screen"
+      style={[styles.container, { backgroundColor: theme.background }]}
+      edges={['top']}
+    >
       {/* Modal */}
       <Modal
         visible={modalVisible}
@@ -840,8 +845,15 @@ export default function EmergencyScreen() {
                     <ThemedText style={[styles.destinationsLabel, { color: theme.textSecondary }]}>
                       {t('checklist.savedPlaces')}
                     </ThemedText>
-                    <ThemedText style={[styles.destinationItem, { color: primary[600] }]} numberOfLines={2} ellipsizeMode="tail">
-                      {destinations.slice(0, 5).map((d) => d.name).join(' • ')}
+                    <ThemedText
+                      style={[styles.destinationItem, { color: primary[600] }]}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
+                      {destinations
+                        .slice(0, 5)
+                        .map((d) => d.name)
+                        .join(' • ')}
                       {destinations.length > 5 ? ` +${destinations.length - 5}` : ''}
                     </ThemedText>
                   </View>
@@ -864,7 +876,11 @@ export default function EmergencyScreen() {
           <ThemedText style={[styles.tipsTitle, { color: isDark ? primary[200] : primary[800] }]}>
             {t('tips.title')}
           </ThemedText>
-          <ThemedText style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]} numberOfLines={5} ellipsizeMode="tail">
+          <ThemedText
+            style={[styles.tipsText, { color: isDark ? primary[300] : primary[700] }]}
+            numberOfLines={5}
+            ellipsizeMode="tail"
+          >
             {profile?.deescalationTechniques
               ? `${t('tips.body')}\n• ${profile.deescalationTechniques}`
               : t('tips.body')}

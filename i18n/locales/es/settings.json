@@ -36,7 +36,7 @@
     "light": "",
     "dark": ""
   },
-"deleteAccountModal": {
+  "deleteAccountModal": {
     "title": "Eliminar cuenta",
     "message": "Esto eliminará permanentemente todos los datos almacenados en este dispositivo. Esta acción no se puede deshacer.",
     "confirm": "Eliminar cuenta",
@@ -46,5 +46,5 @@
     "title": "",
     "message": ""
   },
-"deleteAccountError": "No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo."
+  "deleteAccountError": "No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo."
 }

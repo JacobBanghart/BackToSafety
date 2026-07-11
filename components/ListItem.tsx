@@ -20,9 +20,7 @@ export function ListItem({ label, value, onPress, rightElement, style }: ListIte
 
   const inner = (
     <View style={[styles.row, { borderBottomColor: theme.border }, style]}>
-      <ThemedText style={[styles.label, { color: theme.textSecondary }]}>
-        {label}
-      </ThemedText>
+      <ThemedText style={[styles.label, { color: theme.textSecondary }]}>{label}</ThemedText>
 
       {rightElement != null ? (
         rightElement

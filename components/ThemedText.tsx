@@ -36,31 +36,25 @@ export function ThemedText({
   // Resolve legacy type aliases to their style objects.
   const legacyStyle = (() => {
     switch (type) {
-      case 'default':      return styles.default;
-      case 'defaultSemiBold': return styles.defaultSemiBold;
+      case 'default':
+        return styles.default;
+      case 'defaultSemiBold':
+        return styles.defaultSemiBold;
       // 'title' falls through to the Typography token below.
-      case 'subtitle':    return styles.subtitle;
-      case 'link':        return [styles.link, { color: linkColor }];
-      default:            return undefined;
+      case 'subtitle':
+        return styles.subtitle;
+      case 'link':
+        return [styles.link, { color: linkColor }];
+      default:
+        return undefined;
     }
   })();
 
   // Resolve design-system Typography tokens.
-  const typographyStyle = (type as string) in Typography
-    ? Typography[type as TypographyVariant]
-    : undefined;
+  const typographyStyle =
+    (type as string) in Typography ? Typography[type as TypographyVariant] : undefined;
 
-  return (
-    <Text
-      style={[
-        { color },
-        legacyStyle,
-        typographyStyle,
-        style,
-      ]}
-      {...rest}
-    />
-  );
+  return <Text style={[{ color }, legacyStyle, typographyStyle, style]} {...rest} />;
 }
 
 const styles = StyleSheet.create({

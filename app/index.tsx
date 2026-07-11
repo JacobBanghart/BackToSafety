@@ -111,7 +111,12 @@ export default function HomeScreen() {
                 {t('caringFor')}
               </ThemedText>
             )}
-            <ThemedText type="headline" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
+            <ThemedText
+              type="headline"
+              style={{ color: theme.text }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {hasProfile ? profile.name : t('appTitle')}
             </ThemedText>
           </View>
@@ -171,7 +176,11 @@ export default function HomeScreen() {
             <View style={styles.emergencyActiveContent}>
               <View style={styles.emergencyContent}>
                 <View style={styles.emergencyIconWrap}>
-                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color={Colors.light.textOnPrimary} />
+                  <IconSymbol
+                    name="exclamationmark.triangle.fill"
+                    size={28}
+                    color={Colors.light.textOnPrimary}
+                  />
                 </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>
@@ -196,7 +205,11 @@ export default function HomeScreen() {
             <View style={styles.emergencyActiveContent}>
               <View style={styles.emergencyContent}>
                 <View style={styles.emergencyIconWrap}>
-                  <IconSymbol name="exclamationmark.triangle.fill" size={28} color={Colors.light.textOnPrimary} />
+                  <IconSymbol
+                    name="exclamationmark.triangle.fill"
+                    size={28}
+                    color={Colors.light.textOnPrimary}
+                  />
                 </View>
                 <View style={styles.emergencyTextContainer}>
                   <ThemedText style={styles.emergencyTitle}>
@@ -286,7 +299,10 @@ export default function HomeScreen() {
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
                       {t('emergencyInfo.healthNotes')}
                     </ThemedText>
-                    <ThemedText style={[styles.summaryValue, { color: theme.text }]} numberOfLines={2}>
+                    <ThemedText
+                      style={[styles.summaryValue, { color: theme.text }]}
+                      numberOfLines={2}
+                    >
                       {profile.medicalConditions}
                     </ThemedText>
                   </View>
@@ -296,7 +312,10 @@ export default function HomeScreen() {
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
                       {t('emergencyInfo.medications')}
                     </ThemedText>
-                    <ThemedText style={[styles.summaryValue, { color: theme.text }]} numberOfLines={2}>
+                    <ThemedText
+                      style={[styles.summaryValue, { color: theme.text }]}
+                      numberOfLines={2}
+                    >
                       {profile.medications}
                     </ThemedText>
                   </View>
@@ -306,7 +325,10 @@ export default function HomeScreen() {
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
                       {t('emergencyInfo.cognitiveStatus')}
                     </ThemedText>
-                    <ThemedText style={[styles.summaryValue, { color: theme.text }]} numberOfLines={2}>
+                    <ThemedText
+                      style={[styles.summaryValue, { color: theme.text }]}
+                      numberOfLines={2}
+                    >
                       {profile.cognitiveStatus}
                     </ThemedText>
                   </View>
@@ -316,7 +338,10 @@ export default function HomeScreen() {
                     <ThemedText style={[styles.summaryLabel, { color: theme.textSecondary }]}>
                       {t('emergencyInfo.deescalation')}
                     </ThemedText>
-                    <ThemedText style={[styles.summaryValue, { color: theme.text }]} numberOfLines={2}>
+                    <ThemedText
+                      style={[styles.summaryValue, { color: theme.text }]}
+                      numberOfLines={2}
+                    >
                       {profile.deescalationTechniques}
                     </ThemedText>
                   </View>
@@ -432,7 +457,13 @@ const styles = StyleSheet.create({
   emergencyTextContainer: { flex: 1 },
   emergencyTitle: { color: Colors.light.textOnPrimary, ...Typography.bodyBold, marginBottom: 2 },
   emergencySubtitle: { color: 'rgba(255,255,255,0.8)', ...Typography.caption },
-  emergencyProgressFill: { position: 'absolute', top: 0, left: 0, bottom: 0, backgroundColor: EMERGENCY_SWEEP_COLOR },
+  emergencyProgressFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    bottom: 0,
+    backgroundColor: EMERGENCY_SWEEP_COLOR,
+  },
   emergencyActiveContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -480,7 +511,12 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   viewScriptHint: { ...Typography.caption, fontWeight: '600' },
-  summaryGrid: { gap: Spacing.md, marginTop: Spacing.md, paddingTop: Spacing.md, borderTopWidth: 1 },
+  summaryGrid: {
+    gap: Spacing.md,
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+  },
   summaryItem: {},
   summaryLabel: {
     ...Typography.small,

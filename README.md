@@ -22,14 +22,14 @@ A React Native / Expo app for caregivers of people with dementia or other wander
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Expo SDK 54 (React Native 0.81) |
-| Navigation | Expo Router (file-based) |
+| Layer         | Technology                                                      |
+| ------------- | --------------------------------------------------------------- |
+| Framework     | Expo SDK 54 (React Native 0.81)                                 |
+| Navigation    | Expo Router (file-based)                                        |
 | Local storage | SQLite via `expo-sqlite`, secure values via `expo-secure-store` |
-| Analytics | PostHog (session replay + events) |
-| Testing | Vitest (unit), Playwright (e2e web) |
-| CI / Releases | EAS Build + EAS Submit |
+| Analytics     | PostHog (session replay + events)                               |
+| Testing       | Vitest (unit), Playwright (e2e web)                             |
+| CI / Releases | EAS Build + EAS Submit                                          |
 
 ---
 
@@ -52,21 +52,21 @@ npm run web       # Browser
 
 ## Scripts
 
-| Script | Description |
-|--------|-------------|
-| `npm start` | Start Expo dev server |
-| `npm run android` | Run on Android emulator |
-| `npm run ios` | Run on iOS simulator |
-| `npm run web` | Run in browser |
-| `npm test` | Run unit tests (Vitest) |
-| `npm run test:coverage` | Unit tests with coverage report |
-| `npm run e2e` | Run Playwright end-to-end tests |
-| `npm run lint` | Lint with ESLint |
-| `npm run typecheck` | TypeScript type check |
-| `npm run format` | Format with Prettier |
-| `npm run prebuild` | Generate native Android/iOS projects |
-| `npm run build:apk` | Build release APK locally |
-| `npm run build:aab` | Build release AAB locally |
+| Script                  | Description                          |
+| ----------------------- | ------------------------------------ |
+| `npm start`             | Start Expo dev server                |
+| `npm run android`       | Run on Android emulator              |
+| `npm run ios`           | Run on iOS simulator                 |
+| `npm run web`           | Run in browser                       |
+| `npm test`              | Run unit tests (Vitest)              |
+| `npm run test:coverage` | Unit tests with coverage report      |
+| `npm run e2e`           | Run Playwright end-to-end tests      |
+| `npm run lint`          | Lint with ESLint                     |
+| `npm run typecheck`     | TypeScript type check                |
+| `npm run format`        | Format with Prettier                 |
+| `npm run prebuild`      | Generate native Android/iOS projects |
+| `npm run build:apk`     | Build release APK locally            |
+| `npm run build:aab`     | Build release AAB locally            |
 
 ---
 

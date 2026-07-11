@@ -37,12 +37,7 @@ export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenH
     });
 
   return (
-    <View
-      style={[
-        styles.header,
-        { backgroundColor: theme.background },
-      ]}
-    >
+    <View style={[styles.header, { backgroundColor: theme.background }]}>
       {/* Left: back button */}
       <TouchableOpacity style={styles.sideSlot} onPress={handleBack} hitSlop={8}>
         <IconSymbol name="chevron.left" size={22} color={theme.tint} />
@@ -52,7 +47,11 @@ export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenH
       <View style={styles.titleOverlay} pointerEvents="none">
         {titleIcon ? (
           <View style={styles.titleRow}>
-            <IconSymbol name={titleIcon.name as any} size={titleIcon.size ?? 18} color={titleIcon.color} />
+            <IconSymbol
+              name={titleIcon.name as any}
+              size={titleIcon.size ?? 18}
+              color={titleIcon.color}
+            />
             <ThemedText style={[styles.titleRowText, { color: theme.text }]} numberOfLines={1}>
               {title}
             </ThemedText>
@@ -89,7 +88,7 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   titleOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 44 + Spacing.md,

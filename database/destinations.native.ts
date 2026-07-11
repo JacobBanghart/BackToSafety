@@ -34,7 +34,9 @@ export interface Destination {
  */
 export async function getDestinations(): Promise<Destination[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<any>(`SELECT * FROM destinations ORDER BY sort_order, created_at`);
+  const rows = await db.getAllAsync<any>(
+    `SELECT * FROM destinations ORDER BY sort_order, created_at`,
+  );
   return rows.map(mapRowToDestination);
 }
 

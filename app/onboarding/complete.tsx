@@ -65,10 +65,7 @@ export default function CompleteScreen() {
             t('complete.nextSteps.contacts'),
             t('complete.nextSteps.checklist'),
           ].map((item) => (
-            <View
-              key={item}
-              style={[styles.nextStepRow, { borderLeftColor: theme.border }]}
-            >
+            <View key={item} style={[styles.nextStepRow, { borderLeftColor: theme.border }]}>
               <ThemedText style={[styles.nextStepItem, { color: theme.textSecondary }]}>
                 {item}
               </ThemedText>

@@ -94,7 +94,9 @@ export default function ReadoutScreen() {
       appearanceDesc ? t('copyBlock.appearance', { desc: appearanceDesc }) : undefined,
       medicalDesc ? t('copyBlock.importantDetails', { desc: medicalDesc }) : undefined,
       profile.medications ? t('copyBlock.medications', { value: profile.medications }) : undefined,
-      profile.cognitiveStatus ? t('copyBlock.cognitiveStatus', { value: profile.cognitiveStatus }) : undefined,
+      profile.cognitiveStatus
+        ? t('copyBlock.cognitiveStatus', { value: profile.cognitiveStatus })
+        : undefined,
       profile.mobilityLevel ? t('copyBlock.mobility', { value: profile.mobilityLevel }) : undefined,
       profile.mobilityLevel &&
       [
@@ -111,18 +113,26 @@ export default function ReadoutScreen() {
       profile.communicationPreference
         ? t('copyBlock.communication', { value: profile.communicationPreference })
         : undefined,
-      profile.dislikesTriggers ? t('copyBlock.triggers', { value: profile.dislikesTriggers }) : undefined,
+      profile.dislikesTriggers
+        ? t('copyBlock.triggers', { value: profile.dislikesTriggers })
+        : undefined,
       profile.deescalationTechniques
         ? t('copyBlock.deescalation', { value: profile.deescalationTechniques })
         : undefined,
       profile.likes ? t('copyBlock.likes', { value: profile.likes }) : undefined,
-      profile.approachGuidance ? t('copyBlock.approach', { value: profile.approachGuidance }) : undefined,
+      profile.approachGuidance
+        ? t('copyBlock.approach', { value: profile.approachGuidance })
+        : undefined,
       profile.safeWord ? t('copyBlock.safeWord', { value: profile.safeWord }) : undefined,
       t('copyBlock.lastSeen', { time: ls }),
       t('copyBlock.coordinates', { coords: coordinates }),
-      profile.locativeDeviceInfo ? t('copyBlock.locator', { value: profile.locativeDeviceInfo }) : undefined,
+      profile.locativeDeviceInfo
+        ? t('copyBlock.locator', { value: profile.locativeDeviceInfo })
+        : undefined,
       profile.idBracelets ? t('copyBlock.idBracelet', { value: profile.idBracelets }) : undefined,
-      profile.medicAlertId ? t('copyBlock.medicAlertId', { value: profile.medicAlertId }) : undefined,
+      profile.medicAlertId
+        ? t('copyBlock.medicAlertId', { value: profile.medicAlertId })
+        : undefined,
       '',
       t('copyBlock.wearingReminder'),
     ]
@@ -133,10 +143,7 @@ export default function ReadoutScreen() {
   const script = useMemo(() => {
     if (!profile) return '';
 
-    const scriptParts: string[] = [
-      t('script.opening'),
-      t('script.name', { name: profile.name }),
-    ];
+    const scriptParts: string[] = [t('script.opening'), t('script.name', { name: profile.name })];
 
     if (profile.dateOfBirth) {
       const age = new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear();
@@ -144,14 +151,19 @@ export default function ReadoutScreen() {
     }
 
     if (lastSeen.time) {
-      scriptParts.push(t('script.lastSeenTime', { time: new Date(lastSeen.time).toLocaleString() }));
+      scriptParts.push(
+        t('script.lastSeenTime', { time: new Date(lastSeen.time).toLocaleString() }),
+      );
     } else {
       scriptParts.push(t('script.lastSeenUnknown'));
     }
 
     if (lastSeen.coords) {
       scriptParts.push(
-        t('script.locationCoords', { lat: lastSeen.coords.lat.toFixed(5), lon: lastSeen.coords.lon.toFixed(5) }),
+        t('script.locationCoords', {
+          lat: lastSeen.coords.lat.toFixed(5),
+          lon: lastSeen.coords.lon.toFixed(5),
+        }),
       );
     } else {
       scriptParts.push(t('script.locationUnknown'));
@@ -277,10 +289,7 @@ export default function ReadoutScreen() {
     : null;
 
   return (
-    <SafeAreaView
-      style={{ flex: 1, backgroundColor: theme.background }}
-      edges={['top']}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
       <ScreenHeader
         title={t('screenTitle')}
         onBack={() => {
@@ -289,7 +298,6 @@ export default function ReadoutScreen() {
         }}
       />
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
-
         {/* Call 911 Button - Most prominent */}
         <Pressable style={[styles.emergencyButton, getShadow('sm', colorScheme)]} onPress={call911}>
           <ThemedText style={styles.emergencyButtonText}>{t('callButton')}</ThemedText>
@@ -348,11 +356,20 @@ export default function ReadoutScreen() {
               </View>
             )}
             <View style={styles.identityInfo}>
-              <ThemedText type="headline" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
+              <ThemedText
+                type="headline"
+                style={{ color: theme.text }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {profile.name}
               </ThemedText>
               {profile.nickname && (
-                <ThemedText style={[styles.nickname, { color: theme.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+                <ThemedText
+                  style={[styles.nickname, { color: theme.textSecondary }]}
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
                   {t('sections.identity.goesBy', { nickname: profile.nickname })}
                 </ThemedText>
               )}
@@ -698,10 +715,20 @@ export default function ReadoutScreen() {
             {emergencyContacts.map((c) => (
               <View key={c.id} style={[styles.contactRow, { borderTopColor: theme.border }]}>
                 <View style={styles.contactInfo}>
-                  <ThemedText type="bodyBold" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
+                  <ThemedText
+                    type="bodyBold"
+                    style={{ color: theme.text }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {c.name}
                   </ThemedText>
-                  <ThemedText type="caption" style={{ color: theme.textSecondary }} numberOfLines={1} ellipsizeMode="tail">
+                  <ThemedText
+                    type="caption"
+                    style={{ color: theme.textSecondary }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
                     {c.relationship || c.role}
                   </ThemedText>
                 </View>
@@ -808,7 +835,13 @@ function InfoRow({
       <ThemedText type="caption" style={[infoRowStyles.label, { color: theme.textSecondary }]}>
         {label}
       </ThemedText>
-      <ThemedText style={[infoRowStyles.value, { color: theme.text }]} numberOfLines={4} ellipsizeMode="tail">{value}</ThemedText>
+      <ThemedText
+        style={[infoRowStyles.value, { color: theme.text }]}
+        numberOfLines={4}
+        ellipsizeMode="tail"
+      >
+        {value}
+      </ThemedText>
     </View>
   );
 }
@@ -821,7 +854,12 @@ function InfoChip({ label, value, theme }: { label: string; value: string; theme
       <ThemedText type="small" style={{ color: theme.textSecondary }}>
         {label}
       </ThemedText>
-      <ThemedText type="bodyBold" style={{ color: theme.text }} numberOfLines={1} ellipsizeMode="tail">
+      <ThemedText
+        type="bodyBold"
+        style={{ color: theme.text }}
+        numberOfLines={1}
+        ellipsizeMode="tail"
+      >
         {value}
       </ThemedText>
     </View>

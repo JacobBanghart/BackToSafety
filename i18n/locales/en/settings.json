@@ -36,7 +36,7 @@
     "light": "Light",
     "dark": "Dark"
   },
-"deleteAccountModal": {
+  "deleteAccountModal": {
     "title": "Delete Account",
     "message": "This will permanently delete all data stored on this device. This action cannot be undone.",
     "confirm": "Delete Account",
@@ -46,5 +46,5 @@
     "title": "Developer Mode",
     "message": "Developer options are now enabled!"
   },
-"deleteAccountError": "Failed to delete account. Please try again."
+  "deleteAccountError": "Failed to delete account. Please try again."
 }

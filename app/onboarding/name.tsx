@@ -6,13 +6,7 @@
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { useEffect, useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
@@ -63,93 +57,93 @@ export default function NameScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <KeyboardAvoidingScroll
-          style={styles.scrollView}
-          contentContainerStyle={styles.content}
-          footer={
-            <View style={styles.footer}>
-              <Pressable
-                testID="onboarding-name-continue"
-                accessibilityLabel="onboarding-name-continue"
-                style={[
-                  styles.button,
-                  { backgroundColor: theme.primary },
-                  !name.trim() && styles.buttonDisabled,
-                ]}
-                onPress={handleContinue}
-                disabled={!name.trim()}
-              >
-                <ThemedText style={styles.buttonText}>{t('name.continue')}</ThemedText>
-              </Pressable>
-            </View>
-          }
-        >
-          <OnboardingStepHeader activeStep={1} totalSteps={4} />
-
-          <ThemedText type="title" style={styles.title}>
-            {t('name.title')}
-          </ThemedText>
-
-          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            {t('name.subtitle')}
-          </ThemedText>
-
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>{t('name.nameLabel')}</ThemedText>
-              <TextInput
-                testID="onboarding-name-input"
-                accessibilityLabel="onboarding-name-input"
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.inputBackground,
-                    borderColor: theme.inputBorder,
-                    color: theme.text,
-                  },
-                ]}
-                value={name}
-                onChangeText={(text) => {
-                  setName(text);
-                  setError('');
-                }}
-                placeholder={t('name.namePlaceholder')}
-                placeholderTextColor={theme.inputPlaceholder}
-                autoFocus
-                autoCapitalize="words"
-                autoComplete="name"
-                multiline={false}
-                numberOfLines={1}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>{t('name.nicknameLabel')}</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.inputBackground,
-                    borderColor: theme.inputBorder,
-                    color: theme.text,
-                  },
-                ]}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder={t('name.nicknamePlaceholder')}
-                placeholderTextColor={theme.inputPlaceholder}
-                autoCapitalize="words"
-                multiline={false}
-                numberOfLines={1}
-              />
-              <ThemedText style={[styles.hint, { color: theme.textDisabled }]}>
-                {t('name.nicknameHint')}
-              </ThemedText>
-            </View>
-
-            {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      <KeyboardAvoidingScroll
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+        footer={
+          <View style={styles.footer}>
+            <Pressable
+              testID="onboarding-name-continue"
+              accessibilityLabel="onboarding-name-continue"
+              style={[
+                styles.button,
+                { backgroundColor: theme.primary },
+                !name.trim() && styles.buttonDisabled,
+              ]}
+              onPress={handleContinue}
+              disabled={!name.trim()}
+            >
+              <ThemedText style={styles.buttonText}>{t('name.continue')}</ThemedText>
+            </Pressable>
           </View>
-        </KeyboardAvoidingScroll>
+        }
+      >
+        <OnboardingStepHeader activeStep={1} totalSteps={4} />
+
+        <ThemedText type="title" style={styles.title}>
+          {t('name.title')}
+        </ThemedText>
+
+        <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
+          {t('name.subtitle')}
+        </ThemedText>
+
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>{t('name.nameLabel')}</ThemedText>
+            <TextInput
+              testID="onboarding-name-input"
+              accessibilityLabel="onboarding-name-input"
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
+              ]}
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                setError('');
+              }}
+              placeholder={t('name.namePlaceholder')}
+              placeholderTextColor={theme.inputPlaceholder}
+              autoFocus
+              autoCapitalize="words"
+              autoComplete="name"
+              multiline={false}
+              numberOfLines={1}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>{t('name.nicknameLabel')}</ThemedText>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
+              ]}
+              value={nickname}
+              onChangeText={setNickname}
+              placeholder={t('name.nicknamePlaceholder')}
+              placeholderTextColor={theme.inputPlaceholder}
+              autoCapitalize="words"
+              multiline={false}
+              numberOfLines={1}
+            />
+            <ThemedText style={[styles.hint, { color: theme.textDisabled }]}>
+              {t('name.nicknameHint')}
+            </ThemedText>
+          </View>
+
+          {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+        </View>
+      </KeyboardAvoidingScroll>
     </SafeAreaView>
   );
 }

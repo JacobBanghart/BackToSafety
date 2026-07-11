@@ -6,13 +6,7 @@
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { useEffect, useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
@@ -74,127 +68,127 @@ export default function ContactScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <KeyboardAvoidingScroll
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          footer={
-            <View style={styles.footer}>
-              <Pressable
-                testID="onboarding-contact-skip"
-                accessibilityLabel="onboarding-contact-skip"
-                style={styles.skipButton}
-                onPress={handleSkip}
-              >
-                <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
-                  {t('contact.skip')}
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                style={[
-                  styles.button,
-                  { backgroundColor: theme.primary },
-                  (!name.trim() || !phone.trim()) && styles.buttonDisabled,
-                ]}
-                onPress={handleContinue}
-              >
-                <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-                  {t('contact.continue')}
-                </ThemedText>
-              </Pressable>
-            </View>
-          }
-        >
-          <OnboardingStepHeader activeStep={4} totalSteps={4} />
+      <KeyboardAvoidingScroll
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        footer={
+          <View style={styles.footer}>
+            <Pressable
+              testID="onboarding-contact-skip"
+              accessibilityLabel="onboarding-contact-skip"
+              style={styles.skipButton}
+              onPress={handleSkip}
+            >
+              <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
+                {t('contact.skip')}
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              style={[
+                styles.button,
+                { backgroundColor: theme.primary },
+                (!name.trim() || !phone.trim()) && styles.buttonDisabled,
+              ]}
+              onPress={handleContinue}
+            >
+              <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
+                {t('contact.continue')}
+              </ThemedText>
+            </Pressable>
+          </View>
+        }
+      >
+        <OnboardingStepHeader activeStep={4} totalSteps={4} />
 
-          <ThemedText type="title" style={styles.title}>
-            {t('contact.title')}
-          </ThemedText>
+        <ThemedText type="title" style={styles.title}>
+          {t('contact.title')}
+        </ThemedText>
 
-          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            {t('contact.subtitle')}
-          </ThemedText>
+        <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
+          {t('contact.subtitle')}
+        </ThemedText>
 
-          <View style={styles.form}>
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>{t('contact.nameLabel')}</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.inputBackground,
-                    borderColor: theme.inputBorder,
-                    color: theme.text,
-                  },
-                ]}
-                value={name}
-                onChangeText={(text) => {
-                  setName(text);
-                  setError('');
-                }}
-                placeholder={t('contact.namePlaceholder')}
-                placeholderTextColor={theme.inputPlaceholder}
-                autoCapitalize="words"
-                autoComplete="name"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>{t('contact.phoneLabel')}</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.inputBackground,
-                    borderColor: theme.inputBorder,
-                    color: theme.text,
-                  },
-                ]}
-                value={phone}
-                onChangeText={(text) => {
-                  setPhone(formatPhoneInput(text));
-                  setError('');
-                }}
-                placeholder={t('contact.phonePlaceholder')}
-                placeholderTextColor={theme.inputPlaceholder}
-                keyboardType="phone-pad"
-                inputMode="tel"
-                autoComplete="tel"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>{t('contact.relationshipLabel')}</ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: theme.inputBackground,
-                    borderColor: theme.inputBorder,
-                    color: theme.text,
-                  },
-                ]}
-                value={relationship}
-                onChangeText={setRelationship}
-                placeholder={t('contact.relationshipPlaceholder')}
-                placeholderTextColor={theme.inputPlaceholder}
-                autoCapitalize="words"
-              />
-            </View>
-
-            {error ? (
-              <ThemedText style={[styles.error, { color: theme.error }]}>{error}</ThemedText>
-            ) : null}
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>{t('contact.nameLabel')}</ThemedText>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
+              ]}
+              value={name}
+              onChangeText={(text) => {
+                setName(text);
+                setError('');
+              }}
+              placeholder={t('contact.namePlaceholder')}
+              placeholderTextColor={theme.inputPlaceholder}
+              autoCapitalize="words"
+              autoComplete="name"
+            />
           </View>
 
-          <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
-            <ThemedText style={[styles.infoTitle, { color: theme.text }]}>
-              {t('contact.infoBox.title')}
-            </ThemedText>
-            <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>
-              {t('contact.infoBox.body')}
-            </ThemedText>
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>{t('contact.phoneLabel')}</ThemedText>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
+              ]}
+              value={phone}
+              onChangeText={(text) => {
+                setPhone(formatPhoneInput(text));
+                setError('');
+              }}
+              placeholder={t('contact.phonePlaceholder')}
+              placeholderTextColor={theme.inputPlaceholder}
+              keyboardType="phone-pad"
+              inputMode="tel"
+              autoComplete="tel"
+            />
           </View>
-        </KeyboardAvoidingScroll>
+
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>{t('contact.relationshipLabel')}</ThemedText>
+            <TextInput
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
+              ]}
+              value={relationship}
+              onChangeText={setRelationship}
+              placeholder={t('contact.relationshipPlaceholder')}
+              placeholderTextColor={theme.inputPlaceholder}
+              autoCapitalize="words"
+            />
+          </View>
+
+          {error ? (
+            <ThemedText style={[styles.error, { color: theme.error }]}>{error}</ThemedText>
+          ) : null}
+        </View>
+
+        <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
+          <ThemedText style={[styles.infoTitle, { color: theme.text }]}>
+            {t('contact.infoBox.title')}
+          </ThemedText>
+          <ThemedText style={[styles.infoText, { color: theme.textSecondary }]}>
+            {t('contact.infoBox.body')}
+          </ThemedText>
+        </View>
+      </KeyboardAvoidingScroll>
     </SafeAreaView>
   );
 }

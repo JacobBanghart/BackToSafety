@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigation } from '@react-navigation/native';
 import { track } from '@/utils/analytics';
-import * as Contacts from 'expo-contacts';
+import * as Contacts from 'expo-contacts/legacy';
 import * as Haptics from 'expo-haptics';
 import {
   Alert,
@@ -472,8 +472,14 @@ export default function ContactsScreen() {
 
         <View style={styles.contactHeader}>
           <View style={styles.contactInfo}>
-            <ThemedText style={styles.contactName} numberOfLines={1} ellipsizeMode="tail">{contact.name}</ThemedText>
-            <ThemedText style={[styles.contactMeta, { color: theme.textSecondary }]} numberOfLines={1} ellipsizeMode="tail">
+            <ThemedText style={styles.contactName} numberOfLines={1} ellipsizeMode="tail">
+              {contact.name}
+            </ThemedText>
+            <ThemedText
+              style={[styles.contactMeta, { color: theme.textSecondary }]}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {t(`roles.${roleInfo.value}`)}
               {contact.relationship ? ` • ${contact.relationship}` : ''}
             </ThemedText>
@@ -578,7 +584,11 @@ export default function ContactsScreen() {
                   )
                 }
               >
-                <IconSymbol name={option.icon} size={14} color={isSelected ? Colors.light.textOnPrimary : theme.icon} />
+                <IconSymbol
+                  name={option.icon}
+                  size={14}
+                  color={isSelected ? Colors.light.textOnPrimary : theme.icon}
+                />
                 <ThemedText
                   style={[
                     styles.roleOptionText,

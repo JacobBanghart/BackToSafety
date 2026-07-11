@@ -565,373 +565,383 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <ScreenHeader
-          title={t('screenTitle')}
-          onBack={handleBack}
-          rightElement={
-            <Pressable
-              onPress={handleSave}
-              style={[styles.saveButton, { backgroundColor: theme.tint }]}
-              disabled={isSaving}
-            >
-              <ThemedText style={styles.saveText} numberOfLines={1}>
-                {isSaving ? t('saving') : t('save')}
-              </ThemedText>
-            </Pressable>
-          }
-        />
+      <ScreenHeader
+        title={t('screenTitle')}
+        onBack={handleBack}
+        rightElement={
+          <Pressable
+            onPress={handleSave}
+            style={[styles.saveButton, { backgroundColor: theme.tint }]}
+            disabled={isSaving}
+          >
+            <ThemedText style={styles.saveText} numberOfLines={1}>
+              {isSaving ? t('saving') : t('save')}
+            </ThemedText>
+          </Pressable>
+        }
+      />
 
-        <KeyboardAvoidingScroll style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          {/* Photo Section */}
-          <View style={styles.photoSection}>
-            <View style={styles.photoContainer}>
-              {form.photoUri ? (
-                <Image source={{ uri: form.photoUri }} style={styles.photo} contentFit="cover" />
-              ) : (
-                <View
+      <KeyboardAvoidingScroll
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Photo Section */}
+        <View style={styles.photoSection}>
+          <View style={styles.photoContainer}>
+            {form.photoUri ? (
+              <Image source={{ uri: form.photoUri }} style={styles.photo} contentFit="cover" />
+            ) : (
+              <View
+                style={[
+                  styles.photoPlaceholder,
+                  { backgroundColor: theme.card, borderColor: theme.border },
+                ]}
+              >
+                <IconSymbol name="camera.fill" size={38} color={theme.textSecondary} />
+              </View>
+            )}
+          </View>
+          <View style={styles.photoButtons}>
+            <Pressable
+              style={[styles.photoButton, { backgroundColor: theme.tint }]}
+              onPress={takePhoto}
+            >
+              <ThemedText style={styles.photoButtonText}>{t('takePhoto')}</ThemedText>
+            </Pressable>
+            <Pressable
+              style={[styles.photoButton, { backgroundColor: theme.primary }]}
+              onPress={pickImage}
+            >
+              <ThemedText style={styles.photoButtonText}>{t('choosePhoto')}</ThemedText>
+            </Pressable>
+          </View>
+        </View>
+
+        {/* Personal Info Section */}
+        {renderSection(
+          'personal',
+          t('sections.personal'),
+          'person.fill',
+          <>
+            {renderInput(t('fields.name'), 'name', { placeholder: t('fields.namePlaceholder') })}
+            {renderInput(t('fields.nickname'), 'nickname', {
+              placeholder: t('fields.nicknamePlaceholder'),
+            })}
+            <View style={styles.inputGroup}>
+              <ThemedText style={[styles.label, { color: theme.text }]}>
+                {t('fields.dateOfBirth')}
+              </ThemedText>
+              <View
+                style={[
+                  styles.dateInputContainer,
+                  {
+                    backgroundColor: theme.card,
+                    borderColor: theme.border,
+                  },
+                ]}
+              >
+                <TextInput
                   style={[
-                    styles.photoPlaceholder,
-                    { backgroundColor: theme.card, borderColor: theme.border },
+                    styles.dateInput,
+                    {
+                      color: theme.text,
+                    },
                   ]}
-                >
-                  <IconSymbol name="camera.fill" size={38} color={theme.textSecondary} />
-                </View>
+                  value={form.dateOfBirth}
+                  onChangeText={(v) => updateField('dateOfBirth', formatDobInput(v))}
+                  placeholder="MM/DD/YYYY"
+                  placeholderTextColor={theme.inputPlaceholder}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
+                <Pressable onPress={openDatePicker} style={styles.calendarHint} hitSlop={8}>
+                  <IconSymbol name="calendar" size={18} color={theme.textSecondary} />
+                </Pressable>
+              </View>
+
+              {showDatePicker && Platform.OS !== 'ios' && (
+                <DateTimePicker
+                  value={parseDate(form.dateOfBirth) ?? new Date(1940, 0, 1)}
+                  mode="date"
+                  display="default"
+                  maximumDate={new Date()}
+                  onChange={onAndroidDateChange}
+                />
               )}
             </View>
-            <View style={styles.photoButtons}>
-              <Pressable
-                style={[styles.photoButton, { backgroundColor: theme.tint }]}
-                onPress={takePhoto}
-              >
-                <ThemedText style={styles.photoButtonText}>{t('takePhoto')}</ThemedText>
-              </Pressable>
-              <Pressable
-                style={[styles.photoButton, { backgroundColor: theme.primary }]}
-                onPress={pickImage}
-              >
-                <ThemedText style={styles.photoButtonText}>{t('choosePhoto')}</ThemedText>
-              </Pressable>
-            </View>
-          </View>
 
-          {/* Personal Info Section */}
-          {renderSection(
-            'personal',
-            t('sections.personal'),
-            'person.fill',
-            <>
-              {renderInput(t('fields.name'), 'name', { placeholder: t('fields.namePlaceholder') })}
-              {renderInput(t('fields.nickname'), 'nickname', {
-                placeholder: t('fields.nicknamePlaceholder'),
-              })}
-              <View style={styles.inputGroup}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  {t('fields.dateOfBirth')}
-                </ThemedText>
-                <View
+            <View style={styles.row}>
+              <View style={styles.halfWidth}>
+                {renderInput(t('fields.height'), 'height', {
+                  placeholder: t('fields.heightPlaceholder'),
+                  keyboardType: 'number-pad',
+                })}
+              </View>
+              <View style={styles.halfWidth}>
+                {renderInput(t('fields.weight'), 'weight', {
+                  placeholder: t('fields.weightPlaceholder'),
+                  keyboardType: 'number-pad',
+                })}
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.halfWidth}>
+                {renderInput(t('fields.hairColor'), 'hairColor', {
+                  placeholder: t('fields.hairColorPlaceholder'),
+                })}
+              </View>
+              <View style={styles.halfWidth}>
+                {renderInput(t('fields.eyeColor'), 'eyeColor', {
+                  placeholder: t('fields.eyeColorPlaceholder'),
+                })}
+              </View>
+            </View>
+
+            {renderInput(t('fields.identifyingMarks'), 'identifyingMarks', {
+              placeholder: t('fields.identifyingMarksPlaceholder'),
+              multiline: true,
+              hint: t('fields.identifyingMarksHint'),
+            })}
+          </>,
+        )}
+
+        {/* Medical & Behavioral Section */}
+        {renderSection(
+          'medical',
+          t('sections.medical'),
+          'cross.fill',
+          <>
+            {renderInput(t('fields.medicalConditions'), 'medicalConditions', {
+              placeholder: t('fields.medicalConditionsPlaceholder'),
+              multiline: true,
+            })}
+            {renderInput(t('fields.medications'), 'medications', {
+              placeholder: t('fields.medicationsPlaceholder'),
+              multiline: true,
+            })}
+            {renderInput(t('fields.allergies'), 'allergies', {
+              placeholder: t('fields.allergiesPlaceholder'),
+              multiline: true,
+            })}
+            {renderInput(t('fields.cognitiveStatus'), 'cognitiveStatus', {
+              placeholder: t('fields.cognitiveStatusPlaceholder'),
+              multiline: true,
+              hint: t('fields.cognitiveStatusHint'),
+            })}
+
+            <View style={styles.inputGroup}>
+              <ThemedText style={[styles.label, { color: theme.text }]}>
+                {t('fields.dominantHand')}
+              </ThemedText>
+              <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
+                {t('fields.dominantHandHint')}
+              </ThemedText>
+              <View style={styles.buttonGroup}>
+                {(['left', 'right', 'unknown'] as const).map((hand) => (
+                  <Pressable
+                    key={hand}
+                    style={[
+                      styles.optionButton,
+                      { borderColor: theme.border },
+                      form.dominantHand === hand && {
+                        backgroundColor: theme.tint,
+                        borderColor: theme.tint,
+                      },
+                    ]}
+                    onPress={() => updateField('dominantHand', hand)}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.optionText,
+                        form.dominantHand === hand && { color: Colors.light.textOnPrimary },
+                      ]}
+                    >
+                      {hand === 'left'
+                        ? t('fields.dominantHandLeft')
+                        : hand === 'right'
+                          ? t('fields.dominantHandRight')
+                          : t('fields.dominantHandUnknown')}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText style={[styles.label, { color: theme.text }]}>
+                {t('fields.mobilityLevel')}
+              </ThemedText>
+              <View style={styles.chipGroup}>
+                {MOBILITY_OPTIONS.map((option) => (
+                  <Pressable
+                    key={option}
+                    style={[
+                      styles.chip,
+                      { borderColor: theme.border },
+                      selectedMobilityOptions.includes(option) && {
+                        backgroundColor: theme.tint,
+                        borderColor: theme.tint,
+                      },
+                    ]}
+                    onPress={() => toggleMobilityOption(option)}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.chipText,
+                        selectedMobilityOptions.includes(option) && {
+                          color: Colors.light.textOnPrimary,
+                        },
+                      ]}
+                    >
+                      {t(MOBILITY_OPTION_KEYS[option])}
+                    </ThemedText>
+                  </Pressable>
+                ))}
+              </View>
+              {selectedMobilityOptions.includes('Other') && (
+                <TextInput
                   style={[
-                    styles.dateInputContainer,
+                    styles.input,
                     {
                       backgroundColor: theme.card,
                       borderColor: theme.border,
+                      color: theme.text,
+                      marginTop: Spacing.sm,
                     },
                   ]}
-                >
-                  <TextInput
-                    style={[
-                      styles.dateInput,
-                      {
-                        color: theme.text,
-                      },
-                    ]}
-                    value={form.dateOfBirth}
-                    onChangeText={(v) => updateField('dateOfBirth', formatDobInput(v))}
-                    placeholder="MM/DD/YYYY"
-                    placeholderTextColor={theme.inputPlaceholder}
-                    keyboardType="number-pad"
-                    maxLength={10}
-                  />
-                  <Pressable onPress={openDatePicker} style={styles.calendarHint} hitSlop={8}>
-                    <IconSymbol name="calendar" size={18} color={theme.textSecondary} />
-                  </Pressable>
-                </View>
+                  value={mobilityOtherText}
+                  onChangeText={setMobilityOtherText}
+                  placeholder={t('fields.mobilityOtherPlaceholder')}
+                  placeholderTextColor={theme.inputPlaceholder}
+                />
+              )}
+            </View>
+          </>,
+        )}
 
-                {showDatePicker && Platform.OS !== 'ios' && (
-                  <DateTimePicker
-                    value={parseDate(form.dateOfBirth) ?? new Date(1940, 0, 1)}
-                    mode="date"
-                    display="default"
-                    maximumDate={new Date()}
-                    onChange={onAndroidDateChange}
-                  />
-                )}
-              </View>
+        {/* Communication & De-escalation Section */}
+        {renderSection(
+          'communication',
+          t('sections.communication'),
+          'bubble.left.fill',
+          <>
+            {renderInput(t('fields.communicationPreference'), 'communicationPreference', {
+              placeholder: t('fields.communicationPreferencePlaceholder'),
+              multiline: true,
+            })}
+            {renderInput(t('fields.escalationSigns'), 'escalationSigns', {
+              placeholder: t('fields.escalationSignsPlaceholder'),
+              multiline: true,
+              hint: t('fields.escalationSignsHint'),
+            })}
+            {renderInput(t('fields.deescalationTechniques'), 'deescalationTechniques', {
+              placeholder: t('fields.deescalationTechniquesPlaceholder'),
+              multiline: true,
+              hint: t('fields.deescalationTechniquesHint'),
+            })}
+            {renderInput(t('fields.approachGuidance'), 'approachGuidance', {
+              placeholder: t('fields.approachGuidancePlaceholder'),
+              multiline: true,
+            })}
+            {renderInput(t('fields.likes'), 'likes', {
+              placeholder: t('fields.likesPlaceholder'),
+              multiline: true,
+              hint: t('fields.likesHint'),
+            })}
+            {renderInput(t('fields.dislikesTriggers'), 'dislikesTriggers', {
+              placeholder: t('fields.dislikesTriggersPlaceholder'),
+              multiline: true,
+              hint: t('fields.dislikesTriggersHint'),
+            })}
+            {renderInput(t('fields.safeWord'), 'safeWord', {
+              placeholder: t('fields.safeWordPlaceholder'),
+              hint: t('fields.safeWordHint'),
+            })}
+          </>,
+        )}
 
-              <View style={styles.row}>
-                <View style={styles.halfWidth}>
-                  {renderInput(t('fields.height'), 'height', {
-                    placeholder: t('fields.heightPlaceholder'),
-                    keyboardType: 'number-pad',
-                  })}
-                </View>
-                <View style={styles.halfWidth}>
-                  {renderInput(t('fields.weight'), 'weight', {
-                    placeholder: t('fields.weightPlaceholder'),
-                    keyboardType: 'number-pad',
-                  })}
-                </View>
-              </View>
+        {/* Devices & IDs Section */}
+        {renderSection(
+          'devices',
+          t('sections.devices'),
+          'location.fill',
+          <>
+            {renderInput(t('fields.locativeDeviceInfo'), 'locativeDeviceInfo', {
+              placeholder: t('fields.locativeDeviceInfoPlaceholder'),
+              multiline: true,
+              hint: t('fields.locativeDeviceInfoHint'),
+            })}
+            {renderInput(t('fields.idBracelets'), 'idBracelets', {
+              placeholder: t('fields.idBraceletsPlaceholder'),
+              hint: t('fields.idBraceletsHint'),
+              multiline: true,
+            })}
+            {renderInput(t('fields.medicAlertId'), 'medicAlertId', {
+              placeholder: t('fields.medicAlertIdPlaceholder'),
+            })}
+            {renderInput(t('fields.medicAlertHotline'), 'medicAlertHotline', {
+              placeholder: t('fields.medicAlertHotlinePlaceholder'),
+              keyboardType: 'phone-pad',
+              hint: t('fields.medicAlertHotlineHint'),
+            })}
+          </>,
+        )}
 
-              <View style={styles.row}>
-                <View style={styles.halfWidth}>
-                  {renderInput(t('fields.hairColor'), 'hairColor', {
-                    placeholder: t('fields.hairColorPlaceholder'),
-                  })}
-                </View>
-                <View style={styles.halfWidth}>
-                  {renderInput(t('fields.eyeColor'), 'eyeColor', {
-                    placeholder: t('fields.eyeColorPlaceholder'),
-                  })}
-                </View>
-              </View>
+        {/* Bottom padding */}
+        <View style={{ height: 40 }} />
+      </KeyboardAvoidingScroll>
 
-              {renderInput(t('fields.identifyingMarks'), 'identifyingMarks', {
-                placeholder: t('fields.identifyingMarksPlaceholder'),
-                multiline: true,
-                hint: t('fields.identifyingMarksHint'),
-              })}
-            </>,
-          )}
-
-          {/* Medical & Behavioral Section */}
-          {renderSection(
-            'medical',
-            t('sections.medical'),
-            'cross.fill',
-            <>
-              {renderInput(t('fields.medicalConditions'), 'medicalConditions', {
-                placeholder: t('fields.medicalConditionsPlaceholder'),
-                multiline: true,
-              })}
-              {renderInput(t('fields.medications'), 'medications', {
-                placeholder: t('fields.medicationsPlaceholder'),
-                multiline: true,
-              })}
-              {renderInput(t('fields.allergies'), 'allergies', {
-                placeholder: t('fields.allergiesPlaceholder'),
-                multiline: true,
-              })}
-              {renderInput(t('fields.cognitiveStatus'), 'cognitiveStatus', {
-                placeholder: t('fields.cognitiveStatusPlaceholder'),
-                multiline: true,
-                hint: t('fields.cognitiveStatusHint'),
-              })}
-
-              <View style={styles.inputGroup}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  {t('fields.dominantHand')}
+      <Modal
+        visible={showIosDatePicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowIosDatePicker(false)}
+      >
+        <View style={styles.dateModalBackdrop}>
+          <View
+            style={[
+              styles.dateModalSheet,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
+            <ThemedText style={[styles.dateModalTitle, { color: theme.text }]}>
+              {t('dateModal.title')}
+            </ThemedText>
+            <DateTimePicker
+              value={pendingDobDate}
+              mode="date"
+              display="spinner"
+              maximumDate={new Date()}
+              onChange={onIosDateChange}
+            />
+            <View style={styles.dateModalActions}>
+              <Pressable
+                onPress={() => setShowIosDatePicker(false)}
+                style={[
+                  styles.dateModalButton,
+                  styles.dateModalButtonSecondary,
+                  { borderColor: theme.border },
+                ]}
+              >
+                <ThemedText style={[styles.dateModalButtonText, { color: theme.textSecondary }]}>
+                  {t('dateModal.cancel')}
                 </ThemedText>
-                <ThemedText style={[styles.hint, { color: theme.textSecondary }]}>
-                  {t('fields.dominantHandHint')}
-                </ThemedText>
-                <View style={styles.buttonGroup}>
-                  {(['left', 'right', 'unknown'] as const).map((hand) => (
-                    <Pressable
-                      key={hand}
-                      style={[
-                        styles.optionButton,
-                        { borderColor: theme.border },
-                        form.dominantHand === hand && {
-                          backgroundColor: theme.tint,
-                          borderColor: theme.tint,
-                        },
-                      ]}
-                      onPress={() => updateField('dominantHand', hand)}
-                    >
-                      <ThemedText
-                        style={[styles.optionText, form.dominantHand === hand && { color: Colors.light.textOnPrimary }]}
-                      >
-                        {hand === 'left'
-                          ? t('fields.dominantHandLeft')
-                          : hand === 'right'
-                            ? t('fields.dominantHandRight')
-                            : t('fields.dominantHandUnknown')}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <ThemedText style={[styles.label, { color: theme.text }]}>
-                  {t('fields.mobilityLevel')}
-                </ThemedText>
-                <View style={styles.chipGroup}>
-                  {MOBILITY_OPTIONS.map((option) => (
-                    <Pressable
-                      key={option}
-                      style={[
-                        styles.chip,
-                        { borderColor: theme.border },
-                        selectedMobilityOptions.includes(option) && {
-                          backgroundColor: theme.tint,
-                          borderColor: theme.tint,
-                        },
-                      ]}
-                      onPress={() => toggleMobilityOption(option)}
-                    >
-                      <ThemedText
-                        style={[
-                          styles.chipText,
-                          selectedMobilityOptions.includes(option) && { color: Colors.light.textOnPrimary },
-                        ]}
-                      >
-                        {t(MOBILITY_OPTION_KEYS[option])}
-                      </ThemedText>
-                    </Pressable>
-                  ))}
-                </View>
-                {selectedMobilityOptions.includes('Other') && (
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: theme.card,
-                        borderColor: theme.border,
-                        color: theme.text,
-                        marginTop: Spacing.sm,
-                      },
-                    ]}
-                    value={mobilityOtherText}
-                    onChangeText={setMobilityOtherText}
-                    placeholder={t('fields.mobilityOtherPlaceholder')}
-                    placeholderTextColor={theme.inputPlaceholder}
-                  />
-                )}
-              </View>
-            </>,
-          )}
-
-          {/* Communication & De-escalation Section */}
-          {renderSection(
-            'communication',
-            t('sections.communication'),
-            'bubble.left.fill',
-            <>
-              {renderInput(t('fields.communicationPreference'), 'communicationPreference', {
-                placeholder: t('fields.communicationPreferencePlaceholder'),
-                multiline: true,
-              })}
-              {renderInput(t('fields.escalationSigns'), 'escalationSigns', {
-                placeholder: t('fields.escalationSignsPlaceholder'),
-                multiline: true,
-                hint: t('fields.escalationSignsHint'),
-              })}
-              {renderInput(t('fields.deescalationTechniques'), 'deescalationTechniques', {
-                placeholder: t('fields.deescalationTechniquesPlaceholder'),
-                multiline: true,
-                hint: t('fields.deescalationTechniquesHint'),
-              })}
-              {renderInput(t('fields.approachGuidance'), 'approachGuidance', {
-                placeholder: t('fields.approachGuidancePlaceholder'),
-                multiline: true,
-              })}
-              {renderInput(t('fields.likes'), 'likes', {
-                placeholder: t('fields.likesPlaceholder'),
-                multiline: true,
-                hint: t('fields.likesHint'),
-              })}
-              {renderInput(t('fields.dislikesTriggers'), 'dislikesTriggers', {
-                placeholder: t('fields.dislikesTriggersPlaceholder'),
-                multiline: true,
-                hint: t('fields.dislikesTriggersHint'),
-              })}
-              {renderInput(t('fields.safeWord'), 'safeWord', {
-                placeholder: t('fields.safeWordPlaceholder'),
-                hint: t('fields.safeWordHint'),
-              })}
-            </>,
-          )}
-
-          {/* Devices & IDs Section */}
-          {renderSection(
-            'devices',
-            t('sections.devices'),
-            'location.fill',
-            <>
-              {renderInput(t('fields.locativeDeviceInfo'), 'locativeDeviceInfo', {
-                placeholder: t('fields.locativeDeviceInfoPlaceholder'),
-                multiline: true,
-                hint: t('fields.locativeDeviceInfoHint'),
-              })}
-              {renderInput(t('fields.idBracelets'), 'idBracelets', {
-                placeholder: t('fields.idBraceletsPlaceholder'),
-                hint: t('fields.idBraceletsHint'),
-                multiline: true,
-              })}
-              {renderInput(t('fields.medicAlertId'), 'medicAlertId', {
-                placeholder: t('fields.medicAlertIdPlaceholder'),
-              })}
-              {renderInput(t('fields.medicAlertHotline'), 'medicAlertHotline', {
-                placeholder: t('fields.medicAlertHotlinePlaceholder'),
-                keyboardType: 'phone-pad',
-                hint: t('fields.medicAlertHotlineHint'),
-              })}
-            </>,
-          )}
-
-          {/* Bottom padding */}
-          <View style={{ height: 40 }} />
-        </KeyboardAvoidingScroll>
-
-        <Modal
-          visible={showIosDatePicker}
-          transparent
-          animationType="fade"
-          onRequestClose={() => setShowIosDatePicker(false)}
-        >
-          <View style={styles.dateModalBackdrop}>
-            <View
-              style={[
-                styles.dateModalSheet,
-                { backgroundColor: theme.card, borderColor: theme.border },
-              ]}
-            >
-              <ThemedText style={[styles.dateModalTitle, { color: theme.text }]}>
-                {t('dateModal.title')}
-              </ThemedText>
-              <DateTimePicker
-                value={pendingDobDate}
-                mode="date"
-                display="spinner"
-                maximumDate={new Date()}
-                onChange={onIosDateChange}
-              />
-              <View style={styles.dateModalActions}>
-                <Pressable
-                  onPress={() => setShowIosDatePicker(false)}
-                  style={[
-                    styles.dateModalButton,
-                    styles.dateModalButtonSecondary,
-                    { borderColor: theme.border },
-                  ]}
+              </Pressable>
+              <Pressable
+                onPress={applyIosDate}
+                style={[styles.dateModalButton, { backgroundColor: theme.tint }]}
+              >
+                <ThemedText
+                  style={[styles.dateModalButtonText, { color: Colors.light.textOnPrimary }]}
                 >
-                  <ThemedText style={[styles.dateModalButtonText, { color: theme.textSecondary }]}>
-                    {t('dateModal.cancel')}
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  onPress={applyIosDate}
-                  style={[styles.dateModalButton, { backgroundColor: theme.tint }]}
-                >
-                  <ThemedText style={[styles.dateModalButtonText, { color: Colors.light.textOnPrimary }]}>
-                    {t('dateModal.apply')}
-                  </ThemedText>
-                </Pressable>
-              </View>
+                  {t('dateModal.apply')}
+                </ThemedText>
+              </Pressable>
             </View>
           </View>
-        </Modal>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }

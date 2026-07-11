@@ -4,8 +4,9 @@
 
 Any screen with a `TextInput` or `AppTextInput` MUST render it inside
 `components/KeyboardAvoidingScroll.tsx` — never hand-roll `KeyboardAvoidingView`
-+ `ScrollView` directly, and never put an input under a plain `View`/`ScrollView`
-with no keyboard handling at all.
+
+- `ScrollView` directly, and never put an input under a plain `View`/`ScrollView`
+  with no keyboard handling at all.
 
 This app has no root-level layout that can wrap every screen in keyboard
 avoidance — Expo Router's `<Stack>` mounts each screen independently, screens
@@ -26,7 +27,7 @@ twice already:
 hand: when a screen has a `footer` (bottom CTA button that must stay above the
 keyboard), the wrapper needs `'padding'` behavior on iOS to shift the whole
 footer+scroll stack together. But the ScrollView's own
-`automaticallyAdjustKeyboardInsets` does the *same* keyboard-height
+`automaticallyAdjustKeyboardInsets` does the _same_ keyboard-height
 compensation independently — running both at once double-pads the bottom of
 the scroll content (huge gap under the last field, easy over-scroll). The
 component handles this by disabling `automaticallyAdjustKeyboardInsets`

@@ -161,7 +161,10 @@ export default function DestinationsScreen() {
     void Haptics.impactAsync(style).catch(() => undefined);
   }, []);
 
-  const parseOtherLabelFromNotes = (category: string | undefined, notes: string): { otherCategoryLabel: string; remainingNotes: string } => {
+  const parseOtherLabelFromNotes = (
+    category: string | undefined,
+    notes: string,
+  ): { otherCategoryLabel: string; remainingNotes: string } => {
     if (category !== 'other' || !notes.startsWith('[Type:')) {
       return { otherCategoryLabel: '', remainingNotes: notes };
     }
@@ -526,7 +529,11 @@ export default function DestinationsScreen() {
                   )
                 }
               >
-                <IconSymbol name={option.icon} size={14} color={isSelected ? Colors.light.textOnPrimary : theme.icon} />
+                <IconSymbol
+                  name={option.icon}
+                  size={14}
+                  color={isSelected ? Colors.light.textOnPrimary : theme.icon}
+                />
                 <ThemedText
                   style={[
                     styles.optionText,
@@ -553,7 +560,9 @@ export default function DestinationsScreen() {
               label={t('form.otherCategoryLabel')}
               placeholder={t('form.otherCategoryPlaceholder')}
               value={formData.otherCategoryLabel}
-              onChangeText={(text) => setFormData((prev) => ({ ...prev, otherCategoryLabel: text }))}
+              onChangeText={(text) =>
+                setFormData((prev) => ({ ...prev, otherCategoryLabel: text }))
+              }
             />
           </View>
         )}
@@ -580,7 +589,12 @@ export default function DestinationsScreen() {
                 ]}
                 onPress={() => setFormData({ ...formData, riskLevel: option.value })}
               >
-                <ThemedText style={[styles.riskOptionText, { color: isSelected ? Colors.light.textOnPrimary : color }]}>
+                <ThemedText
+                  style={[
+                    styles.riskOptionText,
+                    { color: isSelected ? Colors.light.textOnPrimary : color },
+                  ]}
+                >
                   {t(`riskLevels.${option.value}`)}
                 </ThemedText>
               </TouchableOpacity>
@@ -785,14 +799,29 @@ export default function DestinationsScreen() {
           onRequestClose={() => setViewingDestination(null)}
         >
           <View style={styles.detailModalBackdrop}>
-            <View style={[styles.detailModalSheet, { backgroundColor: theme.card, borderColor: theme.border, maxHeight: windowHeight * 0.8 }]}>
+            <View
+              style={[
+                styles.detailModalSheet,
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                  maxHeight: windowHeight * 0.8,
+                },
+              ]}
+            >
               {(() => {
                 const dest = viewingDestination;
                 const categoryInfo = getCategoryInfo(dest.category);
                 const riskInfo = getRiskInfo(dest.riskLevel);
                 const riskColor = semantic[riskInfo.color];
-                const { otherCategoryLabel: parsedOtherLabel } = parseOtherLabelFromNotes(dest.category, dest.notes || '');
-                const { remainingNotes: parsedNotes } = parseOtherLabelFromNotes(dest.category, dest.notes || '');
+                const { otherCategoryLabel: parsedOtherLabel } = parseOtherLabelFromNotes(
+                  dest.category,
+                  dest.notes || '',
+                );
+                const { remainingNotes: parsedNotes } = parseOtherLabelFromNotes(
+                  dest.category,
+                  dest.notes || '',
+                );
                 return (
                   <>
                     <View style={styles.detailModalHeader}>
@@ -804,13 +833,25 @@ export default function DestinationsScreen() {
                           {dest.name}
                         </ThemedText>
                         <View style={styles.detailModalBadges}>
-                          <View style={[styles.riskBadge, { backgroundColor: `${riskColor}1A`, borderColor: `${riskColor}55` }]}>
+                          <View
+                            style={[
+                              styles.riskBadge,
+                              { backgroundColor: `${riskColor}1A`, borderColor: `${riskColor}55` },
+                            ]}
+                          >
                             <ThemedText style={[styles.riskText, { color: riskColor }]}>
                               {t(`riskLevels.${riskInfo.value}`)}
                             </ThemedText>
                           </View>
-                          <View style={[styles.categoryBadge, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-                            <ThemedText style={[styles.categoryText, { color: theme.textSecondary }]}>
+                          <View
+                            style={[
+                              styles.categoryBadge,
+                              { backgroundColor: theme.surface, borderColor: theme.border },
+                            ]}
+                          >
+                            <ThemedText
+                              style={[styles.categoryText, { color: theme.textSecondary }]}
+                            >
                               {t(`categories.${categoryInfo.value}`)}
                               {parsedOtherLabel ? `: ${parsedOtherLabel}` : ''}
                             </ThemedText>
@@ -826,8 +867,16 @@ export default function DestinationsScreen() {
                           onPress={() => handleOpenMaps(dest.address!)}
                         >
                           <IconSymbol name="location" size={14} color={primary[600]} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.address')}</ThemedText>
-                          <ThemedText style={[styles.detailRowValue, { color: primary[600] }]} lightColor={primary[700]} darkColor={primary[300]}>
+                          <ThemedText
+                            style={[styles.detailRowLabel, { color: theme.textSecondary }]}
+                          >
+                            {t('detail.address')}
+                          </ThemedText>
+                          <ThemedText
+                            style={[styles.detailRowValue, { color: primary[600] }]}
+                            lightColor={primary[700]}
+                            darkColor={primary[300]}
+                          >
                             {dest.address}
                           </ThemedText>
                         </TouchableOpacity>
@@ -835,39 +884,75 @@ export default function DestinationsScreen() {
                       {dest.distanceFromHome ? (
                         <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
                           <IconSymbol name="figure.walk" size={14} color={theme.textSecondary} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.distance')}</ThemedText>
-                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{dest.distanceFromHome}</ThemedText>
+                          <ThemedText
+                            style={[styles.detailRowLabel, { color: theme.textSecondary }]}
+                          >
+                            {t('detail.distance')}
+                          </ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>
+                            {dest.distanceFromHome}
+                          </ThemedText>
                         </View>
                       ) : null}
                       {dest.reason ? (
                         <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
-                          <IconSymbol name="questionmark.circle" size={14} color={theme.textSecondary} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.why')}</ThemedText>
-                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{dest.reason}</ThemedText>
+                          <IconSymbol
+                            name="questionmark.circle"
+                            size={14}
+                            color={theme.textSecondary}
+                          />
+                          <ThemedText
+                            style={[styles.detailRowLabel, { color: theme.textSecondary }]}
+                          >
+                            {t('detail.why')}
+                          </ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>
+                            {dest.reason}
+                          </ThemedText>
                         </View>
                       ) : null}
                       {parsedNotes ? (
                         <View style={[styles.detailRow, { borderBottomColor: theme.border }]}>
                           <IconSymbol name="note.text" size={14} color={theme.textSecondary} />
-                          <ThemedText style={[styles.detailRowLabel, { color: theme.textSecondary }]}>{t('detail.notes')}</ThemedText>
-                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>{parsedNotes}</ThemedText>
+                          <ThemedText
+                            style={[styles.detailRowLabel, { color: theme.textSecondary }]}
+                          >
+                            {t('detail.notes')}
+                          </ThemedText>
+                          <ThemedText style={[styles.detailRowValue, { color: theme.text }]}>
+                            {parsedNotes}
+                          </ThemedText>
                         </View>
                       ) : null}
                     </ScrollView>
 
                     <View style={styles.detailModalActions}>
                       <Pressable
-                        style={[styles.detailModalButton, { borderColor: theme.border, borderWidth: 1 }]}
+                        style={[
+                          styles.detailModalButton,
+                          { borderColor: theme.border, borderWidth: 1 },
+                        ]}
                         onPress={() => setViewingDestination(null)}
                       >
-                        <ThemedText style={[styles.detailModalButtonText, { color: theme.textSecondary }]}>{tCommon('close')}</ThemedText>
+                        <ThemedText
+                          style={[styles.detailModalButtonText, { color: theme.textSecondary }]}
+                        >
+                          {tCommon('close')}
+                        </ThemedText>
                       </Pressable>
                       <Pressable
                         style={[styles.detailModalButton, { backgroundColor: theme.tint }]}
                         onPress={() => handleEdit(dest)}
                       >
                         <IconSymbol name="pencil" size={14} color={Colors.light.textOnPrimary} />
-                        <ThemedText style={[styles.detailModalButtonText, { color: Colors.light.textOnPrimary }]}>{tCommon('edit')}</ThemedText>
+                        <ThemedText
+                          style={[
+                            styles.detailModalButtonText,
+                            { color: Colors.light.textOnPrimary },
+                          ]}
+                        >
+                          {tCommon('edit')}
+                        </ThemedText>
                       </Pressable>
                     </View>
                   </>

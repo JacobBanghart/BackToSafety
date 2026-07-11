@@ -6,13 +6,7 @@
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { useEffect, useState } from 'react';
-import {
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
@@ -81,138 +75,138 @@ export default function AppearanceScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-        <KeyboardAvoidingScroll
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          footer={
-            <View style={styles.footer}>
-              <Pressable style={styles.skipButton} onPress={handleSkip}>
-                <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
-                  {t('appearance.skip')}
-                </ThemedText>
-              </Pressable>
-              <Pressable
-                testID="onboarding-appearance-continue"
-                accessibilityLabel="onboarding-appearance-continue"
-                style={[styles.button, { backgroundColor: theme.primary }]}
-                onPress={handleContinue}
-              >
-                <ThemedText style={styles.buttonText}>{t('appearance.continue')}</ThemedText>
-              </Pressable>
-            </View>
-          }
-        >
-          <OnboardingStepHeader activeStep={3} totalSteps={4} />
+      <KeyboardAvoidingScroll
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        footer={
+          <View style={styles.footer}>
+            <Pressable style={styles.skipButton} onPress={handleSkip}>
+              <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
+                {t('appearance.skip')}
+              </ThemedText>
+            </Pressable>
+            <Pressable
+              testID="onboarding-appearance-continue"
+              accessibilityLabel="onboarding-appearance-continue"
+              style={[styles.button, { backgroundColor: theme.primary }]}
+              onPress={handleContinue}
+            >
+              <ThemedText style={styles.buttonText}>{t('appearance.continue')}</ThemedText>
+            </Pressable>
+          </View>
+        }
+      >
+        <OnboardingStepHeader activeStep={3} totalSteps={4} />
 
-          <ThemedText type="title" style={styles.title}>
-            {t('appearance.title')}
-          </ThemedText>
+        <ThemedText type="title" style={styles.title}>
+          {t('appearance.title')}
+        </ThemedText>
 
-          <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
-            {t('appearance.subtitle')}
-          </ThemedText>
+        <ThemedText style={[styles.subtitle, { color: theme.textSecondary }]}>
+          {t('appearance.subtitle')}
+        </ThemedText>
 
-          <View style={styles.form}>
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>{t('appearance.heightLabel')}</ThemedText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: theme.inputBackground,
-                      borderColor: theme.inputBorder,
-                      color: theme.text,
-                    },
-                  ]}
-                  value={height}
-                  onChangeText={(value) => setHeight(formatHeightInput(value))}
-                  placeholder={t('appearance.heightPlaceholder')}
-                  placeholderTextColor={theme.inputPlaceholder}
-                  keyboardType="number-pad"
-                  inputMode="numeric"
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>{t('appearance.weightLabel')}</ThemedText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: theme.inputBackground,
-                      borderColor: theme.inputBorder,
-                      color: theme.text,
-                    },
-                  ]}
-                  value={weight}
-                  onChangeText={(value) => setWeight(formatWeightInput(value))}
-                  placeholder={t('appearance.weightPlaceholder')}
-                  placeholderTextColor={theme.inputPlaceholder}
-                  keyboardType="number-pad"
-                  inputMode="numeric"
-                />
-              </View>
-            </View>
-
-            <View style={styles.row}>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>{t('appearance.hairLabel')}</ThemedText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: theme.inputBackground,
-                      borderColor: theme.inputBorder,
-                      color: theme.text,
-                    },
-                  ]}
-                  value={hairColor}
-                  onChangeText={setHairColor}
-                  placeholder={t('appearance.hairPlaceholder')}
-                  placeholderTextColor={theme.inputPlaceholder}
-                />
-              </View>
-              <View style={[styles.inputGroup, styles.halfWidth]}>
-                <ThemedText style={styles.label}>{t('appearance.eyeLabel')}</ThemedText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: theme.inputBackground,
-                      borderColor: theme.inputBorder,
-                      color: theme.text,
-                    },
-                  ]}
-                  value={eyeColor}
-                  onChangeText={setEyeColor}
-                  placeholder={t('appearance.eyePlaceholder')}
-                  placeholderTextColor={theme.inputPlaceholder}
-                />
-              </View>
-            </View>
-
-            <View style={styles.inputGroup}>
-              <ThemedText style={styles.label}>{t('appearance.marksLabel')}</ThemedText>
+        <View style={styles.form}>
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <ThemedText style={styles.label}>{t('appearance.heightLabel')}</ThemedText>
               <TextInput
                 style={[
                   styles.input,
-                  styles.textArea,
                   {
                     backgroundColor: theme.inputBackground,
                     borderColor: theme.inputBorder,
                     color: theme.text,
                   },
                 ]}
-                value={identifyingMarks}
-                onChangeText={setIdentifyingMarks}
-                placeholder={t('appearance.marksPlaceholder')}
+                value={height}
+                onChangeText={(value) => setHeight(formatHeightInput(value))}
+                placeholder={t('appearance.heightPlaceholder')}
                 placeholderTextColor={theme.inputPlaceholder}
-                multiline
-                numberOfLines={3}
+                keyboardType="number-pad"
+                inputMode="numeric"
+              />
+            </View>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <ThemedText style={styles.label}>{t('appearance.weightLabel')}</ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
+                value={weight}
+                onChangeText={(value) => setWeight(formatWeightInput(value))}
+                placeholder={t('appearance.weightPlaceholder')}
+                placeholderTextColor={theme.inputPlaceholder}
+                keyboardType="number-pad"
+                inputMode="numeric"
               />
             </View>
           </View>
-        </KeyboardAvoidingScroll>
+
+          <View style={styles.row}>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <ThemedText style={styles.label}>{t('appearance.hairLabel')}</ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
+                value={hairColor}
+                onChangeText={setHairColor}
+                placeholder={t('appearance.hairPlaceholder')}
+                placeholderTextColor={theme.inputPlaceholder}
+              />
+            </View>
+            <View style={[styles.inputGroup, styles.halfWidth]}>
+              <ThemedText style={styles.label}>{t('appearance.eyeLabel')}</ThemedText>
+              <TextInput
+                style={[
+                  styles.input,
+                  {
+                    backgroundColor: theme.inputBackground,
+                    borderColor: theme.inputBorder,
+                    color: theme.text,
+                  },
+                ]}
+                value={eyeColor}
+                onChangeText={setEyeColor}
+                placeholder={t('appearance.eyePlaceholder')}
+                placeholderTextColor={theme.inputPlaceholder}
+              />
+            </View>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <ThemedText style={styles.label}>{t('appearance.marksLabel')}</ThemedText>
+            <TextInput
+              style={[
+                styles.input,
+                styles.textArea,
+                {
+                  backgroundColor: theme.inputBackground,
+                  borderColor: theme.inputBorder,
+                  color: theme.text,
+                },
+              ]}
+              value={identifyingMarks}
+              onChangeText={setIdentifyingMarks}
+              placeholder={t('appearance.marksPlaceholder')}
+              placeholderTextColor={theme.inputPlaceholder}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+        </View>
+      </KeyboardAvoidingScroll>
     </SafeAreaView>
   );
 }

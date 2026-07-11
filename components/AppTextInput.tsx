@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, TextInput, StyleSheet, KeyboardTypeOptions, TextInputProps, Platform } from 'react-native';
+import {
+  View,
+  TextInput,
+  StyleSheet,
+  KeyboardTypeOptions,
+  TextInputProps,
+  Platform,
+} from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
