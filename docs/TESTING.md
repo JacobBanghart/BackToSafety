@@ -67,17 +67,28 @@ Because the web build uses AsyncStorage instead of SQLite, E2E tests reflect the
 ## 3. Lint and Type Check
 
 ```bash
-npm run lint       # ESLint via expo lint
-npm run typecheck  # TypeScript --noEmit
-npm run format     # Prettier write
-npm run format:check # Prettier check
+npm run lint          # oxlint
+npm run typecheck     # TypeScript --noEmit
+npm run format        # oxfmt write
+npm run format:check  # oxfmt check
 ```
 
-CI should run lint, typecheck, and tests before any merge.
+CI runs lint, typecheck, format check, and tests before any merge (see below).
 
 ---
 
-## 4. Testing Checklist for New Features
+## 4. Continuous Integration
+
+`.github/workflows/ci.yml` runs on every pull request and on push to `main`:
+
+- **`checks` job**: `npm ci` → `npm run lint` → `npm run typecheck` → `npm run format:check` → `npm test`
+- **`e2e` job**: `npm ci` → installs Playwright's Chromium browser → `npm run e2e`. On failure, the Playwright HTML report (`playwright-report/`) is uploaded as a workflow artifact for debugging.
+
+Both jobs run on `ubuntu-latest`. This is separate from the self-hosted runners used by the Android/iOS release workflows.
+
+---
+
+## 5. Testing Checklist for New Features
 
 Before opening a PR:
 
