@@ -5,7 +5,7 @@ import {
 } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { I18nextProvider } from 'react-i18next';
@@ -13,15 +13,69 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { PostHogProvider } from 'posthog-react-native';
 
+import { FatalErrorScreen } from '@/components/FatalErrorScreen';
 import { primary } from '@/constants/Colors';
 import { OnboardingProvider, useOnboarding } from '@/context/OnboardingContext';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
+import { initializeDatabase } from '@/database';
 import i18n from '@/i18n';
 import { loadSavedLanguage } from '@/i18n';
 import { getOrCreateDeviceId } from '@/utils/device-id';
-import { initAnalytics } from '@/utils/analytics';
+import { initAnalytics, track } from '@/utils/analytics';
 import { posthog } from '@/utils/posthog';
+
+/**
+ * Owns calling initializeDatabase() and gates everything that reads from
+ * the DB (ThemeProvider, OnboardingProvider, ProfileProvider, ...) behind
+ * it. On failure it renders FatalErrorScreen instead of a silently empty
+ * app; retrying remounts the gated subtree fresh (keyed by attempt count)
+ * so providers re-run their own initial-load effects against a database
+ * that may now actually be there.
+ */
+function DbGate({ children }: { children: React.ReactNode }) {
+  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    setStatus('loading');
+
+    initializeDatabase()
+      .then(() => {
+        if (!cancelled) setStatus('ready');
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        console.error('[DbGate] Database initialization failed:', err);
+        track('db_init_failed', { message: String(err).slice(0, 200) });
+        setStatus('error');
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [attempt]);
+
+  const handleRetry = useCallback(() => {
+    track('db_init_retried');
+    setAttempt((a) => a + 1);
+  }, []);
+
+  if (status === 'error') {
+    return <FatalErrorScreen onRetry={handleRetry} />;
+  }
+
+  if (status === 'loading') {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color={primary[700]} />
+      </View>
+    );
+  }
+
+  return <React.Fragment key={attempt}>{children}</React.Fragment>;
+}
 
 function RootLayoutNav() {
   const { colorScheme } = useTheme();
@@ -89,22 +143,24 @@ function RootLayoutNav() {
 const RootLayout = () => {
   return (
     <I18nextProvider i18n={i18n}>
-      <ThemeProvider>
-        <OnboardingProvider>
-          <ProfileProvider>
-            <PostHogProvider
-              client={posthog}
-              autocapture={{
-                captureScreens: true,
-                captureTouches: true,
-                propsToCapture: ['testID'],
-              }}
-            >
-              <RootLayoutNav />
-            </PostHogProvider>
-          </ProfileProvider>
-        </OnboardingProvider>
-      </ThemeProvider>
+      <DbGate>
+        <ThemeProvider>
+          <OnboardingProvider>
+            <ProfileProvider>
+              <PostHogProvider
+                client={posthog}
+                autocapture={{
+                  captureScreens: true,
+                  captureTouches: true,
+                  propsToCapture: ['testID'],
+                }}
+              >
+                <RootLayoutNav />
+              </PostHogProvider>
+            </ProfileProvider>
+          </OnboardingProvider>
+        </ThemeProvider>
+      </DbGate>
     </I18nextProvider>
   );
 };

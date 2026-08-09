@@ -3,6 +3,7 @@
  */
 
 import * as SQLite from 'expo-sqlite';
+import { runSqlMigrations, type SqlMigrationDb } from './migrations';
 import {
   DATABASE_NAME,
   DEFAULT_SAFETY_CHECKS,
@@ -11,20 +12,39 @@ import {
   SCHEMA_VERSION,
 } from './schema';
 
-const MIGRATION_ERROR_PREFIX = '[DB] Migration failed';
-
 let db: SQLite.SQLiteDatabase | null = null;
 
 /**
- * Singleton initialization promise — resolves once initializeDatabase() completes.
- * All DB calls wait on this so that no query runs before tables exist.
+ * Resettable "DB ready" deferred. All DB calls wait on this so that no
+ * query runs before tables exist. A resolved deferred stays resolved
+ * forever — existing getDatabase() callers must never re-block after a
+ * successful init. If it rejects, initializeDatabase() swaps in a fresh
+ * deferred on retry; otherwise every future getDatabase() call would throw
+ * forever after a single failed attempt.
  */
-let dbReadyResolve: (() => void) | null = null;
-let dbReadyReject: ((err: unknown) => void) | null = null;
-const dbReady = new Promise<void>((resolve, reject) => {
-  dbReadyResolve = resolve;
-  dbReadyReject = reject;
-});
+interface Deferred {
+  promise: Promise<void>;
+  resolve: () => void;
+  reject: (err: unknown) => void;
+  status: 'pending' | 'resolved' | 'rejected';
+}
+
+function createDeferred(): Deferred {
+  const deferred = { status: 'pending' } as Deferred;
+  deferred.promise = new Promise<void>((resolve, reject) => {
+    deferred.resolve = () => {
+      deferred.status = 'resolved';
+      resolve();
+    };
+    deferred.reject = (err: unknown) => {
+      deferred.status = 'rejected';
+      reject(err);
+    };
+  });
+  return deferred;
+}
+
+let dbReadyDeferred = createDeferred();
 
 /**
  * Get the database connection.
@@ -33,7 +53,7 @@ const dbReady = new Promise<void>((resolve, reject) => {
  */
 export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   // Block until initializeDatabase() has finished setting up the schema
-  await dbReady;
+  await dbReadyDeferred.promise;
   if (!db) throw new Error('[DB] getDatabase called but db is null after ready');
   return db;
 }
@@ -72,60 +92,30 @@ async function getCurrentVersion(database: SQLite.SQLiteDatabase): Promise<numbe
 }
 
 /**
- * Run migrations from current version to target version
- */
-async function runMigrations(
-  database: SQLite.SQLiteDatabase,
-  fromVersion: number,
-  toVersion: number,
-): Promise<void> {
-  validateMigrationPlan(fromVersion, toVersion);
-
-  for (let v = fromVersion + 1; v <= toVersion; v++) {
-    const migration = MIGRATIONS[v];
-    if (!migration) {
-      throw new Error(`Missing migration for version ${v}`);
-    }
-
-    try {
-      await database.execAsync('BEGIN TRANSACTION');
-      await database.execAsync(migration);
-      await database.runAsync(
-        `INSERT OR REPLACE INTO schema_version (version, migrated_at) VALUES (?, CURRENT_TIMESTAMP)`,
-        [v],
-      );
-      await database.execAsync('COMMIT');
-    } catch (error) {
-      await database.execAsync('ROLLBACK');
-      throw new Error(`${MIGRATION_ERROR_PREFIX} v${v}: ${String(error)}`);
-    }
-  }
-}
-
-function validateMigrationPlan(fromVersion: number, toVersion: number): void {
-  if (fromVersion >= toVersion) {
-    return;
-  }
-
-  for (let version = fromVersion + 1; version <= toVersion; version++) {
-    if (!MIGRATIONS[version]) {
-      throw new Error(`Missing required migration for version ${version}`);
-    }
-  }
-}
-
-/**
  * Initialize the database with schema and default data.
  * Must be called once at app startup before any other DB operations.
+ * Safe to call again after a failed attempt — see dbReadyDeferred above.
  */
 export async function initializeDatabase(): Promise<void> {
+  if (dbReadyDeferred.status === 'rejected') {
+    dbReadyDeferred = createDeferred();
+  }
+
   try {
     const database = await openDatabase();
 
     const currentVersion = await getCurrentVersion(database);
 
     if (currentVersion < SCHEMA_VERSION) {
-      await runMigrations(database, currentVersion, SCHEMA_VERSION);
+      // expo-sqlite's runAsync() has overloads TS can't structurally match
+      // against the generic SqlMigrationDb shape; the runtime behavior
+      // (sql, params?) is compatible, so the cast is safe.
+      await runSqlMigrations(
+        database as unknown as SqlMigrationDb,
+        MIGRATIONS,
+        currentVersion,
+        SCHEMA_VERSION,
+      );
     }
 
     // Insert default safety check items if not exists
@@ -144,9 +134,9 @@ export async function initializeDatabase(): Promise<void> {
       );
     }
 
-    dbReadyResolve?.();
+    dbReadyDeferred.resolve();
   } catch (err) {
-    dbReadyReject?.(err);
+    dbReadyDeferred.reject(err);
     throw err;
   }
 }

@@ -23,5 +23,10 @@
   "nContacts_other": "{{count}} contacts",
   "nLocations_one": "{{count}} location",
   "nLocations_other": "{{count}} locations",
-  "emergencyNumber": "911"
+  "emergencyNumber": "911",
+  "fatalError": {
+    "title": "Something went wrong",
+    "body": "The app couldn't start because it wasn't able to load its data. Your information is safe on this device — try again.",
+    "retry": "Try Again"
+  }
 }

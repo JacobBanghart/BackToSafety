@@ -4,6 +4,7 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { listPendingVersions, validateMigrationPlan } from './migrations';
 import { ONBOARDING_STEPS, SCHEMA_VERSION } from './schema';
 
 const STORAGE_KEYS = {
@@ -18,6 +19,23 @@ const STORAGE_KEYS = {
 } as const;
 
 /**
+ * Web migrations, keyed by the version they migrate TO — mirrors the
+ * native MIGRATIONS map in schema.ts but runs plain functions against
+ * AsyncStorage instead of SQL.
+ */
+const WEB_MIGRATIONS: Record<number, () => Promise<void>> = {
+  // Version 1: fresh-install seeding (same defaults the old one-shot
+  // initializeDatabase() used to write directly).
+  1: async () => {
+    const onboardingState: Record<string, { completed: boolean; skipped: boolean }> = {};
+    for (const step of ONBOARDING_STEPS) {
+      onboardingState[step] = { completed: false, skipped: false };
+    }
+    await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING, JSON.stringify(onboardingState));
+  },
+};
+
+/**
  * Web doesn't need a real database connection, but we keep the interface
  */
 export async function getDatabase(): Promise<null> {
@@ -25,21 +43,21 @@ export async function getDatabase(): Promise<null> {
 }
 
 /**
- * Initialize storage with default data
+ * Initialize storage with default data, running any pending migrations.
+ * Safe to call again after a failed attempt — each migration is only
+ * considered done once the schema_version key has been advanced past it,
+ * so a retry simply resumes from wherever it left off.
  */
 export async function initializeDatabase(): Promise<void> {
-  const version = await AsyncStorage.getItem(STORAGE_KEYS.SCHEMA_VERSION);
+  const stored = await AsyncStorage.getItem(STORAGE_KEYS.SCHEMA_VERSION);
+  const parsed = stored ? Number.parseInt(stored, 10) : 0;
+  const currentVersion = Number.isFinite(parsed) ? parsed : 0;
 
-  if (!version) {
-    // Fresh install - initialize with defaults
-    await AsyncStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, String(SCHEMA_VERSION));
+  validateMigrationPlan(currentVersion, SCHEMA_VERSION, WEB_MIGRATIONS);
 
-    // Initialize onboarding steps
-    const onboardingState: Record<string, { completed: boolean; skipped: boolean }> = {};
-    for (const step of ONBOARDING_STEPS) {
-      onboardingState[step] = { completed: false, skipped: false };
-    }
-    await AsyncStorage.setItem(STORAGE_KEYS.ONBOARDING, JSON.stringify(onboardingState));
+  for (const v of listPendingVersions(currentVersion, SCHEMA_VERSION)) {
+    await WEB_MIGRATIONS[v]?.();
+    await AsyncStorage.setItem(STORAGE_KEYS.SCHEMA_VERSION, String(v));
   }
 }
 

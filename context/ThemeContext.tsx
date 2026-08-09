@@ -4,7 +4,7 @@
  */
 
 import { getSetting, saveSetting } from '@/database/storage';
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useColorScheme as useSystemColorScheme } from 'react-native';
 
 export type ThemePreference = 'system' | 'light' | 'dark';
@@ -59,11 +59,12 @@ export const ThemeProvider: React.FC<React.PropsWithChildren> = ({ children }) =
     }
   }, []);
 
-  return (
-    <ThemeContext.Provider value={{ themePreference, colorScheme, setThemePreference, isLoading }}>
-      {children}
-    </ThemeContext.Provider>
+  const value = useMemo(
+    () => ({ themePreference, colorScheme, setThemePreference, isLoading }),
+    [themePreference, colorScheme, setThemePreference, isLoading],
   );
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };
 
 export const useTheme = () => {

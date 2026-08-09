@@ -3,13 +3,8 @@
  * Manages onboarding state and navigation
  */
 
-import {
-  completeOnboardingStep,
-  getCurrentOnboardingStep,
-  initializeDatabase,
-  isOnboardingComplete,
-} from '@/database';
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { completeOnboardingStep, getCurrentOnboardingStep, isOnboardingComplete } from '@/database';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type OnboardingState = {
   isLoading: boolean;
@@ -26,7 +21,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [isOnboarded, setIsOnboarded] = useState(false);
   const [currentStep, setCurrentStep] = useState('welcome');
 
-  const refreshOnboardingState = async () => {
+  const refreshOnboardingState = useCallback(async () => {
     try {
       const complete = await isOnboardingComplete();
       const step = await getCurrentOnboardingStep();
@@ -35,43 +30,41 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
     } catch (error) {
       console.error('[Onboarding] Error refreshing state:', error);
     }
-  };
+  }, []);
 
-  const completeStep = async (step: string) => {
-    await completeOnboardingStep(step);
-    await refreshOnboardingState();
-  };
+  const completeStep = useCallback(
+    async (step: string) => {
+      await completeOnboardingStep(step);
+      await refreshOnboardingState();
+    },
+    [refreshOnboardingState],
+  );
 
+  // Database initialization is owned by DbGate (app/_layout.tsx), which
+  // mounts this provider only after initializeDatabase() has resolved.
   useEffect(() => {
     async function init() {
       try {
-        // Initialize database (runs migrations if needed)
-        await initializeDatabase();
-
-        // Check onboarding status
         await refreshOnboardingState();
-      } catch (error) {
-        console.error('[Onboarding] Initialization error:', error);
       } finally {
         setIsLoading(false);
       }
     }
     init();
-  }, []);
+  }, [refreshOnboardingState]);
 
-  return (
-    <OnboardingContext.Provider
-      value={{
-        isLoading,
-        isOnboarded,
-        currentStep,
-        completeStep,
-        refreshOnboardingState,
-      }}
-    >
-      {children}
-    </OnboardingContext.Provider>
+  const value = useMemo(
+    () => ({
+      isLoading,
+      isOnboarded,
+      currentStep,
+      completeStep,
+      refreshOnboardingState,
+    }),
+    [isLoading, isOnboarded, currentStep, completeStep, refreshOnboardingState],
   );
+
+  return <OnboardingContext.Provider value={value}>{children}</OnboardingContext.Provider>;
 }
 
 export function useOnboarding() {

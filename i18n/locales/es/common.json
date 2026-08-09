@@ -22,5 +22,10 @@
   "nContacts_other": "",
   "nLocations_one": "",
   "nLocations_other": "",
-  "emergencyNumber": ""
+  "emergencyNumber": "",
+  "fatalError": {
+    "title": "Algo salió mal",
+    "body": "La aplicación no pudo iniciarse porque no logró cargar sus datos. Tu información está segura en este dispositivo — intenta de nuevo.",
+    "retry": "Intentar de nuevo"
+  }
 }

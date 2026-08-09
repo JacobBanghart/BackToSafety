@@ -3,8 +3,10 @@
  * Manages the person's profile data, loading from database
  */
 
+import { createIncident, getIncidents } from '@/database';
 import { Contact, getContacts, getEmergencyContacts } from '@/database/contacts';
 import { Profile, saveProfile as dbSaveProfile, getProfile } from '@/database/profile';
+import { getSetting, saveSetting } from '@/database/storage';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 export type LastSeen = {
@@ -14,11 +16,16 @@ export type LastSeen = {
 
 export type Incident = {
   at: string; // ISO time
-  outcome: 'found' | 'not_found' | '911_called';
+  // Matches the subset of database/incidents' outcome CHECK constraint
+  // this app actually writes (emergency.tsx only ever passes these two;
+  // 'ongoing' is the default for an incident still in progress).
+  outcome: 'found' | '911_called' | 'ongoing';
   location?: { lat: number; lon: number; accuracy?: number };
   notes?: string;
   checked?: string[]; // checklist ids
 };
+
+const LAST_SEEN_SETTING_KEY = 'last_seen';
 
 type ProfileState = {
   // Loading state
@@ -77,6 +84,41 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
     const load = async () => {
       setIsLoading(true);
       await Promise.all([refreshProfile(), refreshContacts()]);
+
+      try {
+        const raw = await getSetting(LAST_SEEN_SETTING_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as LastSeen;
+          if (parsed && typeof parsed === 'object') {
+            setLastSeenState(parsed);
+          }
+        }
+      } catch (err) {
+        console.error('Error loading last seen:', err);
+      }
+
+      try {
+        const stored = await getIncidents();
+        setIncidents(
+          stored.map((incident) => ({
+            at: incident.startedAt,
+            outcome: (incident.outcome ?? 'ongoing') as Incident['outcome'],
+            location:
+              incident.lastSeenLat != null && incident.lastSeenLon != null
+                ? {
+                    lat: incident.lastSeenLat,
+                    lon: incident.lastSeenLon,
+                    accuracy: incident.lastSeenAccuracy,
+                  }
+                : undefined,
+            notes: incident.notes,
+            checked: incident.areasChecked,
+          })),
+        );
+      } catch (err) {
+        console.error('Error loading incidents:', err);
+      }
+
       setIsLoading(false);
     };
     load();
@@ -96,6 +138,37 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
     [refreshProfile],
   );
 
+  // Update in-memory lastSeen immediately, then persist in the background.
+  const setLastSeen = useCallback((ls: LastSeen) => {
+    setLastSeenState(ls);
+    saveSetting(LAST_SEEN_SETTING_KEY, JSON.stringify(ls)).catch((err) => {
+      console.error('Error saving last seen:', err);
+    });
+  }, []);
+
+  // Optimistic in-memory update, then fire-and-forget persistence. On DB
+  // failure we keep the in-memory copy — an incident log entry lost from
+  // memory during an active emergency is worse than one that never made it
+  // to disk.
+  const addIncident = useCallback(
+    (incident: Incident) => {
+      setIncidents((prev) => [incident, ...prev]);
+
+      createIncident({
+        startedAt: incident.at,
+        outcome: incident.outcome,
+        areasChecked: incident.checked,
+        notes: incident.notes,
+        lastSeenLat: lastSeen.coords?.lat,
+        lastSeenLon: lastSeen.coords?.lon,
+        lastSeenAccuracy: lastSeen.coords?.accuracy,
+      }).catch((err) => {
+        console.error('Error persisting incident:', err);
+      });
+    },
+    [lastSeen],
+  );
+
   const value = useMemo(
     () => ({
       isLoading,
@@ -107,8 +180,8 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
       refreshProfile,
       refreshContacts,
       saveProfile,
-      setLastSeen: (ls: LastSeen) => setLastSeenState(ls),
-      addIncident: (i: Incident) => setIncidents((prev) => [i, ...prev]),
+      setLastSeen,
+      addIncident,
     }),
     [
       isLoading,
@@ -120,6 +193,8 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
       refreshProfile,
       refreshContacts,
       saveProfile,
+      setLastSeen,
+      addIncident,
     ],
   );
 
