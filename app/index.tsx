@@ -3,9 +3,8 @@
  * Quick access to emergency flow, profile summary, and key actions
  */
 
-import { useFocusEffect } from '@react-navigation/native';
 import { Image } from 'expo-image';
-import { Href, useRouter } from 'expo-router';
+import { Href, useFocusEffect, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useTranslation } from 'react-i18next';

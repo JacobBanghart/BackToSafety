@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from 'expo-router';
 import { track } from '@/utils/analytics';
 import * as Contacts from 'expo-contacts/legacy';
 import * as Haptics from 'expo-haptics';

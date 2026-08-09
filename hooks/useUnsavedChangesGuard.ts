@@ -1,9 +1,21 @@
 import { useEffect, useRef } from 'react';
 import { Alert } from 'react-native';
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
+
+// Narrow structural type covering only what this hook actually calls on the
+// navigation object returned by expo-router's useNavigation().
+type BeforeRemoveNavigation = {
+  addListener: (
+    type: 'beforeRemove',
+    callback: (event: { preventDefault: () => void; data: { action: unknown } }) => void,
+  ) => () => void;
+  // `never` here (rather than `unknown`) so real navigation.dispatch's
+  // stricter action-union parameter type is still assignable to this
+  // structural type; the call site casts the value with `as never` to match.
+  dispatch: (action: never) => void;
+};
 
 type UseUnsavedChangesGuardOptions = {
-  navigation: Pick<NavigationProp<ParamListBase>, 'addListener' | 'dispatch'>;
+  navigation: BeforeRemoveNavigation;
   hasUnsavedChanges: boolean;
   isSaving?: boolean;
   title: string;

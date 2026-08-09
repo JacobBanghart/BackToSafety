@@ -32,7 +32,7 @@ export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenH
       if (router.canGoBack()) {
         router.back();
       } else {
-        router.replace('/(tabs)');
+        router.replace('/');
       }
     });
 
