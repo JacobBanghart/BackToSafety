@@ -1,0 +1,39 @@
+{
+  "section": {
+    "title": "Backup & Restore",
+    "description": "Save a copy of everything on this device, or restore from a backup file."
+  },
+  "export": {
+    "label": "Export Backup",
+    "description": "Save your profile, contacts, and destinations to a file you can share or store.",
+    "confirmTitle": "Export Backup",
+    "confirmMessage": "The exported file will contain unencrypted medical information, including health conditions, medications, and emergency contacts. Only share it with people you trust.",
+    "confirmButton": "Export",
+    "cancelButton": "Cancel",
+    "successTitle": "Backup Exported",
+    "success": "Your backup was created. Choose where to save or send it.",
+    "unavailable": "Sharing isn't available on this device.",
+    "failureTitle": "Export Failed",
+    "failure": "Couldn't create the backup. Please try again."
+  },
+  "import": {
+    "label": "Restore from Backup",
+    "description": "Load a profile, contacts, and destinations from a backup file.",
+    "confirmTitle": "Restore This Backup?",
+    "summaryWithName": "This backup for {{name}} was exported on {{date}} and includes {{contactCount}} contact(s) and {{destinationCount}} destination(s).",
+    "summaryWithoutName": "This backup was exported on {{date}} and includes {{contactCount}} contact(s) and {{destinationCount}} destination(s).",
+    "overwriteWarning": "Restoring will replace all data currently on this device. This cannot be undone.",
+    "confirmButton": "Restore",
+    "cancelButton": "Cancel",
+    "successTitle": "Backup Restored",
+    "success": "Your data has been restored from the backup.",
+    "failureTitle": "Restore Failed",
+    "failure": "Couldn't restore the backup. Please try again.",
+    "errors": {
+      "not_backup": "That file isn't a Back to Safety backup.",
+      "unsupported_format_version": "This backup was created by a newer version of the app. Please update the app and try again.",
+      "newer_schema": "This backup was created by a newer version of the app. Please update the app and try again.",
+      "corrupt": "That backup file appears to be damaged or incomplete."
+    }
+  }
+}

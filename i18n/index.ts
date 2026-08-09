@@ -19,6 +19,7 @@ import enDestinations from './locales/en/destinations.json';
 import enReadout from './locales/en/readout.json';
 import enSettings from './locales/en/settings.json';
 import enOnboarding from './locales/en/onboarding.json';
+import enBackup from './locales/en/backup.json';
 
 // ── Spanish translations ──────────────────────────────────────────────────────
 import esCommon from './locales/es/common.json';
@@ -30,6 +31,7 @@ import esDestinations from './locales/es/destinations.json';
 import esReadout from './locales/es/readout.json';
 import esSettings from './locales/es/settings.json';
 import esOnboarding from './locales/es/onboarding.json';
+import esBackup from './locales/es/backup.json';
 
 const deviceLocale = Localization.getLocales()[0]?.languageCode ?? 'en';
 
@@ -59,6 +61,7 @@ void i18n.use(initReactI18next).init({
       readout: enReadout,
       settings: enSettings,
       onboarding: enOnboarding,
+      backup: enBackup,
     },
     es: {
       common: esCommon,
@@ -70,6 +73,7 @@ void i18n.use(initReactI18next).init({
       readout: esReadout,
       settings: esSettings,
       onboarding: esOnboarding,
+      backup: esBackup,
     },
   },
   lng: deviceLocale,
@@ -85,6 +89,7 @@ void i18n.use(initReactI18next).init({
     'readout',
     'settings',
     'onboarding',
+    'backup',
   ],
   interpolation: {
     escapeValue: false, // React already escapes values

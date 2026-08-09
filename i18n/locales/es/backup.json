@@ -1,0 +1,39 @@
+{
+  "section": {
+    "title": "Copia de seguridad y restauración",
+    "description": "Guarda una copia de todo lo que hay en este dispositivo, o restaura desde un archivo de copia de seguridad."
+  },
+  "export": {
+    "label": "Exportar copia de seguridad",
+    "description": "Guarda el perfil, los contactos y los destinos en un archivo que puedes compartir o almacenar.",
+    "confirmTitle": "Exportar copia de seguridad",
+    "confirmMessage": "El archivo exportado contendrá información médica sin cifrar, incluyendo condiciones de salud, medicamentos y contactos de emergencia. Compártelo solo con personas de confianza.",
+    "confirmButton": "Exportar",
+    "cancelButton": "Cancelar",
+    "successTitle": "Copia de seguridad exportada",
+    "success": "Se creó tu copia de seguridad. Elige dónde guardarla o enviarla.",
+    "unavailable": "Compartir no está disponible en este dispositivo.",
+    "failureTitle": "Error al exportar",
+    "failure": "No se pudo crear la copia de seguridad. Inténtalo de nuevo."
+  },
+  "import": {
+    "label": "Restaurar desde copia de seguridad",
+    "description": "Carga un perfil, contactos y destinos desde un archivo de copia de seguridad.",
+    "confirmTitle": "¿Restaurar esta copia de seguridad?",
+    "summaryWithName": "Esta copia de seguridad de {{name}} se exportó el {{date}} e incluye {{contactCount}} contacto(s) y {{destinationCount}} destino(s).",
+    "summaryWithoutName": "Esta copia de seguridad se exportó el {{date}} e incluye {{contactCount}} contacto(s) y {{destinationCount}} destino(s).",
+    "overwriteWarning": "Restaurar reemplazará todos los datos actuales de este dispositivo. Esta acción no se puede deshacer.",
+    "confirmButton": "Restaurar",
+    "cancelButton": "Cancelar",
+    "successTitle": "Copia de seguridad restaurada",
+    "success": "Tus datos se restauraron desde la copia de seguridad.",
+    "failureTitle": "Error al restaurar",
+    "failure": "No se pudo restaurar la copia de seguridad. Inténtalo de nuevo.",
+    "errors": {
+      "not_backup": "Ese archivo no es una copia de seguridad de Back to Safety.",
+      "unsupported_format_version": "Esta copia de seguridad fue creada con una versión más reciente de la aplicación. Actualiza la aplicación e inténtalo de nuevo.",
+      "newer_schema": "Esta copia de seguridad fue creada con una versión más reciente de la aplicación. Actualiza la aplicación e inténtalo de nuevo.",
+      "corrupt": "Ese archivo de copia de seguridad parece estar dañado o incompleto."
+    }
+  }
+}

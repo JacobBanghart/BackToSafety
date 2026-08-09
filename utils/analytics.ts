@@ -24,6 +24,14 @@ type AnalyticsEventName =
   | 'settings_account_deleted'
   | 'settings_theme_changed'
   | 'settings_language_changed'
+  | 'backup_export_started'
+  | 'backup_exported'
+  | 'backup_export_failed'
+  | 'backup_import_started'
+  | 'backup_imported'
+  | 'backup_import_failed'
+  | 'db_init_failed'
+  | 'db_init_retried'
   | 'contact_saved'
   | 'contact_deleted'
   | 'contact_imported'
@@ -43,15 +51,7 @@ type AnalyticsEventName =
   | 'readout_script_copied'
   | 'readout_details_copied'
   | 'readout_open_in_maps'
-  | 'screen_viewed'
-  | 'db_init_failed'
-  | 'db_init_retried'
-  | 'backup_export_started'
-  | 'backup_exported'
-  | 'backup_export_failed'
-  | 'backup_import_started'
-  | 'backup_imported'
-  | 'backup_import_failed';
+  | 'screen_viewed';
 
 type AnalyticsProperties = Record<string, string | number | boolean | null>;
 
