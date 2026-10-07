@@ -55,8 +55,25 @@
         "args": [
           "5'6"
         ],
-        "expected": "5'6\"",
-        "finding": "F-11"
+        "expected": "5"
+      },
+      {
+        "args": [
+          "5'11"
+        ],
+        "expected": "5'1\""
+      },
+      {
+        "args": [
+          "5'1"
+        ],
+        "expected": "5"
+      },
+      {
+        "args": [
+          "5'11\"1"
+        ],
+        "expected": "5'11\""
       }
     ],
     "formatWeightInput": [

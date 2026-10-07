@@ -5,7 +5,10 @@
 
 /** Feet and inches from up to three digits: 5 → 5, 56 → 5'6", 511 → 5'11". */
 export function formatHeightInput(value: string): string {
-  const digits = value.replace(/\D/g, '').slice(0, 3);
+  let digits = value.replace(/\D/g, '').slice(0, 3);
+  // `5'6` (closing quote gone) means backspace just removed the quote; remove the
+  // last digit too, or the quote comes straight back and the field can't be cleared (F-11).
+  if (/^\d'\d{1,2}$/.test(value)) digits = digits.slice(0, -1);
   if (!digits) return '';
   if (digits.length === 1) return digits;
   if (digits.length === 2) return `${digits[0]}'${digits[1]}"`;
