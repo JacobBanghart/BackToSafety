@@ -1,55 +1,55 @@
 {
-  "screenTitle": "",
-  "loading": "",
-  "addContact": "",
-  "importContact": "",
-  "importing": "",
-  "importWebUnavailable": "",
-  "importDeviceUnavailable": "",
-  "notifyInEmergency": "",
+  "screenTitle": "Contactos",
+  "loading": "Cargando...",
+  "addContact": "Agregar contacto",
+  "importContact": "Importar",
+  "importing": "Importando...",
+  "importWebUnavailable": "La importación de contactos solo está disponible en iPhone y Android.",
+  "importDeviceUnavailable": "La importación de contactos no está disponible en este dispositivo.",
+  "notifyInEmergency": "Avisar en una emergencia",
   "noContacts": {
-    "title": "",
-    "body": "",
-    "button": ""
+    "title": "Sin contactos de emergencia",
+    "body": "Agrega personas a quienes llamar o enviar mensajes si se pierde.",
+    "button": "Agregar el primer contacto"
   },
   "roles": {
-    "primary_caregiver": "",
-    "caregiver": "",
-    "family": "",
-    "neighbor": "",
-    "friend": "",
-    "other": ""
+    "primary_caregiver": "Cuidador principal",
+    "caregiver": "Cuidador",
+    "family": "Familia",
+    "neighbor": "Vecino",
+    "friend": "Amigo",
+    "other": "Otro"
   },
   "form": {
-    "newTitle": "",
-    "editTitle": "",
-    "nameLabel": "",
-    "namePlaceholder": "",
-    "phoneLabel": "",
-    "phonePlaceholder": "",
-    "relationshipLabel": "",
-    "relationshipPlaceholder": "",
-    "addressLabel": "",
-    "addressPlaceholder": "",
-    "notesLabel": "",
-    "notesPlaceholder": "",
-    "roleLabel": ""
+    "newTitle": "Nuevo contacto",
+    "editTitle": "Editar contacto",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Nombre del contacto",
+    "phoneLabel": "Número de teléfono",
+    "phonePlaceholder": "(555) 123-4567",
+    "relationshipLabel": "Parentesco",
+    "relationshipPlaceholder": "p. ej., hija, vecino de al lado",
+    "addressLabel": "Dirección",
+    "addressPlaceholder": "Calle, ciudad, estado",
+    "notesLabel": "Notas",
+    "notesPlaceholder": "Notas adicionales sobre este contacto...",
+    "roleLabel": "Rol"
   },
   "actions": {
-    "call": "",
-    "edit": "",
-    "delete": ""
+    "call": "Llamar",
+    "edit": "Editar",
+    "delete": "Eliminar"
   },
   "deleteModal": {
-    "title": "",
-    "message": "",
-    "confirm": "",
-    "cancel": ""
+    "title": "Eliminar contacto",
+    "message": "¿Seguro que quieres eliminar a {{name}}?",
+    "confirm": "Eliminar",
+    "cancel": "Cancelar"
   },
   "errors": {
-    "deleteFailed": "",
-    "saveFailed": "",
-    "nameRequired": "",
-    "phoneRequired": ""
+    "deleteFailed": "No se pudo eliminar el contacto.",
+    "saveFailed": "No se pudo guardar el contacto. Por favor, inténtalo de nuevo.",
+    "nameRequired": "El nombre es obligatorio.",
+    "phoneRequired": "El número de teléfono es obligatorio."
   }
 }

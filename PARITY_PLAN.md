@@ -45,8 +45,8 @@ language-neutral JSON, or pixels.
   Vitest conformance test pins the TS constants to it; later the Kotlin theme is generated
   from the same file.
 - `i18n/locales/` is already language-neutral JSON, and the Kotlin app consumes the same files.
-  Test: every `en` key exists in `es`. **Currently red: es is missing 46 keys** (38 in
-  `readout.json`, 5 in `destinations.json`, 1 each in `common`, `home`, `profile`).
+  `i18n/locales.test.ts` (landed): every locale matches `en` key-for-key, with no empty
+  strings and the same `{{placeholders}}`.
 - `features.json`: every user-visible feature gets an ID and the flows that cover it. The
   test fails if a feature has no covering flow. This is the asset-manifest idea applied to
   features: the red list is the coverage backlog.
@@ -147,8 +147,10 @@ reactor's Phase −1, and it lands first.
 
 ## Known findings (decide before freeze)
 
-- `app/readout.tsx:148`: age is `currentYear − birthYear`, so it is one year too high
-  until the birthday each year. This value goes to first responders.
-- Spanish is missing 46 i18n keys (see L1); those strings fall back to English.
+- **Fixed:** the readout age was one year too high before the birthday (`utils/age.ts`).
+- **Fixed:** Spanish was ~470 empty or missing strings, and Spanish-locale phones showed blank
+  text in production. Production is now English-only, and the strings are AI-translated.
+  **Before adding `es` to `SHIPPED_LANGUAGES`:** get a native speaker's review, and decide whether
+  the 911 script and the copy block should stay in English, since dispatchers may not speak Spanish.
 - oxlint 1.87 `react/purity` / `react/set-state-in-effect` warnings at 4 sites (intentional
   patterns, downgraded to warnings in `.oxlintrc.json`).

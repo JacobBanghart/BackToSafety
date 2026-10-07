@@ -1,55 +1,62 @@
 {
-  "screenTitle": "",
-  "loading": "",
-  "addDestination": "",
+  "screenTitle": "Lugares para revisar",
+  "loading": "Cargando...",
+  "addDestination": "Agregar lugar",
   "noDestinations": {
-    "title": "",
-    "body": "",
-    "button": ""
+    "title": "Sin lugares guardados",
+    "body": "Agrega lugares a donde {{name}} podría ir. Aparecerán durante una búsqueda de emergencia.",
+    "button": "Agregar el primer lugar"
   },
   "riskLevels": {
-    "critical": "",
-    "high": "",
-    "medium": "",
-    "low": ""
+    "critical": "Crítico",
+    "high": "Riesgo alto",
+    "medium": "Medio",
+    "low": "Bajo"
   },
   "categories": {
-    "water": "",
-    "former_workplace": "",
-    "church": "",
-    "store": "",
-    "restaurant": "",
-    "friend_family": "",
-    "walking_route": "",
-    "other": ""
+    "water": "Agua/Alberca",
+    "former_workplace": "Antiguo trabajo",
+    "church": "Iglesia",
+    "store": "Tienda",
+    "restaurant": "Restaurante",
+    "friend_family": "Amigos/Familia",
+    "walking_route": "Ruta para caminar",
+    "other": "Otro"
+  },
+  "detail": {
+    "address": "Dirección",
+    "distance": "Distancia",
+    "why": "Por qué va ahí",
+    "notes": "Notas"
   },
   "form": {
-    "newTitle": "",
-    "editTitle": "",
-    "nameLabel": "",
-    "namePlaceholder": "",
-    "categoryLabel": "",
-    "riskLabel": "",
-    "addressLabel": "",
-    "addressPlaceholder": "",
-    "distanceLabel": "",
-    "distancePlaceholder": "",
-    "otherCategoryLabel": "",
-    "otherCategoryPlaceholder": "",
-    "whyLabel": "",
-    "whyPlaceholder": "",
-    "notesLabel": "",
-    "notesPlaceholder": ""
+    "newTitle": "Nuevo lugar",
+    "editTitle": "Editar lugar",
+    "hint": "Agrega lugares a donde podría ir. Aparecerán durante una búsqueda de emergencia.",
+    "nameLabel": "Nombre del lugar",
+    "namePlaceholder": "p. ej., Parque Riverside, la casa vieja en la calle Maple",
+    "categoryLabel": "Categoría",
+    "riskLabel": "Nivel de riesgo",
+    "addressLabel": "Dirección",
+    "addressPlaceholder": "Dirección o descripción",
+    "distanceLabel": "Distancia desde casa",
+    "distancePlaceholder": "p. ej., 0.5 millas, 2 cuadras",
+    "otherCategoryLabel": "Describe este tipo de lugar",
+    "otherCategoryPlaceholder": "p. ej., cafetería, parque, hospital...",
+    "whyLabel": "Por qué podría ir ahí",
+    "whyPlaceholder": "p. ej., vivió ahí hace 30 años, trabajaba ahí",
+    "notesLabel": "Notas adicionales",
+    "notesPlaceholder": "Cualquier otro detalle útil..."
   },
   "deleteModal": {
-    "title": "",
-    "message": "",
-    "confirm": "",
-    "cancel": ""
+    "title": "Eliminar lugar",
+    "message": "¿Seguro que quieres eliminar \"{{name}}\"?",
+    "confirm": "Eliminar",
+    "cancel": "Cancelar"
   },
   "errors": {
-    "deleteFailed": "",
-    "saveFailed": "",
-    "nameRequired": ""
+    "deleteFailed": "No se pudo eliminar el lugar.",
+    "saveFailed": "No se pudo guardar el lugar. Por favor, inténtalo de nuevo.",
+    "nameRequired": "El nombre del lugar es obligatorio."
   }
 }

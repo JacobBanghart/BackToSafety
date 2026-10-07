@@ -1,32 +1,33 @@
 {
-  "appTitle": "",
-  "caringFor": "",
+  "appTitle": "Back to Safety",
+  "caringFor": "Cuidando a",
   "emergencyButton": {
-    "startTitle": "",
-    "startSubtitle": "",
-    "activeTitle": "",
-    "timerExpiredTitle": "",
-    "timerExpiredSubtitle": "",
-    "remaining": ""
+    "startTitle": "Iniciar búsqueda de emergencia",
+    "startSubtitle": "Temporizador guiado de 15 minutos con lista de pasos",
+    "activeTitle": "Emergencia en curso",
+    "timerExpiredTitle": "Tiempo agotado: llama al {{emergencyNumber}}",
+    "timerExpiredSubtitle": "Toca para continuar con el protocolo de búsqueda",
+    "remaining": "Quedan {{time}} · {{checked}}/{{total}} pasos"
   },
   "quickActions": {
-    "contacts": "",
-    "contactsNone": "",
-    "contactsSaved": "",
-    "places": "",
-    "placesSubtitle": ""
+    "contacts": "Contactos",
+    "contactsNone": "Ninguno agregado",
+    "contactsSaved": "{{count}} guardados",
+    "places": "Lugares",
+    "placesSubtitle": "Lugares probables"
   },
   "emergencyInfo": {
-    "title": "",
-    "script911": "",
-    "healthNotes": "",
-    "medications": "",
-    "cognitiveStatus": "",
-    "deescalation": ""
+    "title": "Información de emergencia",
+    "script911": "Guion para el 911",
+    "healthNotes": "Notas de salud",
+    "medications": "Medicamentos habituales (opcional)",
+    "cognitiveStatus": "Estado cognitivo",
+    "deescalation": "Cómo calmarle"
   },
+  "settingsLink": "Configuración",
   "setupCard": {
-    "title": "",
-    "body": "",
-    "button": ""
+    "title": "Completa el perfil",
+    "body": "Agrega información sobre la persona que cuidas. El 911 y quienes busquen la usarán en una emergencia.",
+    "button": "Crear perfil"
   }
 }

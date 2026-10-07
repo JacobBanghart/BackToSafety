@@ -1,107 +1,107 @@
 {
-  "screenTitle": "",
-  "loading": "",
+  "screenTitle": "Búsqueda de emergencia",
+  "loading": "Cargando estado de la emergencia...",
   "timer": {
-    "labelActive": "",
-    "labelExpired": "",
-    "hintActive": "",
-    "hintExpired": "",
-    "stepsProgress": ""
+    "labelActive": "Tiempo restante",
+    "labelExpired": "HORA DE LLAMAR AL {{emergencyNumber}}",
+    "hintActive": "Mantén la calma. Revisa cada paso con orden.",
+    "hintExpired": "Llama al {{emergencyNumber}} de inmediato y pide una Alerta Plateada",
+    "stepsProgress": "{{checked}}/{{total}} pasos completados"
   },
   "directionHint": {
-    "left": "",
-    "right": ""
+    "left": "← Puede desviarse a la izquierda (zurdo)",
+    "right": "→ Puede desviarse a la derecha (diestro)"
   },
   "wearing": {
-    "label": "",
-    "hint": "",
-    "placeholder": "",
-    "dismiss": ""
+    "label": "¿Qué ropa lleva puesta?",
+    "hint": "Lo necesitarás para el {{emergencyNumber}}",
+    "placeholder": "p. ej., chaqueta azul, pantalón gris, tenis blancos",
+    "dismiss": "Descartar"
   },
   "actions": {
-    "foundSafe": "",
-    "call911": "",
-    "infoSheet": "",
-    "alertCircle": ""
+    "foundSafe": "Encontrado: a salvo",
+    "call911": "📞 Llamar al {{emergencyNumber}}",
+    "infoSheet": "📋 Ficha de información",
+    "alertCircle": "📱 Avisar a contactos"
   },
   "checklist": {
-    "title": "",
-    "priority": "",
-    "savedPlaces": "",
-    "morePlaces": ""
+    "title": "Protocolo de búsqueda",
+    "priority": "PRIORIDAD",
+    "savedPlaces": "Lugares guardados para revisar:",
+    "morePlaces": "+{{count}} más en Lugares"
   },
   "steps": {
     "home_search": {
-      "title": "",
-      "description": "",
-      "hint": ""
+      "title": "Revisa toda la casa",
+      "description": "Revisa cada cuarto, clóset, debajo de las camas, baños, cochera, sótano y cobertizos",
+      "hint": "Las personas suelen buscar espacios pequeños y tranquilos"
     },
     "outside_immediate": {
-      "title": "",
-      "description": ""
+      "title": "Revisa los alrededores",
+      "description": "Patio, porches, senderos, entradas de autos y dentro de los vehículos (con o sin seguro)"
     },
     "neighbors": {
-      "title": "",
-      "description": ""
+      "title": "Avisa a los vecinos",
+      "description": "Muéstrales una foto y pídeles que llamen si la ven. Revisa también sus patios."
     },
     "radius_search": {
-      "title": "",
-      "description": ""
+      "title": "Busca en un radio de 1 a 1.5 millas",
+      "description": "La mayoría de las personas aparecen a esta distancia de su casa"
     },
     "high_risk": {
-      "title": "",
-      "description": ""
+      "title": "Revisa primero las zonas de alto riesgo",
+      "description": "Agua (albercas, estanques, arroyos), zonas boscosas, zanjas y calles transitadas"
     },
     "familiar_places": {
-      "title": "",
-      "description": ""
+      "title": "Busca en lugares conocidos",
+      "description": "Casa anterior, iglesia, antiguo trabajo, rutas favoritas para caminar"
     },
     "call_911": {
-      "title": "",
-      "description": ""
+      "title": "Llama al {{emergencyNumber}}",
+      "description": "Si no aparece en 15 minutos, llama de inmediato"
     },
     "silver_alert": {
-      "title": "",
-      "description": ""
+      "title": "Pide una Alerta Plateada o Feather",
+      "description": "Pregunta al operador del {{emergencyNumber}} si pueden activar el programa de alertas del estado"
     },
     "share_info": {
-      "title": "",
-      "description": ""
+      "title": "Comparte los datos personales importantes",
+      "description": "Comparte con los rescatistas su apariencia, rutinas diarias y necesidades de comunicación."
     },
     "coordinate": {
-      "title": "",
-      "description": ""
+      "title": "Coordina la búsqueda",
+      "description": "Asigna zonas a quienes ayudan para no buscar dos veces en el mismo lugar"
     },
     "document": {
-      "title": "",
-      "description": ""
+      "title": "Anótalo todo",
+      "description": "Anota horas, zonas revisadas y personas contactadas para los rescatistas"
     }
   },
   "tips": {
-    "title": "",
-    "body": ""
+    "title": "Cuando la encuentres",
+    "body": "• Acércate de frente\n• Habla despacio, con frases cortas\n• Dale tiempo para responder\n• Ofrécete a caminar a su lado\n• No discutas ni la corrijas"
   },
-  "smsMessage": "",
-  "smsWearing": "",
+  "smsMessage": "URGENTE: {{name}} está desaparecido/a. Visto/a por última vez: {{time}}. {{wearing}}Por favor ayuda a buscar o llama si lo/la ves.",
+  "smsWearing": "Lleva puesto: {{wearing}}. ",
   "modal": {
     "found": {
-      "title": "",
-      "message": ""
+      "title": "¡Encontrado!",
+      "message": "Habla con voz tranquila. Ofrécele agua y que descanse."
     },
     "leave": {
-      "title": "",
-      "message": "",
-      "stay": "",
-      "leave": "",
-      "end": ""
+      "title": "¿Salir de la búsqueda de emergencia?",
+      "message": "El temporizador seguirá corriendo en segundo plano. Puedes volver para continuar.",
+      "stay": "Quedarme",
+      "leave": "Salir",
+      "end": "Terminar emergencia"
     },
     "noContacts": {
-      "title": "",
-      "message": ""
+      "title": "Sin contactos",
+      "message": "Agrega contactos de emergencia para enviar alertas."
     },
     "smsError": {
-      "title": "",
-      "message": ""
+      "title": "Error",
+      "message": "No se pudo abrir la app de mensajes."
     }
   }
 }

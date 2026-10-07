@@ -1,8 +1,9 @@
 /**
  * i18n bootstrap
  * Initialises i18next with namespace-per-screen structure.
- * Language defaults to the device locale (via expo-localization).
- * Spanish is available but hidden behind developer settings until fully translated.
+ * Language defaults to the device locale (via expo-localization) when that
+ * language has shipped. Spanish is selectable only from developer settings until
+ * a native speaker has reviewed it; add 'es' to SHIPPED_LANGUAGES after that.
  */
 
 import * as Localization from 'expo-localization';
@@ -31,7 +32,10 @@ import esReadout from './locales/es/readout.json';
 import esSettings from './locales/es/settings.json';
 import esOnboarding from './locales/es/onboarding.json';
 
+const SHIPPED_LANGUAGES = ['en'];
+
 const deviceLocale = Localization.getLocales()[0]?.languageCode ?? 'en';
+const initialLanguage = SHIPPED_LANGUAGES.includes(deviceLocale) ? deviceLocale : 'en';
 
 // Exported so the app can call this once the DB is ready (after onboarding init).
 // Falls back silently — if storage is unavailable the device locale is used.
@@ -39,7 +43,7 @@ export async function loadSavedLanguage(): Promise<void> {
   try {
     const { getSetting } = await import('@/database/storage');
     const saved = await getSetting('language_preference');
-    if (saved === 'en' || saved === 'es') {
+    if (saved === 'en' || (saved === 'es' && (__DEV__ || SHIPPED_LANGUAGES.includes('es')))) {
       await i18n.changeLanguage(saved);
     }
   } catch {
@@ -72,8 +76,9 @@ void i18n.use(initReactI18next).init({
       onboarding: esOnboarding,
     },
   },
-  lng: deviceLocale,
+  lng: initialLanguage,
   fallbackLng: 'en',
+  returnEmptyString: false,
   defaultNS: 'common',
   ns: [
     'common',

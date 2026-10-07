@@ -1,116 +1,107 @@
 {
   "welcome": {
-    "title": "",
-    "description": "",
+    "title": "Prepárate.\nMantén la calma.",
+    "description": "Ayuda a familias y cuidadores a organizar una búsqueda rápidamente.",
     "features": {
       "timer": {
-        "title": "",
-        "description": ""
+        "title": "Temporizador de 15 minutos",
+        "description": "Protocolo de búsqueda guiado con una lista paso a paso"
       },
       "readout": {
-        "title": "",
-        "description": ""
+        "title": "Listo para el 911",
+        "description": "Un guion a un toque con toda la información clave para el operador"
       },
       "privacy": {
-        "title": "",
-        "description": ""
+        "title": "100% privado",
+        "description": "Todos los datos se quedan en tu dispositivo. No necesitas cuenta."
       }
     },
-    "themeLabel": "",
+    "themeLabel": "Elige tu tema",
     "themeOptions": {
-      "light": "",
-      "dark": "",
-      "auto": ""
+      "light": "Claro",
+      "dark": "Oscuro",
+      "auto": "Automático"
     },
-    "languageLabel": "",
-    "scrollHint": "",
-    "getStarted": "",
-    "privacy": ""
+    "languageLabel": "Elige tu idioma",
+    "scrollHint": "↓ Desliza para ver más",
+    "getStarted": "Comenzar",
+    "privacy": "Tu información nunca sale de este dispositivo."
   },
   "theme": {
-    "title": "",
-    "subtitle": "",
+    "title": "Elige la apariencia",
+    "subtitle": "Elige cómo quieres que se vea la app. Puedes cambiarlo después en Configuración.",
     "options": {
-      "system": {
-        "label": "",
-        "description": ""
-      },
-      "light": {
-        "label": "",
-        "description": ""
-      },
-      "dark": {
-        "label": "",
-        "description": ""
-      }
+      "system": { "label": "Sistema", "description": "Igual que tu dispositivo" },
+      "light": { "label": "Claro", "description": "Brillante y nítido" },
+      "dark": { "label": "Oscuro", "description": "Descansa la vista" }
     },
-    "continue": ""
+    "continue": "Continuar"
   },
   "name": {
-    "title": "",
-    "subtitle": "",
-    "nameLabel": "",
-    "namePlaceholder": "",
-    "nicknameLabel": "",
-    "nicknamePlaceholder": "",
-    "nicknameHint": "",
-    "continue": ""
+    "title": "¿A quién cuidas?",
+    "subtitle": "El 911 y tus contactos verán este nombre.",
+    "nameLabel": "Nombre completo *",
+    "namePlaceholder": "p. ej., María López",
+    "nicknameLabel": "Apodo / Cómo le dicen",
+    "nicknamePlaceholder": "p. ej., Mamá, Abuela, María",
+    "nicknameHint": "¿A qué nombre responde mejor?",
+    "continue": "Continuar"
   },
   "photo": {
-    "title": "",
-    "subtitle": "",
-    "noPhoto": "",
-    "takePhoto": "",
-    "chooseLibrary": "",
-    "tip": "",
-    "skip": "",
-    "continue": "",
-    "webCameraUnavailable": ""
+    "title": "Agrega una foto reciente",
+    "subtitle": "Los vecinos y los rescatistas usarán esta foto para identificarle.",
+    "noPhoto": "Aún no hay foto",
+    "takePhoto": "Tomar foto",
+    "chooseLibrary": "Elegir de la galería",
+    "tip": "Usa una foto de los últimos 3 a 6 meses donde se vea bien su cara.",
+    "skip": "Omitir por ahora",
+    "continue": "Continuar",
+    "webCameraUnavailable": "Tomar una foto solo está disponible en la app móvil. En la web, usa \"Elegir de la galería\"."
   },
   "appearance": {
-    "title": "",
-    "subtitle": "",
-    "heightLabel": "",
-    "heightPlaceholder": "",
-    "weightLabel": "",
-    "weightPlaceholder": "",
-    "hairLabel": "",
-    "hairPlaceholder": "",
-    "eyeLabel": "",
-    "eyePlaceholder": "",
-    "marksLabel": "",
-    "marksPlaceholder": "",
-    "skip": "",
-    "continue": ""
+    "title": "Descripción física",
+    "subtitle": "Esto ayuda al 911 y a quienes buscan a identificarle.",
+    "heightLabel": "Estatura",
+    "heightPlaceholder": "5'6\"",
+    "weightLabel": "Peso",
+    "weightPlaceholder": "150 lbs",
+    "hairLabel": "Color de cabello",
+    "hairPlaceholder": "Canoso, corto",
+    "eyeLabel": "Color de ojos",
+    "eyePlaceholder": "Azules",
+    "marksLabel": "Señas particulares",
+    "marksPlaceholder": "Tatuajes, cicatrices, marcas de nacimiento, lentes, aparatos auditivos...",
+    "skip": "Omitir por ahora",
+    "continue": "Continuar"
   },
   "contact": {
-    "title": "",
-    "subtitle": "",
-    "nameLabel": "",
-    "namePlaceholder": "",
-    "phoneLabel": "",
-    "phonePlaceholder": "",
-    "relationshipLabel": "",
-    "relationshipPlaceholder": "",
+    "title": "Contacto de emergencia",
+    "subtitle": "Elige a alguien a quien avisar si se pierde, que no seas tú. Puedes agregar más después.",
+    "nameLabel": "Nombre del contacto *",
+    "namePlaceholder": "p. ej., Juan López",
+    "phoneLabel": "Número de teléfono *",
+    "phonePlaceholder": "(555) 123-4567",
+    "relationshipLabel": "Parentesco",
+    "relationshipPlaceholder": "p. ej., hijo, hija, vecino",
     "infoBox": {
-      "title": "",
-      "body": ""
+      "title": "Cómo funcionan las alertas",
+      "body": "• Tendrás un botón para enviarle un mensaje a este contacto con un toque\n• Recibirá la foto de la persona y su última ubicación conocida\n• Puedes agregar vecinos y familiares después"
     },
-    "skip": "",
-    "continue": ""
+    "skip": "Omitir por ahora",
+    "continue": "Continuar"
   },
   "complete": {
-    "icon": "",
-    "title": "",
-    "description": "",
-    "addMoreLater": "",
+    "icon": "✓",
+    "title": "¡Todo listo!",
+    "description": "Ya tienes lo esencial. En una emergencia, toca el botón grande de la pantalla de inicio para comenzar la búsqueda guiada.",
+    "addMoreLater": "Puedes agregar más después:",
     "nextSteps": {
-      "details": "",
-      "deescalation": "",
-      "destinations": "",
-      "contacts": "",
-      "checklist": ""
+      "details": "Datos personales importantes",
+      "deescalation": "Técnicas para calmarle",
+      "destinations": "Lugares probables",
+      "contacts": "Más contactos de emergencia",
+      "checklist": "Lista de seguridad"
     },
-    "goHome": ""
+    "goHome": "Ir al inicio"
   }
 }

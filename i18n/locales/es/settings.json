@@ -1,13 +1,13 @@
 {
-  "screenTitle": "",
+  "screenTitle": "Configuración",
   "languageSection": {
-    "title": "",
-    "description": ""
+    "title": "Idioma",
+    "description": "El español es experimental. Las traducciones aún no han sido revisadas."
   },
   "sections": {
     "appearance": {
-      "title": "",
-      "description": ""
+      "title": "Apariencia",
+      "description": "Elige tu tema de color preferido."
     },
     "deleteAccount": {
       "title": "Eliminar cuenta",
@@ -16,25 +16,25 @@
       "deletingButton": "Eliminando..."
     },
     "devTools": {
-      "title": "",
-      "description": ""
+      "title": "Herramientas de desarrollo",
+      "description": "Estas herramientas son para hacer pruebas durante el desarrollo."
     },
     "about": {
-      "title": "",
-      "app": "",
-      "version": "",
-      "platform": "",
-      "theme": "",
-      "dbSchema": "",
-      "dbSchemaUnknown": "",
-      "devSuffix": "",
-      "deviceId": ""
+      "title": "Acerca de",
+      "app": "App",
+      "version": "Versión",
+      "platform": "Plataforma",
+      "theme": "Tema",
+      "dbSchema": "Esquema de BD",
+      "dbSchemaUnknown": "Desconocido",
+      "devSuffix": " (Dev)",
+      "deviceId": "ID del dispositivo"
     }
   },
   "themeOptions": {
-    "system": "",
-    "light": "",
-    "dark": ""
+    "system": "Sistema",
+    "light": "Claro",
+    "dark": "Oscuro"
   },
   "deleteAccountModal": {
     "title": "Eliminar cuenta",
@@ -43,8 +43,8 @@
     "cancel": "Cancelar"
   },
   "devModeAlert": {
-    "title": "",
-    "message": ""
+    "title": "Modo de desarrollador",
+    "message": "¡Las opciones de desarrollador ya están activadas!"
   },
   "deleteAccountError": "No se pudo eliminar la cuenta. Por favor, inténtalo de nuevo."
 }

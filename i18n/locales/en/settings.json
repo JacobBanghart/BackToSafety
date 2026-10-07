@@ -2,7 +2,7 @@
   "screenTitle": "Settings",
   "languageSection": {
     "title": "Language",
-    "description": "Spanish is experimental. Translations are incomplete."
+    "description": "Spanish is experimental. Translations have not been reviewed yet."
   },
   "sections": {
     "appearance": {

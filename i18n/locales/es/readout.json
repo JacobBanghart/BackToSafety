@@ -1,71 +1,113 @@
 {
-  "screenTitle": "",
-  "noProfile": "",
-  "goToOnboarding": "",
-  "back": "",
-  "callButton": "",
-  "copyButton": "",
-  "copyFullButton": "",
-  "copyFailed": "",
-  "copyScriptFailed": "",
-  "copyDetailsFailed": "",
+  "screenTitle": "Información de emergencia",
+  "noProfile": "No se encontró un perfil. Primero completa la configuración inicial.",
+  "goToOnboarding": "Ir a la configuración inicial",
+  "back": "Atrás",
+  "callButton": "Llamar al 911",
+  "copyButton": "Copiar",
+  "copyFullButton": "Copiar todos los datos",
+  "copyFailed": "No se pudo copiar",
+  "copyScriptFailed": "No se pudo copiar el guion para el 911 en este momento.",
+  "copyDetailsFailed": "No se pudieron copiar todos los datos en este momento.",
   "sections": {
     "script": {
-      "label": "",
-      "hint": "",
-      "collapsed": "",
-      "missingDetails": ""
+      "label": "Guion para la llamada al 911",
+      "hint": "Léele esto al operador:",
+      "collapsed": "Toca para ampliar",
+      "missingDetails": "Agrega para un guion más completo: {{details}}."
     },
     "identity": {
-      "goesBy": "",
-      "dob": "",
-      "ageLabel": "",
-      "ageSuffix": ""
+      "goesBy": "Le dicen \"{{nickname}}\"",
+      "dob": "Fecha de nac.: {{dob}}",
+      "ageLabel": "Edad",
+      "ageSuffix": " años"
     },
     "appearance": {
-      "title": "",
-      "height": "",
-      "weight": "",
-      "hair": "",
-      "eyes": "",
-      "dominantHand": "",
-      "mobility": "",
-      "vehicleNote": "",
-      "lastSeen": "",
-      "identifyingMarks": ""
+      "title": "Apariencia",
+      "height": "Estatura",
+      "weight": "Peso",
+      "hair": "Cabello",
+      "eyes": "Ojos",
+      "dominantHand": "Mano dominante",
+      "mobility": "Movilidad",
+      "vehicleNote": "Puede estar manejando o usando un vehículo",
+      "lastSeen": "Ropa con la que se vio por última vez",
+      "identifyingMarks": "Señas particulares"
     },
     "location": {
-      "title": "",
-      "time": "",
-      "coordinates": ""
+      "title": "Última ubicación conocida",
+      "time": "Hora",
+      "coordinates": "Coordenadas"
     },
     "medical": {
-      "title": "",
-      "conditions": "",
-      "medications": "",
-      "allergies": "",
-      "cognitiveStatus": ""
+      "title": "Salud y comportamiento",
+      "conditions": "Condiciones",
+      "medications": "Medicamentos habituales (opcional)",
+      "allergies": "Alergias",
+      "cognitiveStatus": "Estado cognitivo"
     },
     "communication": {
-      "title": "",
-      "communication": "",
-      "approach": "",
-      "deescalation": "",
-      "likes": "",
-      "triggers": "",
-      "safeWord": ""
+      "title": "Comunicación y cómo calmarle",
+      "communication": "Comunicación",
+      "approach": "Mejor forma de acercarse",
+      "deescalation": "Cómo calmarle",
+      "likes": "Gustos / Lo que le reconforta",
+      "triggers": "Evitar / Detonantes",
+      "safeWord": "Palabra clave familiar"
     },
     "devices": {
-      "title": "",
-      "locator": "",
-      "idBracelet": "",
-      "medicAlertId": ""
+      "title": "Dispositivos e identificación",
+      "locator": "Localizador personal",
+      "idBracelet": "Pulsera de identificación",
+      "medicAlertId": "ID de MedicAlert"
     }
   },
   "contacts": {
-    "title": "",
-    "call": "",
-    "noContacts": ""
+    "title": "Contactos de emergencia",
+    "call": "Llamar",
+    "noContacts": "No hay contactos de emergencia guardados."
   },
-  "noInfoItem": ""
+  "noInfoItem": "Sin información",
+  "openInMaps": "Abrir en Mapas",
+  "copyBlock": {
+    "name": "Nombre: {{name}}",
+    "nameWithNickname": "Nombre: {{name}} (le dicen \"{{nickname}}\")",
+    "dob": "Fecha de nacimiento: {{dob}}",
+    "appearance": "Apariencia: {{desc}}",
+    "importantDetails": "Datos importantes: {{desc}}",
+    "medications": "Medicamentos habituales (opcional): {{value}}",
+    "cognitiveStatus": "Estado cognitivo: {{value}}",
+    "mobility": "Movilidad: {{value}}",
+    "mobilityVehicleNote": "⚠️ Revisa si su ayuda de movilidad o vehículo está cerca: puede indicar hacia dónde se fue",
+    "communication": "Comunicación: {{value}}",
+    "triggers": "Detonantes / Lo que le molesta: {{value}}",
+    "deescalation": "Cómo calmarle: {{value}}",
+    "likes": "Gustos / Lo que le calma: {{value}}",
+    "approach": "Cómo acercarse: {{value}}",
+    "safeWord": "Palabra clave familiar: {{value}}",
+    "lastSeen": "Visto/a por última vez: {{time}}",
+    "coordinates": "Coordenadas: {{coords}}",
+    "locator": "Localizador personal: {{value}}",
+    "idBracelet": "Pulsera de identificación: {{value}}",
+    "medicAlertId": "ID de MedicAlert: {{value}}",
+    "wearingReminder": "⚠️ COMPLETAR: ¿Qué ropa llevaba puesta? (Camisa, chaqueta, pantalón, zapatos, gorra)",
+    "unknown": "Desconocido",
+    "allergies": "Alergias: {{value}}",
+    "hairColor": "cabello {{color}}",
+    "eyeColor": "ojos {{color}}"
+  },
+  "script": {
+    "opening": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro.",
+    "name": "Nombre: {{name}}.",
+    "age": "Edad aproximada: {{age}} años.",
+    "lastSeenTime": "Visto/a por última vez: {{time}}.",
+    "lastSeenUnknown": "Visto/a por última vez: [completar hora].",
+    "locationCoords": "Última ubicación conocida: {{lat}}, {{lon}}.",
+    "locationUnknown": "Última ubicación conocida: [completar ubicación].",
+    "appearance": "Apariencia: {{desc}}.",
+    "additionalContext": "Contexto adicional: {{desc}}.",
+    "medicAlertId": "ID de MedicAlert: {{id}}.",
+    "photoAvailable": "Hay una foto disponible.",
+    "silverAlert": "Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+  }
 }
