@@ -1,4 +1,4 @@
-# Features: readout.script, readout.copy-script, readout.copy-all, readout.sections,
+# Features: home.emergency-info, readout.script, readout.copy-script, readout.copy-all, readout.sections,
 # readout.contacts, readout.call-911
 appId: com.backtosafety.app
 name: The info sheet shows the 911 script and copies it

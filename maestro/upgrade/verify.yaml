@@ -1,0 +1,61 @@
+# Features: app.upgrade
+# Run after a newer build is installed over the data fill.yaml created: everything
+# must still be there, and onboarding must not come back.
+appId: com.backtosafety.app
+---
+- launchApp
+- assertNotVisible:
+    id: onboarding-get-started
+# Still active; a restored fixture's emergency has long since expired.
+- assertVisible:
+    id: home-start-emergency
+    text: '.*(Emergency In Progress|Timer Expired).*'
+
+- tapOn:
+    id: home-start-emergency
+- assertVisible:
+    id: emergency-progress
+    text: 2/11 steps complete
+- assertVisible:
+    id: emergency-wearing-input
+    text: Blue jacket
+- assertVisible: '.*May veer left.*'
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-leave
+
+- tapOn:
+    id: home-profile
+- assertVisible:
+    id: profile-field-name
+    text: Margaret Smith
+- assertVisible:
+    id: profile-field-dateOfBirth
+    text: 03/15/1940
+- tapOn:
+    id: profile-back
+
+- tapOn:
+    id: home-contacts
+- assertVisible:
+    id: contacts-item-0-name
+    text: John Smith
+- tapOn:
+    id: contacts-back
+
+- tapOn:
+    id: home-places
+- assertVisible:
+    id: destinations-item-0-name
+    text: Riverside Park
+- tapOn:
+    id: destinations-back
+
+- tapOn:
+    id: home-readout
+- tapOn:
+    id: readout-script-toggle
+- assertVisible:
+    id: readout-script-text
+    text: ".*Name: Margaret Smith\\. Age approximately \\d+\\. Last seen: .*Appearance: 5'6\".*Moderate Alzheimer's.*"

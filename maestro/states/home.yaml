@@ -1,3 +1,5 @@
+# Features: app.dark-mode
+# The capture runner (capture.sh) shoots every state in light, dark and large-text modes.
 appId: com.backtosafety.app
 ---
 - runFlow:

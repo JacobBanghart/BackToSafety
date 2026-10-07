@@ -1,0 +1,35 @@
+# Features: emergency.alert-contacts, contacts.call
+appId: com.backtosafety.app
+name: Alerting the circle opens an SMS to the contacts; calling a contact opens the dialer
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+      CONTACT_NAME: John Smith
+      CONTACT_PHONE: '5551234567'
+- runFlow: ../subflows/freeze-clock.yaml
+
+# The SMS composer opens with the alert text (spec/vectors/emergency.json#buildAlertSms).
+- tapOn:
+    id: home-start-emergency
+- tapOn:
+    id: emergency-alert-contacts
+- extendedWaitUntil:
+    visible: '.*URGENT: Margaret Smith is missing\..*'
+    timeout: 20000
+- launchApp:
+    stopApp: false
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-end
+
+# Calling a contact opens the dialer with their number.
+- tapOn:
+    id: home-contacts
+- tapOn:
+    id: contacts-item-0-call
+- extendedWaitUntil:
+    visible: '.*555.*123.*4567.*'
+    timeout: 20000

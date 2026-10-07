@@ -1,0 +1,4 @@
+{
+  "$comment": "testIDs whose content is random by design, per state. compare_screens.py blanks them in both images and skips them in the layout check.",
+  "settings": ["settings-device-id-value"]
+}

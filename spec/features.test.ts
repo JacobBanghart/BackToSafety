@@ -37,7 +37,9 @@ describe('feature inventory', () => {
   });
 
   it('ratchets features without a Maestro flow', () => {
-    const without = features.filter((f) => f.coverage.flows.length === 0).length;
+    const without = features.filter(
+      (f) => f.coverage.flows.length === 0 && !('flowExempt' in f),
+    ).length;
     expect(without, 'more features lack a flow than maxWithoutFlows allows').toBeLessThanOrEqual(
       inventory.maxWithoutFlows,
     );

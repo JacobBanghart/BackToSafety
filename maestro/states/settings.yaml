@@ -10,4 +10,4 @@ appId: com.backtosafety.app
 - tapOn:
     id: home-settings
 - assertVisible:
-    id: settings-device-id
+    id: settings-theme-system

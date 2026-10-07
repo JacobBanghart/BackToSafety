@@ -11,6 +11,10 @@ For each <state>.png in CAPTURED there should be a golden of the same name in GO
   cross-implementation measure: a Compose or SwiftUI screen will never be byte-identical
   to the RN one, but its elements must sit in the same places.
 
+Ignored: the bottom --ignore-bottom-px (Android's gesture bar, system UI that tints
+with whatever is under it) and, per maestro/masks.json, testIDs whose content is random
+by design (the per-install device ID).
+
 A state with no golden is reported as a candidate (exit 0 unless --require-goldens);
 bless it by copying it into GOLDENS in its own commit (rule 1).
 
@@ -25,11 +29,21 @@ from pathlib import Path
 from PIL import Image, ImageChops
 
 
-def pixel_diff_percent(a: Path, b: Path, tolerance: int, diff_out: Path | None) -> float:
+def blank(img: Image.Image, boxes: list[tuple[int, int, int, int]]) -> Image.Image:
+    img = img.copy()
+    for box in boxes:
+        img.paste((255, 0, 255), box)
+    return img
+
+
+def pixel_diff_percent(
+    a: Path, b: Path, tolerance: int, diff_out: Path | None, masks: list[tuple[int, int, int, int]]
+) -> float:
     img_a = Image.open(a).convert("RGB")
     img_b = Image.open(b).convert("RGB")
     if img_a.size != img_b.size:
         raise ValueError(f"size mismatch: {a} {img_a.size} vs {b} {img_b.size}")
+    img_a, img_b = blank(img_a, masks), blank(img_b, masks)
     r, g, b_ = ImageChops.difference(img_a, img_b).split()
     worst = ImageChops.lighter(ImageChops.lighter(r, g), b_)
     mask = worst.point(lambda v: 255 if v > tolerance else 0)
@@ -39,10 +53,15 @@ def pixel_diff_percent(a: Path, b: Path, tolerance: int, diff_out: Path | None) 
     return differing / (img_a.size[0] * img_a.size[1]) * 100
 
 
-def layout_diff(a: Path, b: Path, tolerance_dp: float) -> list[str]:
+def load_layout(path: Path) -> dict[str, list[float]]:
+    return json.loads(path.read_text()) if path.exists() else {}
+
+
+def layout_diff(a: Path, b: Path, tolerance_dp: float, masked: set[str]) -> list[str]:
     if not a.exists() or not b.exists():
         return [] if not b.exists() else [f"missing captured layout {a.name}"]
-    got, want = json.loads(a.read_text()), json.loads(b.read_text())
+    got = {k: v for k, v in load_layout(a).items() if k not in masked}
+    want = {k: v for k, v in load_layout(b).items() if k not in masked}
     problems = [f"missing {tid}" for tid in sorted(set(want) - set(got))]
     problems += [f"unexpected {tid}" for tid in sorted(set(got) - set(want))]
     for tid in sorted(set(got) & set(want)):
@@ -59,14 +78,20 @@ def main() -> int:
     p.add_argument("--channel-tolerance", type=int, default=10)
     p.add_argument("--threshold-percent", type=float, default=0.02)
     p.add_argument("--layout-tolerance-dp", type=float, default=2.0)
+    p.add_argument("--ignore-bottom-px", type=int, default=63, help="Android gesture bar (24dp at 420dpi)")
+    p.add_argument("--dpi", type=int, default=420)
+    p.add_argument("--masks", type=Path, default=Path(__file__).with_name("masks.json"))
     p.add_argument("--skip-pixels", action="store_true", help="layout only (cross-implementation runs)")
     p.add_argument("--require-goldens", action="store_true")
     args = p.parse_args()
 
-    shots = sorted(args.captured.glob("*.png"))
+    shots = sorted(p for p in args.captured.glob("*.png") if not p.name.endswith(".diff.png"))
     if not shots:
         print(f"no captures in {args.captured}", file=sys.stderr)
         return 2
+
+    mask_ids = json.loads(args.masks.read_text()) if args.masks.exists() else {}
+    scale = args.dpi / 160
 
     failed, candidates = [], []
     for shot in shots:
@@ -76,13 +101,25 @@ def main() -> int:
             candidates.append(state)
             print(f"CANDIDATE {state} (no golden)")
             continue
+        masked = set(mask_ids.get(state, []))
         problems = layout_diff(
-            args.captured / f"{state}.layout.json", args.goldens / f"{state}.layout.json", args.layout_tolerance_dp
+            args.captured / f"{state}.layout.json",
+            args.goldens / f"{state}.layout.json",
+            args.layout_tolerance_dp,
+            masked,
         )
+        width, height = Image.open(shot).size
+        boxes = [(0, height - args.ignore_bottom_px, width, height)]
+        for layout in (load_layout(args.captured / f"{state}.layout.json"), load_layout(args.goldens / f"{state}.layout.json")):
+            for tid in masked & set(layout):
+                l, t, r, b = layout[tid]
+                boxes.append((int(l * scale), int(t * scale), int(r * scale) + 1, int(b * scale) + 1))
         line = f"{state}:"
         if not args.skip_pixels:
             try:
-                pct = pixel_diff_percent(shot, golden, args.channel_tolerance, args.captured / f"{state}.diff.png")
+                pct = pixel_diff_percent(
+                    shot, golden, args.channel_tolerance, args.captured / f"{state}.diff.png", boxes
+                )
             except ValueError as e:
                 print(f"ERROR {state}: {e}", file=sys.stderr)
                 return 2

@@ -26,9 +26,10 @@ set_mode() {
   esac
 }
 
-"$ROOT/prepare-android.sh" >/dev/null
 for mode in light dark large-text; do
   set_mode "$mode"
+  # Switching night mode or font scale restarts System UI, which drops demo mode.
+  "$ROOT/prepare-android.sh" >/dev/null
   mkdir -p "$OUT/$mode"
   for state in "${states[@]}"; do
     echo "== $mode / $state"

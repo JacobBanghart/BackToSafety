@@ -1,0 +1,87 @@
+# Fills every kind of persisted data through the UI (spec/storage.md), so the upgrade
+# test can check that a newer build reads all of it. verify.yaml checks the same values.
+appId: com.backtosafety.app
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+      NICKNAME: Maggie
+      CONTACT_NAME: John Smith
+      CONTACT_PHONE: '5551234567'
+
+# Profile: a field from each section, hand and mobility.
+- tapOn:
+    id: home-profile
+- tapOn:
+    id: profile-field-dateOfBirth
+- inputText: '03151940'
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: profile-field-height
+- tapOn:
+    id: profile-field-height
+- inputText: '56'
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: profile-section-medical
+- tapOn:
+    id: profile-section-medical
+- tapOn:
+    id: profile-field-medicalConditions
+- inputText: Moderate Alzheimer's
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: profile-hand-left
+- tapOn:
+    id: profile-hand-left
+- scrollUntilVisible:
+    element:
+      id: profile-mobility-uses-cane
+- tapOn:
+    id: profile-mobility-uses-cane
+- tapOn:
+    id: profile-save
+
+# A place.
+- tapOn:
+    id: home-places
+- tapOn:
+    id: destinations-empty-add
+- tapOn:
+    id: destinations-form-name
+- inputText: Riverside Park
+- hideKeyboard
+- tapOn:
+    id: destinations-form-category-water
+- tapOn:
+    id: destinations-save
+- tapOn:
+    id: destinations-back
+
+# Settings: dark theme.
+- tapOn:
+    id: home-settings
+- tapOn:
+    id: settings-theme-dark
+- tapOn:
+    id: settings-back
+
+# An emergency in progress, with two steps checked and clothing noted.
+- tapOn:
+    id: home-start-emergency
+- tapOn:
+    id: emergency-step-home_search
+- tapOn:
+    id: emergency-wearing-input
+- inputText: Blue jacket
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: emergency-step-neighbors
+    centerElement: true
+- tapOn:
+    id: emergency-step-neighbors

@@ -1,6 +1,6 @@
 {
-  "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows: it may only go down.",
-  "maxWithoutFlows": 16,
+  "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows (features without a flow and without a flowExempt reason): it may only go down.",
+  "maxWithoutFlows": 4,
   "features": [
     {
       "id": "onboarding.routing",
@@ -156,7 +156,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -166,7 +168,8 @@
         "vectors": [],
         "web": [],
         "flows": []
-      }
+      },
+      "flowExempt": "Unreachable (F-28): onboarding requires a name, and the card only shows without one."
     },
     {
       "id": "emergency.start",
@@ -287,7 +290,9 @@
           "phone.json#normalizeSmsRecipient"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/alerts-and-calls.yaml"
+        ]
       }
     },
     {
@@ -414,7 +419,8 @@
         "vectors": [],
         "web": [],
         "flows": []
-      }
+      },
+      "flowExempt": "Unreachable (F-28): onboarding requires a name, so a profile always exists."
     },
     {
       "id": "profile.fields",
@@ -549,7 +555,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/alerts-and-calls.yaml"
+        ]
       }
     },
     {
@@ -623,7 +631,8 @@
         "vectors": [],
         "web": [],
         "flows": []
-      }
+      },
+      "flowExempt": "Dev builds only until Spanish ships; the release test build has no language picker."
     },
     {
       "id": "settings.delete-account",
@@ -642,7 +651,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/settings-dev-mode.yaml"
+        ]
       }
     },
     {
@@ -662,7 +673,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/states/home.yaml"
+        ]
       }
     },
     {
@@ -673,7 +686,8 @@
         "web": [],
         "flows": []
       },
-      "notes": "Gated by i18n/locales.test.ts."
+      "notes": "Gated by i18n/locales.test.ts.",
+      "flowExempt": "Gated by i18n/locales.test.ts and the en/es vectors; Spanish screens get captured once Spanish ships."
     },
     {
       "id": "app.keyboard-avoidance",
@@ -681,7 +695,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/states/onboarding-name-keyboard.yaml"
+        ]
       }
     },
     {
@@ -690,7 +706,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/upgrade/verify.yaml"
+        ]
       },
       "notes": "Contract: spec/storage.md, spec/db-schema.json."
     },
@@ -701,7 +719,8 @@
         "vectors": [],
         "web": [],
         "flows": []
-      }
+      },
+      "flowExempt": "Nothing to observe on device: PostHog is disabled without a key. Event names are gated by spec/analytics-events.json."
     }
   ]
 }

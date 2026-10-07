@@ -143,8 +143,8 @@ A rewrite that silently drops a caregiver's profile is the worst failure this pr
 
 ## Infrastructure
 
-- **Android:** the devbox (CT 201) runs the emulator once `/dev/kvm` is passed through (owner
-  choice, 2026-10-06; steps are in the session notes, via `k8s-homelab/terraform/lxc-devbox.tf`).
+- **Android:** the devbox (CT 201) runs a headless API 36 emulator on `/dev/kvm` (passed through
+  2026-10-06; `k8s-homelab/terraform/lxc-devbox.tf`). Setup and commands: `maestro/README.md`.
 - **iOS:** the self-hosted macOS runner (already used for iOS releases) runs the simulator. It's
   required before the Kotlin iOS app counts as matching (see Target architecture).
 - Android and iOS goldens are separate sets. Each platform measures its own noise floor.
@@ -160,9 +160,9 @@ reactor's Phase −1, and it lands first.
 | Phase 0: seams               | **testIDs landed** (117, `spec/testids.json`). Still open: the debug clock seam for the timer, and the determinism switches (both needed by L3/L4).                                                                                                  |
 | L1: spec as data             | **Landed:** `design-tokens.json`, i18n parity, `testids.json`, `features.json` (60 features, flow ratchet), `analytics-events.json`.                                                                                                                 |
 | L2: logic vectors            | **Landed** for phone, age, field formatters, readout text, and the emergency protocol (`spec/vectors/`, 140+ cases, en+es). The readout and emergency logic was extracted from the screens under Playwright pins. Schema pinned in `db-schema.json`. |
-| L3: Maestro flows            | Blocked on `/dev/kvm` for the devbox (Android). iOS on the Mac runner.                                                                                                                                                                               |
-| L4: screenshot matrix        | After L3 (same rig).                                                                                                                                                                                                                                 |
-| L5: upgrade path             | **Contract written** (`spec/storage.md`). Fixtures and the install-over flow come after L3.                                                                                                                                                          |
+| L3: Maestro flows            | **Android landed:** `maestro/flows/` passes on the devbox emulator (`maestro/README.md`). It found F-26 and F-27. iOS needs the Mac runner.                                                                                                          |
+| L4: screenshot matrix        | **Rig landed:** `maestro/states/` × light/dark/large-text, captured by `capture.sh` (PNG + testID layout in dp) and compared by `compare_screens.py`. Noise floor measured before blessing goldens.                                                  |
+| L5: upgrade path             | **Runner landed:** `maestro/upgrade/upgrade.sh` (install-over, capture fixture, restore fixture) with `fill.yaml` / `verify.yaml`; contract in `spec/storage.md`.                                                                                    |
 | Freeze                       | Findings: every one is fixed except F-21's device check and F-0b's native-speaker review; F-10 is kept. Freeze after L3–L5 run green against the RN app.                                                                                             |
 
 ## Known findings (decide before freeze)
@@ -200,4 +200,5 @@ Vector cases that pin current behavior carry the finding ID.
 | F-25 | Fixed                    | Onboarding promises alerts carry "the person's photo and last known location"; the SMS has neither.                                                                                                                                                                                                                                         |
 | F-26 | Fixed                    | The readout's appearance card holds dominant hand, mobility and the mobility-aid warning, but only rendered when a height/weight/hair/eye/marks field was set, so those three could be hidden from responders. Found by the Maestro profile flow. The hand value was also hardcoded English.                                                |
 | F-27 | Open (low)               | On a fresh install, tapping Get Started immediately after launch is occasionally ignored (about 1 in 10 on the emulator, no JS error logged); probably the initial onboarding redirect. Flows retry that tap.                                                                                                                               |
+| F-28 | Open                     | The home "Complete Your Profile" card and the readout's "no profile found" state are unreachable: both need a profile without a name, and onboarding requires one. Dead UI; the Kotlin apps shouldn't copy it.                                                                                                                              |
 | F-10 | Kept                     | oxlint 1.87 `react/purity` / `react/set-state-in-effect` warnings at 4 sites (intentional patterns, warnings in `.oxlintrc.json`).                                                                                                                                                                                                          |

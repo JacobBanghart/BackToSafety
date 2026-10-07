@@ -1,0 +1,19 @@
+# Features: settings.dev-mode
+appId: com.backtosafety.app
+name: Tapping the version repeatedly enables developer options
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- tapOn:
+    id: home-settings
+- scrollUntilVisible:
+    element:
+      id: settings-version
+- tapOn:
+    id: settings-version
+    repeat: 7
+    delay: 150
+- assertVisible: Developer options are now enabled!
+- tapOn: OK

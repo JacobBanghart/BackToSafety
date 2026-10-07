@@ -10,15 +10,35 @@ appId: com.backtosafety.app
 - runFlow: ../subflows/freeze-clock.yaml
 - tapOn:
     id: home-start-emergency
+- scrollUntilVisible:
+    element:
+      id: emergency-step-home_search
+    centerElement: true
 - tapOn:
     id: emergency-step-home_search
+- scrollUntilVisible:
+    element:
+      id: emergency-step-outside_immediate
+    centerElement: true
 - tapOn:
     id: emergency-step-outside_immediate
+- scrollUntilVisible:
+    element:
+      id: emergency-wearing-input
+    direction: UP
 - tapOn:
     id: emergency-wearing-input
 - inputText: Blue jacket, gray pants
 - hideKeyboard
+# Blur the input so no blinking caret ends up in the capture.
+- tapOn:
+    id: emergency-timer-label
 - openLink: backtosafety://debug/clock?advance=300
+# Back to the top for the capture.
+- scrollUntilVisible:
+    element:
+      id: emergency-timer
+    direction: UP
 - assertVisible:
     id: emergency-timer
     text: '10:00'

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Sets each feature's `flows` coverage in spec/features.json from the `# Features:`
-header of every maestro/flows/*.yaml, and lowers maxWithoutFlows to match.
+header of every maestro/flows/, maestro/states/ (screen captures) and maestro/upgrade/, and
+lowers maxWithoutFlows to match. Features with a `flowExempt` reason don't count.
 Run after adding or changing a flow; spec/features.test.ts checks the result."""
 
 import glob
@@ -12,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FEATURE_ID = re.compile(r"\b([a-z]+\.[a-z0-9-]+)\b")
 
 coverage: dict[str, set[str]] = {}
-for flow in sorted(glob.glob(str(ROOT / "maestro/flows/*.yaml"))):
+for flow in sorted(glob.glob(str(ROOT / "maestro/flows/*.yaml")) + glob.glob(str(ROOT / "maestro/states/*.yaml")) + glob.glob(str(ROOT / "maestro/upgrade/*.yaml"))):
     header = []
     for line in open(flow):
         if not line.startswith("#"):
@@ -34,7 +35,7 @@ if unknown:
     raise SystemExit(f"flows name unknown features: {unknown}")
 for feature in spec["features"]:
     feature["coverage"]["flows"] = sorted(coverage.get(feature["id"], []))
-without = [f["id"] for f in spec["features"] if not f["coverage"]["flows"]]
+without = [f["id"] for f in spec["features"] if not f["coverage"]["flows"] and not f.get("flowExempt")]
 spec["maxWithoutFlows"] = len(without)
 spec_path.write_text(json.dumps(spec, indent=2, ensure_ascii=False) + "\n")
 print(f"{len(spec['features']) - len(without)} of {len(spec['features'])} features have flows; without: {without}")
