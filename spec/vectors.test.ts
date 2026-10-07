@@ -3,7 +3,8 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
-import { ageOn, parseDob } from '@/utils/age';
+import { ageOn, formatDob, parseDob } from '@/utils/age';
+import * as formatters from '@/utils/formatters';
 import * as phone from '@/utils/phone';
 
 // Runs every spec/vectors/*.json file against the TypeScript implementation. The
@@ -29,6 +30,11 @@ const fromDate = (date: Date | null) =>
 const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
   parseDob: (dob: string) => fromDate(parseDob(dob)),
   ageOn: (dob: string, today: string) => ageOn(dob, toDate(today)),
+  formatDob: (date: string) => formatDob(toDate(date)),
+  formatHeightInput: formatters.formatHeightInput,
+  formatWeightInput: formatters.formatWeightInput,
+  formatMedicAlertIdInput: formatters.formatMedicAlertIdInput,
+  formatDobInput: formatters.formatDobInput,
   formatPhoneNumber: phone.formatPhoneNumber,
   formatPhoneInput: phone.formatPhoneInput,
   stripPhoneFormatting: phone.stripPhoneFormatting,

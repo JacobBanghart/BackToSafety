@@ -34,6 +34,13 @@ import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { formatPhoneInput } from '@/utils/phone';
+import { formatDob, parseDob } from '@/utils/age';
+import {
+  formatDobInput,
+  formatHeightInput,
+  formatMedicAlertIdInput,
+  formatWeightInput,
+} from '@/utils/formatters';
 import { track } from '@/utils/analytics';
 
 type SectionKey = 'personal' | 'medical' | 'communication' | 'devices';
@@ -195,43 +202,8 @@ export default function ProfileScreen() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const formatDate = (date: Date): string => {
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const year = String(date.getFullYear());
-    return `${month}/${day}/${year}`;
-  };
-
-  const parseDate = (value: string): Date | null => {
-    const match = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-    if (!match) return null;
-
-    const month = Number(match[1]);
-    const day = Number(match[2]);
-    const year = Number(match[3]);
-    const parsed = new Date(year, month - 1, day);
-
-    if (
-      Number.isNaN(parsed.getTime()) ||
-      parsed.getFullYear() !== year ||
-      parsed.getMonth() !== month - 1 ||
-      parsed.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return parsed;
-  };
-
-  const formatDobInput = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 8);
-    if (digits.length <= 2) return digits;
-    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-  };
-
   const openDatePicker = () => {
-    const initialDate = parseDate(form.dateOfBirth) ?? new Date(1940, 0, 1);
+    const initialDate = parseDob(form.dateOfBirth) ?? new Date(1940, 0, 1);
 
     if (Platform.OS === 'ios') {
       setPendingDobDate(initialDate);
@@ -249,7 +221,7 @@ export default function ProfileScreen() {
       return;
     }
 
-    updateField('dateOfBirth', formatDate(selectedDate));
+    updateField('dateOfBirth', formatDob(selectedDate));
   };
 
   const onIosDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
@@ -258,33 +230,8 @@ export default function ProfileScreen() {
   };
 
   const applyIosDate = () => {
-    updateField('dateOfBirth', formatDate(pendingDobDate));
+    updateField('dateOfBirth', formatDob(pendingDobDate));
     setShowIosDatePicker(false);
-  };
-
-  const formatHeightInput = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 3);
-    if (!digits) return '';
-    if (digits.length === 1) return digits;
-    if (digits.length === 2) return `${digits[0]}'${digits[1]}"`;
-    return `${digits[0]}'${digits.slice(1)}"`;
-  };
-
-  const formatWeightInput = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    if (!digits) return '';
-    return digits.length > 3 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits;
-  };
-
-  const formatMedicAlertIdInput = (value: string): string => {
-    const chars = value
-      .replace(/[^a-zA-Z0-9]/g, '')
-      .toUpperCase()
-      .slice(0, 16);
-    if (!chars) return '';
-
-    const chunks = chars.match(/.{1,4}/g);
-    return chunks ? chunks.join('-') : chars;
   };
 
   const formatFieldInput = (field: keyof typeof form, value: string): string => {
@@ -676,7 +623,7 @@ export default function ProfileScreen() {
 
               {showDatePicker && Platform.OS !== 'ios' && (
                 <DateTimePicker
-                  value={parseDate(form.dateOfBirth) ?? new Date(1940, 0, 1)}
+                  value={parseDob(form.dateOfBirth) ?? new Date(1940, 0, 1)}
                   mode="date"
                   display="default"
                   maximumDate={new Date()}

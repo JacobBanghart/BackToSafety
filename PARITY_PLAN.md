@@ -110,7 +110,7 @@ Playwright on web stays as a fast smoke lane, but it can't gate Kotlin.
 
 Matrix: every screen × meaningful states (empty / filled / validation error / modal open /
 emergency running / expired) × light/dark × en/es × font scale 1.0/1.3, on Android and iOS
-separately. iOS has its own visuals: SF Symbols and the blurred tab bar.
+separately. iOS has its own visuals: SF Symbols (the tab bar is hidden, so its blur never shows).
 
 - **Tier 1, self-goldens:** strict per-implementation regression (reactor's
   `compare_screenshots.py` approach, threshold set from a measured noise floor).
@@ -164,10 +164,21 @@ reactor's Phase −1, and it lands first.
 
 ## Known findings (decide before freeze)
 
-- **Fixed:** the readout age was one year too high before the birthday (`utils/age.ts`).
-- **Fixed:** Spanish was ~470 empty or missing strings, and Spanish-locale phones showed blank
-  text in production. Production is now English-only, and the strings are AI-translated.
-  **Before adding `es` to `SHIPPED_LANGUAGES`:** get a native speaker's review, and decide whether
-  the 911 script and the copy block should stay in English, since dispatchers may not speak Spanish.
-- oxlint 1.87 `react/purity` / `react/set-state-in-effect` warnings at 4 sites (intentional
-  patterns, downgraded to warnings in `.oxlintrc.json`).
+Each one gets fixed in RN and re-blessed before the freeze (rule 2), or explicitly kept.
+Vector cases that pin current behavior carry the finding ID.
+
+| ID   | Status | Finding                                                                                                                                                                                                                                                                                                              |
+| ---- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| F-0a | Fixed  | Readout age was one year too high before the birthday, and parsed MM/DD/YYYY with `new Date(string)` (`utils/age.ts`).                                                                                                                                                                                               |
+| F-0b | Fixed  | Spanish was ~470 empty or missing strings, so Spanish-locale phones showed blank text in production. Production is English-only now; the strings are AI-translated. Before adding `es` to `SHIPPED_LANGUAGES`: native-speaker review, and decide whether the 911 script and copy block stay English for dispatchers. |
+| F-1  | Open   | `formatPhoneInput` cuts international numbers to 10 digits (`+44 20 7946 0958` → `(442) 079-4609`), so an edited non-US contact saves the wrong number.                                                                                                                                                              |
+| F-2  | Open   | `formatPhoneInput` silently drops the 11th digit of any 11-digit number not starting with 1.                                                                                                                                                                                                                         |
+| F-3  | Open   | SMS recipients `+15551234567` and `5551234567` aren't treated as duplicates, so one person can get the alert twice.                                                                                                                                                                                                  |
+| F-4  | Open   | `formatPhoneNumber` folds extensions into the number (`555.123.4567 ext 9` → `555-123-45679`).                                                                                                                                                                                                                       |
+| F-5  | Open   | The copy block's blank line before the "what were they wearing" reminder is removed by `filter(Boolean)`, so it never appears.                                                                                                                                                                                       |
+| F-6  | Open   | Hardcoded English that bypasses i18n: readout "add for a stronger script" details, the copy buttons' labels ("Copy 911 Script", "Copied Full Details"), `AppModal`'s "Cancel" and default "Delete"/"OK", the settings device-ID "Copied" alerts.                                                                     |
+| F-7  | Open   | Mobility is stored as English labels and copied into the readout raw, so it stays English in Spanish.                                                                                                                                                                                                                |
+| F-8  | Fixed  | testIDs were also set as `accessibilityLabel`, so screen readers announced "onboarding-get-started" in place of the button text.                                                                                                                                                                                     |
+| F-9  | Open   | `ScreenHeader`'s icon-only back button has no accessibility label.                                                                                                                                                                                                                                                   |
+| F-11 | Open   | Backspacing the closing `"` of a height (`5'6"` → `5'6`) re-formats straight back to `5'6"`, so the field can't be cleared from the end.                                                                                                                                                                             |
+| F-10 | Kept   | oxlint 1.87 `react/purity` / `react/set-state-in-effect` warnings at 4 sites (intentional patterns, warnings in `.oxlintrc.json`).                                                                                                                                                                                   |

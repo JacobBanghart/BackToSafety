@@ -19,6 +19,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import { useTheme } from '@/context/ThemeContext';
 import { saveProfile } from '@/database/profile';
 import { useTranslation } from 'react-i18next';
+import { formatHeightInput, formatWeightInput } from '@/utils/formatters';
 
 export default function AppearanceScreen() {
   const router = useRouter();
@@ -35,20 +36,6 @@ export default function AppearanceScreen() {
   useEffect(() => {
     track('onboarding_step_viewed', { step: 'profile_appearance' });
   }, []);
-
-  const formatHeightInput = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 3);
-    if (!digits) return '';
-    if (digits.length === 1) return digits;
-    if (digits.length === 2) return `${digits[0]}'${digits[1]}"`;
-    return `${digits[0]}'${digits.slice(1)}"`;
-  };
-
-  const formatWeightInput = (value: string): string => {
-    const digits = value.replace(/\D/g, '').slice(0, 4);
-    if (!digits) return '';
-    return digits.length > 3 ? `${digits.slice(0, -3)},${digits.slice(-3)}` : digits;
-  };
 
   const handleContinue = async () => {
     try {
