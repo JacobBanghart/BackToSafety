@@ -61,9 +61,9 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
   const medicalDesc = describeImportantDetails(profile, t);
 
   const coordinates = lastSeenCoords
-    ? `${lastSeenCoords.lat.toFixed(5)}, ${lastSeenCoords.lon.toFixed(5)} (±${
-        lastSeenCoords.accuracy ?? '—'
-      }m)`
+    ? `${lastSeenCoords.lat.toFixed(5)}, ${lastSeenCoords.lon.toFixed(5)}${
+        lastSeenCoords.accuracy !== undefined ? ` (±${lastSeenCoords.accuracy}m)` : ''
+      }`
     : t('copyBlock.unknown');
 
   return [
@@ -100,11 +100,11 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
       : undefined,
     profile.idBracelets ? t('copyBlock.idBracelet', { value: profile.idBracelets }) : undefined,
     profile.medicAlertId ? t('copyBlock.medicAlertId', { value: profile.medicAlertId }) : undefined,
-    // F-5: meant as a blank line before the reminder, but filter(Boolean) drops it.
+    // Blank line before the reminder
     '',
     t('copyBlock.wearingReminder'),
   ]
-    .filter(Boolean)
+    .filter((line) => line !== undefined)
     .join('\n');
 }
 
@@ -149,8 +149,9 @@ export function buildScript(input: ReadoutInput, t: Translate): string {
     scriptParts.push(t('script.medicAlertId', { id: profile.medicAlertId }));
   }
 
-  // F-12: added whether or not the profile has a photo.
-  scriptParts.push(t('script.photoAvailable'));
+  if (profile.photoUri) {
+    scriptParts.push(t('script.photoAvailable'));
+  }
   scriptParts.push(t('script.silverAlert'));
 
   return scriptParts.join(' ');

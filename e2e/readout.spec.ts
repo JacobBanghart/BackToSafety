@@ -23,8 +23,8 @@ test('readout shows the 911 script and copies full details', async ({ page, cont
     "I'm reporting a missing vulnerable adult who may be disoriented or at risk. " +
       'Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. ' +
       'Appearance: 5\'6", 140, Gray, short hair, Blue eyes, Hearing aids. ' +
-      // F-12: printed even though no photo was added.
-      'Photo available. Please advise about issuing a local Silver/Purple Alert.',
+      // No photo was added, so no "Photo available." (F-12).
+      'Please advise about issuing a local Silver/Purple Alert.',
   );
   await expect(page.getByTestId('readout-script-missing')).toHaveText(
     'Add for stronger script: last seen time, last known location, important details.',
@@ -39,6 +39,7 @@ test('readout shows the 911 script and copies full details', async ({ page, cont
         'Appearance: 5\'6", 140, Gray, short hair, Blue eyes, Hearing aids',
         'Last seen: Unknown',
         'Coordinates: Unknown',
+        '',
         '⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)',
       ].join('\n'),
     );
