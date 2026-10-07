@@ -2,8 +2,8 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider as NavigationThemeProvider,
-} from '@react-navigation/native';
-import { Stack, useRouter, useSegments } from 'expo-router';
+} from 'expo-router/react-navigation';
+import { Stack, usePathname, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
@@ -28,6 +28,13 @@ function RootLayoutNav() {
   const { isLoading, isOnboarded } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // PostHog's captureScreens reads @react-navigation/native's context, which expo-router
+  // (SDK 56+) no longer provides — it ships its own navigation fork. Track screens by path.
+  useEffect(() => {
+    posthog.screen(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -95,7 +102,7 @@ const RootLayout = () => {
             <PostHogProvider
               client={posthog}
               autocapture={{
-                captureScreens: true,
+                captureScreens: false,
                 captureTouches: true,
                 propsToCapture: ['testID'],
               }}

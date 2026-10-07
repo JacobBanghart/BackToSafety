@@ -4,7 +4,10 @@
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
+  "rules": {
+    "react/set-state-in-effect": "warn",
+    "react/purity": "warn"
+  },
   "env": {
     "builtin": true
   }

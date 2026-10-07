@@ -62,7 +62,9 @@
           "cameraPermission": "Allow Back to Safety to use your camera to take a profile photo for emergency identification."
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      "expo-image",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true

@@ -21,7 +21,7 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from 'expo-router/react-navigation';
 
 import { KeyboardAvoidingScroll } from '@/components/KeyboardAvoidingScroll';
 import { ScreenHeader } from '@/components/ScreenHeader';

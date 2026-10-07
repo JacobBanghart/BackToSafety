@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { Alert, Clipboard, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import i18n from 'i18next';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router/react-navigation';
 import { useTranslation } from 'react-i18next';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { track } from '@/utils/analytics';

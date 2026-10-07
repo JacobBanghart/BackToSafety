@@ -3,7 +3,7 @@
  * Quick access to emergency flow, profile summary, and key actions
  */
 
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect } from 'expo-router/react-navigation';
 import { Image } from 'expo-image';
 import { Href, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
