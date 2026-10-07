@@ -5,6 +5,7 @@ import i18next from 'i18next';
 import { afterAll, describe, expect, it } from 'vitest';
 
 import { ageOn, formatDob, parseDob } from '@/utils/age';
+import * as emergency from '@/utils/emergency';
 import * as formatters from '@/utils/formatters';
 import * as phone from '@/utils/phone';
 import * as readout from '@/utils/readout';
@@ -76,6 +77,16 @@ const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
   stripPhoneFormatting: phone.stripPhoneFormatting,
   normalizeSmsRecipient: phone.normalizeSmsRecipient,
   normalizeUniqueSmsRecipients: phone.normalizeUniqueSmsRecipients,
+  buildInitialSteps: (lang: string, emergencyNumber: string) =>
+    emergency.buildInitialSteps(translator(lang, 'emergency'), emergencyNumber),
+  secondsRemaining: (startedAt: string, now: string) =>
+    emergency.secondsRemaining(Date.parse(startedAt), Date.parse(now)),
+  formatCountdown: emergency.formatCountdown,
+  formatCountdownShort: emergency.formatCountdownShort,
+  buildAlertSms: (lang: string, input: Parameters<typeof emergency.buildAlertSms>[1]) =>
+    emergency.buildAlertSms(translator(lang, 'emergency'), input),
+  directionHint: (lang: string, hand: 'left' | 'right' | 'unknown' | null) =>
+    emergency.directionHint(translator(lang, 'emergency'), hand ?? undefined),
   needsVehicleCheck: readout.needsVehicleCheck,
   buildScript: readoutAdapter(readout.buildScript),
   buildCopyBlock: readoutAdapter(readout.buildCopyBlock),
@@ -105,7 +116,7 @@ describe.each(files)('%s', (file) => {
       (_i, _label, c) => {
         const actual = ADAPTERS[fn](...(c.args as never[]));
         if (!('expected' in c)) {
-          expect(BLESS, 'case has no expected value; bless it with VECTORS_BLESS=1').toBe(true);
+          if (!BLESS) throw new Error('case has no expected value; bless it with VECTORS_BLESS=1');
           c.expected = actual;
           blessed++;
           return;

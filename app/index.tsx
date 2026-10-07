@@ -25,8 +25,8 @@ import { getSetting } from '@/database/storage';
 import { setPreviousRoute } from '@/utils/navigation';
 import { posthog } from '@/utils/posthog';
 import { track } from '@/utils/analytics';
+import { formatCountdownShort, SEARCH_WINDOW_SECONDS, secondsRemaining } from '@/utils/emergency';
 
-const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
 /** Emergency button colours — hardcoded, never adapt to light/dark mode */
 const EMERGENCY_IDLE_BG = '#ef4444';
 const EMERGENCY_ACTIVE_BG = '#b91c1c';
@@ -57,9 +57,7 @@ export default function HomeScreen() {
       if (saved) {
         const state: EmergencyState = JSON.parse(saved);
         if (state.isActive) {
-          const started = new Date(state.startedAt);
-          const elapsed = Math.floor((Date.now() - started.getTime()) / 1000);
-          const remaining = Math.max(0, SEARCH_WINDOW_SECONDS - elapsed);
+          const remaining = secondsRemaining(new Date(state.startedAt).getTime(), Date.now());
           setActiveEmergency(state);
           setEmergencySecondsLeft(remaining);
         } else {
@@ -96,8 +94,6 @@ export default function HomeScreen() {
   const emergencyProgress = activeEmergency
     ? ((SEARCH_WINDOW_SECONDS - emergencySecondsLeft) / SEARCH_WINDOW_SECONDS) * 100
     : 0;
-  const emergencyMinutes = Math.floor(emergencySecondsLeft / 60);
-  const emergencySeconds = emergencySecondsLeft % 60;
   const timerExpired = activeEmergency && emergencySecondsLeft === 0;
 
   return (
@@ -192,7 +188,7 @@ export default function HomeScreen() {
                     {timerExpired
                       ? t('emergencyButton.timerExpiredSubtitle')
                       : t('emergencyButton.remaining', {
-                          time: `${emergencyMinutes}:${emergencySeconds.toString().padStart(2, '0')}`,
+                          time: formatCountdownShort(emergencySecondsLeft),
                           checked: activeEmergency.checkedSteps.length,
                           total: 11,
                         })}

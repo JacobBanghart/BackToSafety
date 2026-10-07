@@ -1,0 +1,431 @@
+{
+  "source": "utils/emergency.ts",
+  "description": "The emergency protocol: checklist steps ([lang, emergencyNumber]), countdown math (ISO timestamps), countdown display, the contact alert SMS ([lang, input]; time arrives pre-formatted), and the dominant-hand direction hint.",
+  "functions": {
+    "buildInitialSteps": [
+      {
+        "args": ["en", "911"],
+        "expected": [
+          {
+            "id": "home_search",
+            "step": 1,
+            "title": "Search home thoroughly",
+            "description": "Check every room, closet, under beds, bathrooms, garage, basement, sheds",
+            "hint": "People often seek small, quiet spaces",
+            "checked": false
+          },
+          {
+            "id": "outside_immediate",
+            "step": 2,
+            "title": "Check outside areas",
+            "description": "Yard, porches, paths, driveways, inside vehicles (locked or unlocked)",
+            "checked": false
+          },
+          {
+            "id": "neighbors",
+            "step": 3,
+            "title": "Alert neighbors",
+            "description": "Show photo, ask them to call if seen. Check their yards too.",
+            "checked": false
+          },
+          {
+            "id": "radius_search",
+            "step": 4,
+            "title": "Search 1-1.5 mile radius",
+            "description": "Most people are found within this distance from home",
+            "checked": false
+          },
+          {
+            "id": "high_risk",
+            "step": 5,
+            "title": "Check high-risk areas first",
+            "description": "Water (pools, ponds, streams), wooded areas, ditches, busy roads",
+            "urgent": true,
+            "checked": false
+          },
+          {
+            "id": "familiar_places",
+            "step": 6,
+            "title": "Search familiar places",
+            "description": "Former home, church, old workplace, favorite walking routes",
+            "checked": false
+          },
+          {
+            "id": "call_911",
+            "step": 7,
+            "title": "Call 911",
+            "description": "If not found within 15 minutes, call immediately",
+            "urgent": true,
+            "checked": false
+          },
+          {
+            "id": "silver_alert",
+            "step": 8,
+            "title": "Request Silver/Feather Alert",
+            "description": "Ask 911 dispatcher about activating state alert program",
+            "checked": false
+          },
+          {
+            "id": "share_info",
+            "step": 9,
+            "title": "Share relevant personal details",
+            "description": "Share their appearance, daily routines, and communication needs with responders.",
+            "checked": false
+          },
+          {
+            "id": "coordinate",
+            "step": 10,
+            "title": "Coordinate search efforts",
+            "description": "Assign areas to helpers, avoid duplicating coverage",
+            "checked": false
+          },
+          {
+            "id": "document",
+            "step": 11,
+            "title": "Document everything",
+            "description": "Note times, areas checked, people contacted for responders",
+            "checked": false
+          }
+        ]
+      },
+      {
+        "args": ["es", "911"],
+        "expected": [
+          {
+            "id": "home_search",
+            "step": 1,
+            "title": "Revisa toda la casa",
+            "description": "Revisa cada cuarto, clóset, debajo de las camas, baños, cochera, sótano y cobertizos",
+            "hint": "Las personas suelen buscar espacios pequeños y tranquilos",
+            "checked": false
+          },
+          {
+            "id": "outside_immediate",
+            "step": 2,
+            "title": "Revisa los alrededores",
+            "description": "Patio, porches, senderos, entradas de autos y dentro de los vehículos (con o sin seguro)",
+            "checked": false
+          },
+          {
+            "id": "neighbors",
+            "step": 3,
+            "title": "Avisa a los vecinos",
+            "description": "Muéstrales una foto y pídeles que llamen si la ven. Revisa también sus patios.",
+            "checked": false
+          },
+          {
+            "id": "radius_search",
+            "step": 4,
+            "title": "Busca en un radio de 1 a 1.5 millas",
+            "description": "La mayoría de las personas aparecen a esta distancia de su casa",
+            "checked": false
+          },
+          {
+            "id": "high_risk",
+            "step": 5,
+            "title": "Revisa primero las zonas de alto riesgo",
+            "description": "Agua (albercas, estanques, arroyos), zonas boscosas, zanjas y calles transitadas",
+            "urgent": true,
+            "checked": false
+          },
+          {
+            "id": "familiar_places",
+            "step": 6,
+            "title": "Busca en lugares conocidos",
+            "description": "Casa anterior, iglesia, antiguo trabajo, rutas favoritas para caminar",
+            "checked": false
+          },
+          {
+            "id": "call_911",
+            "step": 7,
+            "title": "Llama al 911",
+            "description": "Si no aparece en 15 minutos, llama de inmediato",
+            "urgent": true,
+            "checked": false
+          },
+          {
+            "id": "silver_alert",
+            "step": 8,
+            "title": "Pide una Alerta Plateada o Feather",
+            "description": "Pregunta al operador del 911 si pueden activar el programa de alertas del estado",
+            "checked": false
+          },
+          {
+            "id": "share_info",
+            "step": 9,
+            "title": "Comparte los datos personales importantes",
+            "description": "Comparte con los rescatistas su apariencia, rutinas diarias y necesidades de comunicación.",
+            "checked": false
+          },
+          {
+            "id": "coordinate",
+            "step": 10,
+            "title": "Coordina la búsqueda",
+            "description": "Asigna zonas a quienes ayudan para no buscar dos veces en el mismo lugar",
+            "checked": false
+          },
+          {
+            "id": "document",
+            "step": 11,
+            "title": "Anótalo todo",
+            "description": "Anota horas, zonas revisadas y personas contactadas para los rescatistas",
+            "checked": false
+          }
+        ]
+      },
+      {
+        "args": ["en", "112"],
+        "expected": [
+          {
+            "id": "home_search",
+            "step": 1,
+            "title": "Search home thoroughly",
+            "description": "Check every room, closet, under beds, bathrooms, garage, basement, sheds",
+            "hint": "People often seek small, quiet spaces",
+            "checked": false
+          },
+          {
+            "id": "outside_immediate",
+            "step": 2,
+            "title": "Check outside areas",
+            "description": "Yard, porches, paths, driveways, inside vehicles (locked or unlocked)",
+            "checked": false
+          },
+          {
+            "id": "neighbors",
+            "step": 3,
+            "title": "Alert neighbors",
+            "description": "Show photo, ask them to call if seen. Check their yards too.",
+            "checked": false
+          },
+          {
+            "id": "radius_search",
+            "step": 4,
+            "title": "Search 1-1.5 mile radius",
+            "description": "Most people are found within this distance from home",
+            "checked": false
+          },
+          {
+            "id": "high_risk",
+            "step": 5,
+            "title": "Check high-risk areas first",
+            "description": "Water (pools, ponds, streams), wooded areas, ditches, busy roads",
+            "urgent": true,
+            "checked": false
+          },
+          {
+            "id": "familiar_places",
+            "step": 6,
+            "title": "Search familiar places",
+            "description": "Former home, church, old workplace, favorite walking routes",
+            "checked": false
+          },
+          {
+            "id": "call_911",
+            "step": 7,
+            "title": "Call 112",
+            "description": "If not found within 15 minutes, call immediately",
+            "urgent": true,
+            "checked": false
+          },
+          {
+            "id": "silver_alert",
+            "step": 8,
+            "title": "Request Silver/Feather Alert",
+            "description": "Ask 112 dispatcher about activating state alert program",
+            "checked": false
+          },
+          {
+            "id": "share_info",
+            "step": 9,
+            "title": "Share relevant personal details",
+            "description": "Share their appearance, daily routines, and communication needs with responders.",
+            "checked": false
+          },
+          {
+            "id": "coordinate",
+            "step": 10,
+            "title": "Coordinate search efforts",
+            "description": "Assign areas to helpers, avoid duplicating coverage",
+            "checked": false
+          },
+          {
+            "id": "document",
+            "step": 11,
+            "title": "Document everything",
+            "description": "Note times, areas checked, people contacted for responders",
+            "checked": false
+          }
+        ]
+      }
+    ],
+    "secondsRemaining": [
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:00.000Z"],
+        "expected": 900
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:00.999Z"],
+        "expected": 900
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:01.000Z"],
+        "expected": 899
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:59.500Z"],
+        "expected": 841
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:10:00.000Z"],
+        "expected": 300
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:14:59.999Z"],
+        "expected": 1
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:15:00.000Z"],
+        "expected": 0
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T16:00:00.000Z"],
+        "expected": 0
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T14:59:55.000Z"],
+        "finding": "F-20",
+        "expected": 905
+      }
+    ],
+    "formatCountdown": [
+      {
+        "args": [900],
+        "expected": "15:00"
+      },
+      {
+        "args": [899],
+        "expected": "14:59"
+      },
+      {
+        "args": [600],
+        "expected": "10:00"
+      },
+      {
+        "args": [60],
+        "expected": "01:00"
+      },
+      {
+        "args": [59],
+        "expected": "00:59"
+      },
+      {
+        "args": [1],
+        "expected": "00:01"
+      },
+      {
+        "args": [0],
+        "expected": "00:00"
+      },
+      {
+        "args": [3600],
+        "expected": "60:00"
+      }
+    ],
+    "formatCountdownShort": [
+      {
+        "args": [900],
+        "finding": "F-19",
+        "expected": "15:00"
+      },
+      {
+        "args": [899],
+        "finding": "F-19",
+        "expected": "14:59"
+      },
+      {
+        "args": [545],
+        "finding": "F-19",
+        "expected": "9:05"
+      },
+      {
+        "args": [59],
+        "finding": "F-19",
+        "expected": "0:59"
+      },
+      {
+        "args": [0],
+        "finding": "F-19",
+        "expected": "0:00"
+      }
+    ],
+    "buildAlertSms": [
+      {
+        "args": [
+          "en",
+          {
+            "name": "Margaret Smith",
+            "startedTime": "3:15:00 PM",
+            "wearing": "Blue jacket, gray pants"
+          }
+        ],
+        "expected": "URGENT: Margaret Smith is missing. Last seen 3:15:00 PM. Wearing: Blue jacket, gray pants. Please help search or call if you see them."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "name": "Margaret Smith",
+            "startedTime": "3:15:00 PM",
+            "wearing": ""
+          }
+        ],
+        "expected": "URGENT: Margaret Smith is missing. Last seen 3:15:00 PM. Please help search or call if you see them."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "startedTime": "3:15:00 PM",
+            "wearing": ""
+          }
+        ],
+        "finding": "F-6",
+        "expected": "URGENT: Our loved one is missing. Last seen 3:15:00 PM. Please help search or call if you see them."
+      },
+      {
+        "args": [
+          "es",
+          {
+            "name": "Margaret Smith",
+            "startedTime": "15:15:00",
+            "wearing": "Chaqueta azul"
+          }
+        ],
+        "expected": "URGENTE: Margaret Smith está desaparecido/a. Visto/a por última vez: 15:15:00. Lleva puesto: Chaqueta azul. Por favor ayuda a buscar o llama si lo/la ves."
+      }
+    ],
+    "directionHint": [
+      {
+        "args": ["en", "left"],
+        "expected": "← May veer left (left-handed)"
+      },
+      {
+        "args": ["en", "right"],
+        "expected": "→ May veer right (right-handed)"
+      },
+      {
+        "args": ["en", "unknown"],
+        "expected": null
+      },
+      {
+        "args": ["en", null],
+        "expected": null
+      },
+      {
+        "args": ["es", "left"],
+        "expected": "← Puede desviarse a la izquierda (zurdo)"
+      }
+    ]
+  }
+}

@@ -37,6 +37,15 @@ import { useTheme } from '@/context/ThemeContext';
 import { getEmergencyContacts } from '@/database/contacts';
 import { Destination, getDestinations } from '@/database/destinations';
 import { getSetting, saveSetting } from '@/database/storage';
+import {
+  buildAlertSms,
+  buildInitialSteps,
+  directionHint,
+  formatCountdown,
+  SEARCH_WINDOW_SECONDS,
+  secondsRemaining,
+  type ChecklistStep,
+} from '@/utils/emergency';
 import { normalizeUniqueSmsRecipients } from '@/utils/phone';
 
 // Emergency state stored in settings
@@ -48,103 +57,6 @@ type EmergencyState = {
   checkedSteps: string[];
   isActive: boolean;
 };
-
-type ChecklistStep = {
-  id: string;
-  step: number;
-  title: string;
-  description: string;
-  hint?: string;
-  urgent?: boolean;
-  checked: boolean;
-};
-
-const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
-
-type TFunction = (key: string, opts?: Record<string, unknown>) => string;
-
-const buildInitialSteps = (t: TFunction, emergencyNumber: string): ChecklistStep[] => [
-  {
-    id: 'home_search',
-    step: 1,
-    title: t('steps.home_search.title'),
-    description: t('steps.home_search.description'),
-    hint: t('steps.home_search.hint'),
-    checked: false,
-  },
-  {
-    id: 'outside_immediate',
-    step: 2,
-    title: t('steps.outside_immediate.title'),
-    description: t('steps.outside_immediate.description'),
-    checked: false,
-  },
-  {
-    id: 'neighbors',
-    step: 3,
-    title: t('steps.neighbors.title'),
-    description: t('steps.neighbors.description'),
-    checked: false,
-  },
-  {
-    id: 'radius_search',
-    step: 4,
-    title: t('steps.radius_search.title'),
-    description: t('steps.radius_search.description'),
-    checked: false,
-  },
-  {
-    id: 'high_risk',
-    step: 5,
-    title: t('steps.high_risk.title'),
-    description: t('steps.high_risk.description'),
-    urgent: true,
-    checked: false,
-  },
-  {
-    id: 'familiar_places',
-    step: 6,
-    title: t('steps.familiar_places.title'),
-    description: t('steps.familiar_places.description'),
-    checked: false,
-  },
-  {
-    id: 'call_911',
-    step: 7,
-    title: t('steps.call_911.title', { emergencyNumber }),
-    description: t('steps.call_911.description'),
-    urgent: true,
-    checked: false,
-  },
-  {
-    id: 'silver_alert',
-    step: 8,
-    title: t('steps.silver_alert.title'),
-    description: t('steps.silver_alert.description', { emergencyNumber }),
-    checked: false,
-  },
-  {
-    id: 'share_info',
-    step: 9,
-    title: t('steps.share_info.title'),
-    description: t('steps.share_info.description'),
-    checked: false,
-  },
-  {
-    id: 'coordinate',
-    step: 10,
-    title: t('steps.coordinate.title'),
-    description: t('steps.coordinate.description'),
-    checked: false,
-  },
-  {
-    id: 'document',
-    step: 11,
-    title: t('steps.document.title'),
-    description: t('steps.document.description'),
-    checked: false,
-  },
-];
 
 export default function EmergencyScreen() {
   const router = useRouter();
@@ -212,8 +124,7 @@ export default function EmergencyScreen() {
           if (state.isActive) {
             // Resume existing emergency
             const started = new Date(state.startedAt);
-            const elapsedSeconds = Math.floor((Date.now() - started.getTime()) / 1000);
-            const remaining = Math.max(0, SEARCH_WINDOW_SECONDS - elapsedSeconds);
+            const remaining = secondsRemaining(started.getTime(), Date.now());
 
             setStartedAt(started);
             setSecondsLeft(remaining);
@@ -304,13 +215,7 @@ export default function EmergencyScreen() {
     }
   }, [wearing, steps, isLoading, startedAt, saveEmergencyState]);
 
-  const mmss = useMemo(() => {
-    const m = Math.floor(secondsLeft / 60)
-      .toString()
-      .padStart(2, '0');
-    const s = (secondsLeft % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }, [secondsLeft]);
+  const mmss = useMemo(() => formatCountdown(secondsLeft), [secondsLeft]);
 
   const toggleStep = useCallback(
     (id: string) => {
@@ -378,11 +283,10 @@ export default function EmergencyScreen() {
       return;
     }
 
-    const wearingText = wearing ? t('smsWearing', { wearing }) : '';
-    const message = t('smsMessage', {
-      name: profile?.name || 'Our loved one',
-      time: startedAt.toLocaleTimeString(),
-      wearing: wearingText,
+    const message = buildAlertSms(t, {
+      name: profile?.name,
+      startedTime: startedAt.toLocaleTimeString(),
+      wearing,
     });
 
     const recipients = normalizeUniqueSmsRecipients(
@@ -420,11 +324,7 @@ export default function EmergencyScreen() {
     }
   };
 
-  const getDirectionHint = () => {
-    if (profile?.dominantHand === 'left') return t('directionHint.left');
-    if (profile?.dominantHand === 'right') return t('directionHint.right');
-    return null;
-  };
+  const getDirectionHint = () => directionHint(t, profile?.dominantHand);
 
   const onBackPress = () => {
     setModalType('leave');
