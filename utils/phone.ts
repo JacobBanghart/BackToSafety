@@ -9,8 +9,19 @@
  * @returns Formatted phone number
  */
 export function formatPhoneNumber(phone: string): string {
+  // Keep an extension readable instead of folding it into the number (F-4)
+  const ext = phone.match(/\s*(?:ext\.?|x|#)\s*(\d+)\s*$/i);
+  if (ext && ext.index !== undefined && ext.index > 0) {
+    return `${formatPhoneNumber(phone.slice(0, ext.index))} ext. ${ext[1]}`;
+  }
+
   // Remove all non-digit characters
   const digits = phone.replace(/\D/g, '');
+
+  // Non-US international numbers have their own grouping; show them as entered (F-1)
+  if (phone.trimStart().startsWith('+') && !digits.startsWith('1')) {
+    return phone.trim();
+  }
 
   // Handle US phone numbers (10 or 11 digits)
   if (digits.length === 10) {
@@ -43,14 +54,21 @@ export function formatPhoneInput(value: string): string {
   // When the value came in with a + prefix (e.g. imported contact), keep +1 visible
   if (hasCountryCode && digits.startsWith('1')) {
     const local = digits.slice(1);
+    if (local.length > 10) return `+${digits}`;
     if (local.length === 0) return '+1 ';
     if (local.length <= 3) return `+1 ${local}`;
     if (local.length <= 6) return `+1 (${local.slice(0, 3)}) ${local.slice(3)}`;
     return `+1 (${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6, 10)}`;
   }
 
+  // Other country codes: keep every digit, unformatted (F-1)
+  if (hasCountryCode) return `+${digits}`;
+
   // Standard 10-digit US format (strip leading 1 if accidentally included without +)
   const localDigits = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
+
+  // Too long to be a US number: never drop digits (F-2)
+  if (localDigits.length > 10) return digits;
 
   if (localDigits.length <= 3) return localDigits;
   if (localDigits.length <= 6) return `(${localDigits.slice(0, 3)}) ${localDigits.slice(3)}`;
@@ -89,7 +107,9 @@ export function normalizeUniqueSmsRecipients(phones: readonly string[]): string[
     .filter((phone) => phone.length > 0);
 
   const recipientsByKey = normalizedRecipients.reduce((acc, phone) => {
-    const dedupeKey = phone.replace(/^\+/, '');
+    // The same US number with and without its +1 country code is one recipient (F-3)
+    const digits = phone.replace(/^\+/, '');
+    const dedupeKey = digits.length === 11 && digits.startsWith('1') ? digits.slice(1) : digits;
 
     if (!acc.has(dedupeKey)) {
       acc.set(dedupeKey, phone);
