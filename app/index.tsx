@@ -360,37 +360,6 @@ export default function HomeScreen() {
             <IconSymbol name="chevron.right" size={16} color={theme.textSecondary} />
           </Pressable>
         </AppCard>
-
-        {/* ── Setup Prompt ── */}
-        {!hasProfile && (
-          <View
-            style={[
-              styles.setupCard,
-              { backgroundColor: theme.card, borderColor: theme.border },
-              getShadow('sm', colorScheme),
-            ]}
-          >
-            <View style={[styles.setupIconWrap, { backgroundColor: theme.primaryLight }]}>
-              <ThemedText style={styles.setupIconEmoji}>📝</ThemedText>
-            </View>
-            <ThemedText style={[styles.setupTitle, { color: theme.text }]}>
-              {t('setupCard.title')}
-            </ThemedText>
-            <ThemedText style={[styles.setupText, { color: theme.textSecondary }]}>
-              {t('setupCard.body')}
-            </ThemedText>
-            <Pressable
-              style={[styles.setupButton, { backgroundColor: theme.primary }]}
-              testID="home-setup-profile"
-              onPress={() => {
-                track('screen_viewed', { screen: 'profile', source: 'home_setup' });
-                router.push('/profile' as Href);
-              }}
-            >
-              <ThemedText style={styles.setupButtonText}>{t('setupCard.button')}</ThemedText>
-            </Pressable>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -534,34 +503,4 @@ const styles = StyleSheet.create({
     ...Typography.body,
     flex: 1,
   },
-  setupCard: {
-    borderRadius: Radius.lg,
-    borderWidth: 1,
-    padding: Spacing.xl,
-    alignItems: 'center',
-    marginBottom: Spacing.lg,
-    gap: Spacing.md,
-  },
-  setupIconWrap: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
-  },
-  setupIconEmoji: { fontSize: 32 },
-  setupTitle: { ...Typography.title, textAlign: 'center' },
-  setupText: { ...Typography.body, textAlign: 'center' },
-  setupButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    paddingHorizontal: Spacing.xl,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-    marginTop: Spacing.xs,
-    minHeight: 48,
-  },
-  setupButtonText: { color: Colors.light.textOnPrimary, ...Typography.bodyBold },
 });

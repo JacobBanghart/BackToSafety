@@ -24,10 +24,5 @@
     "cognitiveStatus": "Estado cognitivo",
     "deescalation": "Cómo calmarle"
   },
-  "settingsLink": "Configuración",
-  "setupCard": {
-    "title": "Completa el perfil",
-    "body": "Agrega información sobre la persona que cuidas. El 911 y quienes busquen la usarán en una emergencia.",
-    "button": "Crear perfil"
-  }
+  "settingsLink": "Configuración"
 }

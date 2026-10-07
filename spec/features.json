@@ -162,16 +162,6 @@
       }
     },
     {
-      "id": "home.setup-card",
-      "description": "Prompt to complete the profile when it is mostly empty.",
-      "coverage": {
-        "vectors": [],
-        "web": [],
-        "flows": []
-      },
-      "flowExempt": "Unreachable (F-28): onboarding requires a name, and the card only shows without one."
-    },
-    {
       "id": "emergency.start",
       "description": "Starting persists active_emergency and records the last-seen time.",
       "coverage": {
@@ -411,16 +401,6 @@
           "maestro/flows/readout.yaml"
         ]
       }
-    },
-    {
-      "id": "readout.no-profile",
-      "description": "Without a profile, offers to go to onboarding.",
-      "coverage": {
-        "vectors": [],
-        "web": [],
-        "flows": []
-      },
-      "flowExempt": "Unreachable (F-28): onboarding requires a name, so a profile always exists."
     },
     {
       "id": "profile.fields",

@@ -10,7 +10,6 @@ import { describeMobility } from '@/utils/mobility';
 import { formatPhoneNumber, stripPhoneFormatting } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -44,7 +43,6 @@ import {
 
 export default function ReadoutScreen() {
   const { profile, emergencyContacts, lastSeen, isLoading } = useProfile();
-  const router = useRouter();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const { t } = useTranslation('readout');
@@ -129,25 +127,8 @@ export default function ReadoutScreen() {
     );
   }
 
-  if (!profile) {
-    return (
-      <SafeAreaView style={[styles.loadingContainer, { backgroundColor: theme.background }]}>
-        <ThemedText>{t('noProfile')}</ThemedText>
-        <Pressable
-          style={[styles.button, { backgroundColor: theme.primary }]}
-          testID="readout-go-onboarding"
-          onPress={() => {
-            track('screen_viewed', { screen: 'onboarding', source: 'readout_no_profile' });
-            router.push('/onboarding');
-          }}
-        >
-          <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-            {t('goToOnboarding')}
-          </ThemedText>
-        </Pressable>
-      </SafeAreaView>
-    );
-  }
+  // Onboarding always creates the profile; this only covers a render before it loads.
+  if (!profile) return null;
 
   const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : null;
 

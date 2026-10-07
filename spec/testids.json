@@ -150,7 +150,6 @@
       "home-profile",
       "home-readout",
       "home-settings",
-      "home-setup-profile",
       "home-start-emergency"
     ],
     "emergency": [
@@ -178,7 +177,6 @@
       "readout-contact-{index}-call",
       "readout-copy-all",
       "readout-copy-script",
-      "readout-go-onboarding",
       "readout-medicalert-hotline",
       "readout-script-missing",
       "readout-script-text",
