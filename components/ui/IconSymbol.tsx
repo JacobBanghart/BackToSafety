@@ -64,6 +64,10 @@ const MAPPING = {
   'camera.fill': 'photo-camera',
   'chevron.up': 'expand-less',
   'chevron.down': 'expand-more',
+  // These three rendered blank on Android before they were mapped (F-29).
+  gearshape: 'settings',
+  globe: 'language',
+  'note.text': 'notes',
 } as IconMapping;
 
 /**
