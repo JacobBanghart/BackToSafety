@@ -35,6 +35,7 @@ import { useTheme } from '@/context/ThemeContext';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import { formatPhoneInput } from '@/utils/phone';
 import { formatDob, parseDob } from '@/utils/age';
+import { MOBILITY_OPTION_KEYS, MOBILITY_OPTIONS, type MobilityOption } from '@/utils/mobility';
 import {
   formatDobInput,
   formatHeightInput,
@@ -44,32 +45,6 @@ import {
 import { track } from '@/utils/analytics';
 
 type SectionKey = 'personal' | 'medical' | 'communication' | 'devices';
-
-const MOBILITY_OPTIONS = [
-  'Walks independently',
-  'Uses cane',
-  'Uses walker',
-  'Manual wheelchair',
-  'Motorized wheelchair',
-  'Mobility scooter',
-  'Bicycle',
-  'Has vehicle',
-  'Other',
-] as const;
-
-const MOBILITY_OPTION_KEYS: Record<string, string> = {
-  'Walks independently': 'mobilityOptions.walksIndependently',
-  'Uses cane': 'mobilityOptions.usesCane',
-  'Uses walker': 'mobilityOptions.usesWalker',
-  'Manual wheelchair': 'mobilityOptions.manualWheelchair',
-  'Motorized wheelchair': 'mobilityOptions.motorizedWheelchair',
-  'Mobility scooter': 'mobilityOptions.mobilityScooter',
-  Bicycle: 'mobilityOptions.bicycle',
-  'Has vehicle': 'mobilityOptions.hasVehicle',
-  Other: 'mobilityOptions.other',
-};
-
-type MobilityOption = (typeof MOBILITY_OPTIONS)[number];
 
 export default function ProfileScreen() {
   const router = useRouter();

@@ -1,0 +1,50 @@
+{
+  "source": "utils/mobility.ts",
+  "description": "Stored mobility (comma-separated English option labels plus free text) rendered for display: known labels translated, custom text passed through. Args: [lang, stored].",
+  "functions": {
+    "describeMobility": [
+      {
+        "args": [
+          "en",
+          "Uses cane, Has vehicle"
+        ],
+        "expected": "Uses cane, Has vehicle"
+      },
+      {
+        "args": [
+          "es",
+          "Uses cane, Has vehicle"
+        ],
+        "expected": "Usa bastón, Tiene vehículo"
+      },
+      {
+        "args": [
+          "es",
+          "Walks independently"
+        ],
+        "expected": "Camina sin ayuda"
+      },
+      {
+        "args": [
+          "es",
+          "Uses walker, rides a tricycle"
+        ],
+        "expected": "Usa andadera, rides a tricycle"
+      },
+      {
+        "args": [
+          "en",
+          ""
+        ],
+        "expected": ""
+      },
+      {
+        "args": [
+          "es",
+          "Other"
+        ],
+        "expected": "Otro"
+      }
+    ]
+  }
+}

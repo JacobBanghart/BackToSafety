@@ -7,6 +7,7 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { ageOn, formatDob, parseDob } from '@/utils/age';
 import * as emergency from '@/utils/emergency';
 import * as formatters from '@/utils/formatters';
+import { describeMobility } from '@/utils/mobility';
 import * as phone from '@/utils/phone';
 import * as readout from '@/utils/readout';
 
@@ -87,6 +88,8 @@ const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
     emergency.buildAlertSms(translator(lang, 'emergency'), input),
   directionHint: (lang: string, hand: 'left' | 'right' | 'unknown' | null) =>
     emergency.directionHint(translator(lang, 'emergency'), hand ?? undefined),
+  describeMobility: (lang: string, stored: string) =>
+    describeMobility(stored, translator(lang, 'readout')),
   needsVehicleCheck: readout.needsVehicleCheck,
   vehicleCheckKind: readout.vehicleCheckKind,
   buildScript: readoutAdapter(readout.buildScript),

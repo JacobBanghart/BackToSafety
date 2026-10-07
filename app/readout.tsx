@@ -6,6 +6,7 @@
 
 import { track } from '@/utils/analytics';
 import { goBack } from '@/utils/navigation';
+import { describeMobility } from '@/utils/mobility';
 import { formatPhoneNumber, stripPhoneFormatting } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
@@ -368,7 +369,7 @@ export default function ReadoutScreen() {
               {profile.mobilityLevel && (
                 <InfoChip
                   label={t('sections.appearance.mobility')}
-                  value={profile.mobilityLevel}
+                  value={describeMobility(profile.mobilityLevel, t)}
                   theme={theme}
                 />
               )}

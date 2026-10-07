@@ -29,7 +29,8 @@ constraints (see `db-schema.json`), and the UI options must stay inside them
   of the `Profile` fields (`dateOfBirth` → `date_of_birth`).
   - `date_of_birth`: text, `MM/DD/YYYY` (see `spec/vectors/age.json`).
   - `mobility_level`: comma-separated English option labels (`Uses cane, Has vehicle`). A
-    custom "Other" value is stored as its free text (F-7).
+    custom "Other" value is stored as its free text. Labels stay English in storage;
+    `describeMobility` (`spec/vectors/mobility.json`) translates them for display.
   - `photo_uri`: an **absolute** `file://` URI to `<Documents>/profile_photo_<epochMs>.jpg`.
     On iOS the container path changes across app updates (F-21), so readers should resolve
     by **basename** inside the documents directory, not by the stored path.

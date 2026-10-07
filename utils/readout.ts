@@ -9,6 +9,7 @@
 
 import type { Profile } from '@/database/profile';
 import { ageOn } from '@/utils/age';
+import { describeMobility } from '@/utils/mobility';
 
 export type Translate = (key: string, vars?: Record<string, unknown>) => string;
 
@@ -85,7 +86,9 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
     profile.cognitiveStatus
       ? t('copyBlock.cognitiveStatus', { value: profile.cognitiveStatus })
       : undefined,
-    profile.mobilityLevel ? t('copyBlock.mobility', { value: profile.mobilityLevel }) : undefined,
+    profile.mobilityLevel
+      ? t('copyBlock.mobility', { value: describeMobility(profile.mobilityLevel, t) })
+      : undefined,
     needsVehicleCheck(profile.mobilityLevel) ? t('copyBlock.mobilityVehicleNote') : undefined,
     profile.communicationPreference
       ? t('copyBlock.communication', { value: profile.communicationPreference })
