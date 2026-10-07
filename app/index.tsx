@@ -25,6 +25,7 @@ import { getSetting } from '@/database/storage';
 import { setPreviousRoute } from '@/utils/navigation';
 import { posthog } from '@/utils/posthog';
 import { track } from '@/utils/analytics';
+import { now } from '@/utils/clock';
 import { formatCountdownShort, SEARCH_WINDOW_SECONDS, secondsRemaining } from '@/utils/emergency';
 
 /** Emergency button colours — hardcoded, never adapt to light/dark mode */
@@ -57,7 +58,7 @@ export default function HomeScreen() {
       if (saved) {
         const state: EmergencyState = JSON.parse(saved);
         if (state.isActive) {
-          const remaining = secondsRemaining(new Date(state.startedAt).getTime(), Date.now());
+          const remaining = secondsRemaining(new Date(state.startedAt).getTime(), now());
           setActiveEmergency(state);
           setEmergencySecondsLeft(remaining);
         } else {
@@ -82,8 +83,10 @@ export default function HomeScreen() {
 
   useEffect(() => {
     if (!activeEmergency) return;
+    // Re-derive from the start time each tick; counting ticks drifts in the background (F-16).
+    const startedAtMs = new Date(activeEmergency.startedAt).getTime();
     const interval = setInterval(() => {
-      setEmergencySecondsLeft((prev) => Math.max(0, prev - 1));
+      setEmergencySecondsLeft(secondsRemaining(startedAtMs, now()));
     }, 1000);
     return () => clearInterval(interval);
   }, [activeEmergency]);

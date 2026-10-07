@@ -40,12 +40,14 @@ import { getSetting, saveSetting } from '@/database/storage';
 import {
   buildAlertSms,
   buildInitialSteps,
+  countdownAlerts,
   directionHint,
   formatCountdown,
   SEARCH_WINDOW_SECONDS,
   secondsRemaining,
   type ChecklistStep,
 } from '@/utils/emergency';
+import { now } from '@/utils/clock';
 import { normalizeUniqueSmsRecipients } from '@/utils/phone';
 
 // Emergency state stored in settings
@@ -124,7 +126,7 @@ export default function EmergencyScreen() {
           if (state.isActive) {
             // Resume existing emergency
             const started = new Date(state.startedAt);
-            const remaining = secondsRemaining(started.getTime(), Date.now());
+            const remaining = secondsRemaining(started.getTime(), now());
 
             setStartedAt(started);
             setSecondsLeft(remaining);
@@ -139,33 +141,32 @@ export default function EmergencyScreen() {
 
             setIsLoading(false);
 
-            // Start timer from remaining time
-            startTimer(remaining);
+            startTimer(started.getTime());
             return;
           }
         }
 
         // Start new emergency
-        const now = new Date();
-        setStartedAt(now);
+        const startedNow = new Date(now());
+        setStartedAt(startedNow);
 
         track('emergency_started');
         await saveEmergencyState({
-          startedAt: now.toISOString(),
+          startedAt: startedNow.toISOString(),
           wearing: '',
           checkedSteps: [],
           isActive: true,
         });
 
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        setLastSeen({ time: now.toISOString() });
+        setLastSeen({ time: startedNow.toISOString() });
 
         setIsLoading(false);
-        startTimer(SEARCH_WINDOW_SECONDS);
+        startTimer(startedNow.getTime());
       } catch (error) {
         console.error('Failed to init emergency:', error);
         setIsLoading(false);
-        startTimer(SEARCH_WINDOW_SECONDS);
+        startTimer(now());
       }
     };
 
@@ -177,28 +178,30 @@ export default function EmergencyScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- Only run on mount
   }, []);
 
-  // Start the countdown timer
-  const startTimer = (initialSeconds: number) => {
+  // Countdown. Each tick re-derives the time left from the start time: JS timers
+  // pause while the app is in the background, so counting ticks would fall behind
+  // real time and the expiry alert would come late (F-16).
+  const startTimer = (startedAtMs: number) => {
     if (intervalRef.current) clearInterval(intervalRef.current);
 
-    if (initialSeconds <= 0) {
+    if (secondsRemaining(startedAtMs, now()) <= 0) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
 
     intervalRef.current = setInterval(() => {
       setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-          Vibration.vibrate([0, 500, 200, 500]);
-          return 0;
+        const next = secondsRemaining(startedAtMs, now());
+        for (const alert of countdownAlerts(prev, next)) {
+          if (alert === 'warning') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+          } else {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+            Vibration.vibrate([0, 500, 200, 500]);
+          }
         }
-        // Warning vibration at 5 minutes
-        if (prev === 5 * 60) {
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        }
-        return prev - 1;
+        if (next === 0 && intervalRef.current) clearInterval(intervalRef.current);
+        return next;
       });
     }, 1000);
   };

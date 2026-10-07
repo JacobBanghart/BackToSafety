@@ -84,6 +84,7 @@ function RootLayoutNav() {
             <Stack.Screen name="contacts" options={{ headerShown: false }} />
             <Stack.Screen name="destinations" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false }} />
+            <Stack.Screen name="debug/clock" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />

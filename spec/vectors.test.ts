@@ -81,6 +81,7 @@ const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
     emergency.buildInitialSteps(translator(lang, 'emergency'), emergencyNumber),
   secondsRemaining: (startedAt: string, now: string) =>
     emergency.secondsRemaining(Date.parse(startedAt), Date.parse(now)),
+  countdownAlerts: emergency.countdownAlerts,
   formatCountdown: emergency.formatCountdown,
   formatCountdownShort: emergency.formatCountdownShort,
   buildAlertSms: (lang: string, input: Parameters<typeof emergency.buildAlertSms>[1]) =>

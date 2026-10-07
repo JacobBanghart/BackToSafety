@@ -101,10 +101,24 @@ export const buildInitialSteps = (t: Translate, emergencyNumber: string): Checkl
   },
 ];
 
-/** Seconds left in the search window, never below zero. */
+/** Seconds left in the search window, between 0 and the full window. */
 export function secondsRemaining(startedAtMs: number, nowMs: number): number {
   const elapsedSeconds = Math.floor((nowMs - startedAtMs) / 1000);
-  return Math.max(0, SEARCH_WINDOW_SECONDS - elapsedSeconds);
+  return Math.min(SEARCH_WINDOW_SECONDS, Math.max(0, SEARCH_WINDOW_SECONDS - elapsedSeconds));
+}
+
+export const WARNING_AT_SECONDS = 5 * 60;
+
+/**
+ * Alerts due when the countdown moves from `prev` to `next` seconds left. Ticks can
+ * skip seconds (the app was in the background), so alerts fire on crossing a
+ * threshold, not on landing exactly on it.
+ */
+export function countdownAlerts(prev: number, next: number): ('warning' | 'expired')[] {
+  const alerts: ('warning' | 'expired')[] = [];
+  if (prev >= WARNING_AT_SECONDS && next < WARNING_AT_SECONDS && next > 0) alerts.push('warning');
+  if (prev > 0 && next === 0) alerts.push('expired');
+  return alerts;
 }
 
 /** MM:SS for the countdown. */

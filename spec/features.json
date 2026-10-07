@@ -174,14 +174,14 @@
       "coverage": {
         "vectors": [
           "emergency.json#secondsRemaining",
-          "emergency.json#formatCountdown"
+          "emergency.json#formatCountdown",
+          "emergency.json#countdownAlerts"
         ],
         "web": [
           "e2e/emergency.spec.ts"
         ],
         "flows": []
-      },
-      "notes": "F-16: drifts while backgrounded."
+      }
     },
     {
       "id": "emergency.checklist",

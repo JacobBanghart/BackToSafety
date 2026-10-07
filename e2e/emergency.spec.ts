@@ -30,3 +30,26 @@ test('emergency checklist lists the protocol and tracks progress', async ({ page
   await page.getByTestId('emergency-step-neighbors').click();
   await expect(page.getByTestId('emergency-progress')).toHaveText('1/11 steps complete');
 });
+
+test('countdown follows the clock, not tick count (F-16)', async ({ page }) => {
+  await onboard(page, { name: 'Margaret Smith' });
+  await page.getByTestId('home-start-emergency').click();
+  await expect(page.getByTestId('emergency-timer')).toHaveText(/^(15:00|14:5\d)$/);
+
+  // Jump 14 minutes ahead, as if the app had been in the background.
+  const advance = (seconds: number) =>
+    page.evaluate(
+      (ms) =>
+        (window as unknown as { __nijiiAdvanceClock: (ms: number) => void }).__nijiiAdvanceClock(
+          ms,
+        ),
+      seconds * 1000,
+    );
+  await advance(14 * 60);
+  await expect(page.getByTestId('emergency-timer')).toHaveText(/^0[01]:\d\d$/);
+  await expect(page.getByTestId('emergency-timer-label')).toHaveText('Time remaining');
+
+  await advance(60);
+  await expect(page.getByTestId('emergency-timer')).toHaveText('00:00');
+  await expect(page.getByTestId('emergency-timer-label')).toHaveText('TIME TO CALL 911');
+});

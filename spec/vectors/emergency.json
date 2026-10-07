@@ -330,8 +330,7 @@
           "2026-10-06T15:00:00.000Z",
           "2026-10-06T14:59:55.000Z"
         ],
-        "finding": "F-20",
-        "expected": 905
+        "expected": 900
       }
     ],
     "formatCountdown": [
@@ -502,6 +501,79 @@
           "left"
         ],
         "expected": "← Puede desviarse a la izquierda (zurdo)"
+      }
+    ],
+    "countdownAlerts": [
+      {
+        "args": [
+          900,
+          899
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          301,
+          300
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          300,
+          299
+        ],
+        "expected": [
+          "warning"
+        ]
+      },
+      {
+        "args": [
+          600,
+          200
+        ],
+        "expected": [
+          "warning"
+        ]
+      },
+      {
+        "args": [
+          300,
+          0
+        ],
+        "expected": [
+          "expired"
+        ]
+      },
+      {
+        "args": [
+          1,
+          0
+        ],
+        "expected": [
+          "expired"
+        ]
+      },
+      {
+        "args": [
+          0,
+          0
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          299,
+          298
+        ],
+        "expected": []
+      },
+      {
+        "args": [
+          5,
+          3
+        ],
+        "expected": []
       }
     ]
   }
