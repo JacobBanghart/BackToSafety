@@ -57,7 +57,8 @@
   "errors": {
     "deleteFailed": "Failed to delete location.",
     "saveFailed": "Failed to save location. Please try again.",
-    "nameRequired": "Location name is required."
+    "nameRequired": "Location name is required.",
+    "reorderFailed": "Failed to save location order. Please try again."
   },
   "reorderHint": "Press and hold any location card to reorder search priority."
 }

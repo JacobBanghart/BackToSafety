@@ -57,7 +57,8 @@
   "errors": {
     "deleteFailed": "No se pudo eliminar el lugar.",
     "saveFailed": "No se pudo guardar el lugar. Por favor, inténtalo de nuevo.",
-    "nameRequired": "El nombre del lugar es obligatorio."
+    "nameRequired": "El nombre del lugar es obligatorio.",
+    "reorderFailed": "No se pudo guardar el orden de los lugares. Por favor, inténtalo de nuevo."
   },
   "reorderHint": "Mantén presionada una tarjeta de lugar para cambiar su prioridad de búsqueda."
 }

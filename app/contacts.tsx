@@ -325,14 +325,14 @@ export default function ContactsScreen() {
       const importedPhone = getContactPhoneNumber(pickedContact);
 
       if (!importedPhone) {
-        showAlert('validation', 'That contact has no phone number to import.');
+        showAlert('validation', t('errors.noPhoneToImport'));
         return;
       }
 
       const importedName = getContactName(pickedContact);
 
       if (!importedName) {
-        showAlert('validation', 'That contact has no name to import.');
+        showAlert('validation', t('errors.noNameToImport'));
         return;
       }
 
@@ -344,7 +344,7 @@ export default function ContactsScreen() {
       const importedPhoneKey = toPhoneKey(importedPhone);
 
       if (existingPhoneKeys.has(importedPhoneKey)) {
-        showAlert('validation', 'This phone number is already in your emergency contacts.');
+        showAlert('validation', t('errors.duplicatePhone'));
         return;
       }
 
@@ -361,7 +361,7 @@ export default function ContactsScreen() {
       setShowForm(true);
     } catch (error) {
       console.error('Failed to import contact:', error);
-      showAlert('error', 'Could not import contact. Please try again.');
+      showAlert('error', t('errors.importFailed'));
     } finally {
       setIsImporting(false);
     }
@@ -430,7 +430,7 @@ export default function ContactsScreen() {
       await loadContacts();
     } catch (error) {
       console.error('Failed to reorder contacts:', error);
-      showAlert('error', 'Failed to save contact order. Please try again.');
+      showAlert('error', t('errors.reorderFailed'));
       await loadContacts();
     }
   };

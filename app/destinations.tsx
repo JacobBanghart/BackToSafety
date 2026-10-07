@@ -390,7 +390,7 @@ export default function DestinationsScreen() {
       await loadDestinations();
     } catch (error) {
       console.error('Failed to reorder destinations:', error);
-      showAlert('error', 'Failed to save location order. Please try again.');
+      showAlert('error', t('errors.reorderFailed'));
       await loadDestinations();
     }
   };
