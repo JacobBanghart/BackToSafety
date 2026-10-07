@@ -1,0 +1,60 @@
+# Features: home.start-emergency, emergency.start, emergency.checklist, emergency.wearing,
+# emergency.resume, home.active-emergency
+appId: com.backtosafety.app
+name: An emergency's checklist and clothing survive a cold restart
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- tapOn:
+    id: home-start-emergency
+- assertVisible:
+    id: emergency-timer
+    text: '(15:00|14:5\d)'
+- assertVisible:
+    id: emergency-progress
+    text: 0/11 steps complete
+
+- scrollUntilVisible:
+    element:
+      id: emergency-step-home_search
+    centerElement: true
+- tapOn:
+    id: emergency-step-home_search
+- scrollUntilVisible:
+    element:
+      id: emergency-step-neighbors
+    centerElement: true
+- tapOn:
+    id: emergency-step-neighbors
+- scrollUntilVisible:
+    element:
+      id: emergency-progress
+    direction: UP
+- assertVisible:
+    id: emergency-progress
+    text: 2/11 steps complete
+- scrollUntilVisible:
+    element:
+      id: emergency-wearing-input
+    direction: UP
+- tapOn:
+    id: emergency-wearing-input
+- inputText: Blue jacket
+- hideKeyboard
+
+# Kill the app mid-emergency, as the OS might while they're on a call.
+- stopApp
+- launchApp
+- assertVisible:
+    id: home-start-emergency
+    text: '.*Emergency In Progress.*'
+- tapOn:
+    id: home-start-emergency
+- assertVisible:
+    id: emergency-progress
+    text: 2/11 steps complete
+- assertVisible:
+    id: emergency-wearing-input
+    text: Blue jacket

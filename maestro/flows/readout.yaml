@@ -1,0 +1,37 @@
+# Features: readout.script, readout.copy-script, readout.copy-all, readout.sections,
+# readout.contacts, readout.call-911
+appId: com.backtosafety.app
+name: The info sheet shows the 911 script and copies it
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+      NICKNAME: Maggie
+      CONTACT_NAME: John Smith
+      CONTACT_PHONE: '5551234567'
+
+- tapOn:
+    id: home-readout
+- tapOn:
+    id: readout-script-toggle
+- assertVisible:
+    id: readout-script-text
+    text: "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: \\[fill in time\\]. Last known location: \\[fill in location\\]. Please advise about issuing a local Silver/Purple Alert."
+- assertVisible:
+    id: readout-script-missing
+    text: 'Add for stronger script: last seen time, appearance details, important details.'
+
+# Emergency contact with a call button.
+- scrollUntilVisible:
+    element:
+      id: readout-contact-0-call
+- assertVisible: John Smith
+
+# The copy buttons' clipboard text is pinned by spec/vectors/readout.json and the
+# Playwright clipboard test; their 2-second "Copied" label is too brief to assert here.
+- scrollUntilVisible:
+    element:
+      id: readout-copy-all
+- assertVisible:
+    id: readout-copy-script

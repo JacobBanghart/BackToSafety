@@ -1,6 +1,6 @@
 {
   "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows: it may only go down.",
-  "maxWithoutFlows": 59,
+  "maxWithoutFlows": 16,
   "features": [
     {
       "id": "onboarding.routing",
@@ -10,7 +10,9 @@
         "web": [
           "e2e/onboarding-emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -21,7 +23,9 @@
         "web": [
           "e2e/onboarding-emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -33,7 +37,9 @@
           "e2e/onboarding-emergency.spec.ts",
           "e2e/readout.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -44,7 +50,9 @@
         "web": [
           "e2e/onboarding-emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -58,7 +66,9 @@
         "web": [
           "e2e/readout.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -71,7 +81,9 @@
         "web": [
           "e2e/readout.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -82,7 +94,9 @@
         "web": [
           "e2e/onboarding-emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/onboarding.yaml"
+        ]
       }
     },
     {
@@ -91,7 +105,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -103,7 +119,9 @@
           "e2e/onboarding-emergency.spec.ts",
           "e2e/emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-resume.yaml"
+        ]
       }
     },
     {
@@ -115,7 +133,10 @@
           "emergency.json#formatCountdown"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-countdown.yaml",
+          "maestro/flows/emergency-resume.yaml"
+        ]
       }
     },
     {
@@ -124,7 +145,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/contacts.yaml"
+        ]
       }
     },
     {
@@ -154,7 +177,9 @@
           "e2e/onboarding-emergency.spec.ts",
           "e2e/emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-resume.yaml"
+        ]
       }
     },
     {
@@ -168,7 +193,9 @@
         "web": [
           "e2e/persistence.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-resume.yaml"
+        ]
       }
     },
     {
@@ -183,7 +210,9 @@
         "web": [
           "e2e/emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-countdown.yaml"
+        ]
       }
     },
     {
@@ -196,7 +225,9 @@
         "web": [
           "e2e/emergency.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-resume.yaml"
+        ]
       }
     },
     {
@@ -205,7 +236,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-resume.yaml"
+        ]
       }
     },
     {
@@ -216,7 +249,9 @@
           "emergency.json#directionHint"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -225,7 +260,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/destinations.yaml"
+        ]
       }
     },
     {
@@ -234,7 +271,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-outcomes.yaml"
+        ]
       },
       "notes": "F-15, F-17."
     },
@@ -259,7 +298,9 @@
         "web": [
           "e2e/persistence.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-outcomes.yaml"
+        ]
       }
     },
     {
@@ -268,7 +309,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-outcomes.yaml"
+        ]
       }
     },
     {
@@ -277,7 +320,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/emergency-outcomes.yaml"
+        ]
       }
     },
     {
@@ -293,7 +338,9 @@
           "e2e/persistence.spec.ts",
           "e2e/readout.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -304,7 +351,9 @@
           "readout.json#buildScript"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -317,7 +366,9 @@
         "web": [
           "e2e/readout.spec.ts"
         ],
-        "flows": []
+        "flows": [
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -328,7 +379,10 @@
           "readout.json#needsVehicleCheck"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml",
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -337,7 +391,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -346,7 +402,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/readout.yaml"
+        ]
       }
     },
     {
@@ -369,7 +427,9 @@
           "phone.json#formatPhoneInput"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -391,7 +451,9 @@
           "age.json#formatDob"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -400,7 +462,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -409,7 +473,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -418,7 +484,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile.yaml"
+        ]
       }
     },
     {
@@ -427,7 +495,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/contacts.yaml"
+        ]
       }
     },
     {
@@ -439,7 +509,9 @@
           "phone.json#formatPhoneNumber"
         ],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/contacts.yaml"
+        ]
       }
     },
     {
@@ -448,7 +520,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/contacts.yaml"
+        ]
       }
     },
     {
@@ -484,7 +558,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/destinations.yaml"
+        ]
       }
     },
     {
@@ -493,7 +569,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/destinations.yaml"
+        ]
       }
     },
     {
@@ -502,7 +580,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/destinations.yaml"
+        ]
       }
     },
     {
@@ -520,7 +600,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/destinations.yaml"
+        ]
       }
     },
     {
@@ -529,7 +611,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/settings.yaml"
+        ]
       }
     },
     {
@@ -547,7 +631,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/settings.yaml"
+        ]
       }
     },
     {
@@ -565,7 +651,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/settings.yaml"
+        ]
       }
     },
     {

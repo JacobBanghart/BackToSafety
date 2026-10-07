@@ -1,0 +1,28 @@
+# Features: settings.theme, settings.about, settings.delete-account
+appId: com.backtosafety.app
+name: Theme persists; deleting the account returns to onboarding
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+
+- tapOn:
+    id: home-settings
+- tapOn:
+    id: settings-theme-dark
+- stopApp
+- launchApp
+- tapOn:
+    id: home-settings
+- assertVisible:
+    id: settings-device-id
+
+- scrollUntilVisible:
+    element:
+      id: settings-delete-account
+- tapOn:
+    id: settings-delete-account
+- tapOn: Delete Account
+- assertVisible:
+    id: onboarding-get-started

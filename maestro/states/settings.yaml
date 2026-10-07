@@ -1,0 +1,13 @@
+appId: com.backtosafety.app
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+      NICKNAME: Maggie
+      CONTACT_NAME: John Smith
+      CONTACT_PHONE: '5551234567'
+- tapOn:
+    id: home-settings
+- assertVisible:
+    id: settings-device-id

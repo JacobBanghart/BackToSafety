@@ -1,0 +1,6 @@
+appId: com.backtosafety.app
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: onboarding-get-started

@@ -1,0 +1,19 @@
+appId: com.backtosafety.app
+---
+- launchApp:
+    clearState: true
+# F-27: a tap right after first launch is occasionally dropped; retry until the name screen shows.
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: onboarding-get-started
+          optional: true
+      - assertVisible:
+          id: onboarding-name-input
+- tapOn:
+    id: onboarding-name-input
+- inputText: Margaret Smith
+- hideKeyboard
+- assertVisible:
+    id: onboarding-name-continue

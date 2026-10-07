@@ -1,0 +1,82 @@
+# Features: onboarding.routing, onboarding.welcome, onboarding.name, onboarding.photo,
+# onboarding.appearance, onboarding.contact, onboarding.complete
+appId: com.backtosafety.app
+name: Onboarding fills the profile and is not shown again
+---
+- launchApp:
+    clearState: true
+- assertVisible:
+    id: onboarding-get-started
+- scrollUntilVisible:
+    element:
+      id: onboarding-welcome-theme-light
+- tapOn:
+    id: onboarding-welcome-theme-light
+- tapOn:
+    id: onboarding-get-started
+
+- tapOn:
+    id: onboarding-name-input
+- inputText: Margaret Smith
+- tapOn:
+    id: onboarding-name-nickname
+- inputText: Maggie
+- hideKeyboard
+- tapOn:
+    id: onboarding-name-continue
+
+- assertVisible:
+    id: onboarding-photo-take
+- assertVisible:
+    id: onboarding-photo-library
+- tapOn:
+    id: onboarding-photo-skip
+
+# Height and weight format as you type (spec/vectors/formatters.json).
+- tapOn:
+    id: onboarding-appearance-height
+- inputText: '56'
+- assertVisible:
+    id: onboarding-appearance-height
+    text: 5'6"
+- tapOn:
+    id: onboarding-appearance-weight
+- inputText: '1400'
+- assertVisible:
+    id: onboarding-appearance-weight
+    text: 1,400
+- tapOn:
+    id: onboarding-appearance-hair
+- inputText: Gray
+- tapOn:
+    id: onboarding-appearance-eyes
+- inputText: Blue
+- hideKeyboard
+- tapOn:
+    id: onboarding-appearance-continue
+
+- tapOn:
+    id: onboarding-contact-name
+- inputText: John Smith
+- tapOn:
+    id: onboarding-contact-phone
+- inputText: '5551234567'
+- assertVisible:
+    id: onboarding-contact-phone
+    text: (555) 123-4567
+- hideKeyboard
+- tapOn:
+    id: onboarding-contact-continue
+
+- tapOn:
+    id: onboarding-complete-home
+- assertVisible:
+    id: home-start-emergency
+
+# Onboarding is persisted: a cold relaunch goes straight home.
+- stopApp
+- launchApp
+- assertVisible:
+    id: home-start-emergency
+- assertNotVisible:
+    id: onboarding-get-started

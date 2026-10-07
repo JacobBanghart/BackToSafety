@@ -1,0 +1,67 @@
+# Features: emergency.call-911, emergency.found, emergency.leave, emergency.info-sheet
+appId: com.backtosafety.app
+name: Call 911, the info sheet, leaving, and Found
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+
+- tapOn:
+    id: home-start-emergency
+
+# Call 911 opens the dialer with the number and checks its step (F-17: twice stays checked).
+- tapOn:
+    id: emergency-call-911
+- assertVisible:
+    text: '.*911.*'
+# Back from the dialer the way a person would: the app is not restarted.
+- launchApp:
+    stopApp: false
+- assertVisible:
+    id: emergency-progress
+    text: 1/11 steps complete
+- tapOn:
+    id: emergency-call-911
+# Back from the dialer the way a person would: the app is not restarted.
+- launchApp:
+    stopApp: false
+- assertVisible:
+    id: emergency-progress
+    text: 1/11 steps complete
+
+# The info sheet opens from the emergency and comes back.
+- tapOn:
+    id: emergency-readout
+- assertVisible:
+    id: readout-script-toggle
+- tapOn:
+    id: readout-back
+- assertVisible:
+    id: emergency-timer
+
+# Back offers stay / leave / end; leaving keeps the emergency running.
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-stay
+- assertVisible:
+    id: emergency-timer
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-leave
+- assertVisible:
+    id: home-start-emergency
+    text: '.*Emergency In Progress.*'
+
+# Found ends it.
+- tapOn:
+    id: home-start-emergency
+- tapOn:
+    id: emergency-found
+- tapOn:
+    id: emergency-modal-found-ok
+- assertVisible:
+    id: home-start-emergency
+    text: '.*Start Emergency Search.*'

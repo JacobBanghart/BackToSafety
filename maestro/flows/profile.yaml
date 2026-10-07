@@ -1,0 +1,86 @@
+# Features: home.caring-for, profile.fields, profile.dob, profile.dominant-hand, profile.mobility,
+# profile.save, readout.sections, emergency.direction-hint
+appId: com.backtosafety.app
+name: Profile edits persist and reach the info sheet and emergency screen
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+
+- tapOn:
+    id: home-profile
+- assertVisible:
+    id: profile-field-name
+    text: Margaret Smith
+
+# Personal: typed date of birth formats as MM/DD/YYYY.
+- tapOn:
+    id: profile-field-dateOfBirth
+- inputText: '03151940'
+- assertVisible:
+    id: profile-field-dateOfBirth
+    text: 03/15/1940
+- hideKeyboard
+
+# Medical & behavioral: hand and mobility.
+- scrollUntilVisible:
+    element:
+      id: profile-section-medical
+- tapOn:
+    id: profile-section-medical
+- scrollUntilVisible:
+    element:
+      id: profile-hand-left
+- tapOn:
+    id: profile-hand-left
+- scrollUntilVisible:
+    element:
+      id: profile-mobility-uses-cane
+- tapOn:
+    id: profile-mobility-uses-cane
+
+# Devices: the MedicAlert hotline (F-14: now shown on the info sheet).
+- scrollUntilVisible:
+    element:
+      id: profile-section-devices
+- tapOn:
+    id: profile-section-devices
+- scrollUntilVisible:
+    element:
+      id: profile-field-medicAlertHotline
+- tapOn:
+    id: profile-field-medicAlertHotline
+- inputText: '18004325378'
+- hideKeyboard
+- tapOn:
+    id: profile-save
+
+# Survives a cold restart.
+- stopApp
+- launchApp
+- tapOn:
+    id: home-profile
+- assertVisible:
+    id: profile-field-dateOfBirth
+    text: 03/15/1940
+- tapOn:
+    id: profile-back
+
+# Info sheet: mobility with the aid-check note, and the tappable hotline.
+- tapOn:
+    id: home-readout
+- scrollUntilVisible:
+    element:
+      text: Uses cane
+- assertVisible: '.*mobility aid \(walker, wheelchair, or cane\).*'
+- scrollUntilVisible:
+    element:
+      id: readout-medicalert-hotline
+- tapOn:
+    id: readout-back
+
+# Emergency: the left-handed direction hint.
+- tapOn:
+    id: home-start-emergency
+- assertVisible: '.*May veer left.*'

@@ -1,0 +1,36 @@
+# Features: emergency.countdown, home.active-emergency
+# Moves the app clock with the test seam (backtosafety://debug/clock, utils/clock.ts).
+appId: com.backtosafety.app
+name: The countdown follows the clock and expires into the call-911 state
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- tapOn:
+    id: home-start-emergency
+- assertVisible:
+    id: emergency-timer-label
+    text: Time remaining
+
+- openLink: backtosafety://debug/clock?advance=840
+- assertVisible:
+    id: emergency-timer
+    text: '0[01]:\d\d'
+
+- openLink: backtosafety://debug/clock?advance=60
+- assertVisible:
+    id: emergency-timer
+    text: '00:00'
+- assertVisible:
+    id: emergency-timer-label
+    text: TIME TO CALL 911
+
+# Home shows the expired state too.
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-leave
+- assertVisible:
+    id: home-start-emergency
+    text: '.*Timer Expired.*'

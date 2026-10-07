@@ -4,3 +4,5 @@ node = "24.21.0"
 java = "temurin-17.0.20+101"
 # Used by the .githooks/pre-commit secret scan.
 gitleaks = "8.30.1"
+# Maestro drives the Android/iOS builds for the parity flows (PARITY_PLAN L3).
+maestro = "cli-2.11.0"

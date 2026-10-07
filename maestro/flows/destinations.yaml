@@ -1,0 +1,68 @@
+# Features: destinations.list, destinations.add-edit, destinations.delete, destinations.detail,
+# emergency.saved-places
+appId: com.backtosafety.app
+name: Add a place, view its detail, see it during an emergency, delete it
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+
+- tapOn:
+    id: home-places
+- tapOn:
+    id: destinations-empty-add
+- tapOn:
+    id: destinations-form-name
+- inputText: Riverside Park
+- hideKeyboard
+- tapOn:
+    id: destinations-form-category-water
+- tapOn:
+    id: destinations-form-risk-high
+- scrollUntilVisible:
+    element:
+      id: destinations-form-reason
+- tapOn:
+    id: destinations-form-reason
+- inputText: Walked the river path every morning
+- hideKeyboard
+- tapOn:
+    id: destinations-save
+- assertVisible:
+    id: destinations-item-0-name
+    text: Riverside Park
+
+# Detail modal.
+- tapOn:
+    id: destinations-item-0
+- assertVisible: Walked the river path every morning
+- tapOn:
+    id: destinations-detail-close
+
+# The saved place is listed under the familiar-places step during an emergency.
+- tapOn:
+    id: destinations-back
+- tapOn:
+    id: home-start-emergency
+- scrollUntilVisible:
+    element:
+      text: '.*Riverside Park.*'
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-end
+
+# Delete.
+- tapOn:
+    id: home-places
+- tapOn:
+    id: destinations-item-0-edit
+- scrollUntilVisible:
+    element:
+      id: destinations-form-delete
+- tapOn:
+    id: destinations-form-delete
+- tapOn: Delete
+- assertVisible:
+    id: destinations-empty-add

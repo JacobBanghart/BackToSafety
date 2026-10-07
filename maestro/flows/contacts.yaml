@@ -1,0 +1,67 @@
+# Features: contacts.list, contacts.add-edit, contacts.delete, home.quick-actions
+appId: com.backtosafety.app
+name: Add, validate, edit and delete an emergency contact
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+
+- tapOn:
+    id: home-contacts
+- assertVisible:
+    id: contacts-empty-add
+- tapOn:
+    id: contacts-empty-add
+
+# Saving without a name is refused (a system alert on native; AppModal on web).
+- tapOn:
+    id: contacts-save
+- assertVisible: Name is required.
+- tapOn: OK
+
+- tapOn:
+    id: contacts-form-name
+- inputText: Ana Lopez
+- tapOn:
+    id: contacts-form-phone
+- inputText: '+44 20 7946 0958'
+# F-1: international numbers keep every digit.
+- assertVisible:
+    id: contacts-form-phone
+    text: '\+442079460958'
+- hideKeyboard
+- tapOn:
+    id: contacts-form-role-neighbor
+- tapOn:
+    id: contacts-save
+
+- assertVisible:
+    id: contacts-item-0-name
+    text: Ana Lopez
+
+# Edit: rename, and the list reflects it.
+- tapOn:
+    id: contacts-item-0-edit
+- tapOn:
+    id: contacts-form-name
+- eraseText
+- inputText: Ana Lopez-Reyes
+- hideKeyboard
+- tapOn:
+    id: contacts-save
+- assertVisible:
+    id: contacts-item-0-name
+    text: Ana Lopez-Reyes
+
+# Delete with confirmation.
+- tapOn:
+    id: contacts-item-0-edit
+- scrollUntilVisible:
+    element:
+      id: contacts-form-delete
+- tapOn:
+    id: contacts-form-delete
+- tapOn: Delete
+- assertVisible:
+    id: contacts-empty-add

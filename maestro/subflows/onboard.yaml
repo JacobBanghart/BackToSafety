@@ -1,0 +1,57 @@
+# Walks onboarding through the real UI from a fresh install and lands on home.
+# Env: NAME (required), NICKNAME, CONTACT_NAME, CONTACT_PHONE (contact step is
+# skipped unless both are set). Appearance is always skipped here; the
+# onboarding flow covers it.
+appId: com.backtosafety.app
+---
+- launchApp:
+    clearState: true
+# F-27: a tap right after first launch is occasionally dropped; retry until the name screen shows.
+- retry:
+    maxRetries: 2
+    commands:
+      - tapOn:
+          id: onboarding-get-started
+          optional: true
+      - assertVisible:
+          id: onboarding-name-input
+- tapOn:
+    id: onboarding-name-input
+- inputText: ${NAME}
+- runFlow:
+    when:
+      true: ${NICKNAME != undefined && NICKNAME != ''}
+    commands:
+      - tapOn:
+          id: onboarding-name-nickname
+      - inputText: ${NICKNAME}
+- hideKeyboard
+- tapOn:
+    id: onboarding-name-continue
+- tapOn:
+    id: onboarding-photo-skip
+- tapOn:
+    id: onboarding-appearance-skip
+- runFlow:
+    when:
+      true: ${CONTACT_NAME != undefined && CONTACT_NAME != '' && CONTACT_PHONE != undefined}
+    commands:
+      - tapOn:
+          id: onboarding-contact-name
+      - inputText: ${CONTACT_NAME}
+      - tapOn:
+          id: onboarding-contact-phone
+      - inputText: ${CONTACT_PHONE}
+      - hideKeyboard
+      - tapOn:
+          id: onboarding-contact-continue
+- runFlow:
+    when:
+      true: ${CONTACT_NAME == undefined || CONTACT_NAME == ''}
+    commands:
+      - tapOn:
+          id: onboarding-contact-skip
+- tapOn:
+    id: onboarding-complete-home
+- assertVisible:
+    id: home-start-emergency
