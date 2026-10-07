@@ -19,6 +19,7 @@
     "yarn-error.log*",
     "coverage",
     ".DS_Store",
-    "spec/**/*.json"
+    "spec/**/*.json",
+    "kmp/**/schemas/**"
   ]
 }
