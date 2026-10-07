@@ -1,0 +1,29 @@
+# Features: destinations.reorder
+# Two places for reorder.sh to drag; destinations-verify.yaml checks the result.
+appId: com.backtosafety.app
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- tapOn:
+    id: home-places
+- tapOn:
+    id: destinations-empty-add
+- tapOn:
+    id: destinations-form-name
+- inputText: Anna Park
+- hideKeyboard
+- tapOn:
+    id: destinations-save
+- tapOn:
+    id: destinations-add
+- tapOn:
+    id: destinations-form-name
+- inputText: Ben Church
+- hideKeyboard
+- tapOn:
+    id: destinations-save
+- assertVisible:
+    id: destinations-item-1-name
+    text: Ben Church

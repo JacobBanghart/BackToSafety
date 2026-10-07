@@ -18,11 +18,12 @@ being tested.
 ```sh
 APK="$(maestro/build-android.sh)"               # release build with test seams
 maestro/start-emulator.sh 4 "$APK"              # 4 fresh headless emulators, app installed
-maestro test maestro/flows/                     # L3 behaviour flows (any one device)
+maestro test --shard-split 4 maestro/flows/    # L3 behaviour flows, spread over the emulators
 maestro/capture-parallel.sh /tmp/captures       # L4: every state × light/dark/large-text, sharded
 python3 maestro/compare_screens.py /tmp/captures/light spec/goldens/android/light
 maestro/stop-emulators.sh                       # always: emulator host memory grows per screenshot
 maestro/upgrade/upgrade.sh install-over OLD.apk NEW.apk   # L5 (one emulator)
+maestro/gestures/reorder.sh                     # drag-to-reorder (adb draganddrop; one emulator)
 python3 maestro/sync_features.py                # after adding a flow
 ```
 

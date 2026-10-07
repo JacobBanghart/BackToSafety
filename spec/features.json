@@ -1,6 +1,6 @@
 {
   "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows (features without a flow and without a flowExempt reason): it may only go down.",
-  "maxWithoutFlows": 4,
+  "maxWithoutFlows": 0,
   "features": [
     {
       "id": "onboarding.routing",
@@ -424,7 +424,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/profile-photo.yaml"
+        ]
       }
     },
     {
@@ -517,7 +519,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/flows/contacts-import.yaml"
+        ]
       }
     },
     {
@@ -526,7 +530,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/gestures/contacts-setup.yaml"
+        ]
       }
     },
     {
@@ -579,7 +585,9 @@
       "coverage": {
         "vectors": [],
         "web": [],
-        "flows": []
+        "flows": [
+          "maestro/gestures/destinations-setup.yaml"
+        ]
       }
     },
     {

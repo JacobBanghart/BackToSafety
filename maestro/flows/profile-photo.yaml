@@ -1,0 +1,35 @@
+# Features: profile.photo
+appId: com.backtosafety.app
+name: A photo chosen from the library is saved, shown, and offered to 911
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- addMedia:
+    - media/test-photo.jpg
+- tapOn:
+    id: home-profile
+- tapOn:
+    id: profile-photo-library
+# Android's system photo picker, then the image picker's crop screen.
+- tapOn: 'Photo taken on.*'
+- tapOn:
+    id: com.backtosafety.app:id/crop_image_menu_crop
+- assertVisible:
+    id: profile-photo
+- tapOn:
+    id: profile-save
+
+# Kept across a cold restart, on home and in the 911 script (F-12).
+- stopApp
+- launchApp
+- assertVisible:
+    id: home-photo
+- tapOn:
+    id: home-readout
+- tapOn:
+    id: readout-script-toggle
+- assertVisible:
+    id: readout-script-text
+    text: '.*Photo available\..*'

@@ -1,0 +1,30 @@
+# Features: contacts.import
+# Needs the address-book contact from seed-device.sh (Rosa Diaz, +1 555 987 6543).
+appId: com.backtosafety.app
+name: Importing a contact from the address book fills the form
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- tapOn:
+    id: home-contacts
+- tapOn:
+    id: contacts-empty-import
+- runFlow:
+    when:
+      visible: Allow
+    commands:
+      - tapOn: Allow
+- tapOn: Rosa Diaz
+- assertVisible:
+    id: contacts-form-name
+    text: Rosa Diaz
+- assertVisible:
+    id: contacts-form-phone
+    text: '\+1 \(555\) 987-6543'
+- tapOn:
+    id: contacts-save
+- assertVisible:
+    id: contacts-item-0-name
+    text: Rosa Diaz

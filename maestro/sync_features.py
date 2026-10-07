@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Sets each feature's `flows` coverage in spec/features.json from the `# Features:`
-header of every maestro/flows/, maestro/states/ (screen captures) and maestro/upgrade/, and
+header of every maestro/flows/, maestro/states/ (screen captures), maestro/upgrade/ and maestro/gestures/, and
 lowers maxWithoutFlows to match. Features with a `flowExempt` reason don't count.
 Run after adding or changing a flow; spec/features.test.ts checks the result."""
 
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 FEATURE_ID = re.compile(r"\b([a-z]+\.[a-z0-9-]+)\b")
 
 coverage: dict[str, set[str]] = {}
-for flow in sorted(glob.glob(str(ROOT / "maestro/flows/*.yaml")) + glob.glob(str(ROOT / "maestro/states/*.yaml")) + glob.glob(str(ROOT / "maestro/upgrade/*.yaml"))):
+for flow in sorted(glob.glob(str(ROOT / "maestro/flows/*.yaml")) + glob.glob(str(ROOT / "maestro/states/*.yaml")) + glob.glob(str(ROOT / "maestro/upgrade/*.yaml")) + glob.glob(str(ROOT / "maestro/gestures/*.yaml"))):
     header = []
     for line in open(flow):
         if not line.startswith("#"):

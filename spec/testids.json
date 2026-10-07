@@ -146,6 +146,7 @@
     ],
     "home": [
       "home-contacts",
+      "home-photo",
       "home-places",
       "home-profile",
       "home-readout",
@@ -192,6 +193,7 @@
       "profile-hand-{hand}",
       "profile-mobility-other-text",
       "profile-mobility-{mobility}",
+      "profile-photo",
       "profile-photo-library",
       "profile-photo-take",
       "profile-save",

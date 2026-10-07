@@ -1,0 +1,4 @@
+# Saves the contact the Contacts app's insert screen was opened with (seed-device.sh).
+appId: com.google.android.contacts
+---
+- tapOn: Save

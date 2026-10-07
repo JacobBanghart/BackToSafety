@@ -1,0 +1,13 @@
+# After reorder.sh dragged the second place to the top: the new order is saved.
+appId: com.backtosafety.app
+---
+- stopApp
+- launchApp
+- tapOn:
+    id: home-places
+- assertVisible:
+    id: destinations-item-0-name
+    text: Ben Church
+- assertVisible:
+    id: destinations-item-1-name
+    text: Anna Park

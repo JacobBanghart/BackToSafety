@@ -1,0 +1,13 @@
+# After reorder.sh dragged the second contact to the top: the new order is saved.
+appId: com.backtosafety.app
+---
+- stopApp
+- launchApp
+- tapOn:
+    id: home-contacts
+- assertVisible:
+    id: contacts-item-0-name
+    text: Ben Second
+- assertVisible:
+    id: contacts-item-1-name
+    text: Anna First

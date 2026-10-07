@@ -120,7 +120,12 @@ export default function HomeScreen() {
             style={styles.avatarWrapper}
           >
             {profile?.photoUri ? (
-              <Image source={{ uri: profile.photoUri }} style={styles.avatar} contentFit="cover" />
+              <Image
+                testID="home-photo"
+                source={{ uri: profile.photoUri }}
+                style={styles.avatar}
+                contentFit="cover"
+              />
             ) : (
               <View
                 style={[

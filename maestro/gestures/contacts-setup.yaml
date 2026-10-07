@@ -1,0 +1,26 @@
+# Features: contacts.reorder
+# Two contacts for reorder.sh to drag; contacts-verify.yaml checks the result.
+appId: com.backtosafety.app
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+      CONTACT_NAME: Anna First
+      CONTACT_PHONE: '5551110000'
+- tapOn:
+    id: home-contacts
+- tapOn:
+    id: contacts-add
+- tapOn:
+    id: contacts-form-name
+- inputText: Ben Second
+- tapOn:
+    id: contacts-form-phone
+- inputText: '5552220000'
+- hideKeyboard
+- tapOn:
+    id: contacts-save
+- assertVisible:
+    id: contacts-item-1-name
+    text: Ben Second

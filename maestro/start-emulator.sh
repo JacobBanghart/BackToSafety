@@ -38,6 +38,7 @@ for i in $(seq 0 $((COUNT - 1))); do
   timeout 600 "$ADB" -s "$serial" wait-for-device shell \
     'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 2; done'
   ANDROID_SERIAL="$serial" "$HERE/prepare-android.sh" >/dev/null
+  ANDROID_SERIAL="$serial" "$HERE/seed-device.sh" >/dev/null
   [ -n "$APK" ] && "$ADB" -s "$serial" install -r "$APK" >/dev/null
   echo "$serial ready"
 done

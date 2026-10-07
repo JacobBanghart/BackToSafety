@@ -518,7 +518,12 @@ export default function ProfileScreen() {
         <View style={styles.photoSection}>
           <View style={styles.photoContainer}>
             {form.photoUri ? (
-              <Image source={{ uri: form.photoUri }} style={styles.photo} contentFit="cover" />
+              <Image
+                testID="profile-photo"
+                source={{ uri: form.photoUri }}
+                style={styles.photo}
+                contentFit="cover"
+              />
             ) : (
               <View
                 style={[
