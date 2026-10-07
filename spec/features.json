@@ -1,0 +1,622 @@
+{
+  "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows: it may only go down.",
+  "maxWithoutFlows": 60,
+  "features": [
+    {
+      "id": "onboarding.routing",
+      "description": "First launch goes to onboarding; once onboarded, onboarding screens redirect home.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "onboarding.welcome",
+      "description": "Welcome screen with feature summary, theme picker, and (dev builds) language picker.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "onboarding.name",
+      "description": "Name (required) and nickname.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts",
+          "e2e/readout.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "onboarding.photo",
+      "description": "Take or choose a photo, copied into the documents directory; skippable.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "onboarding.appearance",
+      "description": "Height, weight, hair, eyes, identifying marks with as-you-type formatting; skippable.",
+      "coverage": {
+        "vectors": [
+          "formatters.json#formatHeightInput",
+          "formatters.json#formatWeightInput"
+        ],
+        "web": [
+          "e2e/readout.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "onboarding.contact",
+      "description": "First emergency contact (name, phone, relationship); skippable.",
+      "coverage": {
+        "vectors": [
+          "phone.json#formatPhoneInput"
+        ],
+        "web": [
+          "e2e/readout.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "onboarding.complete",
+      "description": "Completion screen listing what to add later; goes home.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "home.caring-for",
+      "description": "Header shows the person's photo and name; taps through to the profile.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "home.start-emergency",
+      "description": "Big button starts a new emergency search.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts",
+          "e2e/emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "home.active-emergency",
+      "description": "While an emergency is active the button shows time left and steps done; after 15:00 it switches to the call-911 state.",
+      "coverage": {
+        "vectors": [
+          "emergency.json#secondsRemaining",
+          "emergency.json#formatCountdownShort"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "home.quick-actions",
+      "description": "Contacts (with saved count) and Places shortcuts.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "home.emergency-info",
+      "description": "Emergency info card: 911 script link and health notes summary.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "home.setup-card",
+      "description": "Prompt to complete the profile when it is mostly empty.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.start",
+      "description": "Starting persists active_emergency and records the last-seen time.",
+      "coverage": {
+        "vectors": [],
+        "web": [
+          "e2e/onboarding-emergency.spec.ts",
+          "e2e/emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.resume",
+      "description": "Reopening an active emergency resumes the countdown, wearing text and checked steps.",
+      "coverage": {
+        "vectors": [
+          "emergency.json#secondsRemaining"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.countdown",
+      "description": "15-minute countdown with a warning haptic at 5:00 and an expired state at 0.",
+      "coverage": {
+        "vectors": [
+          "emergency.json#secondsRemaining",
+          "emergency.json#formatCountdown"
+        ],
+        "web": [
+          "e2e/emergency.spec.ts"
+        ],
+        "flows": []
+      },
+      "notes": "F-16: drifts while backgrounded."
+    },
+    {
+      "id": "emergency.checklist",
+      "description": "11-step protocol; tapping toggles a step; progress count; urgent steps flagged PRIORITY.",
+      "coverage": {
+        "vectors": [
+          "emergency.json#buildInitialSteps"
+        ],
+        "web": [
+          "e2e/emergency.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.wearing",
+      "description": "\"What are they wearing?\" input, persisted with the emergency; dismissible.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.direction-hint",
+      "description": "Dominant-hand hint (may veer left/right).",
+      "coverage": {
+        "vectors": [
+          "emergency.json#directionHint"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.saved-places",
+      "description": "Familiar-places step lists saved destinations.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.call-911",
+      "description": "Call button dials the emergency number and marks the step.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      },
+      "notes": "F-15, F-17."
+    },
+    {
+      "id": "emergency.alert-contacts",
+      "description": "Texts every notify-on-emergency contact with the alert message (SMS composer, URL fallback).",
+      "coverage": {
+        "vectors": [
+          "emergency.json#buildAlertSms",
+          "phone.json#normalizeUniqueSmsRecipients",
+          "phone.json#normalizeSmsRecipient"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.found",
+      "description": "Found — Safe ends the emergency and shows the found guidance.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.leave",
+      "description": "Back asks to stay, leave (timer keeps running) or end the emergency.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "emergency.info-sheet",
+      "description": "Opens the readout from the emergency screen and returns.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.script",
+      "description": "Collapsible 911 call script with missing-details hint.",
+      "coverage": {
+        "vectors": [
+          "readout.json#buildScript",
+          "readout.json#missingScriptDetails",
+          "age.json#ageOn"
+        ],
+        "web": [
+          "e2e/readout.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.copy-script",
+      "description": "Copies the 911 script to the clipboard.",
+      "coverage": {
+        "vectors": [
+          "readout.json#buildScript"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.copy-all",
+      "description": "Copies the full details block to the clipboard.",
+      "coverage": {
+        "vectors": [
+          "readout.json#buildCopyBlock"
+        ],
+        "web": [
+          "e2e/readout.spec.ts"
+        ],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.sections",
+      "description": "Identity, appearance (with vehicle-check note), location, medical, communication and devices sections.",
+      "coverage": {
+        "vectors": [
+          "readout.json#needsVehicleCheck"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.open-maps",
+      "description": "Opens last-known coordinates in the maps app.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.contacts",
+      "description": "Emergency contacts list with call buttons.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.call-911",
+      "description": "Prominent Call 911 button.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "readout.no-profile",
+      "description": "Without a profile, offers to go to onboarding.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "profile.fields",
+      "description": "Edit every profile field across four collapsible sections, with field formatters.",
+      "coverage": {
+        "vectors": [
+          "formatters.json#formatHeightInput",
+          "formatters.json#formatWeightInput",
+          "formatters.json#formatMedicAlertIdInput",
+          "phone.json#formatPhoneInput"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "profile.photo",
+      "description": "Replace the photo from camera or library.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "profile.dob",
+      "description": "Date of birth by typing (MM/DD/YYYY) or a date picker.",
+      "coverage": {
+        "vectors": [
+          "formatters.json#formatDobInput",
+          "age.json#parseDob",
+          "age.json#formatDob"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "profile.dominant-hand",
+      "description": "Left / right / unknown selector.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "profile.mobility",
+      "description": "Multi-select mobility options with a free-text Other.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "profile.save",
+      "description": "Save persists and returns; unsaved changes prompt before leaving.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "contacts.list",
+      "description": "Ordered contact cards with role and relationship; empty state.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "contacts.add-edit",
+      "description": "Add or edit a contact with role, notify toggle and validation.",
+      "coverage": {
+        "vectors": [
+          "phone.json#formatPhoneInput",
+          "phone.json#formatPhoneNumber"
+        ],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "contacts.delete",
+      "description": "Delete with confirmation.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "contacts.import",
+      "description": "Import from the device address book.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "contacts.reorder",
+      "description": "Long-press drag to reorder.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "contacts.call",
+      "description": "Call a contact.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "destinations.list",
+      "description": "Ordered place cards with category and risk; empty state.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "destinations.add-edit",
+      "description": "Add or edit a place with category (incl. Other), risk, address, distance, reason, notes; validation.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "destinations.delete",
+      "description": "Delete with confirmation.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "destinations.reorder",
+      "description": "Long-press drag to reorder.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "destinations.detail",
+      "description": "Detail modal with open-in-maps and edit.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "settings.theme",
+      "description": "System / light / dark theme.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "settings.language",
+      "description": "Language picker (dev builds only until Spanish ships).",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "settings.delete-account",
+      "description": "Delete all on-device data after confirmation.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "settings.dev-mode",
+      "description": "Tapping the version enables developer options.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "settings.about",
+      "description": "App, version, platform, theme, DB schema version, copyable device ID.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "app.dark-mode",
+      "description": "Every screen in light and dark.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "app.i18n",
+      "description": "Every string in en and es.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      },
+      "notes": "Gated by i18n/locales.test.ts."
+    },
+    {
+      "id": "app.keyboard-avoidance",
+      "description": "Text inputs stay visible above the keyboard (CLAUDE.md pattern).",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    },
+    {
+      "id": "app.upgrade",
+      "description": "Installing the Kotlin app over the RN app keeps all data (L5).",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      },
+      "notes": "Contract: spec/storage.md, spec/db-schema.json."
+    },
+    {
+      "id": "app.analytics",
+      "description": "PostHog events and screen tracking.",
+      "coverage": {
+        "vectors": [],
+        "web": [],
+        "flows": []
+      }
+    }
+  ]
+}

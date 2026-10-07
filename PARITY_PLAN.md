@@ -154,15 +154,16 @@ reactor's Phase −1, and it lands first.
 
 ## Order of work
 
-1. **Phase −1:** a CI workflow (lint, typecheck, Vitest, Playwright, secret scan) plus a pre-push hook.
-2. **Phase 0, seams:** add testIDs from `spec/testids.json` (no visual change), the debug clock
-   seam, and the determinism switches. Fix or bless the known findings (below).
-3. L1 + L2 (no emulator needed).
-4. L3 Maestro flows, Android first, then iOS on the Mac runner.
-5. L4 capture rig, noise floor, RN self-goldens.
-6. L5 fixtures and the install-over flow.
-7. **Freeze:** bless the RN references. The Kotlin work starts here, and every lane runs against
-   both apps from then on.
+| Step                         | Status (2026-10-06)                                                                                                                                                                                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase −1: CI on push + hooks | **Landed.** `.github/workflows/ci.yml` (lint, format, types, Vitest, `expo install --check`, web/android/ios bundles, Playwright); pre-commit gitleaks and pre-push lint/types/tests via mise.                                                       |
+| Phase 0: seams               | **testIDs landed** (117, `spec/testids.json`). Still open: the debug clock seam for the timer, and the determinism switches (both needed by L3/L4).                                                                                                  |
+| L1: spec as data             | **Landed:** `design-tokens.json`, i18n parity, `testids.json`, `features.json` (60 features, flow ratchet), `analytics-events.json`.                                                                                                                 |
+| L2: logic vectors            | **Landed** for phone, age, field formatters, readout text, and the emergency protocol (`spec/vectors/`, 140+ cases, en+es). The readout and emergency logic was extracted from the screens under Playwright pins. Schema pinned in `db-schema.json`. |
+| L3: Maestro flows            | Blocked on `/dev/kvm` for the devbox (Android). iOS on the Mac runner.                                                                                                                                                                               |
+| L4: screenshot matrix        | After L3 (same rig).                                                                                                                                                                                                                                 |
+| L5: upgrade path             | **Contract written** (`spec/storage.md`). Fixtures and the install-over flow come after L3.                                                                                                                                                          |
+| Freeze                       | After the findings below are fixed or explicitly kept.                                                                                                                                                                                               |
 
 ## Known findings (decide before freeze)
 
