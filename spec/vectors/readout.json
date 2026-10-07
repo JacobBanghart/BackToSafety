@@ -343,36 +343,54 @@
           }
         ],
         "finding": "F-6",
-        "expected": ["last seen time", "last known location", "important details"]
+        "expected": [
+          "last seen time",
+          "last known location",
+          "important details"
+        ]
       }
     ],
     "needsVehicleCheck": [
       {
-        "args": [null],
+        "args": [
+          null
+        ],
         "expected": false
       },
       {
-        "args": [""],
+        "args": [
+          ""
+        ],
         "expected": false
       },
       {
-        "args": ["Uses cane"],
+        "args": [
+          "Uses cane"
+        ],
         "expected": true
       },
       {
-        "args": ["Walks independently"],
+        "args": [
+          "Walks independently"
+        ],
         "expected": false
       },
       {
-        "args": ["Motorized wheelchair, Has vehicle"],
+        "args": [
+          "Motorized wheelchair, Has vehicle"
+        ],
         "expected": true
       },
       {
-        "args": ["Other: rides a BICYCLE"],
+        "args": [
+          "Other: rides a BICYCLE"
+        ],
         "expected": true
       },
       {
-        "args": ["E-bike"],
+        "args": [
+          "E-bike"
+        ],
         "expected": false
       }
     ]

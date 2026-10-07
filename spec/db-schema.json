@@ -1,0 +1,666 @@
+{
+  "schemaVersion": 1,
+  "tables": {
+    "contacts": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "phone",
+          "type": "TEXT",
+          "notNull": true,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "relationship",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "notify_on_emergency",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "1",
+          "primaryKey": 0
+        },
+        {
+          "name": "share_medical_info",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "0",
+          "primaryKey": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "sort_order",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "0",
+          "primaryKey": 0
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        },
+        {
+          "name": "updated_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        }
+      ],
+      "checks": [
+        "role IN ('primary_caregiver', 'caregiver', 'neighbor', 'family', 'friend', 'other')"
+      ]
+    },
+    "destinations": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "address",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "latitude",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "longitude",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "reason",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "distance_from_home",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "risk_level",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "sort_order",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "0",
+          "primaryKey": 0
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        },
+        {
+          "name": "updated_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        }
+      ],
+      "checks": [
+        "category IN ('water', 'former_workplace', 'church', 'store', 'restaurant', 'friend_family', 'walking_route', 'other')",
+        "risk_level IN ('high', 'medium', 'low')"
+      ]
+    },
+    "incidents": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "started_at",
+          "type": "TEXT",
+          "notNull": true,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "ended_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "outcome",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "last_seen_lat",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "last_seen_lon",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "last_seen_accuracy",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "found_lat",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "found_lon",
+          "type": "REAL",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "found_location_name",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "weather",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "time_of_day",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "trigger_identified",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "wearing",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "areas_checked",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "people_contacted",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        }
+      ],
+      "checks": [
+        "outcome IN ('found', 'found_by_other', '911_called', 'returned_home', 'ongoing')"
+      ]
+    },
+    "onboarding": {
+      "columns": [
+        {
+          "name": "step",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "completed",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "0",
+          "primaryKey": 0
+        },
+        {
+          "name": "completed_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "skipped",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "0",
+          "primaryKey": 0
+        }
+      ],
+      "checks": []
+    },
+    "profile": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "name",
+          "type": "TEXT",
+          "notNull": true,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "nickname",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "date_of_birth",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "photo_uri",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "height",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "weight",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "hair_color",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "eye_color",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "identifying_marks",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "medical_conditions",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "medications",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "allergies",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "cognitive_status",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "dominant_hand",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "mobility_level",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "communication_preference",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "escalation_signs",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "deescalation_techniques",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "approach_guidance",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "likes",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "dislikes_triggers",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "safe_word",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "locative_device_info",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "id_bracelets",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "medic_alert_id",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "medic_alert_hotline",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "created_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        },
+        {
+          "name": "updated_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        }
+      ],
+      "checks": [
+        "id = 1",
+        "dominant_hand IN ('left', 'right', 'unknown')"
+      ]
+    },
+    "safety_checks": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "category",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "item_key",
+          "type": "TEXT",
+          "notNull": true,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "completed",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": "0",
+          "primaryKey": 0
+        },
+        {
+          "name": "completed_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "notes",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        }
+      ],
+      "checks": [
+        "category IN ('at_home', 'away_from_home', 'foundation')"
+      ]
+    },
+    "schema_version": {
+      "columns": [
+        {
+          "name": "version",
+          "type": "INTEGER",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "migrated_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        }
+      ],
+      "checks": []
+    },
+    "settings": {
+      "columns": [
+        {
+          "name": "key",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 1
+        },
+        {
+          "name": "value",
+          "type": "TEXT",
+          "notNull": false,
+          "default": null,
+          "primaryKey": 0
+        },
+        {
+          "name": "updated_at",
+          "type": "TEXT",
+          "notNull": false,
+          "default": "CURRENT_TIMESTAMP",
+          "primaryKey": 0
+        }
+      ],
+      "checks": []
+    }
+  }
+}

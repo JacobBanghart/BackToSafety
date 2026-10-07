@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
+import schema from './db-schema.json';
 import contract from './testids.json';
 
 // Keeps spec/testids.json and the RN source in step, in both directions. The Kotlin
@@ -63,5 +64,17 @@ describe('testID contract', () => {
     for (const suffix of ['confirm', 'cancel']) expect(modal).toContain(`\${testID}-${suffix}`);
     for (const id of [...contract.screenHeaders, ...contract.modals])
       expect(declared).toContain(id);
+  });
+
+  it('placeholders match the DB CHECK constraints they mirror', () => {
+    const allowed = (table: keyof typeof schema.tables, column: string) => {
+      const check = schema.tables[table].checks.find((c) => c.startsWith(`${column} IN`));
+      return [...(check ?? '').matchAll(/'([^']+)'/g)].map((m) => m[1]).sort();
+    };
+    const p = contract.placeholders;
+    expect([...p.role].sort()).toEqual(allowed('contacts', 'role'));
+    expect([...p.category].sort()).toEqual(allowed('destinations', 'category'));
+    expect([...p.risk].sort()).toEqual(allowed('destinations', 'risk_level'));
+    expect([...p.hand].sort()).toEqual(allowed('profile', 'dominant_hand'));
   });
 });

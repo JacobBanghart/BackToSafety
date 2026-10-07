@@ -132,6 +132,8 @@ and must read its data. Native data is all SQLite via `expo-sqlite`: Android sto
 incidents, settings (`active_emergency`, `device_id`, theme, language), and onboarding.
 Photos live in the document directory.
 
+- Contract: `spec/storage.md` (paths, settings keys, row semantics) and `spec/db-schema.json`
+  (pinned from the real migrations by `spec/db-schema.test.ts`).
 - Fixtures: DB files plus photos captured from the RN app at each schema version.
 - Flow: install the RN build → onboard and fill every field → start an emergency → install the
   Kotlin build over it → assert every value is visible, the emergency resumes with the right time

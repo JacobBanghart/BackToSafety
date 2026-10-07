@@ -4,7 +4,10 @@
   "functions": {
     "buildInitialSteps": [
       {
-        "args": ["en", "911"],
+        "args": [
+          "en",
+          "911"
+        ],
         "expected": [
           {
             "id": "home_search",
@@ -89,7 +92,10 @@
         ]
       },
       {
-        "args": ["es", "911"],
+        "args": [
+          "es",
+          "911"
+        ],
         "expected": [
           {
             "id": "home_search",
@@ -174,7 +180,10 @@
         ]
       },
       {
-        "args": ["en", "112"],
+        "args": [
+          "en",
+          "112"
+        ],
         "expected": [
           {
             "id": "home_search",
@@ -261,100 +270,153 @@
     ],
     "secondsRemaining": [
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:00.000Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:00:00.000Z"
+        ],
         "expected": 900
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:00.999Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:00:00.999Z"
+        ],
         "expected": 900
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:01.000Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:00:01.000Z"
+        ],
         "expected": 899
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:00:59.500Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:00:59.500Z"
+        ],
         "expected": 841
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:10:00.000Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:10:00.000Z"
+        ],
         "expected": 300
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:14:59.999Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:14:59.999Z"
+        ],
         "expected": 1
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:15:00.000Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T15:15:00.000Z"
+        ],
         "expected": 0
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T16:00:00.000Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T16:00:00.000Z"
+        ],
         "expected": 0
       },
       {
-        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T14:59:55.000Z"],
+        "args": [
+          "2026-10-06T15:00:00.000Z",
+          "2026-10-06T14:59:55.000Z"
+        ],
         "finding": "F-20",
         "expected": 905
       }
     ],
     "formatCountdown": [
       {
-        "args": [900],
+        "args": [
+          900
+        ],
         "expected": "15:00"
       },
       {
-        "args": [899],
+        "args": [
+          899
+        ],
         "expected": "14:59"
       },
       {
-        "args": [600],
+        "args": [
+          600
+        ],
         "expected": "10:00"
       },
       {
-        "args": [60],
+        "args": [
+          60
+        ],
         "expected": "01:00"
       },
       {
-        "args": [59],
+        "args": [
+          59
+        ],
         "expected": "00:59"
       },
       {
-        "args": [1],
+        "args": [
+          1
+        ],
         "expected": "00:01"
       },
       {
-        "args": [0],
+        "args": [
+          0
+        ],
         "expected": "00:00"
       },
       {
-        "args": [3600],
+        "args": [
+          3600
+        ],
         "expected": "60:00"
       }
     ],
     "formatCountdownShort": [
       {
-        "args": [900],
+        "args": [
+          900
+        ],
         "finding": "F-19",
         "expected": "15:00"
       },
       {
-        "args": [899],
+        "args": [
+          899
+        ],
         "finding": "F-19",
         "expected": "14:59"
       },
       {
-        "args": [545],
+        "args": [
+          545
+        ],
         "finding": "F-19",
         "expected": "9:05"
       },
       {
-        "args": [59],
+        "args": [
+          59
+        ],
         "finding": "F-19",
         "expected": "0:59"
       },
       {
-        "args": [0],
+        "args": [
+          0
+        ],
         "finding": "F-19",
         "expected": "0:00"
       }
@@ -407,23 +469,38 @@
     ],
     "directionHint": [
       {
-        "args": ["en", "left"],
+        "args": [
+          "en",
+          "left"
+        ],
         "expected": "← May veer left (left-handed)"
       },
       {
-        "args": ["en", "right"],
+        "args": [
+          "en",
+          "right"
+        ],
         "expected": "→ May veer right (right-handed)"
       },
       {
-        "args": ["en", "unknown"],
+        "args": [
+          "en",
+          "unknown"
+        ],
         "expected": null
       },
       {
-        "args": ["en", null],
+        "args": [
+          "en",
+          null
+        ],
         "expected": null
       },
       {
-        "args": ["es", "left"],
+        "args": [
+          "es",
+          "left"
+        ],
         "expected": "← Puede desviarse a la izquierda (zurdo)"
       }
     ]

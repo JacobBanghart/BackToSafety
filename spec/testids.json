@@ -1,9 +1,23 @@
 {
   "$comment": "Selector contract (PARITY_PLAN rule 3). Every ID here must exist in the RN app (checked by spec/testids.test.ts) and in both Kotlin UIs: a Compose testTag (with testTagsAsResourceId) on Android, a SwiftUI accessibilityIdentifier on iOS. {placeholders} expand to every listed value; {index} is the 0-based position in the list.",
   "placeholders": {
-    "theme": ["system", "light", "dark"],
-    "lang": ["en", "es"],
-    "role": ["primary_caregiver", "caregiver", "family", "neighbor", "friend", "other"],
+    "theme": [
+      "system",
+      "light",
+      "dark"
+    ],
+    "lang": [
+      "en",
+      "es"
+    ],
+    "role": [
+      "primary_caregiver",
+      "caregiver",
+      "family",
+      "neighbor",
+      "friend",
+      "other"
+    ],
     "category": [
       "water",
       "former_workplace",
@@ -14,7 +28,11 @@
       "walking_route",
       "other"
     ],
-    "risk": ["critical", "high", "medium", "low"],
+    "risk": [
+      "high",
+      "medium",
+      "low"
+    ],
     "stepId": [
       "home_search",
       "outside_immediate",
@@ -52,8 +70,17 @@
       "medicAlertId",
       "medicAlertHotline"
     ],
-    "section": ["personal", "medical", "communication", "devices"],
-    "hand": ["left", "right", "unknown"],
+    "section": [
+      "personal",
+      "medical",
+      "communication",
+      "devices"
+    ],
+    "hand": [
+      "left",
+      "right",
+      "unknown"
+    ],
     "mobility": [
       "walks-independently",
       "uses-cane",
@@ -68,11 +95,27 @@
   },
   "derived": {
     "$comment": "An ID declared on a shared component also yields these. The suffixes are part of the contract.",
-    "screenHeader": ["{id}-back", "{id}-title"],
-    "modal": ["{id}-confirm", "{id}-cancel"]
+    "screenHeader": [
+      "{id}-back",
+      "{id}-title"
+    ],
+    "modal": [
+      "{id}-confirm",
+      "{id}-cancel"
+    ]
   },
-  "screenHeaders": ["contacts", "destinations", "emergency", "profile", "readout", "settings"],
-  "modals": ["contacts-modal", "destinations-modal"],
+  "screenHeaders": [
+    "contacts",
+    "destinations",
+    "emergency",
+    "profile",
+    "readout",
+    "settings"
+  ],
+  "modals": [
+    "contacts-modal",
+    "destinations-modal"
+  ],
   "screens": {
     "onboarding": [
       "onboarding-appearance-continue",
