@@ -1,0 +1,44 @@
+{
+  "source": "utils/photoPath.ts",
+  "description": "File name of a stored photo URI. Readers resolve photos by this name inside the current documents directory, since iOS moves the app container on updates (spec/storage.md).",
+  "functions": {
+    "photoFileName": [
+      {
+        "args": [
+          "file:///var/mobile/Containers/Data/Application/0E5A1C3D-AAAA-BBBB-CCCC-123456789ABC/Documents/profile_photo_1759790000000.jpg"
+        ],
+        "expected": "profile_photo_1759790000000.jpg"
+      },
+      {
+        "args": [
+          "file:///data/user/0/com.backtosafety.app/files/profile_photo_1759790000000.jpg"
+        ],
+        "expected": "profile_photo_1759790000000.jpg"
+      },
+      {
+        "args": [
+          "file:///Documents/profile%20photo.jpg"
+        ],
+        "expected": "profile photo.jpg"
+      },
+      {
+        "args": [
+          "file:///Documents/profile_photo_1.jpg?cache=1"
+        ],
+        "expected": "profile_photo_1.jpg"
+      },
+      {
+        "args": [
+          "file:///Documents/"
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          ""
+        ],
+        "expected": null
+      }
+    ]
+  }
+}

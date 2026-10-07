@@ -32,8 +32,9 @@ constraints (see `db-schema.json`), and the UI options must stay inside them
     custom "Other" value is stored as its free text. Labels stay English in storage;
     `describeMobility` (`spec/vectors/mobility.json`) translates them for display.
   - `photo_uri`: an **absolute** `file://` URI to `<Documents>/profile_photo_<epochMs>.jpg`.
-    On iOS the container path changes across app updates (F-21), so readers should resolve
-    by **basename** inside the documents directory, not by the stored path.
+    On iOS the container path changes across app updates, so readers resolve it
+    by file name inside the current documents directory (`photoFileName`, `spec/vectors/photo.json`),
+    falling back to the stored path. The RN app does this on read (F-21).
 - **`onboarding`**: steps `welcome`, `profile_name`, `profile_photo`, `profile_appearance`,
   `emergency_contact`, `complete`. The user counts as onboarded when no row has
   `completed = 0 AND skipped = 0`.

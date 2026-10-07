@@ -9,6 +9,7 @@ import * as emergency from '@/utils/emergency';
 import * as formatters from '@/utils/formatters';
 import { describeMobility } from '@/utils/mobility';
 import * as phone from '@/utils/phone';
+import { photoFileName } from '@/utils/photoPath';
 import * as readout from '@/utils/readout';
 
 // Runs every spec/vectors/*.json file against the TypeScript implementation. The
@@ -91,6 +92,7 @@ const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
     emergency.directionHint(translator(lang, 'emergency'), hand ?? undefined),
   describeMobility: (lang: string, stored: string) =>
     describeMobility(stored, translator(lang, 'readout')),
+  photoFileName,
   needsVehicleCheck: readout.needsVehicleCheck,
   vehicleCheckKind: readout.vehicleCheckKind,
   buildScript: readoutAdapter(readout.buildScript),

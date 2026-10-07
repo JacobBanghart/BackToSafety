@@ -3,6 +3,8 @@
  * Handles the person with dementia's profile data
  */
 
+import { resolvePhotoUri } from '@/utils/photo';
+
 import { getDatabase } from './storage.native';
 
 export interface Profile {
@@ -200,7 +202,7 @@ function mapRowToProfile(row: any): Profile {
     name: row.name,
     nickname: row.nickname,
     dateOfBirth: row.date_of_birth,
-    photoUri: row.photo_uri,
+    photoUri: resolvePhotoUri(row.photo_uri ?? undefined),
     height: row.height,
     weight: row.weight,
     hairColor: row.hair_color,
