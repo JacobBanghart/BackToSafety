@@ -34,11 +34,14 @@ appId: com.backtosafety.app
 - tapOn:
     id: emergency-timer-label
 - openLink: backtosafety://debug/clock?advance=300
-# Back to the top for the capture.
-- scrollUntilVisible:
-    element:
-      id: emergency-timer
-    direction: UP
+# Leave and resume: the emergency screen reopens scrolled to the top, which scrolling
+# back up doesn't do reliably.
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-leave
+- tapOn:
+    id: home-start-emergency
 - assertVisible:
     id: emergency-timer
     text: '10:00'

@@ -11,6 +11,9 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 OUT="${1:-$ROOT/captures/android}"
 shift || true
 ADB="${ANDROID_HOME:-$HOME/Android/Sdk}/platform-tools/adb"
+# ANDROID_SERIAL picks the device (adb honors it); Maestro gets it explicitly.
+MAESTRO=(maestro)
+[ -n "${ANDROID_SERIAL:-}" ] && MAESTRO+=(--device "$ANDROID_SERIAL")
 DPI="$("$ADB" shell wm density | grep -oE '[0-9]+' | tail -1)"
 
 states=("$@")
@@ -33,7 +36,7 @@ for mode in light dark large-text; do
   mkdir -p "$OUT/$mode"
   for state in "${states[@]}"; do
     echo "== $mode / $state"
-    maestro test --no-ansi "$ROOT/states/$state.yaml" >"$OUT/$mode/$state.log" 2>&1 || {
+    "${MAESTRO[@]}" test --no-ansi "$ROOT/states/$state.yaml" >"$OUT/$mode/$state.log" 2>&1 || {
       echo "   flow failed (see $OUT/$mode/$state.log)"
       continue
     }

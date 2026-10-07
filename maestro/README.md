@@ -16,14 +16,20 @@ being tested.
 ## Running
 
 ```sh
-maestro/start-emulator.sh                       # boot headless + prepare-android.sh
-adb install -r "$(maestro/build-android.sh)"    # release build with test seams
-maestro test maestro/flows/                     # L3 behaviour flows
-maestro/capture.sh /tmp/captures                # L4: every state × light/dark/large-text
+APK="$(maestro/build-android.sh)"               # release build with test seams
+maestro/start-emulator.sh 4 "$APK"              # 4 fresh headless emulators, app installed
+maestro test maestro/flows/                     # L3 behaviour flows (any one device)
+maestro/capture-parallel.sh /tmp/captures       # L4: every state × light/dark/large-text, sharded
 python3 maestro/compare_screens.py /tmp/captures/light spec/goldens/android/light
-maestro/upgrade/upgrade.sh install-over OLD.apk NEW.apk   # L5
+maestro/stop-emulators.sh                       # always: emulator host memory grows per screenshot
+maestro/upgrade/upgrade.sh install-over OLD.apk NEW.apk   # L5 (one emulator)
 python3 maestro/sync_features.py                # after adding a flow
 ```
+
+A full capture is 17 states × 3 modes. On 4 emulators that's about 12 minutes; serially it's
+about 45. Emulators use `-gpu guest` (software rendering inside Android). Two full runs were
+byte-identical at zero tolerance, apart from the system bars, which the comparer ignores.
+`-gpu swiftshader_indirect` was just as stable but leaked about 15 GB of host memory per hour.
 
 ## Conventions
 

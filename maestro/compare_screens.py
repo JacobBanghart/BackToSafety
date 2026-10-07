@@ -11,8 +11,10 @@ For each <state>.png in CAPTURED there should be a golden of the same name in GO
   cross-implementation measure: a Compose or SwiftUI screen will never be byte-identical
   to the RN one, but its elements must sit in the same places.
 
-Ignored: the bottom --ignore-bottom-px (Android's gesture bar, system UI that tints
-with whatever is under it) and, per maestro/masks.json, testIDs whose content is random
+Ignored (per maestro/masks.json, also anything under a `below:<testID>` entry, such as
+the system keyboard) and always: system UI, which isn't the app's to match: the top --ignore-top-px (status bar;
+demo mode occasionally draws an icon twice) and the bottom --ignore-bottom-px (gesture
+bar, which tints with whatever is under it) and, per maestro/masks.json, testIDs whose content is random
 by design (the per-install device ID).
 
 A state with no golden is reported as a candidate (exit 0 unless --require-goldens);
@@ -78,6 +80,7 @@ def main() -> int:
     p.add_argument("--channel-tolerance", type=int, default=10)
     p.add_argument("--threshold-percent", type=float, default=0.02)
     p.add_argument("--layout-tolerance-dp", type=float, default=2.0)
+    p.add_argument("--ignore-top-px", type=int, default=136, help="Android status bar (52dp at 420dpi)")
     p.add_argument("--ignore-bottom-px", type=int, default=63, help="Android gesture bar (24dp at 420dpi)")
     p.add_argument("--dpi", type=int, default=420)
     p.add_argument("--masks", type=Path, default=Path(__file__).with_name("masks.json"))
@@ -101,7 +104,8 @@ def main() -> int:
             candidates.append(state)
             print(f"CANDIDATE {state} (no golden)")
             continue
-        masked = set(mask_ids.get(state, []))
+        masked = {m for m in mask_ids.get(state, []) if not m.startswith("below:")}
+        below = [m.split(":", 1)[1] for m in mask_ids.get(state, []) if m.startswith("below:")]
         problems = layout_diff(
             args.captured / f"{state}.layout.json",
             args.goldens / f"{state}.layout.json",
@@ -109,11 +113,13 @@ def main() -> int:
             masked,
         )
         width, height = Image.open(shot).size
-        boxes = [(0, height - args.ignore_bottom_px, width, height)]
+        boxes = [(0, 0, width, args.ignore_top_px), (0, height - args.ignore_bottom_px, width, height)]
         for layout in (load_layout(args.captured / f"{state}.layout.json"), load_layout(args.goldens / f"{state}.layout.json")):
             for tid in masked & set(layout):
                 l, t, r, b = layout[tid]
                 boxes.append((int(l * scale), int(t * scale), int(r * scale) + 1, int(b * scale) + 1))
+            for tid in set(below) & set(layout):
+                boxes.append((0, int(layout[tid][3] * scale) + 1, width, height))
         line = f"{state}:"
         if not args.skip_pixels:
             try:
