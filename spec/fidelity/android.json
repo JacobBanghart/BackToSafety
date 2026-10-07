@@ -1,5 +1,14 @@
 {
+  "dark/onboarding-contact": 4.32,
+  "dark/onboarding-name": 1.61,
+  "dark/onboarding-photo": 2.21,
   "dark/onboarding-welcome": 2.84,
+  "large-text/onboarding-contact": 6.3,
+  "large-text/onboarding-name": 2.73,
+  "large-text/onboarding-photo": 3.57,
   "large-text/onboarding-welcome": 4.51,
+  "light/onboarding-contact": 4.35,
+  "light/onboarding-name": 1.64,
+  "light/onboarding-photo": 2.22,
   "light/onboarding-welcome": 2.83
 }
