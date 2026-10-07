@@ -53,3 +53,14 @@ test('countdown follows the clock, not tick count (F-16)', async ({ page }) => {
   await expect(page.getByTestId('emergency-timer')).toHaveText('00:00');
   await expect(page.getByTestId('emergency-timer-label')).toHaveText('TIME TO CALL 911');
 });
+
+test('calling 911 twice keeps the step checked (F-17)', async ({ page }) => {
+  await onboard(page, { name: 'Margaret Smith' });
+  await page.getByTestId('home-start-emergency').click();
+  await expect(page.getByTestId('emergency-progress')).toHaveText('0/11 steps complete');
+
+  await page.getByTestId('emergency-call-911').click();
+  await expect(page.getByTestId('emergency-progress')).toHaveText('1/11 steps complete');
+  await page.getByTestId('emergency-call-911').click();
+  await expect(page.getByTestId('emergency-progress')).toHaveText('1/11 steps complete');
+});

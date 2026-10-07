@@ -129,7 +129,7 @@ export default function ReadoutScreen() {
 
   const call911 = () => {
     track('readout_911_called');
-    Linking.openURL('tel:911');
+    Linking.openURL(`tel:${t('emergencyNumber', { ns: 'common' })}`);
   };
 
   if (isLoading) {

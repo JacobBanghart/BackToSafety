@@ -262,13 +262,14 @@ export default function EmergencyScreen() {
       seconds_elapsed: SEARCH_WINDOW_SECONDS - secondsLeft,
       checked_count: checkedCount,
     });
-    toggleStep('call_911');
+    // Calling always marks the step done; a second call must not un-check it (F-17).
+    if (!steps.find((step) => step.id === 'call_911')?.checked) toggleStep('call_911');
     addIncident({
       at: new Date().toISOString(),
       outcome: '911_called',
       checked: steps.filter((s) => s.checked).map((s) => s.id),
     });
-    Linking.openURL('tel:911');
+    Linking.openURL(`tel:${emergencyNumber}`);
   };
 
   const onViewReadout = () => {

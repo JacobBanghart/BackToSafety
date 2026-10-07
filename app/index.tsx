@@ -157,7 +157,7 @@ export default function HomeScreen() {
             { backgroundColor: activeEmergency ? EMERGENCY_ACTIVE_BG : EMERGENCY_IDLE_BG },
           ]}
           onPress={() => {
-            track('emergency_started');
+            // emergency_started is tracked by the emergency screen, only for new emergencies (F-18).
             setPreviousRoute('/');
             router.push('/emergency' as Href);
           }}
