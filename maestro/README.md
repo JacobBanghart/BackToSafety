@@ -25,6 +25,7 @@ maestro/stop-emulators.sh                       # always: emulator host memory g
 maestro/upgrade/upgrade.sh install-over OLD.apk NEW.apk   # L5 (one emulator)
 maestro/gestures/reorder.sh                     # drag-to-reorder (adb draganddrop; one emulator)
 python3 maestro/sync_features.py                # after adding a flow
+python3 maestro/fidelity.py /tmp/kt-captures     # Kotlin app vs RN goldens (tier 2 ratchet)
 ```
 
 A full capture is 17 states × 3 modes. On 4 emulators that's about 12 minutes; serially it's

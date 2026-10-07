@@ -44,7 +44,7 @@ for mode in light dark large-text; do
     "$ADB" shell uiautomator dump /sdcard/ui.xml >/dev/null
     "$ADB" pull /sdcard/ui.xml "$OUT/$mode/$state.xml" >/dev/null
     python3 "$ROOT/extract_layout.py" "$OUT/$mode/$state.xml" "$DPI" >"$OUT/$mode/$state.layout.json"
-    rm "$OUT/$mode/$state.xml"
+    [ -n "${KEEP_XML:-}" ] || rm "$OUT/$mode/$state.xml"
   done
 done
 set_mode light

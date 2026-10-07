@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.graphics.BitmapFactory
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
@@ -75,7 +76,7 @@ fun WelcomeScreen(t: Translate, onGetStarted: () -> Unit, modifier: Modifier = M
                 Logo(Modifier.padding(bottom = space.xl.dp).size(180.dp))
                 Text(
                     t("welcome.title"),
-                    style = type.display.style().copy(fontSize = 36.sp, lineHeight = 44.sp),
+                    style = rnTextStyle(36f, 44f, fontWeight = 700, letterSpacing = type.display.letterSpacing),
                     color = colors.text,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.padding(bottom = space.lg.dp),
@@ -104,7 +105,7 @@ fun WelcomeScreen(t: Translate, onGetStarted: () -> Unit, modifier: Modifier = M
                         Box(
                             Modifier.size(44.dp).clip(CircleShape).background(colors.primaryLight),
                             contentAlignment = Alignment.Center,
-                        ) { Text(icon, fontSize = 22.sp) }
+                        ) { Text(icon, style = rnTextStyle(22f, 24f)) }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.dp)) {
                             Text(t("welcome.features.$key.title"), style = type.bodyBold.style(), color = colors.text)
                             Text(t("welcome.features.$key.description"), style = type.body.style(), color = colors.textSecondary)
@@ -143,7 +144,7 @@ fun WelcomeScreen(t: Translate, onGetStarted: () -> Unit, modifier: Modifier = M
                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(icon, fontSize = 20.sp)
+                            Text(icon, style = rnTextStyle(20f, 24f))
                             Text(
                                 t(label),
                                 style = type.bodyLarge.style().copy(
