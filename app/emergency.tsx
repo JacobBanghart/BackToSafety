@@ -36,7 +36,7 @@ import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { getEmergencyContacts } from '@/database/contacts';
 import { Destination, getDestinations } from '@/database/destinations';
-import { getSetting, saveSetting } from '@/database/storage';
+import { createIncident, updateIncident, type Incident } from '@/database/incidents';
 import {
   buildAlertSms,
   buildInitialSteps,
@@ -45,27 +45,24 @@ import {
   formatCountdown,
   SEARCH_WINDOW_SECONDS,
   secondsRemaining,
+  type ActiveEmergency,
   type ChecklistStep,
+  type LastSeenCoords,
 } from '@/utils/emergency';
+import {
+  clearActiveEmergency,
+  loadActiveEmergency,
+  saveActiveEmergency,
+} from '@/utils/activeEmergency';
 import { now } from '@/utils/clock';
 import { normalizeUniqueSmsRecipients } from '@/utils/phone';
-
-// Emergency state stored in settings
-const EMERGENCY_STATE_KEY = 'active_emergency';
-
-type EmergencyState = {
-  startedAt: string; // ISO timestamp
-  wearing: string;
-  checkedSteps: string[];
-  isActive: boolean;
-};
 
 export default function EmergencyScreen() {
   const router = useRouter();
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const isDark = colorScheme === 'dark';
-  const { setLastSeen, profile, addIncident } = useProfile();
+  const { setLastSeen, profile } = useProfile();
   const { t } = useTranslation('emergency');
   const { t: tCommon } = useTranslation('common');
   const emergencyNumber = tCommon('emergencyNumber');
@@ -85,6 +82,9 @@ export default function EmergencyScreen() {
   );
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // The incidents row for this emergency, and where they were last seen.
+  const incidentIdRef = useRef<number | undefined>(undefined);
+  const lastSeenCoordsRef = useRef<LastSeenCoords | undefined>(undefined);
   const scrollRef = useRef<ScrollView>(null);
 
   const timerExpired = secondsLeft === 0;
@@ -92,9 +92,13 @@ export default function EmergencyScreen() {
   const progress = (checkedCount / steps.length) * 100;
 
   // Save emergency state to storage
-  const saveEmergencyState = useCallback(async (state: EmergencyState) => {
+  const saveEmergencyState = useCallback(async (state: ActiveEmergency) => {
     try {
-      await saveSetting(EMERGENCY_STATE_KEY, JSON.stringify(state));
+      await saveActiveEmergency({
+        ...state,
+        ...(incidentIdRef.current !== undefined ? { incidentId: incidentIdRef.current } : {}),
+        ...(lastSeenCoordsRef.current ? { lastSeenCoords: lastSeenCoordsRef.current } : {}),
+      });
     } catch (error) {
       console.error('Failed to save emergency state:', error);
     }
@@ -103,11 +107,32 @@ export default function EmergencyScreen() {
   // Clear emergency state from storage
   const clearEmergencyState = useCallback(async () => {
     try {
-      await saveSetting(EMERGENCY_STATE_KEY, '');
+      await clearActiveEmergency();
     } catch (error) {
       console.error('Failed to clear emergency state:', error);
     }
   }, []);
+
+  // Record what happened in the incidents table (F-22). Never blocks the UI: a
+  // failed write must not delay a 911 call or the found flow.
+  const recordIncident = useCallback(
+    (update: Partial<Incident>) => {
+      const checked = steps.filter((s) => s.checked).map((s) => s.id);
+      const details = { ...update, areasChecked: checked, wearing: wearing || undefined };
+      void (async () => {
+        try {
+          if (incidentIdRef.current === undefined) {
+            // An emergency started before incidents were recorded: create its row now.
+            incidentIdRef.current = await createIncident({ startedAt: startedAt.toISOString() });
+          }
+          await updateIncident(incidentIdRef.current, details);
+        } catch (error) {
+          console.error('Failed to record incident:', error);
+        }
+      })();
+    },
+    [steps, wearing, startedAt],
+  );
 
   // Load destinations for familiar places hints
   useEffect(() => {
@@ -118,32 +143,31 @@ export default function EmergencyScreen() {
   useEffect(() => {
     const initEmergency = async () => {
       try {
-        const savedState = await getSetting(EMERGENCY_STATE_KEY);
+        const state = await loadActiveEmergency();
 
-        if (savedState) {
-          const state: EmergencyState = JSON.parse(savedState);
+        if (state) {
+          // Resume existing emergency
+          const started = new Date(state.startedAt);
+          const remaining = secondsRemaining(started.getTime(), now());
 
-          if (state.isActive) {
-            // Resume existing emergency
-            const started = new Date(state.startedAt);
-            const remaining = secondsRemaining(started.getTime(), now());
+          setStartedAt(started);
+          setSecondsLeft(remaining);
+          incidentIdRef.current = state.incidentId;
+          lastSeenCoordsRef.current = state.lastSeenCoords;
+          setLastSeen({ time: state.startedAt, coords: state.lastSeenCoords });
+          setWearing(state.wearing);
+          setShowWearingInput(true);
+          setSteps((prev) =>
+            prev.map((step) => ({
+              ...step,
+              checked: state.checkedSteps.includes(step.id),
+            })),
+          );
 
-            setStartedAt(started);
-            setSecondsLeft(remaining);
-            setWearing(state.wearing);
-            setShowWearingInput(true);
-            setSteps((prev) =>
-              prev.map((step) => ({
-                ...step,
-                checked: state.checkedSteps.includes(step.id),
-              })),
-            );
+          setIsLoading(false);
 
-            setIsLoading(false);
-
-            startTimer(started.getTime());
-            return;
-          }
+          startTimer(started.getTime());
+          return;
         }
 
         // Start new emergency
@@ -151,6 +175,11 @@ export default function EmergencyScreen() {
         setStartedAt(startedNow);
 
         track('emergency_started');
+        try {
+          incidentIdRef.current = await createIncident({ startedAt: startedNow.toISOString() });
+        } catch (error) {
+          console.error('Failed to create incident:', error);
+        }
         await saveEmergencyState({
           startedAt: startedNow.toISOString(),
           wearing: '',
@@ -247,11 +276,7 @@ export default function EmergencyScreen() {
     // Clear state first and wait for it
     await clearEmergencyState();
     track('emergency_completed', { checked_count: steps.filter((s) => s.checked).length });
-    addIncident({
-      at: new Date().toISOString(),
-      outcome: 'found',
-      checked: steps.filter((s) => s.checked).map((s) => s.id),
-    });
+    recordIncident({ outcome: 'found', endedAt: new Date(now()).toISOString() });
     setModalType('found');
     setModalVisible(true);
   };
@@ -264,12 +289,8 @@ export default function EmergencyScreen() {
     });
     // Calling always marks the step done; a second call must not un-check it (F-17).
     if (!steps.find((step) => step.id === 'call_911')?.checked) toggleStep('call_911');
-    addIncident({
-      at: new Date().toISOString(),
-      outcome: '911_called',
-      checked: steps.filter((s) => s.checked).map((s) => s.id),
-    });
     Linking.openURL(`tel:${emergencyNumber}`);
+    recordIncident({ outcome: '911_called' });
   };
 
   const onViewReadout = () => {
@@ -354,6 +375,8 @@ export default function EmergencyScreen() {
     }
     if (action === 'end') {
       track('emergency_cancelled', { checked_count: steps.filter((s) => s.checked).length });
+      // Ended without an outcome: stamp the end time, keep the outcome as it was.
+      recordIncident({ endedAt: new Date(now()).toISOString() });
       clearEmergencyState().then(() => navigateBack());
     }
   };

@@ -537,6 +537,99 @@
         ],
         "expected": []
       }
+    ],
+    "parseActiveEmergency": [
+      {
+        "args": [
+          null
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          ""
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          "not json"
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          "null"
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          "{\"startedAt\": \"2026-10-06T15:00:00.000Z\", \"wearing\": \"Blue jacket\", \"checkedSteps\": [\"home_search\", \"neighbors\"], \"isActive\": true}"
+        ],
+        "expected": {
+          "startedAt": "2026-10-06T15:00:00.000Z",
+          "wearing": "Blue jacket",
+          "checkedSteps": [
+            "home_search",
+            "neighbors"
+          ],
+          "isActive": true
+        }
+      },
+      {
+        "args": [
+          "{\"startedAt\": \"2026-10-06T15:00:00.000Z\", \"wearing\": \"\", \"checkedSteps\": [], \"isActive\": false}"
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          "{\"startedAt\": \"2026-10-06T15:00:00.000Z\", \"isActive\": true}"
+        ],
+        "expected": {
+          "startedAt": "2026-10-06T15:00:00.000Z",
+          "wearing": "",
+          "checkedSteps": [],
+          "isActive": true
+        }
+      },
+      {
+        "args": [
+          "{\"startedAt\": \"yesterday\", \"isActive\": true}"
+        ],
+        "expected": null
+      },
+      {
+        "args": [
+          "{\"startedAt\": \"2026-10-06T15:00:00.000Z\", \"wearing\": \"\", \"checkedSteps\": [\"call_911\", 7], \"isActive\": true, \"incidentId\": 12, \"lastSeenCoords\": {\"lat\": 45.5, \"lon\": -122.6, \"accuracy\": 20}}"
+        ],
+        "expected": {
+          "startedAt": "2026-10-06T15:00:00.000Z",
+          "wearing": "",
+          "checkedSteps": [
+            "call_911"
+          ],
+          "isActive": true,
+          "incidentId": 12,
+          "lastSeenCoords": {
+            "lat": 45.5,
+            "lon": -122.6,
+            "accuracy": 20
+          }
+        }
+      },
+      {
+        "args": [
+          "{\"startedAt\": \"2026-10-06T15:00:00.000Z\", \"wearing\": \"\", \"checkedSteps\": [], \"isActive\": true, \"lastSeenCoords\": {\"lat\": \"45.5\", \"lon\": -122.6}}"
+        ],
+        "expected": {
+          "startedAt": "2026-10-06T15:00:00.000Z",
+          "wearing": "",
+          "checkedSteps": [],
+          "isActive": true
+        }
+      }
     ]
   }
 }

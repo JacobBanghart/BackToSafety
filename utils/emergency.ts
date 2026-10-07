@@ -152,3 +152,49 @@ export function directionHint(
   if (dominantHand === 'right') return t('directionHint.right');
   return null;
 }
+
+export type LastSeenCoords = { lat: number; lon: number; accuracy?: number };
+
+/** The `active_emergency` settings record (spec/storage.md). */
+export type ActiveEmergency = {
+  startedAt: string;
+  wearing: string;
+  checkedSteps: string[];
+  isActive: boolean;
+  /** Row in the incidents table for this emergency. Absent for emergencies started before it existed. */
+  incidentId?: number;
+  lastSeenCoords?: LastSeenCoords;
+};
+
+/** Parses the stored record. Null when nothing is active or the value can't be read. */
+export function parseActiveEmergency(raw: string | null): ActiveEmergency | null {
+  if (!raw) return null;
+  let state: Record<string, unknown>;
+  try {
+    state = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!state || state.isActive !== true || typeof state.startedAt !== 'string') return null;
+  if (Number.isNaN(Date.parse(state.startedAt))) return null;
+
+  const coords = state.lastSeenCoords as Record<string, unknown> | undefined;
+  return {
+    startedAt: state.startedAt,
+    wearing: typeof state.wearing === 'string' ? state.wearing : '',
+    checkedSteps: Array.isArray(state.checkedSteps)
+      ? state.checkedSteps.filter((id): id is string => typeof id === 'string')
+      : [],
+    isActive: true,
+    ...(typeof state.incidentId === 'number' ? { incidentId: state.incidentId } : {}),
+    ...(coords && typeof coords.lat === 'number' && typeof coords.lon === 'number'
+      ? {
+          lastSeenCoords: {
+            lat: coords.lat,
+            lon: coords.lon,
+            ...(typeof coords.accuracy === 'number' ? { accuracy: coords.accuracy } : {}),
+          },
+        }
+      : {}),
+  };
+}

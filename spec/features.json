@@ -162,9 +162,12 @@
       "description": "Reopening an active emergency resumes the countdown, wearing text and checked steps.",
       "coverage": {
         "vectors": [
+          "emergency.json#parseActiveEmergency",
           "emergency.json#secondsRemaining"
         ],
-        "web": [],
+        "web": [
+          "e2e/persistence.spec.ts"
+        ],
         "flows": []
       }
     },
@@ -250,10 +253,12 @@
     },
     {
       "id": "emergency.found",
-      "description": "Found — Safe ends the emergency and shows the found guidance.",
+      "description": "Found — Safe ends the emergency, records the incident, and shows the found guidance.",
       "coverage": {
         "vectors": [],
-        "web": [],
+        "web": [
+          "e2e/persistence.spec.ts"
+        ],
         "flows": []
       }
     },
@@ -285,6 +290,7 @@
           "age.json#ageOn"
         ],
         "web": [
+          "e2e/persistence.spec.ts",
           "e2e/readout.spec.ts"
         ],
         "flows": []

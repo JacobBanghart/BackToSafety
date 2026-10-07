@@ -21,24 +21,22 @@ import { Typography } from '@/constants/Typography';
 
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
-import { getSetting } from '@/database/storage';
 import { setPreviousRoute } from '@/utils/navigation';
 import { posthog } from '@/utils/posthog';
 import { track } from '@/utils/analytics';
+import { loadActiveEmergency } from '@/utils/activeEmergency';
 import { now } from '@/utils/clock';
-import { formatCountdown, SEARCH_WINDOW_SECONDS, secondsRemaining } from '@/utils/emergency';
+import {
+  formatCountdown,
+  SEARCH_WINDOW_SECONDS,
+  secondsRemaining,
+  type ActiveEmergency,
+} from '@/utils/emergency';
 
 /** Emergency button colours — hardcoded, never adapt to light/dark mode */
 const EMERGENCY_IDLE_BG = '#ef4444';
 const EMERGENCY_ACTIVE_BG = '#b91c1c';
 const EMERGENCY_SWEEP_COLOR = '#ef4444';
-
-type EmergencyState = {
-  startedAt: string;
-  wearing: string;
-  checkedSteps: string[];
-  isActive: boolean;
-};
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -49,23 +47,15 @@ export default function HomeScreen() {
   const { t: tCommon } = useTranslation('common');
   const emergencyNumber = tCommon('emergencyNumber');
 
-  const [activeEmergency, setActiveEmergency] = useState<EmergencyState | null>(null);
+  const [activeEmergency, setActiveEmergency] = useState<ActiveEmergency | null>(null);
   const [emergencySecondsLeft, setEmergencySecondsLeft] = useState(0);
 
   const checkEmergency = useCallback(async () => {
     try {
-      const saved = await getSetting('active_emergency');
-      if (saved) {
-        const state: EmergencyState = JSON.parse(saved);
-        if (state.isActive) {
-          const remaining = secondsRemaining(new Date(state.startedAt).getTime(), now());
-          setActiveEmergency(state);
-          setEmergencySecondsLeft(remaining);
-        } else {
-          setActiveEmergency(null);
-        }
-      } else {
-        setActiveEmergency(null);
+      const state = await loadActiveEmergency();
+      setActiveEmergency(state);
+      if (state) {
+        setEmergencySecondsLeft(secondsRemaining(new Date(state.startedAt).getTime(), now()));
       }
     } catch {
       setActiveEmergency(null);

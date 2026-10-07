@@ -7,17 +7,11 @@ import { Contact, getContacts, getEmergencyContacts } from '@/database/contacts'
 import { Profile, saveProfile as dbSaveProfile, getProfile } from '@/database/profile';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { loadActiveEmergency } from '@/utils/activeEmergency';
+
 export type LastSeen = {
   time?: string; // ISO
   coords?: { lat: number; lon: number; accuracy?: number };
-};
-
-export type Incident = {
-  at: string; // ISO time
-  outcome: 'found' | 'not_found' | '911_called';
-  location?: { lat: number; lon: number; accuracy?: number };
-  notes?: string;
-  checked?: string[]; // checklist ids
 };
 
 type ProfileState = {
@@ -29,16 +23,14 @@ type ProfileState = {
   contacts: Contact[];
   emergencyContacts: Contact[];
 
-  // Runtime state (not persisted yet)
+  // Restored from the active emergency at launch (F-23)
   lastSeen: LastSeen;
-  incidents: Incident[];
 
   // Actions
   refreshProfile: () => Promise<void>;
   refreshContacts: () => Promise<void>;
   saveProfile: (p: Partial<Profile>) => Promise<void>;
   setLastSeen: (ls: LastSeen) => void;
-  addIncident: (i: Incident) => void;
 };
 
 const Ctx = createContext<ProfileState | undefined>(undefined);
@@ -49,7 +41,6 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [emergencyContacts, setEmergencyContacts] = useState<Contact[]>([]);
   const [lastSeen, setLastSeenState] = useState<LastSeen>({});
-  const [incidents, setIncidents] = useState<Incident[]>([]);
 
   // Load profile from database
   const refreshProfile = useCallback(async () => {
@@ -72,15 +63,25 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
     }
   }, []);
 
+  // An emergency in progress survives a restart; so must its last-seen time (F-23).
+  const restoreLastSeen = useCallback(async () => {
+    try {
+      const active = await loadActiveEmergency();
+      if (active) setLastSeenState({ time: active.startedAt, coords: active.lastSeenCoords });
+    } catch (err) {
+      console.error('Error restoring last seen:', err);
+    }
+  }, []);
+
   // Initial load
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
-      await Promise.all([refreshProfile(), refreshContacts()]);
+      await Promise.all([refreshProfile(), refreshContacts(), restoreLastSeen()]);
       setIsLoading(false);
     };
     load();
-  }, [refreshProfile, refreshContacts]);
+  }, [refreshProfile, refreshContacts, restoreLastSeen]);
 
   // Save profile updates
   const saveProfile = useCallback(
@@ -103,12 +104,10 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
       contacts,
       emergencyContacts,
       lastSeen,
-      incidents,
       refreshProfile,
       refreshContacts,
       saveProfile,
       setLastSeen: (ls: LastSeen) => setLastSeenState(ls),
-      addIncident: (i: Incident) => setIncidents((prev) => [i, ...prev]),
     }),
     [
       isLoading,
@@ -116,7 +115,6 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
       contacts,
       emergencyContacts,
       lastSeen,
-      incidents,
       refreshProfile,
       refreshContacts,
       saveProfile,

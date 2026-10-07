@@ -39,19 +39,21 @@ constraints (see `db-schema.json`), and the UI options must stay inside them
   `completed = 0 AND skipped = 0`.
 - **`contacts`** / **`destinations`**: display order is `sort_order`, then `created_at`.
   `contacts.notify_on_emergency = 1` marks the SMS alert recipients.
-- **`incidents`**: always empty today (F-22).
+- **`incidents`**: one row per emergency. Created as `ongoing` when it starts; Call 911 sets
+  `outcome = '911_called'`; Found sets `outcome = 'found'` and `ended_at`; ending without an
+  outcome sets only `ended_at`. Each update records `areas_checked` (JSON array of checked
+  step IDs) and `wearing`. Emergencies started before this existed get their row on first update.
 
 ## `settings` keys
 
 | Key                   | Value                                                                                                                                                                                                                                                                     |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `active_emergency`    | JSON `{"startedAt": ISO-8601, "wearing": string, "checkedSteps": [stepId…], "isActive": true}`. Set to `''` (empty string, not deleted) when the emergency ends. An active emergency resumes with `secondsRemaining(startedAt, now)` (see `spec/vectors/emergency.json`). |
+| `active_emergency` | JSON `{"startedAt": ISO-8601, "wearing": string, "checkedSteps": [stepId…], "isActive": true, "incidentId"?: number, "lastSeenCoords"?: {"lat", "lon", "accuracy"?}}`. The two optional fields were added after release, so older records lack them. Set to `''` (empty string, not deleted) when the emergency ends. Read it with `parseActiveEmergency` (`spec/vectors/emergency.json`): invalid or inactive records count as no emergency. An active emergency resumes with `secondsRemaining(startedAt, now)`. |
 | `device_id`           | UUID v4, created on first launch. Analytics identity; must survive the upgrade unchanged.                                                                                                                                                                                 |
 | `theme_preference`    | `system` \| `light` \| `dark`. Missing means `system`.                                                                                                                                                                                                                    |
 | `language_preference` | `en` \| `es`. Missing means the device locale if shipped, else `en`.                                                                                                                                                                                                      |
 
-## Not persisted (findings, not contract)
+## Restored at launch
 
-- `lastSeen` (time and coordinates) lives in memory only. After a restart the readout falls back
-  to "[fill in time]", even though `active_emergency.startedAt` still has the time (F-23).
-- Incident history is kept in memory only (F-22).
+- `lastSeen` (time and coordinates) is rebuilt from `active_emergency` at launch, so a restart
+  mid-emergency keeps the readout's last-seen time.
