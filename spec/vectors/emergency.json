@@ -383,43 +383,6 @@
         "expected": "60:00"
       }
     ],
-    "formatCountdownShort": [
-      {
-        "args": [
-          900
-        ],
-        "finding": "F-19",
-        "expected": "15:00"
-      },
-      {
-        "args": [
-          899
-        ],
-        "finding": "F-19",
-        "expected": "14:59"
-      },
-      {
-        "args": [
-          545
-        ],
-        "finding": "F-19",
-        "expected": "9:05"
-      },
-      {
-        "args": [
-          59
-        ],
-        "finding": "F-19",
-        "expected": "0:59"
-      },
-      {
-        "args": [
-          0
-        ],
-        "finding": "F-19",
-        "expected": "0:00"
-      }
-    ],
     "buildAlertSms": [
       {
         "args": [

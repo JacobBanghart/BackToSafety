@@ -83,7 +83,6 @@ const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
     emergency.secondsRemaining(Date.parse(startedAt), Date.parse(now)),
   countdownAlerts: emergency.countdownAlerts,
   formatCountdown: emergency.formatCountdown,
-  formatCountdownShort: emergency.formatCountdownShort,
   buildAlertSms: (lang: string, input: Parameters<typeof emergency.buildAlertSms>[1]) =>
     emergency.buildAlertSms(translator(lang, 'emergency'), input),
   directionHint: (lang: string, hand: 'left' | 'right' | 'unknown' | null) =>

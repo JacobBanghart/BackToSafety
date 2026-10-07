@@ -26,7 +26,7 @@ import { setPreviousRoute } from '@/utils/navigation';
 import { posthog } from '@/utils/posthog';
 import { track } from '@/utils/analytics';
 import { now } from '@/utils/clock';
-import { formatCountdownShort, SEARCH_WINDOW_SECONDS, secondsRemaining } from '@/utils/emergency';
+import { formatCountdown, SEARCH_WINDOW_SECONDS, secondsRemaining } from '@/utils/emergency';
 
 /** Emergency button colours — hardcoded, never adapt to light/dark mode */
 const EMERGENCY_IDLE_BG = '#ef4444';
@@ -191,7 +191,7 @@ export default function HomeScreen() {
                     {timerExpired
                       ? t('emergencyButton.timerExpiredSubtitle')
                       : t('emergencyButton.remaining', {
-                          time: formatCountdownShort(emergencySecondsLeft),
+                          time: formatCountdown(emergencySecondsLeft),
                           checked: activeEmergency.checkedSteps.length,
                           total: 11,
                         })}

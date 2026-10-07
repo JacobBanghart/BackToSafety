@@ -152,8 +152,3 @@ export function directionHint(
   if (dominantHand === 'right') return t('directionHint.right');
   return null;
 }
-
-/** M:SS for the home screen's emergency button. F-19: unpadded minutes, unlike formatCountdown. */
-export function formatCountdownShort(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${(seconds % 60).toString().padStart(2, '0')}`;
-}

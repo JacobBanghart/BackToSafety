@@ -112,7 +112,7 @@
       "coverage": {
         "vectors": [
           "emergency.json#secondsRemaining",
-          "emergency.json#formatCountdownShort"
+          "emergency.json#formatCountdown"
         ],
         "web": [],
         "flows": []
