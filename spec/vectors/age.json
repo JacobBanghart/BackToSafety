@@ -1,0 +1,31 @@
+{
+  "source": "utils/age.ts",
+  "description": "Date of birth parsing (stored as MM/DD/YYYY) and whole-year age. Dates in args and results are local calendar dates as YYYY-MM-DD.",
+  "functions": {
+    "parseDob": [
+      { "args": ["03/15/1940"], "expected": "1940-03-15" },
+      { "args": ["3/5/1940"], "expected": "1940-03-05" },
+      { "args": [" 03/15/1940 "], "expected": "1940-03-15" },
+      { "args": ["02/29/1940"], "expected": "1940-02-29" },
+      { "args": ["02/29/1941"], "expected": null },
+      { "args": ["02/30/1940"], "expected": null },
+      { "args": ["13/01/1940"], "expected": null },
+      { "args": ["00/10/1940"], "expected": null },
+      { "args": ["1940-03-15"], "expected": null },
+      { "args": ["03/15/40"], "expected": null },
+      { "args": [""], "expected": null }
+    ],
+    "ageOn": [
+      { "args": ["03/15/1940", "2026-03-14"], "expected": 85 },
+      { "args": ["03/15/1940", "2026-03-15"], "expected": 86 },
+      { "args": ["03/15/1940", "2026-12-31"], "expected": 86 },
+      { "args": ["03/15/1940", "2026-01-01"], "expected": 85 },
+      { "args": ["02/29/1940", "2026-02-28"], "expected": 85 },
+      { "args": ["02/29/1940", "2026-03-01"], "expected": 86 },
+      { "args": ["02/29/1940", "2028-02-29"], "expected": 88 },
+      { "args": ["10/06/2026", "2026-10-06"], "expected": 0 },
+      { "args": ["01/01/2030", "2026-01-01"], "expected": null },
+      { "args": ["not a date", "2026-01-01"], "expected": null }
+    ]
+  }
+}

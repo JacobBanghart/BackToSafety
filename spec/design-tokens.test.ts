@@ -23,6 +23,8 @@ describe('design tokens', () => {
       radius: Radius,
       shadows: Shadows,
     };
-    await expect(`${JSON.stringify(tokens, null, 2)}\n`).toMatchFileSnapshot('./design-tokens.json');
+    await expect(`${JSON.stringify(tokens, null, 2)}\n`).toMatchFileSnapshot(
+      './design-tokens.json',
+    );
   });
 });
