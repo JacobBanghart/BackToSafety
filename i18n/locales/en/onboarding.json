@@ -54,7 +54,8 @@
     "nicknameLabel": "Nickname / Goes By",
     "nicknamePlaceholder": "e.g., Mom, Grandma, Jane",
     "nicknameHint": "What name do they respond to best?",
-    "continue": "Continue"
+    "continue": "Continue",
+    "required": "Name is required for emergency calls"
   },
   "photo": {
     "title": "Add a recent photo",
@@ -100,7 +101,8 @@
       "body": "• You'll have a one-tap button to text this contact\n• They'll receive the person's photo and last known location\n• You can add neighbors and family later"
     },
     "skip": "Skip for now",
-    "continue": "Continue"
+    "continue": "Continue",
+    "required": "Name and phone number are required"
   },
   "complete": {
     "icon": "✓",

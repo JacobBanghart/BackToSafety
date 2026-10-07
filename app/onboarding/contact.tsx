@@ -38,7 +38,7 @@ export default function ContactScreen() {
 
   const handleContinue = async () => {
     if (!name.trim() || !phone.trim()) {
-      setError('Name and phone number are required');
+      setError(t('contact.required'));
       return;
     }
 

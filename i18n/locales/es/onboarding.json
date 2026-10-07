@@ -54,7 +54,8 @@
     "nicknameLabel": "Apodo / Cómo le dicen",
     "nicknamePlaceholder": "p. ej., Mamá, Abuela, María",
     "nicknameHint": "¿A qué nombre responde mejor?",
-    "continue": "Continuar"
+    "continue": "Continuar",
+    "required": "El nombre es obligatorio para las llamadas de emergencia"
   },
   "photo": {
     "title": "Agrega una foto reciente",
@@ -100,7 +101,8 @@
       "body": "• Tendrás un botón para enviarle un mensaje a este contacto con un toque\n• Recibirá la foto de la persona y su última ubicación conocida\n• Puedes agregar vecinos y familiares después"
     },
     "skip": "Omitir por ahora",
-    "continue": "Continuar"
+    "continue": "Continuar",
+    "required": "El nombre y el número de teléfono son obligatorios"
   },
   "complete": {
     "icon": "✓",

@@ -37,7 +37,7 @@ export default function NameScreen() {
 
   const handleContinue = async () => {
     if (!name.trim()) {
-      setError('Name is required for emergency calls');
+      setError(t('name.required'));
       return;
     }
 
