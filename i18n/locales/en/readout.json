@@ -122,5 +122,13 @@
   },
   "copyScriptButton": "Copy 911 Script",
   "copiedScriptButton": "Copied 911 Script",
-  "copiedFullButton": "Copied Full Details"
+  "copiedFullButton": "Copied Full Details",
+  "silverAlert": {
+    "title": "Request a Silver Alert",
+    "body": "Ask the {{emergencyNumber}} dispatcher about issuing a Silver Alert (or Purple Alert/Feather Alert depending on your state). This broadcasts the missing person information to the public and media."
+  },
+  "vehicleCheck": {
+    "vehicle": "Check nearby for their vehicle or bike — it may indicate where they went or provide shelter.",
+    "aid": "Check nearby for their mobility aid (walker, wheelchair, or cane) — it may indicate where they went or provide shelter."
+  }
 }

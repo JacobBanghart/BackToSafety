@@ -701,10 +701,10 @@ export default function DestinationsScreen() {
           {destinations.length > 0 && (
             <View style={styles.listHeader}>
               <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
-                {destinations.length} location{destinations.length !== 1 ? 's' : ''}
+                {t('nLocations', { ns: 'common', count: destinations.length })}
               </ThemedText>
               <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}>
-                Press and hold any location card to reorder search priority.
+                {t('reorderHint')}
               </ThemedText>
             </View>
           )}

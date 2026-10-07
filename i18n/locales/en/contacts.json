@@ -55,5 +55,8 @@
   "permission": {
     "title": "Contacts Permission Needed",
     "message": "Allow contacts access to import an emergency contact from your address book."
-  }
+  },
+  "alertCircleBadge": "IN ALERT CIRCLE",
+  "notifyHint": "Adds this contact to your Alert Circle (people who get emergency SMS alerts)",
+  "reorderHint": "Press and hold any contact card to reorder emergency priority."
 }

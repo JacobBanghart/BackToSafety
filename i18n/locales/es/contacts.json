@@ -55,5 +55,8 @@
   "permission": {
     "title": "Se necesita permiso para los contactos",
     "message": "Permite el acceso a los contactos para importar un contacto de emergencia de tu agenda."
-  }
+  },
+  "alertCircleBadge": "EN EL CÍRCULO DE ALERTA",
+  "notifyHint": "Agrega este contacto a tu Círculo de Alerta (las personas que reciben los mensajes de emergencia)",
+  "reorderHint": "Mantén presionada una tarjeta de contacto para cambiar su prioridad en una emergencia."
 }

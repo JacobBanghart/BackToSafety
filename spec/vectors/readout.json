@@ -397,6 +397,44 @@
         ],
         "expected": false
       }
+    ],
+    "vehicleCheckKind": [
+      {
+        "args": [
+          "Uses cane"
+        ],
+        "expected": "aid"
+      },
+      {
+        "args": [
+          "Has vehicle"
+        ],
+        "expected": "vehicle"
+      },
+      {
+        "args": [
+          "Mobility scooter"
+        ],
+        "expected": "vehicle"
+      },
+      {
+        "args": [
+          "Bicycle"
+        ],
+        "expected": "vehicle"
+      },
+      {
+        "args": [
+          "Manual wheelchair, Uses walker"
+        ],
+        "expected": "aid"
+      },
+      {
+        "args": [
+          "Other: rides an e-bike"
+        ],
+        "expected": "vehicle"
+      }
     ]
   }
 }

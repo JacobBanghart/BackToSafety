@@ -38,6 +38,14 @@ export function needsVehicleCheck(mobilityLevel: string | undefined): boolean {
   return VEHICLE_MOBILITY_VALUES.some((v) => value.includes(v));
 }
 
+/** Which note to show for a vehicle check: a vehicle or bike, or a mobility aid. */
+export function vehicleCheckKind(mobilityLevel: string): 'vehicle' | 'aid' {
+  const value = mobilityLevel.toLowerCase();
+  return ['vehicle', 'bicycle', 'bike', 'scooter'].some((w) => value.includes(w))
+    ? 'vehicle'
+    : 'aid';
+}
+
 export function describeAppearance(profile: Profile, t: Translate): string {
   const parts: string[] = [];
   if (profile.height) parts.push(profile.height);

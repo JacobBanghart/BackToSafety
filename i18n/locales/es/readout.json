@@ -122,5 +122,13 @@
   },
   "copyScriptButton": "Copiar guion para el 911",
   "copiedScriptButton": "Guion copiado",
-  "copiedFullButton": "Datos copiados"
+  "copiedFullButton": "Datos copiados",
+  "silverAlert": {
+    "title": "Pide una Alerta Plateada",
+    "body": "Pregunta al operador del {{emergencyNumber}} si pueden emitir una Alerta Plateada (o Morada o Feather, según tu estado). Así se difunde la información de la persona desaparecida al público y a los medios."
+  },
+  "vehicleCheck": {
+    "vehicle": "Revisa si su vehículo o bicicleta está cerca: puede indicar hacia dónde se fue o servirle de refugio.",
+    "aid": "Revisa si su ayuda de movilidad (andadera, silla de ruedas o bastón) está cerca: puede indicar hacia dónde se fue o servirle de refugio."
+  }
 }

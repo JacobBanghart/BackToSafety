@@ -38,6 +38,7 @@ import {
   buildScript,
   missingScriptDetails,
   needsVehicleCheck,
+  vehicleCheckKind,
   type ReadoutInput,
 } from '@/utils/readout';
 
@@ -393,13 +394,7 @@ export default function ReadoutScreen() {
                     { color: colorScheme === 'dark' ? secondary[100] : neutral[700] },
                   ]}
                 >
-                  Check nearby for their{' '}
-                  {['vehicle', 'bicycle', 'bike', 'scooter'].some((w) =>
-                    profile.mobilityLevel!.toLowerCase().includes(w),
-                  )
-                    ? 'vehicle or bike'
-                    : 'mobility aid (walker, wheelchair, or cane)'}{' '}
-                  — it may indicate where they went or provide shelter.
+                  {t(`vehicleCheck.${vehicleCheckKind(profile.mobilityLevel!)}`)}
                 </ThemedText>
               </View>
             )}
@@ -718,7 +713,7 @@ export default function ReadoutScreen() {
             type="bodyBold"
             style={{ color: colorScheme === 'dark' ? secondary[100] : primary[900] }}
           >
-            Request a Silver Alert
+            {t('silverAlert.title')}
           </ThemedText>
           <ThemedText
             style={[
@@ -726,9 +721,7 @@ export default function ReadoutScreen() {
               { color: colorScheme === 'dark' ? neutral[300] : neutral[700] },
             ]}
           >
-            Ask the 911 dispatcher about issuing a Silver Alert (or Purple Alert/Feather Alert
-            depending on your state). This broadcasts the missing person information to the public
-            and media.
+            {t('silverAlert.body', { emergencyNumber: t('emergencyNumber', { ns: 'common' }) })}
           </ThemedText>
         </View>
       </ScrollView>

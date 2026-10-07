@@ -88,6 +88,7 @@ const ADAPTERS: Record<string, (...args: never[]) => unknown> = {
   directionHint: (lang: string, hand: 'left' | 'right' | 'unknown' | null) =>
     emergency.directionHint(translator(lang, 'emergency'), hand ?? undefined),
   needsVehicleCheck: readout.needsVehicleCheck,
+  vehicleCheckKind: readout.vehicleCheckKind,
   buildScript: readoutAdapter(readout.buildScript),
   buildCopyBlock: readoutAdapter(readout.buildCopyBlock),
   missingScriptDetails: readoutAdapter(readout.missingScriptDetails),

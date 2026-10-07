@@ -467,7 +467,7 @@ export default function ContactsScreen() {
           >
             <IconSymbol name="checkmark.circle.fill" size={11} color={theme.primary} />
             <ThemedText style={[styles.emergencyBadgeText, { color: theme.primary }]}>
-              IN ALERT CIRCLE
+              {t('alertCircleBadge')}
             </ThemedText>
           </View>
         )}
@@ -632,7 +632,7 @@ export default function ContactsScreen() {
         <View style={styles.toggleInfo}>
           <ThemedText style={styles.toggleLabel}>{t('notifyInEmergency')}</ThemedText>
           <ThemedText style={[styles.toggleHint, { color: theme.textSecondary }]}>
-            Adds this contact to your Alert Circle (people who get emergency SMS alerts)
+            {t('notifyHint')}
           </ThemedText>
         </View>
         <View
@@ -696,10 +696,10 @@ export default function ContactsScreen() {
         contacts.length > 0 ? (
           <View style={styles.listHeader}>
             <ThemedText style={[styles.listCount, { color: theme.textSecondary }]}>
-              {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
+              {t('nContacts', { ns: 'common', count: contacts.length })}
             </ThemedText>
             <ThemedText style={[styles.listHint, { color: theme.textSecondary }]}>
-              Press and hold any contact card to reorder emergency priority.
+              {t('reorderHint')}
             </ThemedText>
           </View>
         ) : null
