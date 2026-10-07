@@ -1,0 +1,568 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "48e3e4e8e60f20f27be65e459cfb0b71",
+    "entities": [
+      {
+        "tableName": "profile",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `nickname` TEXT, `date_of_birth` TEXT, `photo_uri` TEXT, `height` TEXT, `weight` TEXT, `hair_color` TEXT, `eye_color` TEXT, `identifying_marks` TEXT, `medical_conditions` TEXT, `medications` TEXT, `allergies` TEXT, `cognitive_status` TEXT, `dominant_hand` TEXT, `mobility_level` TEXT, `communication_preference` TEXT, `escalation_signs` TEXT, `deescalation_techniques` TEXT, `approach_guidance` TEXT, `likes` TEXT, `dislikes_triggers` TEXT, `safe_word` TEXT, `locative_device_info` TEXT, `id_bracelets` TEXT, `medic_alert_id` TEXT, `medic_alert_hotline` TEXT, `created_at` TEXT DEFAULT CURRENT_TIMESTAMP, `updated_at` TEXT DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "nickname",
+            "columnName": "nickname",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dateOfBirth",
+            "columnName": "date_of_birth",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "photoUri",
+            "columnName": "photo_uri",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "height",
+            "columnName": "height",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "weight",
+            "columnName": "weight",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hairColor",
+            "columnName": "hair_color",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "eyeColor",
+            "columnName": "eye_color",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "identifyingMarks",
+            "columnName": "identifying_marks",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "medicalConditions",
+            "columnName": "medical_conditions",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "medications",
+            "columnName": "medications",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "allergies",
+            "columnName": "allergies",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "cognitiveStatus",
+            "columnName": "cognitive_status",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dominantHand",
+            "columnName": "dominant_hand",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "mobilityLevel",
+            "columnName": "mobility_level",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "communicationPreference",
+            "columnName": "communication_preference",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "escalationSigns",
+            "columnName": "escalation_signs",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "deescalationTechniques",
+            "columnName": "deescalation_techniques",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "approachGuidance",
+            "columnName": "approach_guidance",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "likes",
+            "columnName": "likes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "dislikesTriggers",
+            "columnName": "dislikes_triggers",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "safeWord",
+            "columnName": "safe_word",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "locativeDeviceInfo",
+            "columnName": "locative_device_info",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "idBracelets",
+            "columnName": "id_bracelets",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "medicAlertId",
+            "columnName": "medic_alert_id",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "medicAlertHotline",
+            "columnName": "medic_alert_hotline",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "contacts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT NOT NULL, `relationship` TEXT, `role` TEXT, `address` TEXT, `notify_on_emergency` INTEGER NOT NULL DEFAULT 1, `share_medical_info` INTEGER NOT NULL DEFAULT 0, `notes` TEXT, `sort_order` INTEGER NOT NULL DEFAULT 0, `created_at` TEXT DEFAULT CURRENT_TIMESTAMP, `updated_at` TEXT DEFAULT CURRENT_TIMESTAMP)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "phone",
+            "columnName": "phone",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "relationship",
+            "columnName": "relationship",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notifyOnEmergency",
+            "columnName": "notify_on_emergency",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "1"
+          },
+          {
+            "fieldPath": "shareMedicalInfo",
+            "columnName": "share_medical_info",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "destinations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `address` TEXT, `latitude` REAL, `longitude` REAL, `category` TEXT, `reason` TEXT, `distance_from_home` TEXT, `risk_level` TEXT, `notes` TEXT, `sort_order` INTEGER NOT NULL DEFAULT 0, `created_at` TEXT DEFAULT CURRENT_TIMESTAMP, `updated_at` TEXT DEFAULT CURRENT_TIMESTAMP)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "address",
+            "columnName": "address",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "latitude",
+            "columnName": "latitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "longitude",
+            "columnName": "longitude",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reason",
+            "columnName": "reason",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "distanceFromHome",
+            "columnName": "distance_from_home",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "riskLevel",
+            "columnName": "risk_level",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "sortOrder",
+            "columnName": "sort_order",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "incidents",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `started_at` TEXT NOT NULL, `ended_at` TEXT, `outcome` TEXT, `last_seen_lat` REAL, `last_seen_lon` REAL, `last_seen_accuracy` REAL, `found_lat` REAL, `found_lon` REAL, `found_location_name` TEXT, `weather` TEXT, `time_of_day` TEXT, `trigger_identified` TEXT, `wearing` TEXT, `areas_checked` TEXT, `people_contacted` TEXT, `notes` TEXT, `created_at` TEXT DEFAULT CURRENT_TIMESTAMP)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "started_at",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "ended_at",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "outcome",
+            "columnName": "outcome",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "lastSeenLat",
+            "columnName": "last_seen_lat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lastSeenLon",
+            "columnName": "last_seen_lon",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "lastSeenAccuracy",
+            "columnName": "last_seen_accuracy",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "foundLat",
+            "columnName": "found_lat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "foundLon",
+            "columnName": "found_lon",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "foundLocationName",
+            "columnName": "found_location_name",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "weather",
+            "columnName": "weather",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "timeOfDay",
+            "columnName": "time_of_day",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "triggerIdentified",
+            "columnName": "trigger_identified",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "wearing",
+            "columnName": "wearing",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "areasChecked",
+            "columnName": "areas_checked",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "peopleContacted",
+            "columnName": "people_contacted",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "created_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "safety_checks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `category` TEXT, `item_key` TEXT NOT NULL, `completed` INTEGER NOT NULL DEFAULT 0, `completed_at` TEXT, `notes` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "itemKey",
+            "columnName": "item_key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completed",
+            "columnName": "completed",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completed_at",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_safety_checks_item_key",
+            "unique": true,
+            "columnNames": [
+              "item_key"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_safety_checks_item_key` ON `${TABLE_NAME}` (`item_key`)"
+          }
+        ]
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `value` TEXT, `updated_at` TEXT DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "updatedAt",
+            "columnName": "updated_at",
+            "affinity": "TEXT",
+            "defaultValue": "CURRENT_TIMESTAMP"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      },
+      {
+        "tableName": "onboarding",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`step` TEXT NOT NULL, `completed` INTEGER NOT NULL DEFAULT 0, `completed_at` TEXT, `skipped` INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(`step`))",
+        "fields": [
+          {
+            "fieldPath": "step",
+            "columnName": "step",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completed",
+            "columnName": "completed",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completed_at",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "skipped",
+            "columnName": "skipped",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "step"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '48e3e4e8e60f20f27be65e459cfb0b71')"
+    ]
+  }
+}
