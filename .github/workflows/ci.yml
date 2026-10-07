@@ -52,6 +52,23 @@ jobs:
             npx expo export --platform "$platform" --output-dir "dist-$platform"
           done
 
+  kotlin-core:
+    name: Kotlin core (spec vectors)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java (mise.toml)
+        uses: jdx/mise-action@v5
+        with:
+          install_args: java
+
+      # The shared KMP core is held to the same spec/vectors as the RN app.
+      - name: JVM tests
+        working-directory: kmp
+        run: ./gradlew :shared:jvmTest --console=plain
+
   e2e-web:
     name: Playwright (web)
     runs-on: ubuntu-latest

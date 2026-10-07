@@ -59,3 +59,10 @@ reference/Wandering-Letter 04_25.docx
 
 # Maestro capture output (maestro/capture.sh)
 maestro/captures/
+
+# Kotlin rewrite (kmp/)
+kmp/.gradle/
+kmp/.kotlin/
+kmp/build/
+kmp/*/build/
+kmp/local.properties
