@@ -1,0 +1,205 @@
+package com.backtosafety.app.onboarding
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import android.graphics.BitmapFactory
+import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.style
+import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.Translate
+import com.backtosafety.core.invoke
+
+/** First onboarding step. Port of app/onboarding/index.tsx. */
+@Composable
+fun WelcomeScreen(t: Translate, onGetStarted: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
+    val featureBg = if (colors.isDark) Color.White.copy(alpha = 0.08f) else Color(DesignTokens.Neutral.c100)
+    val optionBg = if (colors.isDark) Color.White.copy(alpha = 0.1f) else Color(DesignTokens.Neutral.c100)
+    var themePreference by remember { mutableStateOf("system") }
+    val scroll = rememberScrollState()
+    val type = DesignTokens.Typography
+    val space = DesignTokens.Spacing
+
+    Column(
+        modifier
+            .fillMaxSize()
+            .background(colors.background)
+            .windowInsetsPadding(WindowInsets.safeDrawing),
+    ) {
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(scroll)
+                .padding(start = space.xl.dp, end = space.xl.dp, top = space.xxxl.dp, bottom = space.xl.dp),
+        ) {
+            Column(
+                Modifier.fillMaxWidth().padding(bottom = space.xxl.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Logo(Modifier.padding(bottom = space.xl.dp).size(180.dp))
+                Text(
+                    t("welcome.title"),
+                    style = type.display.style().copy(fontSize = 36.sp, lineHeight = 44.sp),
+                    color = colors.text,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = space.lg.dp),
+                )
+                Text(
+                    t("welcome.description"),
+                    style = type.bodyLarge.style(),
+                    color = colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                )
+            }
+
+            Column(
+                Modifier.padding(bottom = space.xxl.dp),
+                verticalArrangement = Arrangement.spacedBy(space.lg.dp),
+            ) {
+                for ((key, icon) in listOf("timer" to "⏱️", "readout" to "📋", "privacy" to "🔒")) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                            .background(featureBg)
+                            .padding(space.lg.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Box(
+                            Modifier.size(44.dp).clip(CircleShape).background(colors.primaryLight),
+                            contentAlignment = Alignment.Center,
+                        ) { Text(icon, fontSize = 22.sp) }
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.dp)) {
+                            Text(t("welcome.features.$key.title"), style = type.bodyBold.style(), color = colors.text)
+                            Text(t("welcome.features.$key.description"), style = type.body.style(), color = colors.textSecondary)
+                        }
+                    }
+                }
+            }
+
+            Column(Modifier.padding(bottom = space.xl.dp)) {
+                Text(
+                    t("welcome.themeLabel").uppercase(),
+                    style = type.caption.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
+                    color = colors.textDisabled,
+                    modifier = Modifier.padding(bottom = space.md.dp),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp)) {
+                    for ((value, label, icon) in listOf(
+                        Triple("light", "welcome.themeOptions.light", "☀️"),
+                        Triple("dark", "welcome.themeOptions.dark", "🌙"),
+                        Triple("system", "welcome.themeOptions.auto", "📱"),
+                    )) {
+                        val selected = themePreference == value
+                        Row(
+                            Modifier
+                                .weight(1f)
+                                .testTag("onboarding-welcome-theme-$value")
+                                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                                .background(if (selected) colors.primaryLight else optionBg)
+                                .border(
+                                    2.dp,
+                                    if (selected) colors.tint else Color.Transparent,
+                                    RoundedCornerShape(DesignTokens.Radius.lg.dp),
+                                )
+                                .clickable { themePreference = value }
+                                .padding(space.md.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(icon, fontSize = 20.sp)
+                            Text(
+                                t(label),
+                                style = type.bodyLarge.style().copy(
+                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                ),
+                                color = if (selected) colors.tint else colors.textSecondary,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Column(Modifier.padding(space.lg.dp), verticalArrangement = Arrangement.spacedBy(space.lg.dp)) {
+            if (scroll.value <= 10) {
+                Text(
+                    t("welcome.scrollHint").uppercase(),
+                    style = type.caption.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
+                    color = colors.textDisabled,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 46.dp)
+                    .testTag("onboarding-get-started")
+                    .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                    .background(colors.primary)
+                    .clickable(onClick = onGetStarted)
+                    .padding(vertical = space.md.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    t("welcome.getStarted"),
+                    style = type.bodyLarge.style().copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.textOnPrimary,
+                )
+            }
+            Text(
+                t("welcome.privacy"),
+                style = type.caption.style(),
+                color = colors.textDisabled,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Logo(modifier: Modifier) {
+    val context = LocalContext.current
+    val bitmap = remember {
+        context.assets.open("images/logo-full.png").use { BitmapFactory.decodeStream(it) }.asImageBitmap()
+    }
+    Image(bitmap, contentDescription = null, modifier = modifier, contentScale = ContentScale.Fit)
+}

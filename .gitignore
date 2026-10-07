@@ -65,4 +65,6 @@ kmp/.gradle/
 kmp/.kotlin/
 kmp/build/
 kmp/*/build/
+kmp/buildSrc/.gradle/
+kmp/buildSrc/.kotlin/
 kmp/local.properties

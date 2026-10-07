@@ -19,3 +19,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "backtosafety"
 include(":shared")
+include(":androidApp")

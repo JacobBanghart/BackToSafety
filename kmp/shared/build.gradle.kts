@@ -6,10 +6,16 @@ plugins {
     alias(libs.plugins.room)
 }
 
+val generateDesignTokens by tasks.registering(GenerateDesignTokens::class) {
+    spec = rootProject.file("../spec/design-tokens.json")
+    outputDir = layout.buildDirectory.dir("generated/tokens/commonMain/kotlin")
+}
+
 kotlin {
+    sourceSets.commonMain.configure { kotlin.srcDir(generateDesignTokens) }
     androidLibrary {
         namespace = "com.backtosafety.core"
-        compileSdk = 36
+        compileSdk = 37
         minSdk = 24
     }
     // Plain JVM target: the vector tests run here, on the devbox, in seconds.
