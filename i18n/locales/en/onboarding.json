@@ -98,7 +98,7 @@
     "relationshipPlaceholder": "e.g., Son, Daughter, Neighbor",
     "infoBox": {
       "title": "How alerts work",
-      "body": "• You'll have a one-tap button to text this contact\n• They'll receive the person's photo and last known location\n• You can add neighbors and family later"
+      "body": "• You'll have a one-tap button to text this contact\n• The text says who is missing, when they were last seen, and what they're wearing\n• You can add neighbors and family later"
     },
     "skip": "Skip for now",
     "continue": "Continue",

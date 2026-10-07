@@ -98,7 +98,7 @@
     "relationshipPlaceholder": "p. ej., hijo, hija, vecino",
     "infoBox": {
       "title": "Cómo funcionan las alertas",
-      "body": "• Tendrás un botón para enviarle un mensaje a este contacto con un toque\n• Recibirá la foto de la persona y su última ubicación conocida\n• Puedes agregar vecinos y familiares después"
+      "body": "• Tendrás un botón para enviarle un mensaje a este contacto con un toque\n• El mensaje dice quién está desaparecido, cuándo se le vio por última vez y qué ropa lleva\n• Puedes agregar vecinos y familiares después"
     },
     "skip": "Omitir por ahora",
     "continue": "Continuar",

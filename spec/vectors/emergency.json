@@ -611,12 +611,7 @@
             "call_911"
           ],
           "isActive": true,
-          "incidentId": 12,
-          "lastSeenCoords": {
-            "lat": 45.5,
-            "lon": -122.6,
-            "accuracy": 20
-          }
+          "incidentId": 12
         }
       },
       {

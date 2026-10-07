@@ -11,7 +11,6 @@ import { loadActiveEmergency } from '@/utils/activeEmergency';
 
 export type LastSeen = {
   time?: string; // ISO
-  coords?: { lat: number; lon: number; accuracy?: number };
 };
 
 type ProfileState = {
@@ -67,7 +66,7 @@ export const ProfileProvider: React.FC<React.PropsWithChildren> = ({ children })
   const restoreLastSeen = useCallback(async () => {
     try {
       const active = await loadActiveEmergency();
-      if (active) setLastSeenState({ time: active.startedAt, coords: active.lastSeenCoords });
+      if (active) setLastSeenState({ time: active.startedAt });
     } catch (err) {
       console.error('Error restoring last seen:', err);
     }

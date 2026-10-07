@@ -43,7 +43,6 @@ type AnalyticsEventName =
   | 'readout_contact_called'
   | 'readout_script_copied'
   | 'readout_details_copied'
-  | 'readout_open_in_maps'
   | 'screen_viewed';
 
 type AnalyticsProperties = Record<string, string | number | boolean | null>;

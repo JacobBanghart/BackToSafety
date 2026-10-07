@@ -27,7 +27,7 @@ test('readout shows the 911 script and copies full details', async ({ page, cont
       'Please advise about issuing a local Silver/Purple Alert.',
   );
   await expect(page.getByTestId('readout-script-missing')).toHaveText(
-    'Add for stronger script: last seen time, last known location, important details.',
+    'Add for stronger script: last seen time, important details.',
   );
 
   await page.getByTestId('readout-copy-all').click();

@@ -47,7 +47,6 @@ import {
   secondsRemaining,
   type ActiveEmergency,
   type ChecklistStep,
-  type LastSeenCoords,
 } from '@/utils/emergency';
 import {
   clearActiveEmergency,
@@ -82,9 +81,8 @@ export default function EmergencyScreen() {
   );
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // The incidents row for this emergency, and where they were last seen.
+  // The incidents row for this emergency.
   const incidentIdRef = useRef<number | undefined>(undefined);
-  const lastSeenCoordsRef = useRef<LastSeenCoords | undefined>(undefined);
   const scrollRef = useRef<ScrollView>(null);
 
   const timerExpired = secondsLeft === 0;
@@ -97,7 +95,6 @@ export default function EmergencyScreen() {
       await saveActiveEmergency({
         ...state,
         ...(incidentIdRef.current !== undefined ? { incidentId: incidentIdRef.current } : {}),
-        ...(lastSeenCoordsRef.current ? { lastSeenCoords: lastSeenCoordsRef.current } : {}),
       });
     } catch (error) {
       console.error('Failed to save emergency state:', error);
@@ -153,8 +150,7 @@ export default function EmergencyScreen() {
           setStartedAt(started);
           setSecondsLeft(remaining);
           incidentIdRef.current = state.incidentId;
-          lastSeenCoordsRef.current = state.lastSeenCoords;
-          setLastSeen({ time: state.startedAt, coords: state.lastSeenCoords });
+          setLastSeen({ time: state.startedAt });
           setWearing(state.wearing);
           setShowWearingInput(true);
           setSteps((prev) =>

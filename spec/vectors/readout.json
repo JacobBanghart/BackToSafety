@@ -1,6 +1,6 @@
 {
   "source": "utils/readout.ts",
-  "description": "The readout's 911 call script, full-details copy block, missing-details hints, and the vehicle-check rule. Text builders take [lang, input]; times arrive pre-formatted; `today` is YYYY-MM-DD.",
+  "description": "The readout's 911 call script, full-details copy block, missing-details hints, and the vehicle-check rule. Text builders take [lang, input]; times arrive pre-formatted; the app collects no location (blocked on purpose); `today` is YYYY-MM-DD.",
   "functions": {
     "buildScript": [
       {
@@ -46,15 +46,10 @@
               "medicAlertHotline": "1-800-432-5378"
             },
             "lastSeenTime": "10/6/2026, 3:15:00 PM",
-            "lastSeenCoords": {
-              "lat": 45.523064,
-              "lon": -122.676483,
-              "accuracy": 12
-            },
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Age approximately 86. Last seen: 10/6/2026, 3:15:00 PM. Last known location: 45.52306, -122.67648. Appearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses. Additional context: Moderate Alzheimer's. Allergies: Penicillin. MedicAlert ID: AB12-CD34. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Age approximately 86. Last seen: 10/6/2026, 3:15:00 PM. Last known location: [fill in location]. Appearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses. Additional context: Moderate Alzheimer's. Allergies: Penicillin. MedicAlert ID: AB12-CD34. Please advise about issuing a local Silver/Purple Alert."
       },
       {
         "args": [
@@ -87,15 +82,10 @@
               "medicAlertHotline": "1-800-432-5378"
             },
             "lastSeenTime": "10/6/2026, 3:15:00 PM",
-            "lastSeenCoords": {
-              "lat": 45.523064,
-              "lon": -122.676483,
-              "accuracy": 12
-            },
             "today": "2026-10-06"
           }
         ],
-        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Edad aproximada: 86 años. Visto/a por última vez: 10/6/2026, 3:15:00 PM. Última ubicación conocida: 45.52306, -122.67648. Apariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses. Contexto adicional: Moderate Alzheimer's. Alergias: Penicillin. ID de MedicAlert: AB12-CD34. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Edad aproximada: 86 años. Visto/a por última vez: 10/6/2026, 3:15:00 PM. Última ubicación conocida: [completar ubicación]. Apariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses. Contexto adicional: Moderate Alzheimer's. Alergias: Penicillin. ID de MedicAlert: AB12-CD34. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
       },
       {
         "args": [
@@ -194,15 +184,10 @@
               "medicAlertHotline": "1-800-432-5378"
             },
             "lastSeenTime": "10/6/2026, 3:15:00 PM",
-            "lastSeenCoords": {
-              "lat": 45.523064,
-              "lon": -122.676483,
-              "accuracy": 12
-            },
             "today": "2026-10-06"
           }
         ],
-        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nDOB: 03/15/1940\nAppearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses\nImportant Details: Moderate Alzheimer's. Allergies: Penicillin\nRoutine Medications (optional): Donepezil 10mg\nCognitive Status: Disoriented to time and place\nMobility: Uses cane\n⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel\nCommunication: Speaks slowly; responds to Maggie\nSigns of Escalation: Pacing\nTriggers/Dislikes: Loud noises\nDe-escalation: Calm voice, offer tea\nLikes/Soothers: Gardening, Frank Sinatra\nHow to Approach: Approach from the front\nFamily Safe Word: Sunflower\nLast seen: 10/6/2026, 3:15:00 PM\nCoordinates: 45.52306, -122.67648 (±12m)\nPersonal Locator: AirTag in purse\nID Bracelet: MedicAlert bracelet\nMedicAlert ID: AB12-CD34\nMedicAlert Hotline: 1-800-432-5378\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
+        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nDOB: 03/15/1940\nAppearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses\nImportant Details: Moderate Alzheimer's. Allergies: Penicillin\nRoutine Medications (optional): Donepezil 10mg\nCognitive Status: Disoriented to time and place\nMobility: Uses cane\n⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel\nCommunication: Speaks slowly; responds to Maggie\nSigns of Escalation: Pacing\nTriggers/Dislikes: Loud noises\nDe-escalation: Calm voice, offer tea\nLikes/Soothers: Gardening, Frank Sinatra\nHow to Approach: Approach from the front\nFamily Safe Word: Sunflower\nLast seen: 10/6/2026, 3:15:00 PM\nCoordinates: Unknown\nPersonal Locator: AirTag in purse\nID Bracelet: MedicAlert bracelet\nMedicAlert ID: AB12-CD34\nMedicAlert Hotline: 1-800-432-5378\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
       },
       {
         "args": [
@@ -235,15 +220,10 @@
               "medicAlertHotline": "1-800-432-5378"
             },
             "lastSeenTime": "10/6/2026, 3:15:00 PM",
-            "lastSeenCoords": {
-              "lat": 45.523064,
-              "lon": -122.676483,
-              "accuracy": 12
-            },
             "today": "2026-10-06"
           }
         ],
-        "expected": "Nombre: Margaret Smith (le dicen \"Maggie\")\nFecha de nacimiento: 03/15/1940\nApariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses\nDatos importantes: Moderate Alzheimer's. Alergias: Penicillin\nMedicamentos habituales (opcional): Donepezil 10mg\nEstado cognitivo: Disoriented to time and place\nMovilidad: Usa bastón\n⚠️ Revisa si su ayuda de movilidad o vehículo está cerca: puede indicar hacia dónde se fue\nComunicación: Speaks slowly; responds to Maggie\nSeñales de alteración: Pacing\nDetonantes / Lo que le molesta: Loud noises\nCómo calmarle: Calm voice, offer tea\nGustos / Lo que le calma: Gardening, Frank Sinatra\nCómo acercarse: Approach from the front\nPalabra clave familiar: Sunflower\nVisto/a por última vez: 10/6/2026, 3:15:00 PM\nCoordenadas: 45.52306, -122.67648 (±12m)\nLocalizador personal: AirTag in purse\nPulsera de identificación: MedicAlert bracelet\nID de MedicAlert: AB12-CD34\nLínea de MedicAlert: 1-800-432-5378\n\n⚠️ COMPLETAR: ¿Qué ropa llevaba puesta? (Camisa, chaqueta, pantalón, zapatos, gorra)"
+        "expected": "Nombre: Margaret Smith (le dicen \"Maggie\")\nFecha de nacimiento: 03/15/1940\nApariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses\nDatos importantes: Moderate Alzheimer's. Alergias: Penicillin\nMedicamentos habituales (opcional): Donepezil 10mg\nEstado cognitivo: Disoriented to time and place\nMovilidad: Usa bastón\n⚠️ Revisa si su ayuda de movilidad o vehículo está cerca: puede indicar hacia dónde se fue\nComunicación: Speaks slowly; responds to Maggie\nSeñales de alteración: Pacing\nDetonantes / Lo que le molesta: Loud noises\nCómo calmarle: Calm voice, offer tea\nGustos / Lo que le calma: Gardening, Frank Sinatra\nCómo acercarse: Approach from the front\nPalabra clave familiar: Sunflower\nVisto/a por última vez: 10/6/2026, 3:15:00 PM\nCoordenadas: Desconocido\nLocalizador personal: AirTag in purse\nPulsera de identificación: MedicAlert bracelet\nID de MedicAlert: AB12-CD34\nLínea de MedicAlert: 1-800-432-5378\n\n⚠️ COMPLETAR: ¿Qué ropa llevaba puesta? (Camisa, chaqueta, pantalón, zapatos, gorra)"
       },
       {
         "args": [
@@ -253,14 +233,10 @@
               "name": "Margaret Smith",
               "nickname": "Maggie"
             },
-            "lastSeenCoords": {
-              "lat": 45.5,
-              "lon": -122.6
-            },
             "today": "2026-10-06"
           }
         ],
-        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nLast seen: Unknown\nCoordinates: 45.50000, -122.60000\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
+        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nLast seen: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
       },
       {
         "args": [
@@ -289,7 +265,6 @@
         ],
         "expected": [
           "last seen time",
-          "last known location",
           "appearance details",
           "important details"
         ]
@@ -325,11 +300,6 @@
               "medicAlertHotline": "1-800-432-5378"
             },
             "lastSeenTime": "10/6/2026, 3:15:00 PM",
-            "lastSeenCoords": {
-              "lat": 45.523064,
-              "lon": -122.676483,
-              "accuracy": 12
-            },
             "today": "2026-10-06"
           }
         ],
@@ -348,7 +318,6 @@
         ],
         "expected": [
           "hora en que se vio por última vez",
-          "última ubicación conocida",
           "datos importantes"
         ]
       }

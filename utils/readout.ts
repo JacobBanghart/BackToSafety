@@ -17,7 +17,6 @@ export type ReadoutInput = {
   profile: Profile;
   /** Last-seen time, formatted for display. */
   lastSeenTime?: string;
-  lastSeenCoords?: { lat: number; lon: number; accuracy?: number };
   /** For the age line; the screen passes the current date. */
   today: Date;
 };
@@ -65,15 +64,9 @@ export function describeImportantDetails(profile: Profile, t: Translate): string
 }
 
 export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
-  const { profile, lastSeenTime, lastSeenCoords } = input;
+  const { profile, lastSeenTime } = input;
   const appearanceDesc = describeAppearance(profile, t);
   const medicalDesc = describeImportantDetails(profile, t);
-
-  const coordinates = lastSeenCoords
-    ? `${lastSeenCoords.lat.toFixed(5)}, ${lastSeenCoords.lon.toFixed(5)}${
-        lastSeenCoords.accuracy !== undefined ? ` (±${lastSeenCoords.accuracy}m)` : ''
-      }`
-    : t('copyBlock.unknown');
 
   return [
     profile.nickname
@@ -108,7 +101,8 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
       : undefined,
     profile.safeWord ? t('copyBlock.safeWord', { value: profile.safeWord }) : undefined,
     t('copyBlock.lastSeen', { time: lastSeenTime ?? t('copyBlock.unknown') }),
-    t('copyBlock.coordinates', { coords: coordinates }),
+    // The app doesn't collect location (blocked on purpose); this is a line to fill in.
+    t('copyBlock.coordinates', { coords: t('copyBlock.unknown') }),
     profile.locativeDeviceInfo
       ? t('copyBlock.locator', { value: profile.locativeDeviceInfo })
       : undefined,
@@ -126,7 +120,7 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
 }
 
 export function buildScript(input: ReadoutInput, t: Translate): string {
-  const { profile, lastSeenTime, lastSeenCoords, today } = input;
+  const { profile, lastSeenTime, today } = input;
   const appearanceDesc = describeAppearance(profile, t);
   const medicalDesc = describeImportantDetails(profile, t);
 
@@ -143,16 +137,8 @@ export function buildScript(input: ReadoutInput, t: Translate): string {
     scriptParts.push(t('script.lastSeenUnknown'));
   }
 
-  if (lastSeenCoords) {
-    scriptParts.push(
-      t('script.locationCoords', {
-        lat: lastSeenCoords.lat.toFixed(5),
-        lon: lastSeenCoords.lon.toFixed(5),
-      }),
-    );
-  } else {
-    scriptParts.push(t('script.locationUnknown'));
-  }
+  // Location isn't collected (blocked on purpose): the caller fills it in.
+  scriptParts.push(t('script.locationUnknown'));
 
   if (appearanceDesc) {
     scriptParts.push(t('script.appearance', { desc: appearanceDesc }));
@@ -176,11 +162,10 @@ export function buildScript(input: ReadoutInput, t: Translate): string {
 
 /** What's missing for a stronger script, as translated phrases. */
 export function missingScriptDetails(input: ReadoutInput, t: Translate): string[] {
-  const { profile, lastSeenTime, lastSeenCoords } = input;
+  const { profile, lastSeenTime } = input;
   const missing: string[] = [];
 
   if (!lastSeenTime) missing.push(t('sections.script.missing.lastSeenTime'));
-  if (!lastSeenCoords) missing.push(t('sections.script.missing.lastKnownLocation'));
   if (!describeAppearance(profile, t)) missing.push(t('sections.script.missing.appearanceDetails'));
   if (!describeImportantDetails(profile, t)) {
     missing.push(t('sections.script.missing.importantDetails'));

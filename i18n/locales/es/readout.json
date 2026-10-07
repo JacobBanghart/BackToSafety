@@ -17,7 +17,6 @@
       "missingDetails": "Agrega para un guion más completo: {{details}}.",
       "missing": {
         "lastSeenTime": "hora en que se vio por última vez",
-        "lastKnownLocation": "última ubicación conocida",
         "appearanceDetails": "detalles de apariencia",
         "importantDetails": "datos importantes"
       }
@@ -41,9 +40,8 @@
       "identifyingMarks": "Señas particulares"
     },
     "location": {
-      "title": "Última ubicación conocida",
-      "time": "Hora",
-      "coordinates": "Coordenadas"
+      "title": "Visto por última vez",
+      "time": "Hora"
     },
     "medical": {
       "title": "Salud y comportamiento",
@@ -76,7 +74,6 @@
     "noContacts": "No hay contactos de emergencia guardados."
   },
   "noInfoItem": "Sin información",
-  "openInMaps": "Abrir en Mapas",
   "copyBlock": {
     "name": "Nombre: {{name}}",
     "nameWithNickname": "Nombre: {{name}} (le dicen \"{{nickname}}\")",
@@ -112,7 +109,6 @@
     "age": "Edad aproximada: {{age}} años.",
     "lastSeenTime": "Visto/a por última vez: {{time}}.",
     "lastSeenUnknown": "Visto/a por última vez: [completar hora].",
-    "locationCoords": "Última ubicación conocida: {{lat}}, {{lon}}.",
     "locationUnknown": "Última ubicación conocida: [completar ubicación].",
     "appearance": "Apariencia: {{desc}}.",
     "additionalContext": "Contexto adicional: {{desc}}.",

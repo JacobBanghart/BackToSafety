@@ -1,6 +1,6 @@
 {
   "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows: it may only go down.",
-  "maxWithoutFlows": 60,
+  "maxWithoutFlows": 59,
   "features": [
     {
       "id": "onboarding.routing",
@@ -327,15 +327,6 @@
         "vectors": [
           "readout.json#needsVehicleCheck"
         ],
-        "web": [],
-        "flows": []
-      }
-    },
-    {
-      "id": "readout.open-maps",
-      "description": "Opens last-known coordinates in the maps app.",
-      "coverage": {
-        "vectors": [],
         "web": [],
         "flows": []
       }

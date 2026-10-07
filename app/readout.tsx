@@ -17,7 +17,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -59,7 +58,6 @@ export default function ReadoutScreen() {
         ? {
             profile,
             lastSeenTime: lastSeen.time ? new Date(lastSeen.time).toLocaleString() : undefined,
-            lastSeenCoords: lastSeen.coords,
             today: new Date(),
           }
         : null,
@@ -108,17 +106,6 @@ export default function ReadoutScreen() {
       Alert.alert(t('copyFailed'), t('copyScriptFailed'));
     }
   };
-  const openMaps = () => {
-    if (!lastSeen.coords) return;
-    track('readout_open_in_maps');
-    const { lat, lon } = lastSeen.coords;
-    const url = Platform.select({
-      ios: `http://maps.apple.com/?ll=${lat},${lon}`,
-      default: `https://maps.google.com/?q=${lat},${lon}`,
-    });
-    Linking.openURL(url!);
-  };
-
   const copyAll = async () => {
     try {
       await Clipboard.setStringAsync(textBlock);
@@ -163,9 +150,6 @@ export default function ReadoutScreen() {
   }
 
   const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : null;
-  const coordinates = lastSeen.coords
-    ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)} (±${lastSeen.coords.accuracy ?? '—'}m)`
-    : null;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
@@ -279,7 +263,7 @@ export default function ReadoutScreen() {
         </View>
 
         {/* Last Seen Card */}
-        {(ls || coordinates) && (
+        {ls && (
           <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
             <View style={styles.sectionLabel}>
               <IconSymbol name="clock.fill" size={14} color={theme.primary} />
@@ -290,27 +274,7 @@ export default function ReadoutScreen() {
                 {t('sections.location.title')}
               </ThemedText>
             </View>
-            {ls && (
-              <InfoRow icon="clock" label={t('sections.location.time')} value={ls} theme={theme} />
-            )}
-            {coordinates && (
-              <InfoRow
-                icon="location.fill"
-                label={t('sections.location.coordinates')}
-                value={coordinates}
-                theme={theme}
-              />
-            )}
-            {lastSeen.coords && (
-              <Pressable
-                style={[styles.mapsButton, { backgroundColor: semantic.success }]}
-                testID="readout-open-maps"
-                onPress={openMaps}
-              >
-                <IconSymbol name="map.fill" size={16} color={Colors.light.textOnPrimary} />
-                <ThemedText style={styles.mapsButtonText}>{t('openInMaps')}</ThemedText>
-              </Pressable>
-            )}
+            <InfoRow icon="clock" label={t('sections.location.time')} value={ls} theme={theme} />
           </View>
         )}
 
@@ -953,21 +917,6 @@ const styles = StyleSheet.create({
     borderRadius: Radius.md,
   },
   callButtonText: {
-    color: Colors.light.textOnPrimary,
-    ...Typography.bodyBold,
-  },
-
-  // Maps
-  mapsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.sm,
-    paddingVertical: Spacing.md,
-    borderRadius: Radius.md,
-    marginTop: Spacing.xs,
-  },
-  mapsButtonText: {
     color: Colors.light.textOnPrimary,
     ...Typography.bodyBold,
   },
