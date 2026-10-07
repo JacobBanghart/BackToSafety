@@ -48,11 +48,16 @@ import com.backtosafety.core.invoke
 
 /** First onboarding step. Port of app/onboarding/index.tsx. */
 @Composable
-fun WelcomeScreen(t: Translate, onGetStarted: () -> Unit, modifier: Modifier = Modifier) {
+fun WelcomeScreen(
+    t: Translate,
+    themePreference: String,
+    onThemeChange: (String) -> Unit,
+    onGetStarted: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     val colors = LocalAppColors.current
     val featureBg = if (colors.isDark) Color.White.copy(alpha = 0.08f) else Color(DesignTokens.Neutral.c100)
     val optionBg = if (colors.isDark) Color.White.copy(alpha = 0.1f) else Color(DesignTokens.Neutral.c100)
-    var themePreference by remember { mutableStateOf("system") }
     val scroll = rememberScrollState()
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
@@ -139,7 +144,7 @@ fun WelcomeScreen(t: Translate, onGetStarted: () -> Unit, modifier: Modifier = M
                                     if (selected) colors.tint else Color.Transparent,
                                     RoundedCornerShape(DesignTokens.Radius.lg.dp),
                                 )
-                                .clickable { themePreference = value }
+                                .clickable { onThemeChange(value) }
                                 .padding(space.md.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,

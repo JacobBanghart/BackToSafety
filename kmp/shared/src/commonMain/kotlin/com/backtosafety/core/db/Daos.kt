@@ -40,6 +40,15 @@ interface IncidentDao {
 }
 
 @Dao
+interface SafetyCheckDao {
+    @Query("SELECT * FROM safety_checks ORDER BY id")
+    suspend fun all(): List<SafetyCheckEntity>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertMissing(checks: List<SafetyCheckEntity>)
+}
+
+@Dao
 interface SettingDao {
     @Query("SELECT value FROM settings WHERE `key` = :key")
     suspend fun get(key: String): String?
@@ -52,6 +61,13 @@ interface SettingDao {
 interface OnboardingDao {
     @Query("SELECT * FROM onboarding")
     suspend fun all(): List<OnboardingStepEntity>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertMissing(steps: List<OnboardingStepEntity>)
+
+    /** Skipping a step marks it completed too, as the RN screens do. */
+    @Query("UPDATE onboarding SET completed = 1 WHERE step = :step")
+    suspend fun complete(step: String)
 
     /** Onboarded once no step is left neither completed nor skipped (spec/storage.md). */
     @Query("SELECT COUNT(*) = 0 FROM onboarding WHERE completed = 0 AND skipped = 0")

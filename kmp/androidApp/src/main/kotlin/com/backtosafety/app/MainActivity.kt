@@ -4,35 +4,30 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
-import com.backtosafety.app.onboarding.WelcomeScreen
-import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.core.Translations
+import com.backtosafety.core.data.Store
+import com.backtosafety.core.db.databaseBuilder
+import com.backtosafety.core.db.databasePath
+import com.backtosafety.core.db.openAppDatabase
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
 class MainActivity : ComponentActivity() {
-    private val translations by lazy { loadTranslations() }
-
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        val t = translations.translator(locale = "en", namespace = "onboarding")
+        val path = databasePath(this)
+        val store = Store(openAppDatabase(path, databaseBuilder(this, path)))
+        val translations = loadTranslations()
         setContent {
-            AppTheme(dark = isSystemInDarkTheme()) {
-                // testTag(...) values surface as Android resource IDs, matching the RN
-                // app's testIDs, so the same Maestro flows drive both (spec/testids.json).
-                WelcomeScreen(
-                    t = t,
-                    onGetStarted = {},
-                    modifier = Modifier.semantics { testTagsAsResourceId = true },
-                )
-            }
+            // testTag(...) values surface as Android resource IDs, matching the RN
+            // app's testIDs, so the same Maestro flows drive both (spec/testids.json).
+            App(store, translations, Modifier.semantics { testTagsAsResourceId = true })
         }
     }
 

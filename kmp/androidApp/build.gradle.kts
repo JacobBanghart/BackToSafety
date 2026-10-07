@@ -8,6 +8,9 @@ val repoRoot = rootProject.file("..")
 val syncSharedAssets by tasks.registering(SyncSharedAssets::class) {
     locales = repoRoot.resolve("i18n/locales")
     images = repoRoot.resolve("assets/images")
+    // node_modules: run `npm ci` in the repo root before building the app.
+    vectorIcons = repoRoot.resolve("node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons")
+    spec = repoRoot.resolve("spec")
     outputDir = layout.buildDirectory.dir("generated/sharedAssets")
 }
 

@@ -26,6 +26,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun incidents(): IncidentDao
     abstract fun settings(): SettingDao
     abstract fun onboarding(): OnboardingDao
+    abstract fun safetyChecks(): SafetyCheckDao
 }
 
 @Suppress("KotlinNoActualForExpect")

@@ -1,0 +1,72 @@
+{
+  "onboardingSteps": [
+    "welcome",
+    "profile_name",
+    "profile_photo",
+    "profile_appearance",
+    "emergency_contact",
+    "complete"
+  ],
+  "safetyChecks": [
+    {
+      "category": "at_home",
+      "item_key": "visual_supports_doors",
+      "completed": 0
+    },
+    {
+      "category": "at_home",
+      "item_key": "locks_high_location",
+      "completed": 0
+    },
+    {
+      "category": "at_home",
+      "item_key": "door_chimes",
+      "completed": 0
+    },
+    {
+      "category": "at_home",
+      "item_key": "geofence_setup",
+      "completed": 0
+    },
+    {
+      "category": "at_home",
+      "item_key": "physical_boundaries",
+      "completed": 0
+    },
+    {
+      "category": "away_from_home",
+      "item_key": "alert_caregivers_staff",
+      "completed": 0
+    },
+    {
+      "category": "away_from_home",
+      "item_key": "safety_plan_locations",
+      "completed": 0
+    },
+    {
+      "category": "away_from_home",
+      "item_key": "introduce_first_responders",
+      "completed": 0
+    },
+    {
+      "category": "away_from_home",
+      "item_key": "evaluate_locative_tech",
+      "completed": 0
+    },
+    {
+      "category": "foundation",
+      "item_key": "social_stories",
+      "completed": 0
+    },
+    {
+      "category": "foundation",
+      "item_key": "water_safety_classes",
+      "completed": 0
+    },
+    {
+      "category": "foundation",
+      "item_key": "safety_responsibility",
+      "completed": 0
+    }
+  ]
+}
