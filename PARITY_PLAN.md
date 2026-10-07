@@ -163,7 +163,7 @@ reactor's Phase −1, and it lands first.
 | L3: Maestro flows            | Blocked on `/dev/kvm` for the devbox (Android). iOS on the Mac runner.                                                                                                                                                                               |
 | L4: screenshot matrix        | After L3 (same rig).                                                                                                                                                                                                                                 |
 | L5: upgrade path             | **Contract written** (`spec/storage.md`). Fixtures and the install-over flow come after L3.                                                                                                                                                          |
-| Freeze                       | After the findings below are fixed or explicitly kept.                                                                                                                                                                                               |
+| Freeze                       | Findings: every one is fixed except F-21's device check and F-0b's native-speaker review; F-10 is kept. Freeze after L3–L5 run green against the RN app.                                                                                             |
 
 ## Known findings (decide before freeze)
 
