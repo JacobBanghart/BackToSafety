@@ -197,7 +197,7 @@ export default function PhotoScreen() {
           disabled={!photoUri || isLoading}
         >
           <ThemedText style={styles.buttonText}>
-            {isLoading ? 'Saving...' : t('photo.continue')}
+            {isLoading ? t('saving', { ns: 'common' }) : t('photo.continue')}
           </ThemedText>
         </Pressable>
       </View>
