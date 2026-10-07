@@ -723,7 +723,7 @@ export default function DestinationsScreen() {
           </ThemedText>
           <Pressable
             style={[styles.emptyButton, { backgroundColor: theme.primary }]}
-            testID="destinations-add"
+            testID="destinations-empty-add"
             onPress={handleAddNew}
           >
             <IconSymbol name="plus" size={18} color={Colors.light.textOnPrimary} />
@@ -738,7 +738,7 @@ export default function DestinationsScreen() {
           {destinations.length > 0 && (
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: theme.primary }]}
-              testID="destinations-empty-add"
+              testID="destinations-add"
               onPress={handleAddNew}
             >
               <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />

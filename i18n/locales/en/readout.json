@@ -37,7 +37,9 @@
       "mobility": "Mobility",
       "vehicleNote": "May be driving or operating a vehicle",
       "lastSeen": "Last Seen Wearing",
-      "identifyingMarks": "Identifying Marks"
+      "identifyingMarks": "Identifying Marks",
+      "handLeft": "Left",
+      "handRight": "Right"
     },
     "location": {
       "title": "Last Seen",

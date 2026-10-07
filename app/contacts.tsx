@@ -718,7 +718,7 @@ export default function ContactsScreen() {
           <View style={styles.emptyActionsRow}>
             <Pressable
               style={[styles.addButton, styles.emptyAction, { backgroundColor: theme.primary }]}
-              testID="contacts-add"
+              testID="contacts-empty-add"
               onPress={handleAddNew}
             >
               <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
@@ -732,7 +732,7 @@ export default function ContactsScreen() {
                 styles.emptyAction,
                 { backgroundColor: theme.card, borderColor: theme.border },
               ]}
-              testID="contacts-import"
+              testID="contacts-empty-import"
               onPress={handleImportContact}
               disabled={isImporting}
             >
@@ -753,7 +753,7 @@ export default function ContactsScreen() {
             <View style={styles.footerActionsRow}>
               <TouchableOpacity
                 style={[styles.addButton, styles.footerAction, { backgroundColor: theme.primary }]}
-                testID="contacts-empty-add"
+                testID="contacts-add"
                 onPress={handleAddNew}
               >
                 <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
@@ -765,7 +765,7 @@ export default function ContactsScreen() {
                   styles.footerAction,
                   { backgroundColor: theme.card, borderColor: theme.border },
                 ]}
-                testID="contacts-empty-import"
+                testID="contacts-import"
                 onPress={handleImportContact}
                 disabled={isImporting}
               >

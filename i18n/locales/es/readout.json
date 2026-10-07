@@ -37,7 +37,9 @@
       "mobility": "Movilidad",
       "vehicleNote": "Puede estar manejando o usando un vehículo",
       "lastSeen": "Ropa con la que se vio por última vez",
-      "identifyingMarks": "Señas particulares"
+      "identifyingMarks": "Señas particulares",
+      "handLeft": "Izquierda",
+      "handRight": "Derecha"
     },
     "location": {
       "title": "Visto por última vez",

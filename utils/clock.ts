@@ -7,14 +7,22 @@
 export const TEST_SEAMS_ENABLED = __DEV__ || process.env.EXPO_PUBLIC_TEST_SEAMS === '1';
 
 let offsetMs = 0;
+let frozenAtMs: number | null = null;
 
 export function now(): number {
-  return Date.now() + offsetMs;
+  return frozenAtMs ?? Date.now() + offsetMs;
 }
 
 /** Moves the app clock forward (or back). Ignored unless test seams are enabled. */
 export function advanceClock(ms: number): void {
-  if (TEST_SEAMS_ENABLED) offsetMs += ms;
+  if (!TEST_SEAMS_ENABLED) return;
+  if (frozenAtMs !== null) frozenAtMs += ms;
+  else offsetMs += ms;
+}
+
+/** Stops the app clock at a fixed moment, so screenshots show the same times every run. */
+export function freezeClock(atMs: number): void {
+  if (TEST_SEAMS_ENABLED) frozenAtMs = atMs;
 }
 
 // On web a deep link reloads the page (and resets the offset), so Playwright

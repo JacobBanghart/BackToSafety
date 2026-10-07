@@ -279,11 +279,14 @@ export default function ReadoutScreen() {
         )}
 
         {/* Appearance Card */}
+        {/* Mobility and dominant hand live here too, so they alone must show the card (F-26). */}
         {(profile.height ||
           profile.weight ||
           profile.hairColor ||
           profile.eyeColor ||
-          profile.identifyingMarks) && (
+          profile.identifyingMarks ||
+          (profile.dominantHand && profile.dominantHand !== 'unknown') ||
+          profile.mobilityLevel) && (
           <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
             <View style={styles.sectionLabel}>
               <IconSymbol name="eye.fill" size={14} color={theme.primary} />
@@ -326,7 +329,11 @@ export default function ReadoutScreen() {
               {profile.dominantHand && profile.dominantHand !== 'unknown' && (
                 <InfoChip
                   label={t('sections.appearance.dominantHand')}
-                  value={profile.dominantHand === 'left' ? 'Left' : 'Right'}
+                  value={
+                    profile.dominantHand === 'left'
+                      ? t('sections.appearance.handLeft')
+                      : t('sections.appearance.handRight')
+                  }
                   theme={theme}
                 />
               )}
