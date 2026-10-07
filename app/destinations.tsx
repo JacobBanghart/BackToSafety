@@ -399,13 +399,16 @@ export default function DestinationsScreen() {
     item: destination,
     drag,
     isActive,
+    getIndex,
   }: RenderItemParams<Destination>) => {
+    const index = getIndex() ?? 0;
     const categoryInfo = getCategoryInfo(destination.category);
     const riskInfo = getRiskInfo(destination.riskLevel);
     const riskColor = semantic[riskInfo.color];
 
     return (
       <Pressable
+        testID={`destinations-item-${index}`}
         onPress={() => setViewingDestination(destination)}
         onLongPress={drag}
         delayLongPress={180}
@@ -425,7 +428,11 @@ export default function DestinationsScreen() {
               <View style={[styles.categoryIcon, { backgroundColor: `${primary[600]}15` }]}>
                 <IconSymbol name={categoryInfo.icon} size={16} color={primary[600]} />
               </View>
-              <ThemedText style={styles.destinationName} numberOfLines={1}>
+              <ThemedText
+                testID={`destinations-item-${index}-name`}
+                style={styles.destinationName}
+                numberOfLines={1}
+              >
                 {destination.name}
               </ThemedText>
             </View>
@@ -458,6 +465,7 @@ export default function DestinationsScreen() {
 
           <TouchableOpacity
             style={[styles.editButton, { backgroundColor: `${primary[600]}15` }]}
+            testID={`destinations-item-${index}-edit`}
             onPress={() => handleEdit(destination)}
           >
             <IconSymbol name="pencil" size={18} color={primary[600]} />
@@ -467,6 +475,7 @@ export default function DestinationsScreen() {
         {destination.address && (
           <TouchableOpacity
             style={[styles.addressRow, { backgroundColor: theme.surface }]}
+            testID={`destinations-item-${index}-maps`}
             onPress={() => handleOpenMaps(destination.address!)}
           >
             <IconSymbol name="location" size={14} color={primary[600]} />
@@ -496,6 +505,7 @@ export default function DestinationsScreen() {
 
       {/* Name */}
       <AppTextInput
+        testID="destinations-form-name"
         label={t('form.nameLabel')}
         required
         placeholder={t('form.namePlaceholder')}
@@ -523,6 +533,7 @@ export default function DestinationsScreen() {
                     borderColor: isSelected ? selectedColor : theme.inputBorder,
                   },
                 ]}
+                testID={`destinations-form-category-${option.value}`}
                 onPress={() =>
                   setFormData((prev) =>
                     prev.category === option.value ? prev : { ...prev, category: option.value },
@@ -557,6 +568,7 @@ export default function DestinationsScreen() {
         {formData.category === 'other' && (
           <View style={{ marginTop: Spacing.sm }}>
             <AppTextInput
+              testID="destinations-form-other-category"
               label={t('form.otherCategoryLabel')}
               placeholder={t('form.otherCategoryPlaceholder')}
               value={formData.otherCategoryLabel}
@@ -587,6 +599,7 @@ export default function DestinationsScreen() {
                     borderColor: color,
                   },
                 ]}
+                testID={`destinations-form-risk-${option.value}`}
                 onPress={() => setFormData({ ...formData, riskLevel: option.value })}
               >
                 <ThemedText
@@ -605,6 +618,7 @@ export default function DestinationsScreen() {
 
       {/* Address */}
       <AppTextInput
+        testID="destinations-form-address"
         label={t('form.addressLabel')}
         placeholder={t('form.addressPlaceholder')}
         multiline
@@ -614,6 +628,7 @@ export default function DestinationsScreen() {
 
       {/* Distance */}
       <AppTextInput
+        testID="destinations-form-distance"
         label={t('form.distanceLabel')}
         placeholder={t('form.distancePlaceholder')}
         value={formData.distanceFromHome}
@@ -622,6 +637,7 @@ export default function DestinationsScreen() {
 
       {/* Reason */}
       <AppTextInput
+        testID="destinations-form-reason"
         label={t('form.whyLabel')}
         placeholder={t('form.whyPlaceholder')}
         multiline
@@ -631,6 +647,7 @@ export default function DestinationsScreen() {
 
       {/* Notes */}
       <AppTextInput
+        testID="destinations-form-notes"
         label={t('form.notesLabel')}
         placeholder={t('form.notesPlaceholder')}
         multiline
@@ -641,6 +658,7 @@ export default function DestinationsScreen() {
       {editingDestination && (
         <TouchableOpacity
           style={[styles.formDeleteButton, { borderColor: semantic.error }]}
+          testID="destinations-form-delete"
           onPress={() => handleDelete(editingDestination)}
         >
           <IconSymbol name="trash" size={14} color={semantic.error} />
@@ -705,6 +723,7 @@ export default function DestinationsScreen() {
           </ThemedText>
           <Pressable
             style={[styles.emptyButton, { backgroundColor: theme.primary }]}
+            testID="destinations-add"
             onPress={handleAddNew}
           >
             <IconSymbol name="plus" size={18} color={Colors.light.textOnPrimary} />
@@ -719,6 +738,7 @@ export default function DestinationsScreen() {
           {destinations.length > 0 && (
             <TouchableOpacity
               style={[styles.addButton, { backgroundColor: theme.primary }]}
+              testID="destinations-empty-add"
               onPress={handleAddNew}
             >
               <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
@@ -736,6 +756,7 @@ export default function DestinationsScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <ScreenHeader
+          testID="destinations"
           title={
             showForm
               ? editingDestination
@@ -747,6 +768,7 @@ export default function DestinationsScreen() {
           rightElement={
             showForm ? (
               <Pressable
+                testID="destinations-save"
                 onPress={handleSave}
                 style={[styles.headerSaveButton, { backgroundColor: theme.tint }]}
                 disabled={isSaving}
@@ -776,6 +798,7 @@ export default function DestinationsScreen() {
       </SafeAreaView>
 
       <AppModal
+        testID="destinations-modal"
         visible={modalVisible}
         onDismiss={() => handleModalAction('cancel')}
         title={
@@ -864,6 +887,7 @@ export default function DestinationsScreen() {
                       {dest.address ? (
                         <TouchableOpacity
                           style={[styles.detailRow, { borderBottomColor: theme.border }]}
+                          testID="destinations-detail-maps"
                           onPress={() => handleOpenMaps(dest.address!)}
                         >
                           <IconSymbol name="location" size={14} color={primary[600]} />
@@ -932,6 +956,7 @@ export default function DestinationsScreen() {
                           styles.detailModalButton,
                           { borderColor: theme.border, borderWidth: 1 },
                         ]}
+                        testID="destinations-detail-close"
                         onPress={() => setViewingDestination(null)}
                       >
                         <ThemedText
@@ -942,6 +967,7 @@ export default function DestinationsScreen() {
                       </Pressable>
                       <Pressable
                         style={[styles.detailModalButton, { backgroundColor: theme.tint }]}
+                        testID="destinations-detail-edit"
                         onPress={() => handleEdit(dest)}
                       >
                         <IconSymbol name="pencil" size={14} color={Colors.light.textOnPrimary} />

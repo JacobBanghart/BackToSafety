@@ -64,7 +64,6 @@ export default function NameScreen() {
           <View style={styles.footer}>
             <Pressable
               testID="onboarding-name-continue"
-              accessibilityLabel="onboarding-name-continue"
               style={[
                 styles.button,
                 { backgroundColor: theme.primary },
@@ -93,7 +92,6 @@ export default function NameScreen() {
             <ThemedText style={styles.label}>{t('name.nameLabel')}</ThemedText>
             <TextInput
               testID="onboarding-name-input"
-              accessibilityLabel="onboarding-name-input"
               style={[
                 styles.input,
                 {
@@ -120,6 +118,7 @@ export default function NameScreen() {
           <View style={styles.inputGroup}>
             <ThemedText style={styles.label}>{t('name.nicknameLabel')}</ThemedText>
             <TextInput
+              testID="onboarding-name-nickname"
               style={[
                 styles.input,
                 {

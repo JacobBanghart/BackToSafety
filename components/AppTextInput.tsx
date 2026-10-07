@@ -24,6 +24,7 @@ interface AppTextInputProps {
   keyboardType?: KeyboardTypeOptions;
   autoComplete?: TextInputProps['autoComplete'];
   required?: boolean;
+  testID?: string;
 }
 
 export function AppTextInput({
@@ -37,6 +38,7 @@ export function AppTextInput({
   keyboardType = 'default',
   autoComplete,
   required = false,
+  testID,
 }: AppTextInputProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -54,6 +56,7 @@ export function AppTextInput({
       )}
 
       <TextInput
+        testID={testID}
         style={[
           styles.textInput,
           !multiline && styles.textInputSingleLine,

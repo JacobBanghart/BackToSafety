@@ -154,6 +154,7 @@ export default function WelcomeScreen() {
                     borderColor: colors.optionBorder,
                   },
                 ]}
+                testID={`onboarding-welcome-theme-${option.value}`}
                 onPress={() => {
                   track('settings_theme_changed', {
                     theme: option.value,
@@ -201,6 +202,7 @@ export default function WelcomeScreen() {
                         borderColor: colors.optionBorder,
                       },
                     ]}
+                    testID={`onboarding-welcome-language-${lang}`}
                     onPress={() => {
                       void i18n.changeLanguage(lang);
                       void saveSetting('language_preference', lang);
@@ -234,7 +236,6 @@ export default function WelcomeScreen() {
         )}
         <Pressable
           testID="onboarding-get-started"
-          accessibilityLabel="onboarding-get-started"
           style={[styles.button, { backgroundColor: colors.buttonBg }]}
           onPress={handleContinue}
         >

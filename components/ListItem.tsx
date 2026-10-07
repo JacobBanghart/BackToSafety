@@ -12,27 +12,33 @@ interface ListItemProps {
   onPress?: () => void;
   rightElement?: ReactNode;
   style?: ViewStyle;
+  testID?: string;
 }
 
-export function ListItem({ label, value, onPress, rightElement, style }: ListItemProps) {
+export function ListItem({ label, value, onPress, rightElement, style, testID }: ListItemProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
   const inner = (
-    <View style={[styles.row, { borderBottomColor: theme.border }, style]}>
+    <View
+      testID={onPress ? undefined : testID}
+      style={[styles.row, { borderBottomColor: theme.border }, style]}
+    >
       <ThemedText style={[styles.label, { color: theme.textSecondary }]}>{label}</ThemedText>
 
       {rightElement != null ? (
         rightElement
       ) : (
-        <ThemedText style={styles.value}>{value ?? ''}</ThemedText>
+        <ThemedText testID={testID && `${testID}-value`} style={styles.value}>
+          {value ?? ''}
+        </ThemedText>
       )}
     </View>
   );
 
   if (onPress) {
     return (
-      <TouchableOpacity onPress={onPress} activeOpacity={0.7}>
+      <TouchableOpacity testID={testID} onPress={onPress} activeOpacity={0.7}>
         {inner}
       </TouchableOpacity>
     );

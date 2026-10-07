@@ -271,6 +271,7 @@ export default function ReadoutScreen() {
         <ThemedText>{t('noProfile')}</ThemedText>
         <Pressable
           style={[styles.button, { backgroundColor: theme.primary }]}
+          testID="readout-go-onboarding"
           onPress={() => {
             track('screen_viewed', { screen: 'onboarding', source: 'readout_no_profile' });
             router.push('/onboarding');
@@ -292,6 +293,7 @@ export default function ReadoutScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }} edges={['top']}>
       <ScreenHeader
+        testID="readout"
         title={t('screenTitle')}
         onBack={() => {
           track('screen_viewed', { screen: 'home', source: 'readout_back' });
@@ -300,7 +302,11 @@ export default function ReadoutScreen() {
       />
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         {/* Call 911 Button - Most prominent */}
-        <Pressable style={[styles.emergencyButton, getShadow('sm', colorScheme)]} onPress={call911}>
+        <Pressable
+          style={[styles.emergencyButton, getShadow('sm', colorScheme)]}
+          testID="readout-call-911"
+          onPress={call911}
+        >
           <ThemedText style={styles.emergencyButtonText}>{t('callButton')}</ThemedText>
         </Pressable>
 
@@ -308,6 +314,7 @@ export default function ReadoutScreen() {
         <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
           <Pressable
             style={styles.scriptHeaderButton}
+            testID="readout-script-toggle"
             onPress={() => setIsScriptExpanded((prev) => !prev)}
           >
             <View style={styles.sectionLabel}>
@@ -330,9 +337,17 @@ export default function ReadoutScreen() {
               <ThemedText style={[styles.scriptHint, { color: theme.textSecondary }]}>
                 {t('sections.script.hint')}
               </ThemedText>
-              <ThemedText style={[styles.scriptText, { color: theme.text }]}>{script}</ThemedText>
+              <ThemedText
+                testID="readout-script-text"
+                style={[styles.scriptText, { color: theme.text }]}
+              >
+                {script}
+              </ThemedText>
               {missingScriptDetails.length > 0 && (
-                <ThemedText style={[styles.scriptMissingText, { color: semantic.warning }]}>
+                <ThemedText
+                  testID="readout-script-missing"
+                  style={[styles.scriptMissingText, { color: semantic.warning }]}
+                >
                   {t('sections.script.missingDetails', {
                     details: missingScriptDetails.join(', '),
                   })}
@@ -412,6 +427,7 @@ export default function ReadoutScreen() {
             {lastSeen.coords && (
               <Pressable
                 style={[styles.mapsButton, { backgroundColor: semantic.success }]}
+                testID="readout-open-maps"
                 onPress={openMaps}
               >
                 <IconSymbol name="map.fill" size={16} color={Colors.light.textOnPrimary} />
@@ -713,7 +729,7 @@ export default function ReadoutScreen() {
                 {t('contacts.title')}
               </ThemedText>
             </View>
-            {emergencyContacts.map((c) => (
+            {emergencyContacts.map((c, index) => (
               <View key={c.id} style={[styles.contactRow, { borderTopColor: theme.border }]}>
                 <View style={styles.contactInfo}>
                   <ThemedText
@@ -735,6 +751,7 @@ export default function ReadoutScreen() {
                 </View>
                 <Pressable
                   style={[styles.callButton, { backgroundColor: semantic.success }]}
+                  testID={`readout-contact-${index}-call`}
                   onPress={() => {
                     track('readout_contact_called');
                     Linking.openURL(`tel:${c.phone}`);
@@ -754,6 +771,7 @@ export default function ReadoutScreen() {
         <View style={styles.actionsCard}>
           <Pressable
             style={[styles.button, { backgroundColor: theme.primary }]}
+            testID="readout-copy-script"
             onPress={copyScript}
           >
             <IconSymbol
@@ -771,6 +789,7 @@ export default function ReadoutScreen() {
               styles.buttonSecondary,
               { borderColor: theme.border, backgroundColor: theme.card },
             ]}
+            testID="readout-copy-all"
             onPress={copyAll}
           >
             <IconSymbol

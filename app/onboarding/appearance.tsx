@@ -80,14 +80,17 @@ export default function AppearanceScreen() {
         contentContainerStyle={styles.scrollContent}
         footer={
           <View style={styles.footer}>
-            <Pressable style={styles.skipButton} onPress={handleSkip}>
+            <Pressable
+              style={styles.skipButton}
+              testID="onboarding-appearance-skip"
+              onPress={handleSkip}
+            >
               <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
                 {t('appearance.skip')}
               </ThemedText>
             </Pressable>
             <Pressable
               testID="onboarding-appearance-continue"
-              accessibilityLabel="onboarding-appearance-continue"
               style={[styles.button, { backgroundColor: theme.primary }]}
               onPress={handleContinue}
             >
@@ -111,6 +114,7 @@ export default function AppearanceScreen() {
             <View style={[styles.inputGroup, styles.halfWidth]}>
               <ThemedText style={styles.label}>{t('appearance.heightLabel')}</ThemedText>
               <TextInput
+                testID="onboarding-appearance-height"
                 style={[
                   styles.input,
                   {
@@ -130,6 +134,7 @@ export default function AppearanceScreen() {
             <View style={[styles.inputGroup, styles.halfWidth]}>
               <ThemedText style={styles.label}>{t('appearance.weightLabel')}</ThemedText>
               <TextInput
+                testID="onboarding-appearance-weight"
                 style={[
                   styles.input,
                   {
@@ -152,6 +157,7 @@ export default function AppearanceScreen() {
             <View style={[styles.inputGroup, styles.halfWidth]}>
               <ThemedText style={styles.label}>{t('appearance.hairLabel')}</ThemedText>
               <TextInput
+                testID="onboarding-appearance-hair"
                 style={[
                   styles.input,
                   {
@@ -169,6 +175,7 @@ export default function AppearanceScreen() {
             <View style={[styles.inputGroup, styles.halfWidth]}>
               <ThemedText style={styles.label}>{t('appearance.eyeLabel')}</ThemedText>
               <TextInput
+                testID="onboarding-appearance-eyes"
                 style={[
                   styles.input,
                   {
@@ -188,6 +195,7 @@ export default function AppearanceScreen() {
           <View style={styles.inputGroup}>
             <ThemedText style={styles.label}>{t('appearance.marksLabel')}</ThemedText>
             <TextInput
+              testID="onboarding-appearance-marks"
               style={[
                 styles.input,
                 styles.textArea,

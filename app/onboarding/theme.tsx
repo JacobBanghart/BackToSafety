@@ -95,6 +95,7 @@ export default function ThemeScreen() {
                       : theme.card,
                 },
               ]}
+              testID={`onboarding-theme-${option.value}`}
               onPress={() => {
                 track('settings_theme_changed', { theme: option.value, source: 'onboarding' });
                 setThemePreference(option.value);
@@ -125,6 +126,7 @@ export default function ThemeScreen() {
       <View style={styles.footer}>
         <Pressable
           style={[styles.button, { backgroundColor: theme.tint }]}
+          testID="onboarding-theme-continue"
           onPress={handleContinue}
         >
           <ThemedText style={styles.buttonText}>{t('theme.continue')}</ThemedText>

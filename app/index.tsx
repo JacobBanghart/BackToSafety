@@ -123,6 +123,7 @@ export default function HomeScreen() {
 
           {/* Avatar */}
           <Pressable
+            testID="home-profile"
             onPress={() => {
               track('screen_viewed', { screen: 'profile', source: 'home' });
               router.push('/profile' as Href);
@@ -151,7 +152,6 @@ export default function HomeScreen() {
         {/* ── Emergency Button ── */}
         <Pressable
           testID="home-start-emergency"
-          accessibilityLabel="home-start-emergency"
           style={[
             styles.emergencyButton,
             getShadow('md', colorScheme),
@@ -229,6 +229,7 @@ export default function HomeScreen() {
         <View style={styles.quickActions}>
           <Pressable
             style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+            testID="home-contacts"
             onPress={() => {
               track('screen_viewed', { screen: 'contacts', source: 'home' });
               router.push('/contacts' as Href);
@@ -249,6 +250,7 @@ export default function HomeScreen() {
 
           <Pressable
             style={[styles.actionCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+            testID="home-places"
             onPress={() => {
               track('destination_add_tapped', { source: 'home' });
               router.push('/destinations' as Href);
@@ -270,6 +272,7 @@ export default function HomeScreen() {
         {hasProfile && (
           <Pressable
             style={[styles.summaryCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+            testID="home-readout"
             onPress={() => {
               track('screen_viewed', { screen: 'readout', source: 'home' });
               router.push('/readout' as Href);
@@ -355,6 +358,7 @@ export default function HomeScreen() {
         <AppCard style={styles.settingsCard}>
           <Pressable
             style={styles.settingsRow}
+            testID="home-settings"
             onPress={() => {
               track('screen_viewed', { screen: 'settings', source: 'home' });
               router.push('/settings' as Href);
@@ -388,6 +392,7 @@ export default function HomeScreen() {
             </ThemedText>
             <Pressable
               style={[styles.setupButton, { backgroundColor: theme.primary }]}
+              testID="home-setup-profile"
               onPress={() => {
                 track('screen_viewed', { screen: 'profile', source: 'home_setup' });
                 router.push('/profile' as Href);

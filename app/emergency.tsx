@@ -470,7 +470,6 @@ export default function EmergencyScreen() {
   return (
     <SafeAreaView
       testID="emergency-screen"
-      accessibilityLabel="emergency-screen"
       style={[styles.container, { backgroundColor: theme.background }]}
       edges={['top']}
     >
@@ -506,6 +505,7 @@ export default function EmergencyScreen() {
                     styles.modalButtonFullWidth,
                     { backgroundColor: semantic.success },
                   ]}
+                  testID="emergency-modal-found-ok"
                   onPress={() => handleModalAction('dismiss')}
                 >
                   <ThemedText style={styles.modalButtonText}>{tCommon('ok')}</ThemedText>
@@ -529,6 +529,7 @@ export default function EmergencyScreen() {
                       styles.modalButtonOutline,
                       { borderColor: theme.border },
                     ]}
+                    testID="emergency-modal-leave-stay"
                     onPress={() => setModalVisible(false)}
                   >
                     <ThemedText style={[styles.modalButtonText, { color: theme.text }]}>
@@ -541,6 +542,7 @@ export default function EmergencyScreen() {
                       styles.modalButtonRowItem,
                       { backgroundColor: theme.primary },
                     ]}
+                    testID="emergency-modal-leave-leave"
                     onPress={() => {
                       track('emergency_leave');
                       handleModalAction('leave');
@@ -551,6 +553,7 @@ export default function EmergencyScreen() {
                 </View>
                 <TouchableOpacity
                   style={styles.modalButtonDestructive}
+                  testID="emergency-modal-leave-end"
                   onPress={() => handleModalAction('end')}
                 >
                   <ThemedText
@@ -580,6 +583,7 @@ export default function EmergencyScreen() {
                     styles.modalButtonFullWidth,
                     { backgroundColor: theme.primary },
                   ]}
+                  testID="emergency-modal-info-ok"
                   onPress={() => setModalVisible(false)}
                 >
                   <ThemedText style={styles.modalButtonText}>{tCommon('ok')}</ThemedText>
@@ -591,6 +595,7 @@ export default function EmergencyScreen() {
       </Modal>
 
       <ScreenHeader
+        testID="emergency"
         title={t('screenTitle')}
         onBack={onBackPress}
         titleIcon={{ name: 'exclamationmark.triangle.fill', color: semantic.error, size: 18 }}
@@ -611,10 +616,12 @@ export default function EmergencyScreen() {
             getShadow('md', colorScheme),
           ]}
         >
-          <ThemedText style={styles.timerLabel}>
+          <ThemedText testID="emergency-timer-label" style={styles.timerLabel}>
             {timerExpired ? t('timer.labelExpired', { emergencyNumber }) : t('timer.labelActive')}
           </ThemedText>
-          <ThemedText style={styles.timerText}>{mmss}</ThemedText>
+          <ThemedText testID="emergency-timer" style={styles.timerText}>
+            {mmss}
+          </ThemedText>
           <ThemedText style={styles.timerHint}>
             {timerExpired ? t('timer.hintExpired', { emergencyNumber }) : t('timer.hintActive')}
           </ThemedText>
@@ -625,7 +632,7 @@ export default function EmergencyScreen() {
               <View style={[styles.progressFill, { flex: progress / 100 }]} />
               <View style={{ flex: (100 - progress) / 100 }} />
             </View>
-            <ThemedText style={styles.progressText}>
+            <ThemedText testID="emergency-progress" style={styles.progressText}>
               {t('timer.stepsProgress', { checked: checkedCount, total: steps.length })}
             </ThemedText>
           </View>
@@ -657,6 +664,7 @@ export default function EmergencyScreen() {
               {t('wearing.hint', { emergencyNumber })}
             </ThemedText>
             <TextInput
+              testID="emergency-wearing-input"
               style={[
                 styles.wearingInput,
                 {
@@ -671,7 +679,11 @@ export default function EmergencyScreen() {
               placeholderTextColor={neutral[400]}
               multiline
             />
-            <Pressable style={styles.wearingDismiss} onPress={() => setShowWearingInput(false)}>
+            <Pressable
+              style={styles.wearingDismiss}
+              testID="emergency-wearing-dismiss"
+              onPress={() => setShowWearingInput(false)}
+            >
               <ThemedText style={[styles.dismissText, { color: theme.textSecondary }]}>
                 {t('wearing.dismiss')}
               </ThemedText>
@@ -688,6 +700,7 @@ export default function EmergencyScreen() {
               { backgroundColor: semantic.success },
               getShadow('sm', colorScheme),
             ]}
+            testID="emergency-found"
             onPress={onMarkFound}
             activeOpacity={0.8}
           >
@@ -706,6 +719,7 @@ export default function EmergencyScreen() {
               },
               timerExpired && getShadow('sm', colorScheme),
             ]}
+            testID="emergency-call-911"
             onPress={onCall911}
           >
             <ThemedText
@@ -725,6 +739,7 @@ export default function EmergencyScreen() {
                 styles.actionButtonSecondary,
                 { backgroundColor: theme.card, borderColor: theme.border },
               ]}
+              testID="emergency-readout"
               onPress={onViewReadout}
             >
               <ThemedText style={[styles.actionButtonTextSmall, { color: theme.text }]}>
@@ -737,6 +752,7 @@ export default function EmergencyScreen() {
                 styles.actionButtonSecondary,
                 { backgroundColor: theme.card, borderColor: theme.border },
               ]}
+              testID="emergency-alert-contacts"
               onPress={onAlertContacts}
             >
               <ThemedText style={[styles.actionButtonTextSmall, { color: theme.text }]}>
@@ -778,6 +794,7 @@ export default function EmergencyScreen() {
                   opacity: step.checked ? 0.75 : 1,
                 },
               ]}
+              testID={`emergency-step-${step.id}`}
               onPress={() => toggleStep(step.id)}
             >
               {/* Step number / checkmark */}

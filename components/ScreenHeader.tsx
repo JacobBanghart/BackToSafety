@@ -19,9 +19,17 @@ interface ScreenHeaderProps {
   onBack?: () => void;
   rightElement?: ReactNode;
   titleIcon?: TitleIcon;
+  /** Screen ID; the back button gets `<testID>-back` and the title `<testID>-title`. */
+  testID?: string;
 }
 
-export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenHeaderProps) {
+export function ScreenHeader({
+  title,
+  onBack,
+  rightElement,
+  titleIcon,
+  testID,
+}: ScreenHeaderProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const router = useRouter();
@@ -39,7 +47,12 @@ export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenH
   return (
     <View style={[styles.header, { backgroundColor: theme.background }]}>
       {/* Left: back button */}
-      <TouchableOpacity style={styles.sideSlot} onPress={handleBack} hitSlop={8}>
+      <TouchableOpacity
+        testID={testID && `${testID}-back`}
+        style={styles.sideSlot}
+        onPress={handleBack}
+        hitSlop={8}
+      >
         <IconSymbol name="chevron.left" size={22} color={theme.tint} />
       </TouchableOpacity>
 
@@ -52,12 +65,20 @@ export function ScreenHeader({ title, onBack, rightElement, titleIcon }: ScreenH
               size={titleIcon.size ?? 18}
               color={titleIcon.color}
             />
-            <ThemedText style={[styles.titleRowText, { color: theme.text }]} numberOfLines={1}>
+            <ThemedText
+              testID={testID && `${testID}-title`}
+              style={[styles.titleRowText, { color: theme.text }]}
+              numberOfLines={1}
+            >
               {title}
             </ThemedText>
           </View>
         ) : (
-          <ThemedText style={[styles.headerTitle, { color: theme.text }]} numberOfLines={1}>
+          <ThemedText
+            testID={testID && `${testID}-title`}
+            style={[styles.headerTitle, { color: theme.text }]}
+            numberOfLines={1}
+          >
             {title}
           </ThemedText>
         )}

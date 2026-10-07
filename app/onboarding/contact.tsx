@@ -75,7 +75,6 @@ export default function ContactScreen() {
           <View style={styles.footer}>
             <Pressable
               testID="onboarding-contact-skip"
-              accessibilityLabel="onboarding-contact-skip"
               style={styles.skipButton}
               onPress={handleSkip}
             >
@@ -89,6 +88,7 @@ export default function ContactScreen() {
                 { backgroundColor: theme.primary },
                 (!name.trim() || !phone.trim()) && styles.buttonDisabled,
               ]}
+              testID="onboarding-contact-continue"
               onPress={handleContinue}
             >
               <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
@@ -112,6 +112,7 @@ export default function ContactScreen() {
           <View style={styles.inputGroup}>
             <ThemedText style={styles.label}>{t('contact.nameLabel')}</ThemedText>
             <TextInput
+              testID="onboarding-contact-name"
               style={[
                 styles.input,
                 {
@@ -135,6 +136,7 @@ export default function ContactScreen() {
           <View style={styles.inputGroup}>
             <ThemedText style={styles.label}>{t('contact.phoneLabel')}</ThemedText>
             <TextInput
+              testID="onboarding-contact-phone"
               style={[
                 styles.input,
                 {
@@ -159,6 +161,7 @@ export default function ContactScreen() {
           <View style={styles.inputGroup}>
             <ThemedText style={styles.label}>{t('contact.relationshipLabel')}</ThemedText>
             <TextInput
+              testID="onboarding-contact-relationship"
               style={[
                 styles.input,
                 {

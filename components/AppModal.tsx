@@ -17,6 +17,8 @@ interface AppModalProps {
   /** Label for the confirm button. Defaults to 'Delete' for delete type, 'OK' for alert. */
   confirmLabel?: string;
   onConfirm?: () => void;
+  /** Root ID; the buttons get `<testID>-confirm` and `<testID>-cancel`. */
+  testID?: string;
 }
 
 export function AppModal({
@@ -27,6 +29,7 @@ export function AppModal({
   type,
   confirmLabel,
   onConfirm,
+  testID,
 }: AppModalProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
@@ -38,13 +41,14 @@ export function AppModal({
   return (
     <Modal animationType="fade" transparent visible={visible} onRequestClose={onDismiss}>
       <View style={[styles.overlay, { backgroundColor: theme.overlay }]}>
-        <View style={[styles.content, { backgroundColor: theme.card }]}>
+        <View testID={testID} style={[styles.content, { backgroundColor: theme.card }]}>
           <ThemedText style={styles.title}>{title}</ThemedText>
           <ThemedText style={styles.message}>{message}</ThemedText>
 
           <View style={[styles.buttons, type !== 'delete' && styles.buttonsCentered]}>
             {type === 'delete' && (
               <TouchableOpacity
+                testID={testID && `${testID}-cancel`}
                 style={[styles.button, styles.cancelButton, { borderColor: theme.border }]}
                 onPress={onDismiss}
               >
@@ -53,6 +57,7 @@ export function AppModal({
             )}
 
             <TouchableOpacity
+              testID={testID && `${testID}-confirm`}
               style={[styles.button, { backgroundColor: confirmBackgroundColor }]}
               onPress={onConfirm ?? onDismiss}
             >

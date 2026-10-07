@@ -134,7 +134,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]} edges={['top']}>
-      <ScreenHeader title={t('screenTitle')} />
+      <ScreenHeader testID="settings" title={t('screenTitle')} />
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Theme Section */}
         <AppCard>
@@ -161,6 +161,7 @@ export default function SettingsScreen() {
                       backgroundColor: isSelected ? theme.primaryLight : 'transparent',
                     },
                   ]}
+                  testID={`settings-theme-${option.value}`}
                   onPress={() => {
                     track('settings_theme_changed', { theme: option.value });
                     setThemePreference(option.value);
@@ -194,6 +195,7 @@ export default function SettingsScreen() {
           </ThemedText>
           <Pressable
             style={[styles.dangerButton, isDeletingAccount && styles.buttonDisabled]}
+            testID="settings-delete-account"
             onPress={handleDeleteAccount}
             disabled={isDeletingAccount}
           >
@@ -243,6 +245,7 @@ export default function SettingsScreen() {
                         backgroundColor: isSelected ? theme.primaryLight : 'transparent',
                       },
                     ]}
+                    testID={`settings-language-${lang}`}
                     onPress={() => {
                       track('settings_language_changed', { language: lang });
                       void i18n.changeLanguage(lang);
@@ -273,6 +276,7 @@ export default function SettingsScreen() {
           <ListItem
             label={t('sections.about.version')}
             value={`${appVersionLabel}${devModeEnabled ? t('sections.about.devSuffix') : ''}`}
+            testID="settings-version"
             onPress={handleVersionTap}
           />
           <ListItem label={t('sections.about.platform')} value={Platform.OS} />
@@ -290,6 +294,7 @@ export default function SettingsScreen() {
           <ListItem
             label={t('sections.about.deviceId')}
             value={deviceId ?? '—'}
+            testID="settings-device-id"
             onPress={() => {
               if (deviceId) {
                 Clipboard.setString(deviceId);

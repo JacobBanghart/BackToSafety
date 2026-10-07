@@ -157,6 +157,7 @@ export default function PhotoScreen() {
         <View style={styles.photoButtons}>
           <Pressable
             style={[styles.photoButton, { borderColor: theme.primary }]}
+            testID="onboarding-photo-take"
             onPress={takePhoto}
           >
             <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>
@@ -165,6 +166,7 @@ export default function PhotoScreen() {
           </Pressable>
           <Pressable
             style={[styles.photoButton, { borderColor: theme.primary }]}
+            testID="onboarding-photo-library"
             onPress={pickImage}
           >
             <ThemedText style={[styles.photoButtonText, { color: theme.primary }]}>
@@ -179,12 +181,7 @@ export default function PhotoScreen() {
       </View>
 
       <View style={styles.footer}>
-        <Pressable
-          testID="onboarding-photo-skip"
-          accessibilityLabel="onboarding-photo-skip"
-          style={styles.skipButton}
-          onPress={handleSkip}
-        >
+        <Pressable testID="onboarding-photo-skip" style={styles.skipButton} onPress={handleSkip}>
           <ThemedText style={[styles.skipButtonText, { color: theme.textDisabled }]}>
             {t('photo.skip')}
           </ThemedText>
@@ -195,6 +192,7 @@ export default function PhotoScreen() {
             { backgroundColor: theme.primary },
             !photoUri && styles.buttonDisabled,
           ]}
+          testID="onboarding-photo-continue"
           onPress={handleContinue}
           disabled={!photoUri || isLoading}
         >

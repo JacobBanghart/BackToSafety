@@ -10,14 +10,16 @@ interface SecondaryButtonProps {
   label: string;
   onPress: () => void;
   style?: ViewStyle;
+  testID?: string;
 }
 
-export function SecondaryButton({ label, onPress, style }: SecondaryButtonProps) {
+export function SecondaryButton({ label, onPress, style, testID }: SecondaryButtonProps) {
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
   return (
     <TouchableOpacity
+      testID={testID}
       style={[styles.button, { borderColor: theme.border }, style]}
       onPress={onPress}
       activeOpacity={0.8}

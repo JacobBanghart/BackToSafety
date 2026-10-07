@@ -518,6 +518,7 @@ export default function ProfileScreen() {
         </ThemedText>
       )}
       <TextInput
+        testID={`profile-field-${field}`}
         style={[
           styles.input,
           !options?.multiline && styles.inputSingleLine,
@@ -546,7 +547,11 @@ export default function ProfileScreen() {
     content: React.ReactNode,
   ) => (
     <View style={[styles.section, { backgroundColor: theme.card, borderColor: theme.border }]}>
-      <Pressable style={styles.sectionHeader} onPress={() => toggleSection(key)}>
+      <Pressable
+        style={styles.sectionHeader}
+        testID={`profile-section-${key}`}
+        onPress={() => toggleSection(key)}
+      >
         <View style={[styles.sectionIconWrap, { backgroundColor: theme.primaryLight }]}>
           <IconSymbol name={icon} size={16} color={theme.primary} />
         </View>
@@ -566,10 +571,12 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScreenHeader
+        testID="profile"
         title={t('screenTitle')}
         onBack={handleBack}
         rightElement={
           <Pressable
+            testID="profile-save"
             onPress={handleSave}
             style={[styles.saveButton, { backgroundColor: theme.tint }]}
             disabled={isSaving}
@@ -604,12 +611,14 @@ export default function ProfileScreen() {
           <View style={styles.photoButtons}>
             <Pressable
               style={[styles.photoButton, { backgroundColor: theme.tint }]}
+              testID="profile-photo-take"
               onPress={takePhoto}
             >
               <ThemedText style={styles.photoButtonText}>{t('takePhoto')}</ThemedText>
             </Pressable>
             <Pressable
               style={[styles.photoButton, { backgroundColor: theme.primary }]}
+              testID="profile-photo-library"
               onPress={pickImage}
             >
               <ThemedText style={styles.photoButtonText}>{t('choosePhoto')}</ThemedText>
@@ -641,6 +650,7 @@ export default function ProfileScreen() {
                 ]}
               >
                 <TextInput
+                  testID="profile-field-dateOfBirth"
                   style={[
                     styles.dateInput,
                     {
@@ -654,7 +664,12 @@ export default function ProfileScreen() {
                   keyboardType="number-pad"
                   maxLength={10}
                 />
-                <Pressable onPress={openDatePicker} style={styles.calendarHint} hitSlop={8}>
+                <Pressable
+                  testID="profile-dob-calendar"
+                  onPress={openDatePicker}
+                  style={styles.calendarHint}
+                  hitSlop={8}
+                >
                   <IconSymbol name="calendar" size={18} color={theme.textSecondary} />
                 </Pressable>
               </View>
@@ -749,6 +764,7 @@ export default function ProfileScreen() {
                         borderColor: theme.tint,
                       },
                     ]}
+                    testID={`profile-hand-${hand}`}
                     onPress={() => updateField('dominantHand', hand)}
                   >
                     <ThemedText
@@ -784,6 +800,7 @@ export default function ProfileScreen() {
                         borderColor: theme.tint,
                       },
                     ]}
+                    testID={`profile-mobility-${option.toLowerCase().replace(/ /g, '-')}`}
                     onPress={() => toggleMobilityOption(option)}
                   >
                     <ThemedText
@@ -801,6 +818,7 @@ export default function ProfileScreen() {
               </View>
               {selectedMobilityOptions.includes('Other') && (
                 <TextInput
+                  testID="profile-mobility-other-text"
                   style={[
                     styles.input,
                     {
@@ -917,6 +935,7 @@ export default function ProfileScreen() {
             />
             <View style={styles.dateModalActions}>
               <Pressable
+                testID="profile-date-cancel"
                 onPress={() => setShowIosDatePicker(false)}
                 style={[
                   styles.dateModalButton,
@@ -929,6 +948,7 @@ export default function ProfileScreen() {
                 </ThemedText>
               </Pressable>
               <Pressable
+                testID="profile-date-apply"
                 onPress={applyIosDate}
                 style={[styles.dateModalButton, { backgroundColor: theme.tint }]}
               >

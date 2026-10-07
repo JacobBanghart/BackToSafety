@@ -439,7 +439,13 @@ export default function ContactsScreen() {
     }
   };
 
-  const renderContactCard = ({ item: contact, drag, isActive }: RenderItemParams<Contact>) => {
+  const renderContactCard = ({
+    item: contact,
+    drag,
+    isActive,
+    getIndex,
+  }: RenderItemParams<Contact>) => {
+    const index = getIndex() ?? 0;
     const roleInfo = getRoleInfo(contact.role);
 
     return (
@@ -472,7 +478,12 @@ export default function ContactsScreen() {
 
         <View style={styles.contactHeader}>
           <View style={styles.contactInfo}>
-            <ThemedText style={styles.contactName} numberOfLines={1} ellipsizeMode="tail">
+            <ThemedText
+              testID={`contacts-item-${index}-name`}
+              style={styles.contactName}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {contact.name}
             </ThemedText>
             <ThemedText
@@ -488,12 +499,14 @@ export default function ContactsScreen() {
           <View style={styles.contactActions}>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: semantic.success }]}
+              testID={`contacts-item-${index}-call`}
               onPress={() => handleCall(contact.phone)}
             >
               <IconSymbol name="phone.fill" size={16} color={Colors.light.textOnPrimary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.actionButton, { backgroundColor: theme.primary }]}
+              testID={`contacts-item-${index}-edit`}
               onPress={() => handleEdit(contact)}
             >
               <IconSymbol name="pencil" size={16} color={Colors.light.textOnPrimary} />
@@ -523,6 +536,7 @@ export default function ContactsScreen() {
 
       {/* Name */}
       <AppTextInput
+        testID="contacts-form-name"
         label={t('form.nameLabel')}
         value={formData.name}
         onChangeText={(text) => setFormData({ ...formData, name: text })}
@@ -532,6 +546,7 @@ export default function ContactsScreen() {
 
       {/* Phone */}
       <AppTextInput
+        testID="contacts-form-phone"
         label={t('form.phoneLabel')}
         value={formData.phone}
         onChangeText={(text) => setFormData({ ...formData, phone: formatPhoneInput(text) })}
@@ -543,6 +558,7 @@ export default function ContactsScreen() {
 
       {/* Relationship */}
       <AppTextInput
+        testID="contacts-form-relationship"
         label={t('form.relationshipLabel')}
         value={formData.relationship}
         onChangeText={(text) => setFormData({ ...formData, relationship: text })}
@@ -551,6 +567,7 @@ export default function ContactsScreen() {
 
       {/* Address */}
       <AppTextInput
+        testID="contacts-form-address"
         label={t('form.addressLabel')}
         value={formData.address}
         onChangeText={(text) => setFormData({ ...formData, address: text })}
@@ -578,6 +595,7 @@ export default function ContactsScreen() {
                     borderColor: isSelected ? theme.primary : theme.inputBorder,
                   },
                 ]}
+                testID={`contacts-form-role-${option.value}`}
                 onPress={() =>
                   setFormData((prev) =>
                     prev.role === option.value ? prev : { ...prev, role: option.value },
@@ -612,6 +630,7 @@ export default function ContactsScreen() {
             borderColor: theme.inputBorder,
           },
         ]}
+        testID="contacts-form-notify"
         onPress={() => setFormData({ ...formData, notifyOnEmergency: !formData.notifyOnEmergency })}
       >
         <View style={styles.toggleInfo}>
@@ -636,6 +655,7 @@ export default function ContactsScreen() {
 
       {/* Notes */}
       <AppTextInput
+        testID="contacts-form-notes"
         label={t('form.notesLabel')}
         value={formData.notes}
         onChangeText={(text) => setFormData({ ...formData, notes: text })}
@@ -647,6 +667,7 @@ export default function ContactsScreen() {
       {editingContact && (
         <TouchableOpacity
           style={[styles.formDeleteButton, { borderColor: semantic.error }]}
+          testID="contacts-form-delete"
           onPress={() => handleDelete(editingContact)}
         >
           <IconSymbol name="trash" size={14} color={semantic.error} />
@@ -701,6 +722,7 @@ export default function ContactsScreen() {
           <View style={styles.emptyActionsRow}>
             <Pressable
               style={[styles.addButton, styles.emptyAction, { backgroundColor: theme.primary }]}
+              testID="contacts-add"
               onPress={handleAddNew}
             >
               <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
@@ -714,6 +736,7 @@ export default function ContactsScreen() {
                 styles.emptyAction,
                 { backgroundColor: theme.card, borderColor: theme.border },
               ]}
+              testID="contacts-import"
               onPress={handleImportContact}
               disabled={isImporting}
             >
@@ -734,6 +757,7 @@ export default function ContactsScreen() {
             <View style={styles.footerActionsRow}>
               <TouchableOpacity
                 style={[styles.addButton, styles.footerAction, { backgroundColor: theme.primary }]}
+                testID="contacts-empty-add"
                 onPress={handleAddNew}
               >
                 <IconSymbol name="plus" size={20} color={Colors.light.textOnPrimary} />
@@ -745,6 +769,7 @@ export default function ContactsScreen() {
                   styles.footerAction,
                   { backgroundColor: theme.card, borderColor: theme.border },
                 ]}
+                testID="contacts-empty-import"
                 onPress={handleImportContact}
                 disabled={isImporting}
               >
@@ -766,6 +791,7 @@ export default function ContactsScreen() {
       <SafeAreaView style={styles.safeArea} edges={['top']}>
         {/* Header */}
         <ScreenHeader
+          testID="contacts"
           title={
             showForm ? (editingContact ? t('form.editTitle') : t('addContact')) : t('screenTitle')
           }
@@ -773,6 +799,7 @@ export default function ContactsScreen() {
           rightElement={
             showForm ? (
               <Pressable
+                testID="contacts-save"
                 onPress={handleSave}
                 style={[styles.headerSaveButton, { backgroundColor: theme.tint }]}
                 disabled={isSaving}
@@ -802,6 +829,7 @@ export default function ContactsScreen() {
       </SafeAreaView>
 
       <AppModal
+        testID="contacts-modal"
         visible={modalVisible}
         onDismiss={() => handleModalAction('cancel')}
         title={
