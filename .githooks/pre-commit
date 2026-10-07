@@ -2,4 +2,10 @@
 
 set -euo pipefail
 
-"$(git rev-parse --show-toplevel)/scripts/secret-scan.sh"
+cd "$(git rev-parse --show-toplevel)"
+
+# Tools come from mise.toml when mise is available.
+if command -v mise >/dev/null 2>&1; then
+  exec mise exec -- scripts/secret-scan.sh
+fi
+exec scripts/secret-scan.sh

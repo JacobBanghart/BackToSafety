@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Fast local gate before a push; CI runs the full set (bundles, Playwright).
+
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Tools come from mise.toml when mise is available.
+run() {
+  if command -v mise >/dev/null 2>&1; then mise exec -- "$@"; else "$@"; fi
+}
+
+run npm run --silent lint
+run npm run --silent typecheck
+run npm test --silent

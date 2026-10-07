@@ -10,6 +10,25 @@ Tests that import TypeScript modules or rely on React internals die with the rew
 belongs in this harness only if it can run unchanged against both apps: black-box UI driving,
 language-neutral JSON, or pixels.
 
+## Target architecture (owner decision, 2026-10-06)
+
+**Kotlin Multiplatform for the shared core, native UI on each platform:** Jetpack Compose on
+Android, SwiftUI on iOS. The shared module holds the models, the SQLite data layer, migrations,
+the emergency protocol and timer, the readout/SMS text builders, phone formatting, and i18n
+loading. Everything a user sees is written twice.
+
+That makes this harness the thing that keeps two UIs in step, which changes three things:
+
+- **iOS is a required gate, not a later add-on.** A SwiftUI screen can drift from the Compose
+  one without either platform looking broken. Every L3 flow and L4 capture runs on both
+  platforms before a screen counts as done.
+- **L2 vectors run against the shared Kotlin module once**, and both UIs inherit the results.
+  Logic that leaks into a UI layer (formatting in a SwiftUI view, say) escapes the vectors, so
+  every screen's text has to come from the shared module.
+- **Selectors are the cross-platform contract.** The same `testids.json` ID must exist as a
+  Compose `testTag` and a SwiftUI `accessibilityIdentifier`. A contract test checks both apps'
+  view hierarchies for every ID the screen declares.
+
 ## How reactor's test types map here
 
 | Reactor lane                                                     | nijii equivalent                                                    | Runs against             |
@@ -122,13 +141,11 @@ A rewrite that silently drops a caregiver's profile is the worst failure this pr
 
 ## Infrastructure
 
-This dev box (an LXC container) has **no `/dev/kvm`**, so it can't run an Android emulator. Options:
-
-- **Self-hosted macOS runner** (recommended): it already exists for iOS releases, and it can run
-  both the iOS simulator and an arm64 Android emulator. One capture host for both platforms,
-  and therefore one noise floor.
-- Pass `/dev/kvm` through to this container on the Proxmox host for fast local Android loops.
-  This is an optional add-on; iOS still needs the Mac.
+- **Android:** the devbox (CT 201) runs the emulator once `/dev/kvm` is passed through (owner
+  choice, 2026-10-06; steps are in the session notes, via `k8s-homelab/terraform/lxc-devbox.tf`).
+- **iOS:** the self-hosted macOS runner (already used for iOS releases) runs the simulator. It's
+  required before the Kotlin iOS app counts as matching (see Target architecture).
+- Android and iOS goldens are separate sets. Each platform measures its own noise floor.
 
 There is also no CI lane today that runs lint/typecheck/Vitest/Playwright on push. That's
 reactor's Phase −1, and it lands first.
