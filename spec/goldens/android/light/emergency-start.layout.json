@@ -1,0 +1,80 @@
+{
+  "emergency-alert-contacts": [
+    209.9,
+    689.5,
+    395.4,
+    739.4
+  ],
+  "emergency-back": [
+    12.2,
+    66.3,
+    56.0,
+    89.1
+  ],
+  "emergency-call-911": [
+    16.0,
+    621.3,
+    395.4,
+    681.5
+  ],
+  "emergency-found": [
+    16.0,
+    557.3,
+    395.4,
+    613.3
+  ],
+  "emergency-progress": [
+    40.0,
+    296.4,
+    371.4,
+    314.7
+  ],
+  "emergency-readout": [
+    16.0,
+    689.5,
+    201.9,
+    739.4
+  ],
+  "emergency-screen": [
+    0.0,
+    0.0,
+    411.4,
+    914.3
+  ],
+  "emergency-step-home_search": [
+    16.0,
+    795.4,
+    395.4,
+    912.0
+  ],
+  "emergency-timer": [
+    123.8,
+    166.1,
+    287.2,
+    238.1
+  ],
+  "emergency-timer-label": [
+    145.5,
+    144.0,
+    265.5,
+    162.3
+  ],
+  "emergency-title": [
+    132.2,
+    63.6,
+    301.3,
+    91.8
+  ],
+  "emergency-wearing-dismiss": [
+    329.9,
+    497.9,
+    378.3,
+    524.2
+  ],
+  "emergency-wearing-input": [
+    32.8,
+    425.9,
+    378.7,
+    489.9
+  ]
+}

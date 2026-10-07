@@ -1,0 +1,26 @@
+{
+  "onboarding-photo-continue": [
+    16.0,
+    826.7,
+    395.4,
+    874.7
+  ],
+  "onboarding-photo-library": [
+    24.0,
+    545.9,
+    387.4,
+    600.0
+  ],
+  "onboarding-photo-skip": [
+    16.0,
+    774.5,
+    395.4,
+    814.5
+  ],
+  "onboarding-photo-take": [
+    24.0,
+    480.0,
+    387.4,
+    534.1
+  ]
+}

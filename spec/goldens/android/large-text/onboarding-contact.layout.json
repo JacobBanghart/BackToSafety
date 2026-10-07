@@ -1,0 +1,32 @@
+{
+  "onboarding-contact-continue": [
+    16.0,
+    824.0,
+    395.4,
+    874.7
+  ],
+  "onboarding-contact-name": [
+    24.0,
+    331.4,
+    387.4,
+    379.4
+  ],
+  "onboarding-contact-phone": [
+    24.0,
+    434.3,
+    387.4,
+    482.3
+  ],
+  "onboarding-contact-relationship": [
+    24.0,
+    536.8,
+    387.4,
+    584.8
+  ],
+  "onboarding-contact-skip": [
+    16.0,
+    769.1,
+    395.4,
+    811.8
+  ]
+}

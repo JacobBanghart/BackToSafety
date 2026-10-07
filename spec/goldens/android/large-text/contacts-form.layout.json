@@ -1,0 +1,86 @@
+{
+  "contacts-back": [
+    12.2,
+    69.7,
+    56.0,
+    92.6
+  ],
+  "contacts-form-address": [
+    16.0,
+    473.1,
+    395.4,
+    553.1
+  ],
+  "contacts-form-name": [
+    16.0,
+    213.0,
+    395.4,
+    257.1
+  ],
+  "contacts-form-notify": [
+    16.0,
+    747.0,
+    395.4,
+    869.0
+  ],
+  "contacts-form-phone": [
+    16.0,
+    299.8,
+    395.4,
+    344.0
+  ],
+  "contacts-form-relationship": [
+    16.0,
+    386.3,
+    395.4,
+    430.5
+  ],
+  "contacts-form-role-caregiver": [
+    213.0,
+    595.8,
+    335.2,
+    635.4
+  ],
+  "contacts-form-role-family": [
+    16.0,
+    643.4,
+    114.7,
+    683.0
+  ],
+  "contacts-form-role-friend": [
+    249.9,
+    643.4,
+    345.9,
+    683.0
+  ],
+  "contacts-form-role-neighbor": [
+    122.7,
+    643.4,
+    241.9,
+    683.0
+  ],
+  "contacts-form-role-other": [
+    16.0,
+    691.4,
+    105.9,
+    731.4
+  ],
+  "contacts-form-role-primary_caregiver": [
+    16.0,
+    595.8,
+    205.0,
+    635.4
+  ],
+  "contacts-save": [
+    327.6,
+    64.0,
+    399.6,
+    98.7
+  ],
+  "contacts-title": [
+    139.8,
+    66.7,
+    271.2,
+    95.6
+  ]
+}

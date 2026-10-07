@@ -1,0 +1,62 @@
+{
+  "settings-back": [
+    12.2,
+    66.3,
+    56.0,
+    89.1
+  ],
+  "settings-delete-account": [
+    41.1,
+    493.3,
+    370.3,
+    545.1
+  ],
+  "settings-device-id": [
+    41.1,
+    879.2,
+    370.3,
+    914.3
+  ],
+  "settings-device-id-value": [
+    41.1,
+    907.4,
+    340.2,
+    914.3
+  ],
+  "settings-theme-dark": [
+    269.0,
+    220.2,
+    370.7,
+    308.2
+  ],
+  "settings-theme-light": [
+    155.0,
+    220.2,
+    257.1,
+    308.2
+  ],
+  "settings-theme-system": [
+    41.1,
+    220.2,
+    142.9,
+    308.2
+  ],
+  "settings-title": [
+    168.0,
+    63.6,
+    243.4,
+    91.8
+  ],
+  "settings-version": [
+    41.1,
+    695.6,
+    370.3,
+    757.0
+  ],
+  "settings-version-value": [
+    41.1,
+    723.8,
+    76.6,
+    747.8
+  ]
+}

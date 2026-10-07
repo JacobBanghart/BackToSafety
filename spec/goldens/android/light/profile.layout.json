@@ -1,0 +1,92 @@
+{
+  "profile-back": [
+    12.2,
+    72.4,
+    56.0,
+    95.2
+  ],
+  "profile-dob-calendar": [
+    321.5,
+    602.3,
+    365.3,
+    646.1
+  ],
+  "profile-field-dateOfBirth": [
+    46.1,
+    601.9,
+    321.5,
+    646.5
+  ],
+  "profile-field-eyeColor": [
+    211.8,
+    778.7,
+    379.0,
+    822.9
+  ],
+  "profile-field-hairColor": [
+    33.1,
+    778.7,
+    200.4,
+    822.9
+  ],
+  "profile-field-height": [
+    33.1,
+    690.7,
+    200.4,
+    734.9
+  ],
+  "profile-field-identifyingMarks": [
+    33.1,
+    889.1,
+    379.0,
+    890.3
+  ],
+  "profile-field-name": [
+    33.1,
+    424.8,
+    379.0,
+    469.0
+  ],
+  "profile-field-nickname": [
+    33.1,
+    512.8,
+    379.0,
+    557.0
+  ],
+  "profile-field-weight": [
+    211.8,
+    690.7,
+    379.0,
+    734.9
+  ],
+  "profile-photo-library": [
+    201.9,
+    264.0,
+    334.9,
+    304.0
+  ],
+  "profile-photo-take": [
+    77.0,
+    264.0,
+    189.7,
+    304.0
+  ],
+  "profile-save": [
+    327.6,
+    64.0,
+    399.6,
+    104.0
+  ],
+  "profile-section-personal": [
+    17.1,
+    329.1,
+    394.3,
+    397.3
+  ],
+  "profile-title": [
+    155.8,
+    69.7,
+    255.2,
+    97.9
+  ]
+}
