@@ -31,9 +31,18 @@
     "title": "Choose your look",
     "subtitle": "Select how you'd like the app to appear. You can change this later in Settings.",
     "options": {
-      "system": { "label": "System", "description": "Match your device settings" },
-      "light": { "label": "Light", "description": "Bright and clear" },
-      "dark": { "label": "Dark", "description": "Easy on the eyes" }
+      "system": {
+        "label": "System",
+        "description": "Match your device settings"
+      },
+      "light": {
+        "label": "Light",
+        "description": "Bright and clear"
+      },
+      "dark": {
+        "label": "Dark",
+        "description": "Easy on the eyes"
+      }
     },
     "continue": "Continue"
   },
@@ -56,7 +65,10 @@
     "tip": "Use a photo from the last 3-6 months with a clear view of their face.",
     "skip": "Skip for now",
     "continue": "Continue",
-    "webCameraUnavailable": "Taking a photo is only available in the mobile app. Please use \"Choose from Library\" on web."
+    "webCameraUnavailable": "Taking a photo is only available in the mobile app. Please use \"Choose from Library\" on web.",
+    "libraryPermission": "We need photo library access to save a photo for emergencies.",
+    "cameraPermission": "We need camera access to take a photo.",
+    "saveFailed": "Failed to save photo. Please try again."
   },
   "appearance": {
     "title": "Physical description",

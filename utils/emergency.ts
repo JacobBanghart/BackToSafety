@@ -137,8 +137,7 @@ export function buildAlertSms(
 ): string {
   const wearingText = input.wearing ? t('smsWearing', { wearing: input.wearing }) : '';
   return t('smsMessage', {
-    // F-6: English fallback that bypasses i18n.
-    name: input.name || 'Our loved one',
+    name: input.name || t('smsUnknownName'),
     time: input.startedTime,
     wearing: wearingText,
   });

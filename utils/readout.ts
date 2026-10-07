@@ -157,15 +157,17 @@ export function buildScript(input: ReadoutInput, t: Translate): string {
   return scriptParts.join(' ');
 }
 
-/** What's missing for a stronger script. F-6: these are English, not translated. */
+/** What's missing for a stronger script, as translated phrases. */
 export function missingScriptDetails(input: ReadoutInput, t: Translate): string[] {
   const { profile, lastSeenTime, lastSeenCoords } = input;
   const missing: string[] = [];
 
-  if (!lastSeenTime) missing.push('last seen time');
-  if (!lastSeenCoords) missing.push('last known location');
-  if (!describeAppearance(profile, t)) missing.push('appearance details');
-  if (!describeImportantDetails(profile, t)) missing.push('important details');
+  if (!lastSeenTime) missing.push(t('sections.script.missing.lastSeenTime'));
+  if (!lastSeenCoords) missing.push(t('sections.script.missing.lastKnownLocation'));
+  if (!describeAppearance(profile, t)) missing.push(t('sections.script.missing.appearanceDetails'));
+  if (!describeImportantDetails(profile, t)) {
+    missing.push(t('sections.script.missing.importantDetails'));
+  }
 
   return missing;
 }

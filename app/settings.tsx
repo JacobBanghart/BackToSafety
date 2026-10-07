@@ -121,7 +121,7 @@ export default function SettingsScreen() {
     };
 
     if (Platform.OS === 'web') {
-      if (confirm('This will permanently delete all data on this device. Are you sure?')) {
+      if (confirm(t('deleteAccountModal.message'))) {
         confirmDelete();
       }
     } else {
@@ -299,9 +299,9 @@ export default function SettingsScreen() {
               if (deviceId) {
                 Clipboard.setString(deviceId);
                 if (Platform.OS === 'web') {
-                  alert('Device ID copied!');
+                  alert(t('deviceIdCopied'));
                 } else {
-                  Alert.alert('Copied', 'Device ID copied to clipboard.');
+                  Alert.alert(t('copied', { ns: 'common' }), t('deviceIdCopied'));
                 }
               }
             }}

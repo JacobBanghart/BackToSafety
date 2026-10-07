@@ -97,5 +97,6 @@
     "title": "Fecha de nacimiento",
     "cancel": "Cancelar",
     "apply": "Aplicar"
-  }
+  },
+  "cameraUnavailableTitle": "Cámara no disponible"
 }

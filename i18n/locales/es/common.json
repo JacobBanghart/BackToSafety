@@ -23,5 +23,9 @@
   "nContacts_other": "{{count}} contactos",
   "nLocations_one": "{{count}} lugar",
   "nLocations_other": "{{count}} lugares",
-  "emergencyNumber": "911"
+  "emergencyNumber": "911",
+  "saveFailed": "No se pudo guardar. Por favor, inténtalo de nuevo.",
+  "copied": "Copiado",
+  "notNow": "Ahora no",
+  "openSettings": "Abrir configuración"
 }

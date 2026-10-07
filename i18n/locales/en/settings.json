@@ -46,5 +46,6 @@
     "title": "Developer Mode",
     "message": "Developer options are now enabled!"
   },
-  "deleteAccountError": "Failed to delete account. Please try again."
+  "deleteAccountError": "Failed to delete account. Please try again.",
+  "deviceIdCopied": "Device ID copied to clipboard."
 }

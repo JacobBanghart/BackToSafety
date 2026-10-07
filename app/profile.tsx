@@ -393,7 +393,7 @@ export default function ProfileScreen() {
   const takePhoto = async () => {
     track('profile_photo_taken');
     if (Platform.OS === 'web') {
-      Alert.alert('Camera Not Available', t('webCameraUnavailable'));
+      Alert.alert(t('cameraUnavailableTitle'), t('webCameraUnavailable'));
       return;
     }
 

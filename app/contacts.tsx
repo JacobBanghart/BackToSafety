@@ -304,19 +304,15 @@ export default function ContactsScreen() {
       const permission = await Contacts.requestPermissionsAsync();
 
       if (!permission.granted) {
-        Alert.alert(
-          'Contacts Permission Needed',
-          'Allow contacts access to import an emergency contact from your address book.',
-          [
-            { text: 'Not Now', style: 'cancel' },
-            {
-              text: 'Open Settings',
-              onPress: () => {
-                void Linking.openSettings();
-              },
+        Alert.alert(t('permission.title'), t('permission.message'), [
+          { text: t('notNow', { ns: 'common' }), style: 'cancel' },
+          {
+            text: t('openSettings', { ns: 'common' }),
+            onPress: () => {
+              void Linking.openSettings();
             },
-          ],
-        );
+          },
+        ]);
         return;
       }
 

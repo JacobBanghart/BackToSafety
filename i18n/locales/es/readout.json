@@ -14,7 +14,13 @@
       "label": "Guion para la llamada al 911",
       "hint": "Léele esto al operador:",
       "collapsed": "Toca para ampliar",
-      "missingDetails": "Agrega para un guion más completo: {{details}}."
+      "missingDetails": "Agrega para un guion más completo: {{details}}.",
+      "missing": {
+        "lastSeenTime": "hora en que se vio por última vez",
+        "lastKnownLocation": "última ubicación conocida",
+        "appearanceDetails": "detalles de apariencia",
+        "importantDetails": "datos importantes"
+      }
     },
     "identity": {
       "goesBy": "Le dicen \"{{nickname}}\"",
@@ -109,5 +115,8 @@
     "medicAlertId": "ID de MedicAlert: {{id}}.",
     "photoAvailable": "Hay una foto disponible.",
     "silverAlert": "Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
-  }
+  },
+  "copyScriptButton": "Copiar guion para el 911",
+  "copiedScriptButton": "Guion copiado",
+  "copiedFullButton": "Datos copiados"
 }

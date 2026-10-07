@@ -51,7 +51,7 @@ export default function NameScreen() {
       router.push('/onboarding/photo' as Href);
     } catch (err) {
       console.error('Error saving profile:', err);
-      setError('Failed to save. Please try again.');
+      setError(t('saveFailed', { ns: 'common' }));
     }
   };
 

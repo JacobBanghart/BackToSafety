@@ -39,7 +39,7 @@ export default function PhotoScreen() {
     track('profile_photo_chosen');
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      alert('We need photo library access to save a photo for emergencies.');
+      alert(t('photo.libraryPermission'));
       return;
     }
 
@@ -64,7 +64,7 @@ export default function PhotoScreen() {
 
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      alert('We need camera access to take a photo.');
+      alert(t('photo.cameraPermission'));
       return;
     }
 
@@ -97,7 +97,7 @@ export default function PhotoScreen() {
       setPhotoUri(destFile.uri);
     } catch (error) {
       console.error('Error saving photo:', error);
-      alert('Failed to save photo. Please try again.');
+      alert(t('photo.saveFailed'));
     }
   };
 

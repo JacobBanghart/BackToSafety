@@ -652,7 +652,7 @@ export default function ReadoutScreen() {
               color={Colors.light.textOnPrimary}
             />
             <ThemedText style={[styles.buttonText, { color: theme.textOnPrimary }]}>
-              {copiedType === 'script' ? 'Copied 911 Script' : 'Copy 911 Script'}
+              {copiedType === 'script' ? t('copiedScriptButton') : t('copyScriptButton')}
             </ThemedText>
           </Pressable>
           <Pressable
@@ -670,7 +670,7 @@ export default function ReadoutScreen() {
               color={copiedType === 'all' ? semantic.success : theme.text}
             />
             <ThemedText style={[styles.buttonText, { color: theme.text }]}>
-              {copiedType === 'all' ? 'Copied Full Details' : 'Copy Full Details'}
+              {copiedType === 'all' ? t('copiedFullButton') : t('copyFullButton')}
             </ThemedText>
           </Pressable>
         </View>

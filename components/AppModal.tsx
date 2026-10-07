@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { Modal, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
@@ -14,7 +15,7 @@ interface AppModalProps {
   title: string;
   message: string;
   type: AppModalType;
-  /** Label for the confirm button. Defaults to 'Delete' for delete type, 'OK' for alert. */
+  /** Label for the confirm button. Defaults to Delete for delete type, OK for alert. */
   confirmLabel?: string;
   onConfirm?: () => void;
   /** Root ID; the buttons get `<testID>-confirm` and `<testID>-cancel`. */
@@ -31,10 +32,11 @@ export function AppModal({
   onConfirm,
   testID,
 }: AppModalProps) {
+  const { t } = useTranslation('common');
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
 
-  const resolvedConfirmLabel = confirmLabel ?? (type === 'delete' ? 'Delete' : 'OK');
+  const resolvedConfirmLabel = confirmLabel ?? (type === 'delete' ? t('delete') : t('ok'));
 
   const confirmBackgroundColor = type === 'delete' ? semantic.error : theme.primary;
 
@@ -52,7 +54,9 @@ export function AppModal({
                 style={[styles.button, styles.cancelButton, { borderColor: theme.border }]}
                 onPress={onDismiss}
               >
-                <ThemedText style={[styles.buttonText, { color: theme.text }]}>Cancel</ThemedText>
+                <ThemedText style={[styles.buttonText, { color: theme.text }]}>
+                  {t('cancel')}
+                </ThemedText>
               </TouchableOpacity>
             )}
 

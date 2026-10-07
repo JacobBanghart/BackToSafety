@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
@@ -33,6 +34,7 @@ export function ScreenHeader({
   const { colorScheme } = useTheme();
   const theme = Colors[colorScheme];
   const router = useRouter();
+  const { t } = useTranslation('common');
 
   const handleBack =
     onBack ??
@@ -49,6 +51,8 @@ export function ScreenHeader({
       {/* Left: back button */}
       <TouchableOpacity
         testID={testID && `${testID}-back`}
+        accessibilityRole="button"
+        accessibilityLabel={t('back')}
         style={styles.sideSlot}
         onPress={handleBack}
         hitSlop={8}

@@ -14,7 +14,13 @@
       "label": "911 Call Script",
       "hint": "Read this to dispatch:",
       "collapsed": "Tap to expand",
-      "missingDetails": "Add for stronger script: {{details}}."
+      "missingDetails": "Add for stronger script: {{details}}.",
+      "missing": {
+        "lastSeenTime": "last seen time",
+        "lastKnownLocation": "last known location",
+        "appearanceDetails": "appearance details",
+        "importantDetails": "important details"
+      }
     },
     "identity": {
       "goesBy": "Goes by \"{{nickname}}\"",
@@ -109,5 +115,8 @@
     "medicAlertId": "MedicAlert ID: {{id}}.",
     "photoAvailable": "Photo available.",
     "silverAlert": "Please advise about issuing a local Silver/Purple Alert."
-  }
+  },
+  "copyScriptButton": "Copy 911 Script",
+  "copiedScriptButton": "Copied 911 Script",
+  "copiedFullButton": "Copied Full Details"
 }

@@ -56,7 +56,7 @@ export default function ContactScreen() {
       router.push('/onboarding/complete' as Href);
     } catch (err) {
       console.error('Error saving contact:', err);
-      setError('Failed to save. Please try again.');
+      setError(t('saveFailed', { ns: 'common' }));
     }
   };
 

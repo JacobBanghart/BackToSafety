@@ -103,5 +103,6 @@
       "title": "Error",
       "message": "Could not open messaging app."
     }
-  }
+  },
+  "smsUnknownName": "Our loved one"
 }
