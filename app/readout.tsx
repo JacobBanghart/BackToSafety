@@ -33,7 +33,13 @@ import { Radius, Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
-import { ageOn } from '@/utils/age';
+import {
+  buildCopyBlock,
+  buildScript,
+  missingScriptDetails,
+  needsVehicleCheck,
+  type ReadoutInput,
+} from '@/utils/readout';
 
 export default function ReadoutScreen() {
   const { profile, emergencyContacts, lastSeen, isLoading } = useProfile();
@@ -45,161 +51,30 @@ export default function ReadoutScreen() {
   const [copiedType, setCopiedType] = useState<'script' | 'all' | null>(null);
   const copiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Mobility values that imply a vehicle/aid to physically check nearby
-  const VEHICLE_MOBILITY_VALUES = [
-    'Motorized wheelchair',
-    'Mobility scooter',
-    'Bicycle',
-    'Has vehicle',
-    'Manual wheelchair',
-    'Uses walker',
-    'Uses cane',
-  ];
-
-  // Build appearance string from profile fields
-  const appearanceDesc = useMemo(() => {
-    if (!profile) return '';
-    const parts: string[] = [];
-    if (profile.height) parts.push(profile.height);
-    if (profile.weight) parts.push(profile.weight);
-    if (profile.hairColor) parts.push(t('copyBlock.hairColor', { color: profile.hairColor }));
-    if (profile.eyeColor) parts.push(t('copyBlock.eyeColor', { color: profile.eyeColor }));
-    if (profile.identifyingMarks) parts.push(profile.identifyingMarks);
-    return parts.join(', ');
-  }, [profile, t]);
-
-  // Build personal details string
-  const medicalDesc = useMemo(() => {
-    if (!profile) return '';
-    const parts: string[] = [];
-    if (profile.medicalConditions) parts.push(profile.medicalConditions);
-    if (profile.allergies) parts.push(t('copyBlock.allergies', { value: profile.allergies }));
-    return parts.join('. ');
-  }, [profile, t]);
-
-  const textBlock = useMemo(() => {
-    if (!profile) return '';
-
-    const ls = lastSeen.time ? new Date(lastSeen.time).toLocaleString() : t('copyBlock.unknown');
-    const coordinates = lastSeen.coords
-      ? `${lastSeen.coords.lat.toFixed(5)}, ${lastSeen.coords.lon.toFixed(5)} (±${
-          lastSeen.coords.accuracy ?? '—'
-        }m)`
-      : t('copyBlock.unknown');
-
-    return [
-      profile.nickname
-        ? t('copyBlock.nameWithNickname', { name: profile.name, nickname: profile.nickname })
-        : t('copyBlock.name', { name: profile.name }),
-      profile.dateOfBirth ? t('copyBlock.dob', { dob: profile.dateOfBirth }) : undefined,
-      appearanceDesc ? t('copyBlock.appearance', { desc: appearanceDesc }) : undefined,
-      medicalDesc ? t('copyBlock.importantDetails', { desc: medicalDesc }) : undefined,
-      profile.medications ? t('copyBlock.medications', { value: profile.medications }) : undefined,
-      profile.cognitiveStatus
-        ? t('copyBlock.cognitiveStatus', { value: profile.cognitiveStatus })
-        : undefined,
-      profile.mobilityLevel ? t('copyBlock.mobility', { value: profile.mobilityLevel }) : undefined,
-      profile.mobilityLevel &&
-      [
-        'motorized wheelchair',
-        'mobility scooter',
-        'bicycle',
-        'has vehicle',
-        'manual wheelchair',
-        'uses walker',
-        'uses cane',
-      ].some((v) => profile.mobilityLevel!.toLowerCase().includes(v))
-        ? t('copyBlock.mobilityVehicleNote')
-        : undefined,
-      profile.communicationPreference
-        ? t('copyBlock.communication', { value: profile.communicationPreference })
-        : undefined,
-      profile.dislikesTriggers
-        ? t('copyBlock.triggers', { value: profile.dislikesTriggers })
-        : undefined,
-      profile.deescalationTechniques
-        ? t('copyBlock.deescalation', { value: profile.deescalationTechniques })
-        : undefined,
-      profile.likes ? t('copyBlock.likes', { value: profile.likes }) : undefined,
-      profile.approachGuidance
-        ? t('copyBlock.approach', { value: profile.approachGuidance })
-        : undefined,
-      profile.safeWord ? t('copyBlock.safeWord', { value: profile.safeWord }) : undefined,
-      t('copyBlock.lastSeen', { time: ls }),
-      t('copyBlock.coordinates', { coords: coordinates }),
-      profile.locativeDeviceInfo
-        ? t('copyBlock.locator', { value: profile.locativeDeviceInfo })
-        : undefined,
-      profile.idBracelets ? t('copyBlock.idBracelet', { value: profile.idBracelets }) : undefined,
-      profile.medicAlertId
-        ? t('copyBlock.medicAlertId', { value: profile.medicAlertId })
-        : undefined,
-      '',
-      t('copyBlock.wearingReminder'),
-    ]
-      .filter(Boolean)
-      .join('\n');
-  }, [profile, lastSeen, appearanceDesc, medicalDesc, t]);
-
-  const script = useMemo(() => {
-    if (!profile) return '';
-
-    const scriptParts: string[] = [t('script.opening'), t('script.name', { name: profile.name })];
-
-    const age = profile.dateOfBirth ? ageOn(profile.dateOfBirth, new Date()) : null;
-    if (age !== null) {
-      scriptParts.push(t('script.age', { age }));
-    }
-
-    if (lastSeen.time) {
-      scriptParts.push(
-        t('script.lastSeenTime', { time: new Date(lastSeen.time).toLocaleString() }),
-      );
-    } else {
-      scriptParts.push(t('script.lastSeenUnknown'));
-    }
-
-    if (lastSeen.coords) {
-      scriptParts.push(
-        t('script.locationCoords', {
-          lat: lastSeen.coords.lat.toFixed(5),
-          lon: lastSeen.coords.lon.toFixed(5),
-        }),
-      );
-    } else {
-      scriptParts.push(t('script.locationUnknown'));
-    }
-
-    if (appearanceDesc) {
-      scriptParts.push(t('script.appearance', { desc: appearanceDesc }));
-    }
-
-    if (medicalDesc) {
-      scriptParts.push(t('script.additionalContext', { desc: medicalDesc }));
-    }
-
-    if (profile.medicAlertId) {
-      scriptParts.push(t('script.medicAlertId', { id: profile.medicAlertId }));
-    }
-
-    scriptParts.push(t('script.photoAvailable'));
-    scriptParts.push(t('script.silverAlert'));
-
-    return scriptParts.join(' ');
-  }, [profile, lastSeen, appearanceDesc, medicalDesc, t]);
-
-  const missingScriptDetails = useMemo(() => {
-    if (!profile) return [];
-
-    const missing: string[] = [];
-
-    if (!lastSeen.time) missing.push('last seen time');
-    if (!lastSeen.coords) missing.push('last known location');
-    if (!appearanceDesc) missing.push('appearance details');
-    if (!medicalDesc) missing.push('important details');
-
-    return missing;
-  }, [profile, lastSeen, appearanceDesc, medicalDesc]);
+  const readoutInput = useMemo<ReadoutInput | null>(
+    () =>
+      profile
+        ? {
+            profile,
+            lastSeenTime: lastSeen.time ? new Date(lastSeen.time).toLocaleString() : undefined,
+            lastSeenCoords: lastSeen.coords,
+            today: new Date(),
+          }
+        : null,
+    [profile, lastSeen],
+  );
+  const textBlock = useMemo(
+    () => (readoutInput ? buildCopyBlock(readoutInput, t) : ''),
+    [readoutInput, t],
+  );
+  const script = useMemo(
+    () => (readoutInput ? buildScript(readoutInput, t) : ''),
+    [readoutInput, t],
+  );
+  const missingDetails = useMemo(
+    () => (readoutInput ? missingScriptDetails(readoutInput, t) : []),
+    [readoutInput, t],
+  );
 
   useEffect(() => {
     return () => {
@@ -343,13 +218,13 @@ export default function ReadoutScreen() {
               >
                 {script}
               </ThemedText>
-              {missingScriptDetails.length > 0 && (
+              {missingDetails.length > 0 && (
                 <ThemedText
                   testID="readout-script-missing"
                   style={[styles.scriptMissingText, { color: semantic.warning }]}
                 >
                   {t('sections.script.missingDetails', {
-                    details: missingScriptDetails.join(', '),
+                    details: missingDetails.join(', '),
                   })}
                 </ThemedText>
               )}
@@ -497,40 +372,37 @@ export default function ReadoutScreen() {
                 />
               )}
             </View>
-            {profile.mobilityLevel &&
-              VEHICLE_MOBILITY_VALUES.some((v) =>
-                profile.mobilityLevel!.toLowerCase().includes(v.toLowerCase()),
-              ) && (
-                <View
+            {needsVehicleCheck(profile.mobilityLevel) && (
+              <View
+                style={[
+                  styles.vehicleCheckNote,
+                  {
+                    backgroundColor: `${semantic.warning}15`,
+                    borderColor: `${semantic.warning}40`,
+                  },
+                ]}
+              >
+                <IconSymbol
+                  name="exclamationmark.triangle.fill"
+                  size={14}
+                  color={semantic.warning}
+                />
+                <ThemedText
                   style={[
-                    styles.vehicleCheckNote,
-                    {
-                      backgroundColor: `${semantic.warning}15`,
-                      borderColor: `${semantic.warning}40`,
-                    },
+                    styles.vehicleCheckText,
+                    { color: colorScheme === 'dark' ? secondary[100] : neutral[700] },
                   ]}
                 >
-                  <IconSymbol
-                    name="exclamationmark.triangle.fill"
-                    size={14}
-                    color={semantic.warning}
-                  />
-                  <ThemedText
-                    style={[
-                      styles.vehicleCheckText,
-                      { color: colorScheme === 'dark' ? secondary[100] : neutral[700] },
-                    ]}
-                  >
-                    Check nearby for their{' '}
-                    {['vehicle', 'bicycle', 'bike', 'scooter'].some((w) =>
-                      profile.mobilityLevel!.toLowerCase().includes(w),
-                    )
-                      ? 'vehicle or bike'
-                      : 'mobility aid (walker, wheelchair, or cane)'}{' '}
-                    — it may indicate where they went or provide shelter.
-                  </ThemedText>
-                </View>
-              )}
+                  Check nearby for their{' '}
+                  {['vehicle', 'bicycle', 'bike', 'scooter'].some((w) =>
+                    profile.mobilityLevel!.toLowerCase().includes(w),
+                  )
+                    ? 'vehicle or bike'
+                    : 'mobility aid (walker, wheelchair, or cane)'}{' '}
+                  — it may indicate where they went or provide shelter.
+                </ThemedText>
+              </View>
+            )}
             {profile.identifyingMarks && (
               <InfoRow
                 icon="person.text.rectangle"
