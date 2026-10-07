@@ -33,6 +33,7 @@ import { Radius, Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
+import { ageOn } from '@/utils/age';
 
 export default function ReadoutScreen() {
   const { profile, emergencyContacts, lastSeen, isLoading } = useProfile();
@@ -145,8 +146,8 @@ export default function ReadoutScreen() {
 
     const scriptParts: string[] = [t('script.opening'), t('script.name', { name: profile.name })];
 
-    if (profile.dateOfBirth) {
-      const age = new Date().getFullYear() - new Date(profile.dateOfBirth).getFullYear();
+    const age = profile.dateOfBirth ? ageOn(profile.dateOfBirth, new Date()) : null;
+    if (age !== null) {
       scriptParts.push(t('script.age', { age }));
     }
 
