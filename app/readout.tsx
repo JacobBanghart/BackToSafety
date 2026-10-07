@@ -6,7 +6,7 @@
 
 import { track } from '@/utils/analytics';
 import { goBack } from '@/utils/navigation';
-import { formatPhoneNumber } from '@/utils/phone';
+import { formatPhoneNumber, stripPhoneFormatting } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
@@ -484,6 +484,7 @@ export default function ReadoutScreen() {
 
         {/* Approach & De-escalation Card */}
         {(profile.communicationPreference ||
+          profile.escalationSigns ||
           profile.deescalationTechniques ||
           profile.approachGuidance ||
           profile.likes ||
@@ -512,6 +513,14 @@ export default function ReadoutScreen() {
                 icon="figure.walk.motion"
                 label={t('sections.communication.approach')}
                 value={profile.approachGuidance}
+                theme={theme}
+              />
+            )}
+            {profile.escalationSigns && (
+              <InfoRow
+                icon="waveform.path.ecg"
+                label={t('sections.communication.escalation')}
+                value={profile.escalationSigns}
                 theme={theme}
               />
             )}
@@ -551,7 +560,10 @@ export default function ReadoutScreen() {
         )}
 
         {/* Locator & ID Card */}
-        {(profile.locativeDeviceInfo || profile.idBracelets || profile.medicAlertId) && (
+        {(profile.locativeDeviceInfo ||
+          profile.idBracelets ||
+          profile.medicAlertId ||
+          profile.medicAlertHotline) && (
           <View style={[styles.card, { borderColor: theme.border, backgroundColor: theme.card }]}>
             <View style={styles.sectionLabel}>
               <IconSymbol name="location.fill" size={14} color={theme.primary} />
@@ -585,6 +597,23 @@ export default function ReadoutScreen() {
                 value={profile.medicAlertId}
                 theme={theme}
               />
+            )}
+            {profile.medicAlertHotline && (
+              <Pressable
+                testID="readout-medicalert-hotline"
+                accessibilityRole="button"
+                onPress={() => {
+                  track('readout_medicalert_hotline_called');
+                  Linking.openURL(`tel:${stripPhoneFormatting(profile.medicAlertHotline!)}`);
+                }}
+              >
+                <InfoRow
+                  icon="phone.fill"
+                  label={t('sections.devices.medicAlertHotline')}
+                  value={profile.medicAlertHotline}
+                  theme={theme}
+                />
+              </Pressable>
             )}
           </View>
         )}

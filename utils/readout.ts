@@ -82,6 +82,9 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
     profile.communicationPreference
       ? t('copyBlock.communication', { value: profile.communicationPreference })
       : undefined,
+    profile.escalationSigns
+      ? t('copyBlock.escalation', { value: profile.escalationSigns })
+      : undefined,
     profile.dislikesTriggers
       ? t('copyBlock.triggers', { value: profile.dislikesTriggers })
       : undefined,
@@ -100,6 +103,9 @@ export function buildCopyBlock(input: ReadoutInput, t: Translate): string {
       : undefined,
     profile.idBracelets ? t('copyBlock.idBracelet', { value: profile.idBracelets }) : undefined,
     profile.medicAlertId ? t('copyBlock.medicAlertId', { value: profile.medicAlertId }) : undefined,
+    profile.medicAlertHotline
+      ? t('copyBlock.medicAlertHotline', { value: profile.medicAlertHotline })
+      : undefined,
     // Blank line before the reminder
     '',
     t('copyBlock.wearingReminder'),

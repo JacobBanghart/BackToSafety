@@ -59,13 +59,15 @@
       "deescalation": "Cómo calmarle",
       "likes": "Gustos / Lo que le reconforta",
       "triggers": "Evitar / Detonantes",
-      "safeWord": "Palabra clave familiar"
+      "safeWord": "Palabra clave familiar",
+      "escalation": "Señales de que se está alterando"
     },
     "devices": {
       "title": "Dispositivos e identificación",
       "locator": "Localizador personal",
       "idBracelet": "Pulsera de identificación",
-      "medicAlertId": "ID de MedicAlert"
+      "medicAlertId": "ID de MedicAlert",
+      "medicAlertHotline": "Línea de MedicAlert"
     }
   },
   "contacts": {
@@ -100,7 +102,9 @@
     "unknown": "Desconocido",
     "allergies": "Alergias: {{value}}",
     "hairColor": "cabello {{color}}",
-    "eyeColor": "ojos {{color}}"
+    "eyeColor": "ojos {{color}}",
+    "escalation": "Señales de alteración: {{value}}",
+    "medicAlertHotline": "Línea de MedicAlert: {{value}}"
   },
   "script": {
     "opening": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro.",

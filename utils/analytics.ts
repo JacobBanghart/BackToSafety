@@ -38,6 +38,7 @@ type AnalyticsEventName =
   | 'profile_saved'
   | 'profile_photo_taken'
   | 'profile_photo_chosen'
+  | 'readout_medicalert_hotline_called'
   | 'readout_911_called'
   | 'readout_contact_called'
   | 'readout_script_copied'

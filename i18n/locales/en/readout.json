@@ -59,13 +59,15 @@
       "deescalation": "De-escalation",
       "likes": "Likes / Comforts",
       "triggers": "Avoid / Triggers",
-      "safeWord": "Family Safe Word"
+      "safeWord": "Family Safe Word",
+      "escalation": "Signs of Escalation"
     },
     "devices": {
       "title": "Devices & ID",
       "locator": "Personal Locator",
       "idBracelet": "ID Bracelet",
-      "medicAlertId": "MedicAlert ID"
+      "medicAlertId": "MedicAlert ID",
+      "medicAlertHotline": "MedicAlert Hotline"
     }
   },
   "contacts": {
@@ -100,7 +102,9 @@
     "unknown": "Unknown",
     "allergies": "Allergies: {{value}}",
     "hairColor": "{{color}} hair",
-    "eyeColor": "{{color}} eyes"
+    "eyeColor": "{{color}} eyes",
+    "escalation": "Signs of Escalation: {{value}}",
+    "medicAlertHotline": "MedicAlert Hotline: {{value}}"
   },
   "script": {
     "opening": "I'm reporting a missing vulnerable adult who may be disoriented or at risk.",
