@@ -98,5 +98,8 @@
     "cancel": "Cancelar",
     "apply": "Aplicar"
   },
-  "cameraUnavailableTitle": "Cámara no disponible"
+  "cameraUnavailableTitle": "Cámara no disponible",
+  "errors": {
+    "nameRequired": "El nombre es obligatorio."
+  }
 }

@@ -300,6 +300,11 @@ export default function ProfileScreen() {
   };
 
   const handleSave = async () => {
+    // The name column is NOT NULL: saving it empty used to fail silently (F-38).
+    if (!form.name.trim()) {
+      Alert.alert(t('required', { ns: 'common' }), t('errors.nameRequired'));
+      return;
+    }
     setIsSaving(true);
     const resolvedMobility = getResolvedMobility() || undefined;
     try {
@@ -340,6 +345,7 @@ export default function ProfileScreen() {
       router.replace('/');
     } catch (err) {
       console.error('Error saving profile:', err);
+      Alert.alert(t('error', { ns: 'common' }), t('saveFailed', { ns: 'common' }));
     } finally {
       setIsSaving(false);
     }
