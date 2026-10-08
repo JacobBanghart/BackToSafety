@@ -5,7 +5,7 @@ import { SFSymbol, SymbolWeight } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<SFSymbol, ComponentProps<typeof MaterialIcons>['name']>;
+type IconMapping = Partial<Record<SFSymbol, ComponentProps<typeof MaterialIcons>['name']>>;
 export type IconSymbolName = keyof typeof MAPPING;
 
 /**
@@ -68,7 +68,11 @@ const MAPPING = {
   gearshape: 'settings',
   globe: 'language',
   'note.text': 'notes',
-} as IconMapping;
+  // These three rendered blank on Android too; `as IconMapping` let any SF Symbol name through.
+  'doc.on.clipboard.fill': 'content-copy',
+  'square.and.arrow.up': 'share',
+  'questionmark.circle': 'help-outline',
+} satisfies IconMapping;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.

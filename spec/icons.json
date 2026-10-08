@@ -53,6 +53,9 @@
     "chevron.down": "expand-more",
     "gearshape": "settings",
     "globe": "language",
-    "note.text": "notes"
+    "note.text": "notes",
+    "doc.on.clipboard.fill": "content-copy",
+    "square.and.arrow.up": "share",
+    "questionmark.circle": "help-outline"
   }
 }

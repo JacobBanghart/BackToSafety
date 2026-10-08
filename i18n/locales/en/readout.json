@@ -74,6 +74,7 @@
     "noContacts": "No emergency contacts saved."
   },
   "noInfoItem": "Not provided",
+  "wearingCard": "Fill in: What are they wearing? (shirt, jacket, pants, shoes, hat)",
   "copyBlock": {
     "name": "Name: {{name}}",
     "nameWithNickname": "Name: {{name}} (goes by \"{{nickname}}\")",

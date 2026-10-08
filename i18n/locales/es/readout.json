@@ -74,6 +74,7 @@
     "noContacts": "No hay contactos de emergencia guardados."
   },
   "noInfoItem": "Sin información",
+  "wearingCard": "Completa: ¿Qué ropa lleva puesta? (camisa, chaqueta, pantalón, zapatos, gorra)",
   "copyBlock": {
     "name": "Nombre: {{name}}",
     "nameWithNickname": "Nombre: {{name}} (le dicen \"{{nickname}}\")",

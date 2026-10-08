@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { useTheme } from '@/context/ThemeContext';
 import { Colors } from '@/constants/Colors';
 import { ThemedText } from '@/components/ThemedText';
-import { IconSymbol } from '@/components/ui/IconSymbol';
+import { IconSymbol, type IconSymbolName } from '@/components/ui/IconSymbol';
 import { Spacing } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
 
 interface TitleIcon {
-  name: string;
+  name: IconSymbolName;
   color: string;
   size?: number;
 }
@@ -64,11 +64,7 @@ export function ScreenHeader({
       <View style={styles.titleOverlay} pointerEvents="none">
         {titleIcon ? (
           <View style={styles.titleRow}>
-            <IconSymbol
-              name={titleIcon.name as any}
-              size={titleIcon.size ?? 18}
-              color={titleIcon.color}
-            />
+            <IconSymbol name={titleIcon.name} size={titleIcon.size ?? 18} color={titleIcon.color} />
             <ThemedText
               testID={testID && `${testID}-title`}
               style={[styles.titleRowText, { color: theme.text }]}

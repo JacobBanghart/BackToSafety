@@ -6,6 +6,7 @@
 
 import { track } from '@/utils/analytics';
 import { goBack } from '@/utils/navigation';
+import { now } from '@/utils/clock';
 import { describeMobility } from '@/utils/mobility';
 import { formatPhoneNumber, stripPhoneFormatting } from '@/utils/phone';
 import * as Clipboard from 'expo-clipboard';
@@ -56,7 +57,7 @@ export default function ReadoutScreen() {
         ? {
             profile,
             lastSeenTime: lastSeen.time ? new Date(lastSeen.time).toLocaleString() : undefined,
-            today: new Date(),
+            today: new Date(now()),
           }
         : null,
     [profile, lastSeen],
@@ -376,7 +377,7 @@ export default function ReadoutScreen() {
               { color: colorScheme === 'dark' ? secondary[100] : neutral[700] },
             ]}
           >
-            Fill in: What are they wearing? (shirt, jacket, pants, shoes, hat)
+            {t('wearingCard')}
           </ThemedText>
         </View>
 
