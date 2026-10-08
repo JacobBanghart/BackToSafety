@@ -4,6 +4,7 @@
 #
 # Usage: maestro/capture.sh [out-dir] [state ...]
 # Modes: light, dark (system dark mode; the app follows it), large-text (font scale 1.3).
+# MODES="large-text" limits a run to some of them.
 
 set -euo pipefail
 
@@ -29,7 +30,7 @@ set_mode() {
   esac
 }
 
-for mode in light dark large-text; do
+for mode in ${MODES:-light dark large-text}; do
   set_mode "$mode"
   # Switching night mode or font scale restarts System UI, which drops demo mode.
   "$ROOT/prepare-android.sh" >/dev/null

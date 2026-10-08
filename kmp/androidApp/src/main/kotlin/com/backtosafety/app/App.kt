@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.home.HomeScreen
 import com.backtosafety.app.onboarding.AppearanceScreen
 import com.backtosafety.app.onboarding.CompleteScreen
@@ -20,8 +21,10 @@ import com.backtosafety.app.onboarding.NameScreen
 import com.backtosafety.app.onboarding.PhotoScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.ui.AppTheme
+import com.backtosafety.app.ui.NotPortedScreen
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
+import com.backtosafety.core.invoke
 import kotlinx.coroutines.launch
 
 /** The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). */
@@ -44,6 +47,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
     val onboarding = translations.translator("en", "onboarding")
     val common = translations.translator("en", "common")
     val home = translations.translator("en", "home")
+    val emergency = translations.translator("en", "emergency")
 
     AppTheme(dark = dark) {
         val nav = rememberNavController()
@@ -66,7 +70,21 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
             composable("complete") {
                 CompleteScreen(onboarding, store) { nav.navigate("home") { popUpTo(0) } }
             }
-            composable("home") { HomeScreen(home) }
+            composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) } }
+            composable("emergency") {
+                EmergencyScreen(
+                    emergency, common, store,
+                    onLeave = { if (!nav.popBackStack()) nav.navigate("home") },
+                    onViewReadout = { nav.navigate("readout") },
+                )
+            }
+            // Not ported yet: each shows its title and a back button.
+            for ((route, ns) in listOf(
+                "profile" to "profile", "contacts" to "contacts", "destinations" to "destinations",
+                "readout" to "readout", "settings" to "settings",
+            )) {
+                composable(route) { NotPortedScreen(translations.translator("en", ns)("screenTitle"), route) { nav.popBackStack() } }
+            }
         }
     }
 }

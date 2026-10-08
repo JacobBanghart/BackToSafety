@@ -9,6 +9,12 @@ its mark by more than the slack, the check also fails, asking you to lower the m
 marks only go down. --update writes the current numbers as the new marks; commit that
 on its own (rule 1).
 
+Layout works the same way. Elements must sit within LAYOUT_TOLERANCE_DP of the RN golden,
+unless the state has a layout mark in spec/fidelity/android-layout.json: the largest
+movement allowed there. Compose rounds each padding and border to whole pixels, while RN
+rounds positions once, so on a long screen the difference adds up past 2dp toward the
+bottom. Missing or unexpected testIDs always fail.
+
 Usage: fidelity.py CAPTURED_ROOT [--update]   (CAPTURED_ROOT/<mode>/<state>.png from capture.sh)
 """
 
@@ -21,14 +27,18 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 MARKS = ROOT / "spec/fidelity/android.json"
+LAYOUT_MARKS = ROOT / "spec/fidelity/android-layout.json"
+LAYOUT_TOLERANCE_DP = 2.0
+LAYOUT_SLACK = 0.3  # dp
 GOLDENS = ROOT / "spec/goldens/android"
 SLACK = 0.05  # percentage points of run-to-run headroom before a mark must be lowered
 
 
-def measure(captured: Path, mode: str) -> dict[str, tuple[float | None, list[str]]]:
+def measure(captured: Path, mode: str) -> dict[str, tuple[float | None, float, list[str]]]:
+    """Per state: pixel difference %, largest element movement (dp), missing/unexpected IDs."""
     out = subprocess.run(
         [sys.executable, str(HERE / "compare_screens.py"), str(captured / mode), str(GOLDENS / mode),
-         "--threshold-percent", "100"],
+         "--threshold-percent", "100", "--layout-tolerance-dp", "0"],
         capture_output=True, text=True,
     ).stdout
     results = {}
@@ -37,8 +47,10 @@ def measure(captured: Path, mode: str) -> dict[str, tuple[float | None, list[str
             continue
         state = line.split()[1].rstrip(":")
         pct = float(line.split("pixels ")[1].split("%")[0]) if "pixels " in line else None
-        problems = [p for p in line.split("; ") if "moved" in p or "missing" in p or "unexpected" in p]
-        results[state] = (pct, problems)
+        parts = line.split("; ")
+        moved = [float(p.split(" moved ")[1].split("dp")[0]) for p in parts if " moved " in p]
+        problems = [p for p in parts if "missing" in p or "unexpected" in p]
+        results[state] = (pct, max(moved, default=0.0), problems)
     return results
 
 
@@ -49,18 +61,29 @@ def main() -> int:
     args = p.parse_args()
 
     marks = json.loads(MARKS.read_text()) if MARKS.exists() else {}
+    layout_marks = json.loads(LAYOUT_MARKS.read_text()) if LAYOUT_MARKS.exists() else {}
     failed = False
     for mode in sorted(d.name for d in args.captured.iterdir() if d.is_dir()):
-        for state, (pct, layout_problems) in sorted(measure(args.captured, mode).items()):
+        for state, (pct, moved, layout_problems) in sorted(measure(args.captured, mode).items()):
             key = f"{mode}/{state}"
             mark = marks.get(key)
+            layout_mark = layout_marks.get(key)
             if args.update:
                 marks[key] = round(pct, 2)
-                print(f"mark {key} = {marks[key]}%")
+                if moved > LAYOUT_TOLERANCE_DP:
+                    layout_marks[key] = round(moved, 1)
+                else:
+                    layout_marks.pop(key, None)
+                print(f"mark {key} = {marks[key]}%" + (f", {layout_marks[key]}dp" if key in layout_marks else ""))
                 continue
             verdict = "ok"
+            allowed = max(LAYOUT_TOLERANCE_DP, layout_mark or 0)
             if layout_problems:
                 verdict = "FAIL layout: " + "; ".join(layout_problems)
+            elif moved > allowed + (LAYOUT_SLACK if layout_mark else 0):
+                verdict = f"FAIL layout: moved {moved:.1f}dp > {allowed}dp"
+            elif layout_mark and moved < layout_mark - LAYOUT_SLACK:
+                verdict = f"FAIL layout better than mark {layout_mark}dp ({moved:.1f}dp): lower it (--update)"
             elif mark is None:
                 verdict = "FAIL no mark (run with --update)"
             elif pct > mark + SLACK:
@@ -68,9 +91,10 @@ def main() -> int:
             elif pct < mark - SLACK:
                 verdict = f"FAIL better than mark {mark}%: lower it (--update)"
             failed |= verdict != "ok"
-            print(f"{verdict:4} {key}: {pct:.2f}%")
+            print(f"{verdict:4} {key}: {pct:.2f}%, moved {moved:.1f}dp")
     if args.update:
         MARKS.write_text(json.dumps(dict(sorted(marks.items())), indent=2) + "\n")
+        LAYOUT_MARKS.write_text(json.dumps(dict(sorted(layout_marks.items())), indent=2) + "\n")
     return 1 if failed else 0
 
 

@@ -39,6 +39,8 @@ appId: com.backtosafety.app
       - tapOn:
           id: onboarding-contact-name
       - inputText: ${CONTACT_NAME}
+      # At large text the keyboard leaves only a sliver of the phone field showing.
+      - hideKeyboard
       - tapOn:
           id: onboarding-contact-phone
       - inputText: ${CONTACT_PHONE}

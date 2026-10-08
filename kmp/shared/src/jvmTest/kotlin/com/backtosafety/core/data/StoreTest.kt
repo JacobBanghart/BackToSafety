@@ -57,4 +57,38 @@ class StoreTest {
         assertEquals("Maggie", profile.nickname)
         assertEquals("5'6\"", profile.height)
     }
+
+    @Test
+    fun activeEmergencyRoundTripsInTheRnFormat() = runBlocking {
+        val store = freshStore()
+        val e = com.backtosafety.core.ActiveEmergency("2026-10-06T16:00:00.000Z", "Blue jacket", listOf("neighbors"), incidentId = 3)
+        store.saveActiveEmergency(e)
+        assertEquals(
+            """{"startedAt":"2026-10-06T16:00:00.000Z","wearing":"Blue jacket","checkedSteps":["neighbors"],"isActive":true,"incidentId":3}""",
+            store.setting(Store.ACTIVE_EMERGENCY),
+        )
+        assertEquals(e, store.activeEmergency())
+        store.clearActiveEmergency()
+        assertEquals("", store.setting(Store.ACTIVE_EMERGENCY))
+        assertEquals(null, store.activeEmergency())
+    }
+
+    @Test
+    fun incidentsRecordOutcomes() = runBlocking {
+        val store = freshStore()
+        val id = store.createIncident("2026-10-06T16:00:00.000Z")
+        store.recordIncident(id, "2026-10-06T16:00:00.000Z", listOf("call_911"), "", outcome = "911_called")
+        store.recordIncident(id, "2026-10-06T16:00:00.000Z", listOf("call_911", "neighbors"), "Blue jacket", outcome = "found", endedAt = "2026-10-06T16:10:00.000Z")
+        val incident = store.incidents().single()
+        assertEquals(id, incident.id)
+        assertEquals("found", incident.outcome)
+        assertEquals("2026-10-06T16:10:00.000Z", incident.endedAt)
+        assertEquals("""["call_911","neighbors"]""", incident.areasChecked)
+        assertEquals("Blue jacket", incident.wearing)
+
+        // An emergency from before incidents were recorded gets its row on first update.
+        val created = store.recordIncident(null, "2026-10-07T09:00:00.000Z", emptyList(), "", outcome = "911_called")
+        assertEquals("911_called", store.incidents().first { it.id == created }.outcome)
+    }
 }
+

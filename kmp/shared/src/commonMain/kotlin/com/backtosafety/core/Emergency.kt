@@ -2,6 +2,9 @@ package com.backtosafety.core
 
 import kotlin.time.Instant
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -115,3 +118,16 @@ fun parseActiveEmergency(raw: String?): ActiveEmergency? {
         incidentId = (state["incidentId"] as? JsonPrimitive)?.takeIf { !it.isString }?.longOrNull,
     )
 }
+
+/**
+ * The stored form of [ActiveEmergency], in the same key order the RN app writes
+ * (JSON.stringify of { startedAt, wearing, checkedSteps, isActive, incidentId? }).
+ */
+fun serializeActiveEmergency(e: ActiveEmergency): String = buildJsonObject {
+    put("startedAt", e.startedAt)
+    put("wearing", e.wearing)
+    put("checkedSteps", JsonArray(e.checkedSteps.map(::JsonPrimitive)))
+    put("isActive", true)
+    e.incidentId?.let { put("incidentId", it) }
+}.toString()
+

@@ -20,6 +20,9 @@ interface ContactDao {
     @Query("SELECT * FROM contacts ORDER BY sort_order, created_at")
     suspend fun all(): List<ContactEntity>
 
+    @Query("SELECT * FROM contacts WHERE notify_on_emergency = 1 ORDER BY sort_order, created_at")
+    suspend fun emergency(): List<ContactEntity>
+
     @Insert
     suspend fun insert(contact: ContactEntity): Long
 }
@@ -37,6 +40,15 @@ interface DestinationDao {
 interface IncidentDao {
     @Query("SELECT * FROM incidents ORDER BY started_at DESC")
     suspend fun all(): List<IncidentEntity>
+
+    @Query("SELECT * FROM incidents WHERE id = :id")
+    suspend fun get(id: Long): IncidentEntity?
+
+    @Insert
+    suspend fun insert(incident: IncidentEntity): Long
+
+    @Upsert
+    suspend fun save(incident: IncidentEntity)
 }
 
 @Dao

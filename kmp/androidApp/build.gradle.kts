@@ -31,6 +31,8 @@ android {
         targetSdk = 36
         versionCode = 100
         versionName = "2.0.0-dev"
+        // Test seams (the debug clock), as EXPO_PUBLIC_TEST_SEAMS=1 does for the RN build.
+        buildConfigField("boolean", "TEST_SEAMS", (findProperty("testSeams") == "true").toString())
     }
 
     signingConfigs {
@@ -51,7 +53,10 @@ android {
         }
     }
 
-    buildFeatures { compose = true }
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
 }
 
 dependencies {
