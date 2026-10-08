@@ -56,7 +56,10 @@ def pixel_diff_percent(
 
 
 def load_layout(path: Path) -> dict[str, list[float]]:
-    return json.loads(path.read_text()) if path.exists() else {}
+    """testID -> bounds, without elements that aren't on screen. UI Automator lists some
+    off-screen views with empty or inverted bounds (top below bottom); others it omits."""
+    layout = json.loads(path.read_text()) if path.exists() else {}
+    return {tid: b for tid, b in layout.items() if b[2] > b[0] and b[3] > b[1]}
 
 
 def layout_diff(a: Path, b: Path, tolerance_dp: float, masked: set[str]) -> list[str]:

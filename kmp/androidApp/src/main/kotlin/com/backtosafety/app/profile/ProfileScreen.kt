@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -431,17 +432,27 @@ private fun Field(
     }
 }
 
-/** The date of birth: typed as MM/DD/YYYY, or picked in the platform date dialog. */
+/**
+ * The date of birth: typed as MM/DD/YYYY, or picked in the platform date dialog. As in RN, a
+ * bordered row (padding md) holds the 44dp input and the calendar button beside it.
+ */
 @Composable
 private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
+    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
     Group(label) {
-        RnTextField(
-            value, { onChange(formatDobInput(it)) }, "profile-field-dateOfBirth",
-            placeholder = "MM/DD/YYYY", keyboardType = KeyboardType.Number, maxLength = 10,
-            background = colors.card, border = colors.border,
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 44.udp).clip(shape).background(colors.card)
+                .rnBorder(1.dp, colors.border, shape).padding(horizontal = space.md.udp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
+            RnTextField(
+                value, { onChange(formatDobInput(it)) }, "profile-field-dateOfBirth",
+                placeholder = "MM/DD/YYYY", keyboardType = KeyboardType.Number, maxLength = 10,
+                background = Color.Transparent, border = Color.Transparent, bare = true,
+                modifier = Modifier.weight(1f),
+            )
             Box(
                 Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 44.udp, minHeight = 44.udp)
                     .clickable {

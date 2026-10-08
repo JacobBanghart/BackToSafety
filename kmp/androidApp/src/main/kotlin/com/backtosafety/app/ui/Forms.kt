@@ -100,8 +100,9 @@ fun RnTextField(
     textAreaPaddingV: Float = 10f,
     maxLength: Int? = null,
     onFocusChanged: (Boolean) -> Unit = {},
+    /** Just the input: no border or horizontal padding (it sits inside a bordered row). */
+    bare: Boolean = false,
     modifier: Modifier = Modifier,
-    trailing: @Composable (() -> Unit)? = null,
 ) {
     val colors = LocalAppColors.current
     var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
@@ -127,13 +128,17 @@ fun RnTextField(
                 if (multiline) Modifier.heightIn(min = 80.udp, max = textAreaMaxHeight?.udp ?: androidx.compose.ui.unit.Dp.Infinity)
                 else Modifier.height(44.udp),
             )
-            .clip(shape)
-            .background(background)
-            // RN's border is inside the box, so it's drawn over the padding, not around it.
-            .border(1.dp, border, shape),
+            .then(
+                if (bare) Modifier
+                // RN's border is inside the box, so it's drawn over the padding, not around it.
+                else Modifier.clip(shape).background(background).border(1.dp, border, shape),
+            ),
         decorationBox = { inner ->
             Row(
-                Modifier.padding(start = (DesignTokens.Spacing.md + 1).udp, end = if (trailing != null) 0.dp else (DesignTokens.Spacing.md + 1).udp)
+                Modifier.padding(
+                    start = if (bare) 0.dp else (DesignTokens.Spacing.md + 1).udp,
+                    end = if (bare) 0.dp else (DesignTokens.Spacing.md + 1).udp,
+                )
                     .padding(vertical = if (multiline) (textAreaPaddingV + 1).udp else 0.dp),
                 verticalAlignment = if (multiline) Alignment.Top else Alignment.CenterVertically,
             ) {
@@ -141,7 +146,6 @@ fun RnTextField(
                     if (value.isEmpty()) Text(placeholder, style = textStyle, color = colors.inputPlaceholder)
                     inner()
                 }
-                trailing?.invoke()
             }
         },
     )
