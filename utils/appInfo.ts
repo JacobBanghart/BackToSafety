@@ -1,3 +1,4 @@
+import * as Application from 'expo-application';
 import Constants from 'expo-constants';
 
 const FALLBACK_APP_NAME = 'Back to Safety';
@@ -8,8 +9,10 @@ export function getAppName(): string {
 }
 
 export function getAppVersionLabel(): string {
-  const version = Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? FALLBACK_VERSION;
-  const build = Constants.nativeBuildVersion;
+  // expo-application: SDK 57 removed Constants.nativeAppVersion/nativeBuildVersion (F-34).
+  const version =
+    Application.nativeApplicationVersion ?? Constants.expoConfig?.version ?? FALLBACK_VERSION;
+  const build = Application.nativeBuildVersion;
 
   if (version.startsWith('internal-')) {
     return version;
