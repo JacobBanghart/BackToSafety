@@ -21,6 +21,7 @@ import com.backtosafety.app.onboarding.NameScreen
 import com.backtosafety.app.onboarding.PhotoScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.readout.ReadoutScreen
+import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.NotPortedScreen
 import com.backtosafety.core.Translations
@@ -28,15 +29,24 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.invoke
 import kotlinx.coroutines.launch
 
+/** i18n/index.ts: languages released to users (Spanish awaits a native review). */
+private val SHIPPED_LANGUAGES = listOf("en")
+
 /** The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). */
 @Composable
 fun App(store: Store, translations: Translations, modifier: Modifier) {
     var onboarded by remember { mutableStateOf<Boolean?>(null) }
     var themePreference by remember { mutableStateOf("system") }
+    var language by remember { mutableStateOf("en") }
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         store.seed()
-        themePreference = store.setting("theme_preference") ?: "system"
+        themePreference = store.setting(Store.THEME_PREFERENCE) ?: "system"
+        // i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships.
+        language = when (store.setting(Store.LANGUAGE_PREFERENCE)) {
+            "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
+            else -> "en"
+        }
         onboarded = store.isOnboarded()
     }
     val dark = when (themePreference) {
@@ -45,11 +55,16 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
         else -> isSystemInDarkTheme()
     }
     val start = onboarded ?: return
-    val onboarding = translations.translator("en", "onboarding")
-    val common = translations.translator("en", "common")
-    val home = translations.translator("en", "home")
-    val emergency = translations.translator("en", "emergency")
-    val readout = translations.translator("en", "readout")
+    val onboarding = translations.translator(language, "onboarding")
+    val common = translations.translator(language, "common")
+    val home = translations.translator(language, "home")
+    val emergency = translations.translator(language, "emergency")
+    val readout = translations.translator(language, "readout")
+    val settings = translations.translator(language, "settings")
+    fun setTheme(value: String) {
+        themePreference = value
+        scope.launch { store.putSetting(Store.THEME_PREFERENCE, value) }
+    }
 
     AppTheme(dark = dark) {
         val nav = rememberNavController()
@@ -58,10 +73,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
                 WelcomeScreen(
                     t = onboarding,
                     themePreference = themePreference,
-                    onThemeChange = { value ->
-                        themePreference = value
-                        scope.launch { store.putSetting("theme_preference", value) }
-                    },
+                    onThemeChange = ::setTheme,
                     onGetStarted = { scope.launch { store.completeStep("welcome"); nav.navigate("name") } },
                 )
             }
@@ -80,13 +92,26 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
                     onViewReadout = { nav.navigate("readout") },
                 )
             }
+            composable("settings") {
+                SettingsScreen(
+                    settings, common, store,
+                    themePreference = themePreference, onThemeChange = ::setTheme,
+                    language = language,
+                    onLanguageChange = {
+                        language = it
+                        scope.launch { store.putSetting(Store.LANGUAGE_PREFERENCE, it) }
+                    },
+                    onBack = { nav.popBackStack() },
+                    onDeleted = { nav.navigate("welcome") { popUpTo(0) } },
+                )
+            }
             composable("readout") { ReadoutScreen(readout, common, store) { nav.popBackStack() } }
             // Not ported yet: each shows its title and a back button.
             for ((route, ns) in listOf(
                 "profile" to "profile", "contacts" to "contacts", "destinations" to "destinations",
-                "settings" to "settings",
+
             )) {
-                composable(route) { NotPortedScreen(translations.translator("en", ns)("screenTitle"), route) { nav.popBackStack() } }
+                composable(route) { NotPortedScreen(translations.translator(language, ns)("screenTitle"), route) { nav.popBackStack() } }
             }
         }
     }

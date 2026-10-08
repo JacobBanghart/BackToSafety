@@ -1,6 +1,14 @@
 {
-  "$comment": "Per state, what to blank because it varies by design: testIDs (the per-install device ID; focused inputs whose text cursor blinks) or 'below:<testID>' for everything under an element (the system keyboard). compare_screens.py blanks these in both images and skips masked testIDs in the layout check.",
-  "settings": ["settings-device-id-value"],
-  "onboarding-name": ["onboarding-name-input"],
-  "onboarding-name-keyboard": ["onboarding-name-input", "below:onboarding-name-continue"]
+  "$comment": "Per state, what to blank because it varies by design: testIDs (the per-install device ID; the version, which differs per build; focused inputs whose text cursor blinks) or 'below:<testID>' for everything under an element (the system keyboard). compare_screens.py blanks these in both images and skips masked testIDs in the layout check.",
+  "settings": [
+    "settings-device-id-value",
+    "settings-version-value"
+  ],
+  "onboarding-name": [
+    "onboarding-name-input"
+  ],
+  "onboarding-name-keyboard": [
+    "onboarding-name-input",
+    "below:onboarding-name-continue"
+  ]
 }

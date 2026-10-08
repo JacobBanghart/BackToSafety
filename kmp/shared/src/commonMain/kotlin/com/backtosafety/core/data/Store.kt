@@ -5,6 +5,8 @@ import com.backtosafety.core.Profile
 import com.backtosafety.core.db.IncidentEntity
 import com.backtosafety.core.parseActiveEmergency
 import com.backtosafety.core.serializeActiveEmergency
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import com.backtosafety.core.db.AppDatabase
@@ -87,6 +89,30 @@ class Store(private val db: AppDatabase) {
         return id
     }
 
+    /**
+     * Settings > Delete Account (database/storage.native.ts clearAllData): empties every
+     * table, then re-creates the onboarding steps so the app starts onboarding again.
+     */
+    suspend fun clearAllData() {
+        db.profile().deleteAll()
+        db.contacts().deleteAll()
+        db.destinations().deleteAll()
+        db.incidents().deleteAll()
+        db.safetyChecks().deleteAll()
+        db.settings().deleteAll()
+        db.onboarding().deleteAll()
+        db.onboarding().insertMissing(ONBOARDING_STEPS.map { OnboardingStepEntity(step = it) })
+    }
+
+    private var cachedDeviceId: String? = null
+
+    /** The anonymous per-install ID (utils/device-id.ts): a random UUID, stored on first use. */
+    @OptIn(ExperimentalUuidApi::class)
+    suspend fun deviceId(): String = cachedDeviceId ?: (
+        setting(DEVICE_ID)?.takeIf { it.isNotEmpty() }
+            ?: Uuid.random().toString().also { putSetting(DEVICE_ID, it) }
+        ).also { cachedDeviceId = it }
+
     suspend fun setting(key: String): String? = db.settings().get(key)
 
     suspend fun putSetting(key: String, value: String) =
@@ -94,6 +120,9 @@ class Store(private val db: AppDatabase) {
 
     companion object {
         const val ACTIVE_EMERGENCY = "active_emergency"
+        const val DEVICE_ID = "device_id"
+        const val THEME_PREFERENCE = "theme_preference"
+        const val LANGUAGE_PREFERENCE = "language_preference"
 
         val ONBOARDING_STEPS = listOf(
             "welcome", "profile_name", "profile_photo", "profile_appearance", "emergency_contact", "complete",

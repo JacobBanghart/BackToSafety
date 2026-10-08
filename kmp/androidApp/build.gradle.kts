@@ -30,7 +30,8 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 100
-        versionName = "2.0.0-dev"
+        // The RN app's version (app.json), so Settings > About reads the same.
+        versionName = Regex("\"version\"\\s*:\\s*\"([^\"]+)\"").find(repoRoot.resolve("app.json").readText())!!.groupValues[1]
         // Test seams (the debug clock), as EXPO_PUBLIC_TEST_SEAMS=1 does for the RN build.
         buildConfigField("boolean", "TEST_SEAMS", (findProperty("testSeams") == "true").toString())
     }

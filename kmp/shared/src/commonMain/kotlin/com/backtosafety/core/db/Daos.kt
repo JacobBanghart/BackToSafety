@@ -13,6 +13,9 @@ interface ProfileDao {
 
     @Upsert
     suspend fun save(profile: ProfileEntity)
+
+    @Query("DELETE FROM profile")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -25,6 +28,9 @@ interface ContactDao {
 
     @Insert
     suspend fun insert(contact: ContactEntity): Long
+
+    @Query("DELETE FROM contacts")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -34,6 +40,9 @@ interface DestinationDao {
 
     @Insert
     suspend fun insert(destination: DestinationEntity): Long
+
+    @Query("DELETE FROM destinations")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -49,6 +58,9 @@ interface IncidentDao {
 
     @Upsert
     suspend fun save(incident: IncidentEntity)
+
+    @Query("DELETE FROM incidents")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -58,6 +70,9 @@ interface SafetyCheckDao {
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertMissing(checks: List<SafetyCheckEntity>)
+
+    @Query("DELETE FROM safety_checks")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -67,6 +82,9 @@ interface SettingDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun put(setting: SettingEntity)
+
+    @Query("DELETE FROM settings")
+    suspend fun deleteAll()
 }
 
 @Dao
@@ -84,4 +102,7 @@ interface OnboardingDao {
     /** Onboarded once no step is left neither completed nor skipped (spec/storage.md). */
     @Query("SELECT COUNT(*) = 0 FROM onboarding WHERE completed = 0 AND skipped = 0")
     suspend fun isComplete(): Boolean
+
+    @Query("DELETE FROM onboarding")
+    suspend fun deleteAll()
 }

@@ -1,9 +1,12 @@
 package com.backtosafety.app.ui
 
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
@@ -76,6 +79,32 @@ fun rnTextStyle(fontSize: Float, lineHeight: Float, fontWeight: Int = 400, lette
             ),
         )
     }
+
+/**
+ * RN text with no lineHeight (e.g. ThemedText type="subtitle"): Android's natural line height,
+ * with RN's default includeFontPadding = true.
+ */
+@Composable
+fun rnTextStyleNatural(fontSize: Float, fontWeight: Int = 400): TextStyle = with(LocalDensity.current) {
+    TextStyle(
+        fontSize = ceilPx(fontSize.sp.toPx()).toSp(),
+        fontWeight = FontWeight(fontWeight),
+        platformStyle = PlatformTextStyle(includeFontPadding = true),
+        lineBreak = RnTextBase.lineBreak,
+        textMotion = TextMotion.Animated,
+    )
+}
+
+/**
+ * Holds a line of text to RN's line height. RN's line-height span fixes each line's height
+ * even when a glyph comes from a taller fallback font (emoji); Compose grows the line to the
+ * fallback's metrics instead, so emoji-only text is clipped to the line here.
+ */
+@Composable
+fun Modifier.rnLineHeight(lineHeight: Float): Modifier {
+    val height = with(LocalDensity.current) { ceilPx(lineHeight.sp.toPx()).toDp() }
+    return this.height(height).wrapContentHeight(unbounded = true)
+}
 
 /** Math.ceil on a pixel size, tolerant of float noise (42.0000001 is 42). */
 fun ceilPx(px: Float): Float = kotlin.math.ceil(px - 0.001f)

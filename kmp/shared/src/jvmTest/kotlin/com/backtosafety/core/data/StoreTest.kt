@@ -90,5 +90,29 @@ class StoreTest {
         val created = store.recordIncident(null, "2026-10-07T09:00:00.000Z", emptyList(), "", outcome = "911_called")
         assertEquals("911_called", store.incidents().first { it.id == created }.outcome)
     }
-}
 
+    @Test
+    fun deleteAccountEmptiesEverythingAndRestartsOnboarding() = runBlocking {
+        val store = freshStore()
+        store.seed()
+        Store.ONBOARDING_STEPS.forEach { store.completeStep(it) }
+        store.saveProfile { it.copy(name = "Margaret Smith") }
+        store.addContact(com.backtosafety.core.db.ContactEntity(name = "John Smith", phone = "5551234567"))
+        store.putSetting(Store.THEME_PREFERENCE, "dark")
+        assertTrue(store.isOnboarded())
+
+        store.clearAllData()
+        assertEquals(null, store.profile())
+        assertTrue(store.contacts().isEmpty())
+        assertEquals(null, store.setting(Store.THEME_PREFERENCE))
+        assertFalse(store.isOnboarded())
+    }
+
+    @Test
+    fun deviceIdIsCreatedOnceAndKept() = runBlocking {
+        val path = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).absolutePath
+        val first = Store(openAppDatabase(path, databaseBuilder(path))).deviceId()
+        assertTrue(Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").matches(first))
+        assertEquals(first, Store(openAppDatabase(path, databaseBuilder(path))).deviceId())
+    }
+}
