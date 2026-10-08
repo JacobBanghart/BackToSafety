@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Auto Backup for Android 11 and lower, as the RN app (expo-secure-store's rules): shared
+     preferences only. The database stays on the device ("Your information never leaves this device"). -->
+<full-backup-content>
+    <include domain="sharedpref" path="." />
+    <exclude domain="sharedpref" path="SecureStore" />
+</full-backup-content>

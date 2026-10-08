@@ -14,9 +14,15 @@ val syncSharedAssets by tasks.registering(SyncSharedAssets::class) {
     outputDir = layout.buildDirectory.dir("generated/sharedAssets")
 }
 
+val syncLauncherResources by tasks.registering(SyncLauncherResources::class) {
+    rnRes = repoRoot.resolve("android/app/src/main/res")
+    outputDir = layout.buildDirectory.dir("generated/launcherRes")
+}
+
 androidComponents {
     onVariants { variant ->
         variant.sources.assets?.addGeneratedSourceDirectory(syncSharedAssets, SyncSharedAssets::outputDir)
+        variant.sources.res?.addGeneratedSourceDirectory(syncLauncherResources, SyncLauncherResources::outputDir)
     }
 }
 
@@ -79,4 +85,5 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.android.image.cropper)
     implementation(libs.posthog.android)
+    implementation(libs.core.splashscreen)
 }

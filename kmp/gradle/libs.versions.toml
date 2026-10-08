@@ -12,6 +12,8 @@ activity-compose = "1.13.0"
 navigation-compose = "2.10.2"
 
 [libraries]
+# The splash screen the RN app shows (expo-splash-screen uses it).
+core-splashscreen = { module = "androidx.core:core-splashscreen", version = "1.2.0" }
 # Same analytics backend as the RN app (posthog-react-native).
 posthog-android = { module = "com.posthog:posthog-android", version = "3.72.1" }
 # The cropper expo-image-picker uses (allowsEditing), so the crop screen is the same.

@@ -1,0 +1,5 @@
+<resources>
+    <!-- As android/app/src/main/res/values/colors.xml (the launcher icon and splash). -->
+    <color name="splashscreen_background">#ffffff</color>
+    <color name="iconBackground">#65276c</color>
+</resources>
