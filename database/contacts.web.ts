@@ -10,12 +10,12 @@ export interface Contact {
   id?: number;
   name: string;
   phone: string;
-  relationship?: string;
+  relationship?: string | null;
   role?: 'primary_caregiver' | 'caregiver' | 'neighbor' | 'family' | 'friend' | 'other';
-  address?: string;
+  address?: string | null;
   notifyOnEmergency: boolean;
   shareMedicalInfo: boolean;
-  notes?: string;
+  notes?: string | null;
   sortOrder?: number;
   createdAt?: string;
   updatedAt?: string;

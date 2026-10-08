@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from './storage.web';
 export interface Destination {
   id?: number;
   name: string;
-  address?: string;
+  address?: string | null;
   latitude?: number;
   longitude?: number;
   category?:
@@ -21,10 +21,10 @@ export interface Destination {
     | 'friend_family'
     | 'walking_route'
     | 'other';
-  reason?: string;
-  distanceFromHome?: string;
+  reason?: string | null;
+  distanceFromHome?: string | null;
   riskLevel?: 'high' | 'medium' | 'low';
-  notes?: string;
+  notes?: string | null;
   sortOrder?: number;
   createdAt?: string;
   updatedAt?: string;

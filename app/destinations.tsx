@@ -195,14 +195,15 @@ export default function DestinationsScreen() {
     setIsSaving(true);
     try {
       if (editingDestination?.id) {
+        // null, not undefined: updateDestination skips undefined fields (F-35).
         await updateDestination(editingDestination.id, {
           name: formData.name,
-          address: formData.address || undefined,
+          address: formData.address || null,
           category: formData.category,
           riskLevel: formData.riskLevel,
-          reason: formData.reason || undefined,
-          distanceFromHome: formData.distanceFromHome || undefined,
-          notes: resolvedNotes,
+          reason: formData.reason || null,
+          distanceFromHome: formData.distanceFromHome || null,
+          notes: resolvedNotes ?? null,
         });
       } else {
         const nextSortOrder = destinations.reduce((maxOrder, destination) => {

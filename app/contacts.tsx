@@ -147,15 +147,17 @@ export default function ContactsScreen() {
     setIsSaving(true);
     try {
       if (editingContact?.id) {
+        // null, not undefined: updateContact skips undefined fields, so a cleared field
+        // would keep its old value (F-35).
         await updateContact(editingContact.id, {
           name: formData.name,
           phone: formData.phone,
-          relationship: formData.relationship || undefined,
+          relationship: formData.relationship || null,
           role: formData.role,
-          address: formData.address || undefined,
+          address: formData.address || null,
           notifyOnEmergency: formData.notifyOnEmergency,
           shareMedicalInfo: formData.shareMedicalInfo,
-          notes: formData.notes || undefined,
+          notes: formData.notes || null,
         });
       } else {
         const nextSortOrder = contacts.reduce((maxOrder, contact) => {
