@@ -39,20 +39,25 @@ android {
         buildConfigField("String", "POSTHOG_HOST", "\"${System.getenv("EXPO_PUBLIC_POSTHOG_HOST") ?: "https://us.i.posthog.com"}\"")
     }
 
+    // The RN repo's debug keystore (local, not committed), so this build can install over the
+    // RN test build. Without it (CI), release builds are left unsigned.
+    val parityKeystore = repoRoot.resolve("android/app/debug.keystore")
     signingConfigs {
-        // The RN repo's debug keystore, so this build can install over the RN test build.
-        create("parity") {
-            storeFile = repoRoot.resolve("android/app/debug.keystore")
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
+        if (parityKeystore.exists()) {
+            create("parity") {
+                storeFile = parityKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
     }
 
     buildTypes {
-        debug { signingConfig = signingConfigs.getByName("parity") }
+        val parity = signingConfigs.findByName("parity")
+        debug { if (parity != null) signingConfig = parity }
         release {
-            signingConfig = signingConfigs.getByName("parity")
+            signingConfig = parity
             isMinifyEnabled = false
         }
     }

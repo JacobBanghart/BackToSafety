@@ -69,6 +69,26 @@ jobs:
         working-directory: kmp
         run: ./gradlew :shared:jvmTest --console=plain
 
+  kotlin-android:
+    name: Kotlin Android app (build)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java and Node (mise.toml)
+        uses: jdx/mise-action@v5
+        with:
+          install_args: java node
+
+      # The app bundles the RN app's icon font and glyph map from node_modules.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        working-directory: kmp
+        run: ./gradlew :androidApp:assembleRelease --console=plain
+
   e2e-web:
     name: Playwright (web)
     runs-on: ubuntu-latest
