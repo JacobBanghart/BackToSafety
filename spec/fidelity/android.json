@@ -11,6 +11,7 @@
   "dark/onboarding-photo": 1.75,
   "dark/onboarding-welcome": 1.83,
   "dark/readout": 5.68,
+  "dark/settings": 3.7,
   "large-text/emergency-expired": 7.8,
   "large-text/emergency-leave-modal": 6.26,
   "large-text/emergency-progress": 6.9,
@@ -23,6 +24,7 @@
   "large-text/onboarding-photo": 1.17,
   "large-text/onboarding-welcome": 1.55,
   "large-text/readout": 5.57,
+  "large-text/settings": 4.43,
   "light/emergency-expired": 6.85,
   "light/emergency-leave-modal": 5.66,
   "light/emergency-progress": 6.94,
@@ -34,5 +36,6 @@
   "light/onboarding-name-keyboard": 1.05,
   "light/onboarding-photo": 1.77,
   "light/onboarding-welcome": 1.83,
-  "light/readout": 5.08
+  "light/readout": 5.08,
+  "light/settings": 4.06
 }
