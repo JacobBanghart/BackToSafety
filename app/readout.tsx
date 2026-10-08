@@ -596,7 +596,10 @@ export default function ReadoutScreen() {
                     numberOfLines={1}
                     ellipsizeMode="tail"
                   >
-                    {c.relationship || c.role}
+                    {c.relationship ||
+                      (c.role
+                        ? t(`roles.${c.role}`, { ns: 'contacts', defaultValue: c.role })
+                        : '')}
                   </ThemedText>
                 </View>
                 <Pressable

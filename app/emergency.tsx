@@ -271,6 +271,8 @@ export default function EmergencyScreen() {
   const onMarkFound = async () => {
     // Clear state first and wait for it
     await clearEmergencyState();
+    // The info sheet's "last seen" belongs to the emergency; it ends with it.
+    setLastSeen({});
     track('emergency_completed', { checked_count: steps.filter((s) => s.checked).length });
     recordIncident({ outcome: 'found', endedAt: new Date(now()).toISOString() });
     setModalType('found');
@@ -373,6 +375,7 @@ export default function EmergencyScreen() {
       track('emergency_cancelled', { checked_count: steps.filter((s) => s.checked).length });
       // Ended without an outcome: stamp the end time, keep the outcome as it was.
       recordIncident({ endedAt: new Date(now()).toISOString() });
+      setLastSeen({});
       clearEmergencyState().then(() => navigateBack());
     }
   };
