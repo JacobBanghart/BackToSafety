@@ -35,6 +35,7 @@ import { Colors, primary, semantic } from '@/constants/Colors';
 import { getShadow } from '@/constants/Shadows';
 import { Spacing, Radius } from '@/constants/Spacing';
 import { Typography } from '@/constants/Typography';
+import { useProfile } from '@/context/ProfileContext';
 import { useTheme } from '@/context/ThemeContext';
 import { useUnsavedChangesGuard } from '@/hooks/useUnsavedChangesGuard';
 import {
@@ -102,6 +103,7 @@ export default function DestinationsScreen() {
   const { t } = useTranslation('destinations');
   const { t: tCommon } = useTranslation('common');
   const { height: windowHeight } = useWindowDimensions();
+  const { profile } = useProfile();
 
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -719,7 +721,9 @@ export default function DestinationsScreen() {
             {t('noDestinations.title')}
           </ThemedText>
           <ThemedText style={[styles.emptyText, { color: theme.textSecondary }]}>
-            {t('noDestinations.body')}
+            {t('noDestinations.body', {
+              name: profile?.name || t('noDestinations.nameFallback'),
+            })}
           </ThemedText>
           <Pressable
             style={[styles.emptyButton, { backgroundColor: theme.primary }]}

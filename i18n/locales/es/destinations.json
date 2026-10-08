@@ -5,7 +5,8 @@
   "noDestinations": {
     "title": "Sin lugares guardados",
     "body": "Agrega lugares a donde {{name}} podría ir. Aparecerán durante una búsqueda de emergencia.",
-    "button": "Agregar el primer lugar"
+    "button": "Agregar el primer lugar",
+    "nameFallback": "tu ser querido"
   },
   "riskLevels": {
     "critical": "Crítico",

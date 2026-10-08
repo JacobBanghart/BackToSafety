@@ -5,7 +5,8 @@
   "noDestinations": {
     "title": "No Saved Places",
     "body": "Add locations where {{name}} might go. These appear during an emergency search.",
-    "button": "Add First Place"
+    "button": "Add First Place",
+    "nameFallback": "your loved one"
   },
   "riskLevels": {
     "critical": "Critical",
