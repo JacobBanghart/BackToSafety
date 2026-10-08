@@ -7,7 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.sp
@@ -28,7 +30,10 @@ fun Icon(name: String, size: Float, color: Color, modifier: Modifier = Modifier)
         glyph,
         modifier = modifier,
         color = color,
-        style = TextStyle(fontFamily = icons.font, fontSize = size.sp, lineHeight = size.sp),
+        // A vector-icons glyph is RN text: its size rounds up to whole pixels too.
+        style = with(LocalDensity.current) { ceilPx(size.sp.toPx()).toSp() }.let {
+            TextStyle(fontFamily = icons.font, fontSize = it, lineHeight = it, textMotion = TextMotion.Animated)
+        },
     )
 }
 

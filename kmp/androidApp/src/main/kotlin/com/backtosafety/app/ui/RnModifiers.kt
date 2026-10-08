@@ -19,3 +19,7 @@ fun Modifier.negativeTopMargin(margin: Dp): Modifier = layout { measurable, cons
     val px = margin.roundToPx()
     layout(placeable.width, (placeable.height - px).coerceAtLeast(0)) { placeable.place(0, -px) }
 }
+
+/** StyleSheet.hairlineWidth: one physical pixel. */
+val hairline: Dp
+    @androidx.compose.runtime.Composable get() = with(androidx.compose.ui.platform.LocalDensity.current) { 1.toDp() }

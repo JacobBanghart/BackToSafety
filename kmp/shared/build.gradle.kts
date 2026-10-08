@@ -26,7 +26,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.kotlinx.datetime)
+            api(libs.kotlinx.datetime)
             api(libs.room.runtime)
             implementation(libs.sqlite.bundled)
         }

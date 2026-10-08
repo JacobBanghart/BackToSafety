@@ -20,6 +20,7 @@ Usage: fidelity.py CAPTURED_ROOT [--update]   (CAPTURED_ROOT/<mode>/<state>.png 
 
 import argparse
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -49,7 +50,8 @@ def measure(captured: Path, mode: str) -> dict[str, tuple[float | None, float, l
         pct = float(line.split("pixels ")[1].split("%")[0]) if "pixels " in line else None
         parts = line.split("; ")
         moved = [float(p.split(" moved ")[1].split("dp")[0]) for p in parts if " moved " in p]
-        problems = [p for p in parts if "missing" in p or "unexpected" in p]
+        # Whole-word only: a testID may itself contain "missing" (readout-script-missing).
+        problems = [m.group(0) for m in re.finditer(r"(?<![\w-])(missing|unexpected) [\w-]+", line)]
         results[state] = (pct, max(moved, default=0.0), problems)
     return results
 

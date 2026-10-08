@@ -20,6 +20,7 @@ import com.backtosafety.app.onboarding.ContactScreen
 import com.backtosafety.app.onboarding.NameScreen
 import com.backtosafety.app.onboarding.PhotoScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
+import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.NotPortedScreen
 import com.backtosafety.core.Translations
@@ -48,6 +49,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
     val common = translations.translator("en", "common")
     val home = translations.translator("en", "home")
     val emergency = translations.translator("en", "emergency")
+    val readout = translations.translator("en", "readout")
 
     AppTheme(dark = dark) {
         val nav = rememberNavController()
@@ -78,10 +80,11 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
                     onViewReadout = { nav.navigate("readout") },
                 )
             }
+            composable("readout") { ReadoutScreen(readout, common, store) { nav.popBackStack() } }
             // Not ported yet: each shows its title and a back button.
             for ((route, ns) in listOf(
                 "profile" to "profile", "contacts" to "contacts", "destinations" to "destinations",
-                "readout" to "readout", "settings" to "settings",
+                "settings" to "settings",
             )) {
                 composable(route) { NotPortedScreen(translations.translator("en", ns)("screenTitle"), route) { nav.popBackStack() } }
             }

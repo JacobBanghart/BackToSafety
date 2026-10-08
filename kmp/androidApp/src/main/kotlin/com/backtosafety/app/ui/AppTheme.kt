@@ -8,7 +8,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -44,30 +46,44 @@ val LocalAppColors = staticCompositionLocalOf { AppColors(isDark = false) }
 private val RnTextBase = TextStyle(
     platformStyle = PlatformTextStyle(includeFontPadding = false),
     lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None),
+    lineBreak = LineBreak(LineBreak.Strategy.HighQuality, LineBreak.Strictness.Default, LineBreak.WordBreak.Default),
+    // RN's TextPaint lays glyphs out at their linear (unhinted) advances. Compose's default,
+    // TextMotion.Static, hints them to whole pixels, which made body text ~0.6% narrower and
+    // wrapped lines differently. Animated is linear: line widths then match RN to the pixel.
+    textMotion = TextMotion.Animated,
 )
 
 /**
- * A text style sized like RN's. Android 14+ scales fonts nonlinearly, and RN converts
- * fontSize and lineHeight through that table separately (at 1.3x, 24sp -> ~26.7dp), while
- * Compose would scale lineHeight by the font size's ratio. So lineHeight is given as the
- * ratio of the two converted sizes.
+ * A text style sized the way RN's Android text is (TextAttributes): the font size and the
+ * line height are converted to pixels and rounded *up* to whole pixels, and letter spacing
+ * is em of that rounded font size. At 420dpi a 13sp caption renders at 35px, not 34.1, so
+ * without this every caption is 2.6% narrower than RN's. The conversion goes through the
+ * device's font scale, which Android 14+ applies nonlinearly. Lines break like RN's
+ * textBreakStrategy="highQuality" (balanced), not greedily.
  */
 @Composable
-fun rnTextStyle(fontSize: Float, lineHeight: Float, fontWeight: Int = 400, letterSpacing: Float = 0f): TextStyle {
-    val ratio = with(LocalDensity.current) { lineHeight.sp.toDp().value / fontSize.sp.toDp().value }
-    return RnTextBase.merge(
-        TextStyle(
-            fontSize = fontSize.sp,
-            fontWeight = FontWeight(fontWeight),
-            lineHeight = ratio.em,
-            letterSpacing = letterSpacing.sp,
-        ),
-    )
-}
+fun rnTextStyle(fontSize: Float, lineHeight: Float, fontWeight: Int = 400, letterSpacing: Float = 0f): TextStyle =
+    with(LocalDensity.current) {
+        val fontPx = ceilPx(fontSize.sp.toPx())
+        val linePx = ceilPx(lineHeight.sp.toPx())
+        RnTextBase.merge(
+            TextStyle(
+                fontSize = fontPx.toSp(),
+                fontWeight = FontWeight(fontWeight),
+                // Compose rounds the line height up again; keep float noise from adding a pixel.
+                lineHeight = ((linePx - 0.01f) / fontPx).em,
+                letterSpacing = (letterSpacing.sp.toPx() / fontPx).em,
+            ),
+        )
+    }
 
-/** A design-system text style (constants/Typography.ts). */
+/** Math.ceil on a pixel size, tolerant of float noise (42.0000001 is 42). */
+fun ceilPx(px: Float): Float = kotlin.math.ceil(px - 0.001f)
+
+/** A design-system text style (constants/Typography.ts), optionally with RN style overrides. */
 @Composable
-fun DesignTokens.Type.style(): TextStyle = rnTextStyle(fontSize, lineHeight, fontWeight, letterSpacing)
+fun DesignTokens.Type.style(fontWeight: Int = this.fontWeight, letterSpacing: Float = this.letterSpacing): TextStyle =
+    rnTextStyle(fontSize, lineHeight, fontWeight, letterSpacing)
 
 @Composable
 fun AppTheme(dark: Boolean, content: @Composable () -> Unit) {

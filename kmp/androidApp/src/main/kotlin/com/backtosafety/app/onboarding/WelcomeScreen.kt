@@ -122,7 +122,7 @@ fun WelcomeScreen(
             Column(Modifier.padding(bottom = space.xl.dp)) {
                 Text(
                     t("welcome.themeLabel").uppercase(),
-                    style = type.caption.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
+                    style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
                     color = colors.textDisabled,
                     modifier = Modifier.padding(bottom = space.md.dp),
                 )
@@ -167,7 +167,7 @@ fun WelcomeScreen(
             if (scroll.value <= 10) {
                 Text(
                     t("welcome.scrollHint").uppercase(),
-                    style = type.caption.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
+                    style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
                     color = colors.textDisabled,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),

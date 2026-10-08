@@ -7,7 +7,8 @@ import kotlinx.serialization.json.contentOrNull
 
 /**
  * Looks up a translated string. `vars` fill `{{name}}` placeholders; a `count` var picks
- * the `_one`/`_other` plural form, and an `ns` var reads from another namespace.
+ * the `_one`/`_other` plural form, an `ns` var reads from another namespace, and a
+ * `defaultValue` var stands in for a missing key.
  */
 typealias Translate = (key: String, vars: Map<String, Any?>) -> String
 
@@ -15,7 +16,7 @@ typealias Translate = (key: String, vars: Map<String, Any?>) -> String
  * The same i18n/locales JSON the RN app ships, with the subset of i18next behavior the
  * app uses: nested keys by dots, English fallback (also for empty strings, as the RN app
  * sets returnEmptyString: false), `{{var}}` interpolation and English/Spanish plurals.
- * A key found nowhere comes back as the key itself, as in i18next.
+ * A key found nowhere comes back as its defaultValue, or else the key itself, as in i18next.
  */
 class Translations(
     /** locale -> namespace -> parsed JSON */
@@ -27,6 +28,7 @@ class Translations(
         val resolvedKey = pluralKey(locale, ns, key, vars["count"])
         val template = lookup(locale, ns, resolvedKey)
             ?: lookup(fallbackLocale, ns, resolvedKey)
+            ?: vars["defaultValue"] as? String
             ?: resolvedKey
         interpolate(template, vars)
     }

@@ -67,6 +67,7 @@ import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
+import com.backtosafety.app.ui.localeTime
 import com.backtosafety.app.ui.negativeTopMargin
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
@@ -88,8 +89,6 @@ import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.normalizeUniqueSmsRecipients
 import com.backtosafety.core.secondsRemaining
-import java.text.DateFormat
-import java.util.Date
 import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -246,8 +245,7 @@ fun EmergencyScreen(
                                 modal = Modal.NO_CONTACTS
                                 return@launch
                             }
-                            val startedTime = DateFormat.getTimeInstance(DateFormat.MEDIUM)
-                                .format(Date(Instant.parse(current.startedAt).toEpochMilliseconds()))
+                            val startedTime = localeTime(Instant.parse(current.startedAt).toEpochMilliseconds())
                             val message = buildAlertSms(t, profile?.name, startedTime, wearing)
                             val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + recipients.joinToString(";")))
                                 .putExtra("sms_body", message)
@@ -312,7 +310,7 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
     ) {
         Text(
             (if (expired) t("timer.labelExpired", number) else t("timer.labelActive")).uppercase(),
-            style = type.caption.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp),
+            style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
             color = Color.White.copy(alpha = 0.75f),
             modifier = Modifier.testTag("emergency-timer-label"),
         )
@@ -503,7 +501,7 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                             Box(Modifier.clip(RoundedCornerShape(DesignTokens.Radius.sm.dp)).background(error).padding(horizontal = space.sm.dp, vertical = space.xxs.dp)) {
                                 Text(
                                     t("checklist.priority"),
-                                    style = type.small.style().copy(fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp),
+                                    style = type.small.style(fontWeight = 700, letterSpacing = 0.5f),
                                     color = Color(DesignTokens.Light.textOnPrimary),
                                 )
                             }
@@ -518,7 +516,7 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                         Column(Modifier.negativeTopMargin(space.xs.dp).padding(top = space.sm.dp), verticalArrangement = Arrangement.spacedBy(space.xxs.dp)) {
                             Text(
                                 t("checklist.savedPlaces").uppercase(),
-                                style = type.small.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.4.sp),
+                                style = type.small.style(fontWeight = 600, letterSpacing = 0.4f),
                                 color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xxs.dp),
                             )
                             Text(

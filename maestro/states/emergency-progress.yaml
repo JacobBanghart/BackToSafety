@@ -30,7 +30,12 @@ appId: com.backtosafety.app
     id: emergency-wearing-input
 - inputText: Blue jacket, gray pants
 - hideKeyboard
-# Blur the input so no blinking caret ends up in the capture.
+# Blur the input so no blinking caret ends up in the capture. At large text the label
+# can end up just above the viewport once the keyboard is gone.
+- scrollUntilVisible:
+    element:
+      id: emergency-timer-label
+    direction: UP
 - tapOn:
     id: emergency-timer-label
 - openLink: backtosafety://debug/clock?advance=300

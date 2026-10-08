@@ -117,7 +117,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 if (hasProfile) {
                     Text(
                         t("caringFor").uppercase(),
-                        style = type.caption.style().copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.8.sp),
+                        style = type.caption.style(fontWeight = 600, letterSpacing = 0.8f),
                         color = colors.textSecondary,
                     )
                 }
@@ -289,7 +289,7 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
                     Column {
                         Text(
                             t(label).uppercase(),
-                            style = type.small.style().copy(fontWeight = FontWeight.Bold, letterSpacing = 0.6.sp),
+                            style = type.small.style(fontWeight = 700, letterSpacing = 0.6f),
                             color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xxs.dp),
                         )
                         Text(value, style = type.body.style(), color = colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)

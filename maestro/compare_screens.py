@@ -63,16 +63,21 @@ TOUCH_TARGET_DP = 48.0
 
 
 def normalize_touch_target(got: list[float], want: list[float]) -> list[float]:
-    """Compose reports a clickable smaller than 48dp with its minimum touch target: the same
-    center, grown to 48dp. When one side is exactly that and the other smaller, compare the
-    other side's real extent around the shared center instead."""
-    l, t, r, b = got
-    out = [l, t, r, b]
+    """Compose reports a clickable smaller than 48dp with its minimum touch target: grown to
+    48dp around the same center, or, where an ancestor clips the growth, from one edge. When
+    one side is exactly 48dp and the other smaller, compare the real extent instead: centered,
+    or anchored at either edge, whichever is closest."""
+    out = list(got)
     for lo, hi in ((0, 2), (1, 3)):
         g, w = got[hi] - got[lo], want[hi] - want[lo]
         if abs(g - TOUCH_TARGET_DP) < 0.6 and w < TOUCH_TARGET_DP - 0.6:
             center = (got[lo] + got[hi]) / 2
-            out[lo], out[hi] = center - w / 2, center + w / 2
+            candidates = [
+                (center - w / 2, center + w / 2),
+                (got[lo], got[lo] + w),
+                (got[hi] - w, got[hi]),
+            ]
+            out[lo], out[hi] = min(candidates, key=lambda c: max(abs(c[0] - want[lo]), abs(c[1] - want[hi])))
     return out
 
 
