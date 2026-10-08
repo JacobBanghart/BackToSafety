@@ -27,5 +27,10 @@
   "saveFailed": "Failed to save. Please try again.",
   "copied": "Copied",
   "notNow": "Not Now",
-  "openSettings": "Open Settings"
+  "openSettings": "Open Settings",
+  "notFound": {
+    "screenTitle": "Oops!",
+    "title": "This screen does not exist.",
+    "link": "Go to home screen!"
+  }
 }

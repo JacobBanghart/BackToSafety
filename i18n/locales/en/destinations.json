@@ -60,5 +60,7 @@
     "nameRequired": "Location name is required.",
     "reorderFailed": "Failed to save location order. Please try again."
   },
-  "reorderHint": "Press and hold any location card to reorder search priority."
+  "reorderHint": "Press and hold any location card to reorder search priority.",
+  "waterWarning": "Water locations are high priority. Always check water first!",
+  "searchTip": "Most people with dementia are found within 1.5 miles of where they were last seen. Check water sources first!"
 }

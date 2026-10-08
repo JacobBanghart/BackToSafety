@@ -27,5 +27,10 @@
   "saveFailed": "No se pudo guardar. Por favor, inténtalo de nuevo.",
   "copied": "Copiado",
   "notNow": "Ahora no",
-  "openSettings": "Abrir configuración"
+  "openSettings": "Abrir configuración",
+  "notFound": {
+    "screenTitle": "¡Uy!",
+    "title": "Esta pantalla no existe.",
+    "link": "¡Ir a la pantalla de inicio!"
+  }
 }

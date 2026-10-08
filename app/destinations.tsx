@@ -562,7 +562,7 @@ export default function DestinationsScreen() {
           <View style={[styles.warningBox, { backgroundColor: `${semantic.warning}15` }]}>
             <IconSymbol name="exclamationmark.triangle.fill" size={16} color={semantic.warning} />
             <ThemedText style={[styles.warningText, { color: semantic.warning }]}>
-              Water locations are high priority. Always check water first!
+              {t('waterWarning')}
             </ThemedText>
           </View>
         )}
@@ -694,8 +694,7 @@ export default function DestinationsScreen() {
           <View style={[styles.infoBox, { backgroundColor: theme.primaryLight }]}>
             <IconSymbol name="info.circle.fill" size={18} color={primary[600]} />
             <ThemedText style={[styles.infoText, { color: theme.text }]}>
-              Most people with dementia are found within 1.5 miles of where they were last seen.
-              Check water sources first!
+              {t('searchTip')}
             </ThemedText>
           </View>
 
