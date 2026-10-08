@@ -1,6 +1,8 @@
 package com.backtosafety.app.settings
 
 import android.app.AlertDialog
+import com.backtosafety.core.AnalyticsEvent
+import com.backtosafety.core.Analytics
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.background
@@ -40,6 +42,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.ui.Icon
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.AppCard
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
@@ -90,6 +93,7 @@ fun SettingsScreen(
             tapCount += 1
             if (tapCount >= TAPS_TO_UNLOCK && !devMode) {
                 devMode = true
+                Analytics.track(AnalyticsEvent.SETTINGS_DEV_MODE_UNLOCKED)
                 AlertDialog.Builder(context).setTitle(t("devModeAlert.title")).setMessage(t("devModeAlert.message"))
                     .setPositiveButton("OK", null).show()
             }
@@ -106,7 +110,10 @@ fun SettingsScreen(
                 deleting = true
                 scope.launch {
                     runCatching { store.clearAllData() }
-                        .onSuccess { onDeleted() }
+                        .onSuccess {
+                            Analytics.track(AnalyticsEvent.SETTINGS_ACCOUNT_DELETED)
+                            onDeleted()
+                        }
                         .onFailure {
                             AlertDialog.Builder(context).setTitle(tCommon("error")).setMessage(t("deleteAccountError"))
                                 .setPositiveButton("OK", null).show()
@@ -123,13 +130,13 @@ fun SettingsScreen(
     ) {
         ScreenHeader(t("screenTitle"), "settings", onBack)
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.xl.dp),
-            verticalArrangement = Arrangement.spacedBy(space.lg.dp),
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.xl.udp),
+            verticalArrangement = Arrangement.spacedBy(space.lg.udp),
         ) {
             AppCard {
                 SectionHeader("paintbrush.fill", colors.text, t("sections.appearance.title"))
                 Description(t("sections.appearance.description"))
-                Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     for ((value, icon) in listOf("system" to "📱", "light" to "☀️", "dark" to "🌙")) {
                         Option(t("themeOptions.$value"), "settings-theme-$value", themePreference == value, icon) {
                             onThemeChange(value)
@@ -145,8 +152,8 @@ fun SettingsScreen(
                 Row(
                     Modifier.fillMaxWidth().testTag("settings-delete-account").alpha(if (deleting) 0.6f else 1f).clip(shape)
                         .clickable(enabled = !deleting, onClick = ::deleteAccount)
-                        .background(Color(DesignTokens.Semantic.error)).padding(vertical = 14.dp, horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.dp, Alignment.CenterHorizontally),
+                        .background(Color(DesignTokens.Semantic.error)).padding(vertical = 14.udp, horizontal = 20.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val white = Color(DesignTokens.Light.textOnPrimary)
@@ -164,7 +171,7 @@ fun SettingsScreen(
                     Description(t("sections.devTools.description"))
                     SectionHeader("globe", colors.text, t("languageSection.title"))
                     Description(t("languageSection.description"))
-                    Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                         for ((lang, label) in listOf("en" to "English", "es" to "Español")) {
                             Option(label, "settings-language-$lang", language == lang) { onLanguageChange(lang) }
                         }
@@ -208,8 +215,8 @@ private fun versionLabel(): String {
 @Composable
 private fun SectionHeader(icon: String, iconColor: Color, title: String) {
     Row(
-        Modifier.padding(bottom = DesignTokens.Spacing.sm.dp),
-        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.dp),
+        Modifier.padding(bottom = DesignTokens.Spacing.sm.udp),
+        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, 20f, iconColor)
@@ -222,7 +229,7 @@ private fun SectionHeader(icon: String, iconColor: Color, title: String) {
 private fun Description(text: String) {
     Text(
         text, style = rnTextStyle(16f, 24f), color = LocalAppColors.current.textSecondary,
-        modifier = Modifier.padding(bottom = DesignTokens.Spacing.lg.dp),
+        modifier = Modifier.padding(bottom = DesignTokens.Spacing.lg.udp),
     )
 }
 
@@ -234,13 +241,13 @@ private fun RowScope.Option(label: String, testID: String, selected: Boolean, ic
     Column(
         Modifier.weight(1f).testTag(testID).clip(shape).clickable(onClick = onClick)
             .background(if (selected) colors.primaryLight else Color.Transparent)
-            .rnBorder(2.dp, if (selected) colors.tint else colors.border, shape)
-            .padding(vertical = DesignTokens.Spacing.lg.dp),
+            .rnBorder(2.udp, if (selected) colors.tint else colors.border, shape)
+            .padding(vertical = DesignTokens.Spacing.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         // themeIcon: fontSize 24 over ThemedText's 24 line height.
         icon?.let {
-            Text(it, style = rnTextStyle(24f, 24f), modifier = Modifier.padding(bottom = DesignTokens.Spacing.xs.dp).rnLineHeight(24f))
+            Text(it, style = rnTextStyle(24f, 24f), modifier = Modifier.padding(bottom = DesignTokens.Spacing.xs.udp).rnLineHeight(24f))
         }
         Text(
             label, style = rnTextStyle(14f, 24f, if (selected) 600 else 400),

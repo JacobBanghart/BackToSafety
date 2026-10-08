@@ -43,25 +43,25 @@ private val radius = DesignTokens.Radius
 fun OnboardingStepHeader(activeStep: Int, totalSteps: Int, onBack: () -> Unit) {
     val colors = LocalAppColors.current
     Row(
-        Modifier.fillMaxWidth().padding(bottom = space.xxl.dp),
+        Modifier.fillMaxWidth().padding(bottom = space.xxl.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.sizeIn(minWidth = 44.dp, minHeight = 44.dp).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
+        Box(Modifier.sizeIn(minWidth = 44.udp, minHeight = 44.udp).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
             Icon("chevron.left", 20f, colors.tint)
         }
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(space.sm.dp, Alignment.CenterHorizontally)) {
+        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally)) {
             for (step in 1..totalSteps) {
                 val on = step <= activeStep
                 Box(
                     Modifier
-                        .height(8.dp)
-                        .width(if (step == activeStep) 24.dp else 8.dp)
+                        .height(8.udp)
+                        .width(if (step == activeStep) 24.udp else 8.udp)
                         .clip(RoundedCornerShape(radius.sm.dp))
                         .background(if (on) colors.primary else colors.border),
                 )
             }
         }
-        Box(Modifier.sizeIn(minWidth = 44.dp, minHeight = 44.dp))
+        Box(Modifier.sizeIn(minWidth = 44.udp, minHeight = 44.udp))
     }
 }
 
@@ -99,13 +99,13 @@ fun AppInput(
         modifier = modifier
             .fillMaxWidth()
             .testTag(testTag)
-            .then(if (multiline) Modifier.heightIn(min = 80.dp) else Modifier.height(48.dp))
+            .then(if (multiline) Modifier.heightIn(min = 80.udp) else Modifier.height(48.udp))
             .clip(RoundedCornerShape(radius.lg.dp))
             .background(colors.inputBackground)
-            .border(1.dp, colors.inputBorder, RoundedCornerShape(radius.lg.dp)),
+            .border(1.udp, colors.inputBorder, RoundedCornerShape(radius.lg.dp)),
         decorationBox = { field ->
             Box(
-                Modifier.padding(horizontal = space.lg.dp, vertical = if (multiline) space.sm.dp else 0.dp),
+                Modifier.padding(horizontal = space.lg.udp, vertical = if (multiline) space.sm.udp else 0.dp),
                 contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart,
             ) {
                 if (value.isEmpty()) Text(placeholder, style = textStyle, color = colors.inputPlaceholder)
@@ -149,7 +149,7 @@ fun PrimaryButton(
 fun SkipButton(label: String, testTag: String, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     Box(
-        Modifier.fillMaxWidth().testTag(testTag).clickable(onClick = onClick).padding(vertical = space.sm.dp),
+        Modifier.fillMaxWidth().testTag(testTag).clickable(onClick = onClick).padding(vertical = space.sm.udp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = DesignTokens.Typography.body.style(), color = colors.textDisabled)

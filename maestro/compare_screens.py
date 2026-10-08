@@ -59,28 +59,6 @@ def load_layout(path: Path) -> dict[str, list[float]]:
     return json.loads(path.read_text()) if path.exists() else {}
 
 
-TOUCH_TARGET_DP = 48.0
-
-
-def normalize_touch_target(got: list[float], want: list[float]) -> list[float]:
-    """Compose reports a clickable smaller than 48dp with its minimum touch target: grown to
-    48dp around the same center, or, where an ancestor clips the growth, from one edge. When
-    one side is exactly 48dp and the other smaller, compare the real extent instead: centered,
-    or anchored at either edge, whichever is closest."""
-    out = list(got)
-    for lo, hi in ((0, 2), (1, 3)):
-        g, w = got[hi] - got[lo], want[hi] - want[lo]
-        if abs(g - TOUCH_TARGET_DP) < 0.6 and w < TOUCH_TARGET_DP - 0.6:
-            center = (got[lo] + got[hi]) / 2
-            candidates = [
-                (center - w / 2, center + w / 2),
-                (got[lo], got[lo] + w),
-                (got[hi] - w, got[hi]),
-            ]
-            out[lo], out[hi] = min(candidates, key=lambda c: max(abs(c[0] - want[lo]), abs(c[1] - want[hi])))
-    return out
-
-
 def layout_diff(a: Path, b: Path, tolerance_dp: float, masked: set[str]) -> list[str]:
     if not a.exists() or not b.exists():
         return [] if not b.exists() else [f"missing captured layout {a.name}"]
@@ -89,7 +67,7 @@ def layout_diff(a: Path, b: Path, tolerance_dp: float, masked: set[str]) -> list
     problems = [f"missing {tid}" for tid in sorted(set(want) - set(got))]
     problems += [f"unexpected {tid}" for tid in sorted(set(got) - set(want))]
     for tid in sorted(set(got) & set(want)):
-        delta = max(abs(x - y) for x, y in zip(normalize_touch_target(got[tid], want[tid]), want[tid]))
+        delta = max(abs(x - y) for x, y in zip(got[tid], want[tid]))
         if delta > tolerance_dp:
             problems.append(f"{tid} moved {delta:.1f}dp: {want[tid]} -> {got[tid]}")
     return problems

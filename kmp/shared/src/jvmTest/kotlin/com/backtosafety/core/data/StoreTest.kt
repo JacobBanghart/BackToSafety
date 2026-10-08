@@ -1,6 +1,8 @@
 package com.backtosafety.core.data
 
+import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DATABASE_NAME
+import com.backtosafety.core.db.DestinationEntity
 import com.backtosafety.core.db.databaseBuilder
 import com.backtosafety.core.db.openAppDatabase
 import java.io.File
@@ -97,7 +99,7 @@ class StoreTest {
         store.seed()
         Store.ONBOARDING_STEPS.forEach { store.completeStep(it) }
         store.saveProfile { it.copy(name = "Margaret Smith") }
-        store.addContact(com.backtosafety.core.db.ContactEntity(name = "John Smith", phone = "5551234567"))
+        store.addContact(ContactEntity(name = "John Smith", phone = "5551234567"))
         store.putSetting(Store.THEME_PREFERENCE, "dark")
         assertTrue(store.isOnboarded())
 
@@ -114,5 +116,41 @@ class StoreTest {
         val first = Store(openAppDatabase(path, databaseBuilder(path))).deviceId()
         assertTrue(Regex("[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}").matches(first))
         assertEquals(first, Store(openAppDatabase(path, databaseBuilder(path))).deviceId())
+    }
+
+    @Test
+    fun contactsAddEditReorderDelete() = runBlocking {
+        val store = freshStore()
+        val ana = store.addContact(ContactEntity(name = "Ana", phone = "1", relationship = "Neighbor", notes = "Has a key"))
+        val bo = store.addContact(ContactEntity(name = "Bo", phone = "2"))
+        assertEquals(listOf("Ana" to 0, "Bo" to 1), store.contacts().map { it.name to it.sortOrder })
+        assertTrue(store.contacts().all { it.createdAt != null })
+
+        // Clearing fields in the edit form clears them (F-35).
+        val edited = store.contacts().first { it.id == ana }.copy(name = "Ana Lopez", relationship = null, notes = null)
+        store.updateContact(edited)
+        val saved = store.contacts().first { it.id == ana }
+        assertEquals("Ana Lopez", saved.name)
+        assertEquals(null, saved.relationship)
+        assertEquals(null, saved.notes)
+
+        store.reorderContacts(store.contacts().reversed())
+        assertEquals(listOf("Bo", "Ana Lopez"), store.contacts().map { it.name })
+
+        store.deleteContact(bo)
+        assertEquals(listOf("Ana Lopez"), store.contacts().map { it.name })
+    }
+
+    @Test
+    fun destinationsAddEditReorderDelete() = runBlocking {
+        val store = freshStore()
+        val park = store.addDestination(DestinationEntity(name = "Park", reason = "Walks", category = "walking_route"))
+        store.addDestination(DestinationEntity(name = "Church"))
+        store.updateDestination(store.destinations().first { it.id == park }.copy(reason = null))
+        assertEquals(null, store.destinations().first { it.id == park }.reason)
+        store.reorderDestinations(store.destinations().reversed())
+        assertEquals(listOf("Church", "Park"), store.destinations().map { it.name })
+        store.deleteDestination(park)
+        assertEquals(listOf("Church"), store.destinations().map { it.name })
     }
 }

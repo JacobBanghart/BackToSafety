@@ -29,6 +29,26 @@ interface ContactDao {
     @Insert
     suspend fun insert(contact: ContactEntity): Long
 
+    @Query("SELECT MAX(sort_order) FROM contacts")
+    suspend fun maxSortOrder(): Int?
+
+    /** Every editable field, as the edit form saves it; cleared fields become NULL. */
+    @Query(
+        "UPDATE contacts SET name = :name, phone = :phone, relationship = :relationship, role = :role, " +
+            "address = :address, notify_on_emergency = :notifyOnEmergency, share_medical_info = :shareMedicalInfo, " +
+            "notes = :notes, updated_at = CURRENT_TIMESTAMP WHERE id = :id",
+    )
+    suspend fun update(
+        id: Long, name: String, phone: String, relationship: String?, role: String?, address: String?,
+        notifyOnEmergency: Boolean, shareMedicalInfo: Boolean, notes: String?,
+    )
+
+    @Query("UPDATE contacts SET sort_order = :sortOrder, updated_at = CURRENT_TIMESTAMP WHERE id = :id")
+    suspend fun setSortOrder(id: Long, sortOrder: Int)
+
+    @Query("DELETE FROM contacts WHERE id = :id")
+    suspend fun delete(id: Long)
+
     @Query("DELETE FROM contacts")
     suspend fun deleteAll()
 }
@@ -40,6 +60,26 @@ interface DestinationDao {
 
     @Insert
     suspend fun insert(destination: DestinationEntity): Long
+
+    @Query("SELECT MAX(sort_order) FROM destinations")
+    suspend fun maxSortOrder(): Int?
+
+    /** Every editable field, as the edit form saves it; cleared fields become NULL. */
+    @Query(
+        "UPDATE destinations SET name = :name, address = :address, category = :category, reason = :reason, " +
+            "distance_from_home = :distanceFromHome, risk_level = :riskLevel, notes = :notes, " +
+            "updated_at = CURRENT_TIMESTAMP WHERE id = :id",
+    )
+    suspend fun update(
+        id: Long, name: String, address: String?, category: String?, reason: String?,
+        distanceFromHome: String?, riskLevel: String?, notes: String?,
+    )
+
+    @Query("UPDATE destinations SET sort_order = :sortOrder, updated_at = CURRENT_TIMESTAMP WHERE id = :id")
+    suspend fun setSortOrder(id: Long, sortOrder: Int)
+
+    @Query("DELETE FROM destinations WHERE id = :id")
+    suspend fun delete(id: Long)
 
     @Query("DELETE FROM destinations")
     suspend fun deleteAll()

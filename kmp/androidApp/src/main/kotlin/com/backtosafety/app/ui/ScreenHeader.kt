@@ -34,15 +34,15 @@ fun ScreenHeader(
 ) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
-    Box(Modifier.fillMaxWidth().background(colors.background).heightIn(min = 52.dp).padding(space.md.dp)) {
+    Box(Modifier.fillMaxWidth().background(colors.background).heightIn(min = 52.udp).padding(space.md.udp)) {
         Row(
             Modifier.matchParentSize(),
-            horizontalArrangement = Arrangement.spacedBy(space.xs.dp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
                 Modifier.padding(horizontal = (44 + space.md).dp),
-                horizontalArrangement = Arrangement.spacedBy(space.xs.dp),
+                horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 titleIcon?.let { (name, color) -> Icon(name, titleIconSize, color) }
@@ -58,11 +58,11 @@ fun ScreenHeader(
         }
         Row(Modifier.fillMaxWidth().align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.widthIn(min = 44.dp).testTag("$testID-back").clickable(onClick = onBack),
+                Modifier.widthIn(min = 44.udp).testTag("$testID-back").clickable(onClick = onBack),
                 contentAlignment = Alignment.CenterStart,
             ) { Icon("chevron.left", 22f, colors.tint) }
             Box(Modifier.weight(1f))
-            Box(Modifier.widthIn(min = 44.dp), contentAlignment = Alignment.CenterEnd) { right() }
+            Box(Modifier.widthIn(min = 44.udp), contentAlignment = Alignment.CenterEnd) { right() }
         }
     }
 }

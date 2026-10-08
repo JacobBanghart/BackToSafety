@@ -12,6 +12,10 @@ activity-compose = "1.13.0"
 navigation-compose = "2.10.2"
 
 [libraries]
+# Same analytics backend as the RN app (posthog-react-native).
+posthog-android = { module = "com.posthog:posthog-android", version = "3.72.1" }
+# The cropper expo-image-picker uses (allowsEditing), so the crop screen is the same.
+android-image-cropper = { module = "com.vanniktech:android-image-cropper", version = "4.7.0" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }

@@ -11,8 +11,16 @@ val generateDesignTokens by tasks.registering(GenerateDesignTokens::class) {
     outputDir = layout.buildDirectory.dir("generated/tokens/commonMain/kotlin")
 }
 
+val generateAnalyticsEvents by tasks.registering(GenerateAnalyticsEvents::class) {
+    spec = rootProject.file("../spec/analytics-events.json")
+    outputDir = layout.buildDirectory.dir("generated/analytics/commonMain/kotlin")
+}
+
 kotlin {
-    sourceSets.commonMain.configure { kotlin.srcDir(generateDesignTokens) }
+    sourceSets.commonMain.configure {
+        kotlin.srcDir(generateDesignTokens)
+        kotlin.srcDir(generateAnalyticsEvents)
+    }
     androidLibrary {
         namespace = "com.backtosafety.core"
         compileSdk = 37

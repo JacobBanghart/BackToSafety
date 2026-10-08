@@ -15,6 +15,10 @@ import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.backtosafety.core.DesignTokens
@@ -37,6 +41,8 @@ class AppColors(val isDark: Boolean) {
     val inputPlaceholder = Color(if (isDark) DesignTokens.Dark.inputPlaceholder else DesignTokens.Light.inputPlaceholder)
     val error = Color(if (isDark) DesignTokens.Dark.error else DesignTokens.Light.error)
     val success = Color(if (isDark) DesignTokens.Dark.success else DesignTokens.Light.success)
+    val icon = Color(if (isDark) DesignTokens.Dark.icon else DesignTokens.Light.icon)
+    val borderFocused = Color(if (isDark) DesignTokens.Dark.borderFocused else DesignTokens.Light.borderFocused)
 }
 
 val LocalAppColors = staticCompositionLocalOf { AppColors(isDark = false) }
@@ -116,8 +122,15 @@ fun DesignTokens.Type.style(fontWeight: Int = this.fontWeight, letterSpacing: Fl
 
 @Composable
 fun AppTheme(dark: Boolean, content: @Composable () -> Unit) {
+    val viewConfiguration = LocalViewConfiguration.current
     CompositionLocalProvider(
         LocalAppColors provides AppColors(dark),
+        // RN doesn't grow small touchables to 48dp (only an explicit hitSlop does). Matching
+        // that keeps taps landing where they do in the RN app, and makes the bounds Compose
+        // reports to UI Automator the real ones.
+        LocalViewConfiguration provides object : ViewConfiguration by viewConfiguration {
+            override val minimumTouchTargetSize: DpSize = DpSize.Zero
+        },
         // ThemedText's defaults (16/24), which unstyled text such as emoji icons inherits.
         LocalTextStyle provides rnTextStyle(16f, 24f),
         content = content,

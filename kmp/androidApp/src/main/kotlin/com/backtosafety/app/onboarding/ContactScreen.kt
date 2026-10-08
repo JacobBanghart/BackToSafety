@@ -1,6 +1,8 @@
 package com.backtosafety.app.onboarding
 
 import androidx.compose.foundation.background
+import com.backtosafety.app.ui.trackStep
+import com.backtosafety.app.ui.TrackStepViewed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.AppInput
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
@@ -36,6 +39,7 @@ import kotlinx.coroutines.launch
 /** Port of app/onboarding/contact.tsx. */
 @Composable
 fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onContinue: () -> Unit) {
+    TrackStepViewed("emergency_contact")
     val colors = LocalAppColors.current
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
@@ -50,6 +54,7 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         contentBottom = 20f,
         footer = {
             SkipButton(t("contact.skip"), "onboarding-contact-skip") {
+                trackStep(false, "emergency_contact")
                 scope.launch { store.completeStep("emergency_contact"); onContinue() }
             }
             // Styled as disabled until both fields are filled, but still tappable: a tap
@@ -74,6 +79,7 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                                 ),
                             )
                             store.completeStep("emergency_contact")
+                            trackStep(true, "emergency_contact")
                         }.onSuccess { onContinue() }.onFailure { error = tCommon("saveFailed") }
                     }
                 },
@@ -83,8 +89,8 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     ) {
         OnboardingStepHeader(activeStep = 4, totalSteps = 4, onBack = onBack)
         StepTitle(t("contact.title"))
-        Text(t("contact.subtitle"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xxl.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text(t("contact.subtitle"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xxl.udp))
+        Column(verticalArrangement = Arrangement.spacedBy(20.udp)) {
             Field(t("contact.nameLabel")) {
                 AppInput(name, { name = it; error = "" }, t("contact.namePlaceholder"), "onboarding-contact-name",
                     input, capitalization = KeyboardCapitalization.Words)
@@ -102,12 +108,12 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         Column(
             Modifier
                 .fillMaxWidth()
-                .padding(top = space.xl.dp)
+                .padding(top = space.xl.udp)
                 .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                 .background(colors.primaryLight)
-                .padding(space.lg.dp),
+                .padding(space.lg.udp),
         ) {
-            Text(t("contact.infoBox.title"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.padding(bottom = space.sm.dp))
+            Text(t("contact.infoBox.title"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.padding(bottom = space.sm.udp))
             Text(t("contact.infoBox.body"), style = rnTextStyle(14f, 22f), color = colors.textSecondary)
         }
     }

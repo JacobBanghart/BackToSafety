@@ -1,6 +1,8 @@
 package com.backtosafety.app.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
+import com.backtosafety.app.ui.trackStep
+import com.backtosafety.app.ui.TrackStepViewed
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -16,6 +18,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.AppInput
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
@@ -33,6 +36,7 @@ import kotlinx.coroutines.launch
 /** Port of app/onboarding/appearance.tsx. */
 @Composable
 fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue: () -> Unit) {
+    TrackStepViewed("profile_appearance")
     val colors = LocalAppColors.current
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
@@ -48,6 +52,7 @@ fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue:
         contentBottom = 20f,
         footer = {
             SkipButton(t("appearance.skip"), "onboarding-appearance-skip") {
+                trackStep(false, "profile_appearance")
                 scope.launch { store.completeStep("profile_appearance"); onContinue() }
             }
             PrimaryButton(
@@ -65,6 +70,7 @@ fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue:
                             )
                         }
                         store.completeStep("profile_appearance")
+                        trackStep(true, "profile_appearance")
                         onContinue()
                     }
                 },
@@ -75,10 +81,10 @@ fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue:
         StepTitle(t("appearance.title"))
         Text(
             t("appearance.subtitle"), style = type.body.style(), color = colors.textSecondary,
-            modifier = Modifier.alpha(0.7f).padding(bottom = space.xxl.dp),
+            modifier = Modifier.alpha(0.7f).padding(bottom = space.xxl.udp),
         )
-        Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(20.udp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                 Field(t("appearance.heightLabel"), Modifier.weight(1f)) {
                     AppInput(height, { height = formatHeightInput(it) }, t("appearance.heightPlaceholder"),
                         "onboarding-appearance-height", input, keyboardType = KeyboardType.Number)
@@ -88,7 +94,7 @@ fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue:
                         "onboarding-appearance-weight", input, keyboardType = KeyboardType.Number)
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                 Field(t("appearance.hairLabel"), Modifier.weight(1f)) {
                     AppInput(hair, { hair = it }, t("appearance.hairPlaceholder"), "onboarding-appearance-hair", input)
                 }

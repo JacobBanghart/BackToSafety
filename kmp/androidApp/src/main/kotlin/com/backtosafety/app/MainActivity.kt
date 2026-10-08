@@ -9,7 +9,12 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import com.backtosafety.core.Analytics
 import com.backtosafety.core.AppClock
+import com.posthog.PersonProfiles
+import com.posthog.PostHog
+import com.posthog.android.PostHogAndroid
+import com.posthog.android.PostHogAndroidConfig
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.databaseBuilder
@@ -24,6 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         AppClock.testSeamsEnabled = BuildConfig.TEST_SEAMS
+        setUpAnalytics()
         handleTestSeam(intent)
         val path = databasePath(this)
         val store = Store(openAppDatabase(path, databaseBuilder(this, path)))
@@ -32,6 +38,35 @@ class MainActivity : ComponentActivity() {
             // testTag(...) values surface as Android resource IDs, matching the RN
             // app's testIDs, so the same Maestro flows drive both (spec/testids.json).
             App(store, translations, Modifier.semantics { testTagsAsResourceId = true })
+        }
+    }
+
+    /**
+     * utils/posthog.ts: the same PostHog options as the RN app. Without a key (dev and test
+     * builds) nothing is set up and every event goes nowhere.
+     */
+    private fun setUpAnalytics() {
+        if (BuildConfig.POSTHOG_KEY.isEmpty()) return
+        val config = PostHogAndroidConfig(BuildConfig.POSTHOG_KEY, BuildConfig.POSTHOG_HOST).apply {
+            captureApplicationLifecycleEvents = true
+            captureScreenViews = false // screens are reported by route, as the RN app does
+            preloadFeatureFlags = true
+            personProfiles = PersonProfiles.IDENTIFIED_ONLY
+            flushAt = 20
+            flushIntervalSeconds = 10
+            maxBatchSize = 100
+            maxQueueSize = 1000
+            sessionReplay = true
+            sessionReplayConfig.maskAllTextInputs = true
+            sessionReplayConfig.maskAllImages = true
+            errorTrackingConfig.autoCapture = true
+        }
+        PostHogAndroid.setup(applicationContext, config)
+        Analytics.sink = { name, properties ->
+            @Suppress("UNCHECKED_CAST")
+            val props = properties.filterValues { it != null } as Map<String, Any>
+            if (name == Analytics.SCREEN) PostHog.screen(properties["\$screen_name"] as String)
+            else PostHog.capture(name, properties = props)
         }
     }
 

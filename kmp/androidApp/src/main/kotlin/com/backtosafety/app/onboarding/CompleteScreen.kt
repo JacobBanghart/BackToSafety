@@ -1,6 +1,10 @@
 package com.backtosafety.app.onboarding
 
 import androidx.compose.foundation.background
+import com.backtosafety.core.AnalyticsEvent
+import com.backtosafety.core.Analytics
+import com.backtosafety.app.ui.trackStep
+import com.backtosafety.app.ui.TrackStepViewed
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +31,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
@@ -39,6 +44,7 @@ import kotlinx.coroutines.launch
 /** Port of app/onboarding/complete.tsx. */
 @Composable
 fun CompleteScreen(t: Translate, store: Store, onFinish: () -> Unit) {
+    TrackStepViewed("complete")
     val colors = LocalAppColors.current
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
@@ -46,37 +52,41 @@ fun CompleteScreen(t: Translate, store: Store, onFinish: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
         Column(
-            Modifier.weight(1f).fillMaxWidth().padding(start = space.xl.dp, end = space.xl.dp, top = 60.dp),
+            Modifier.weight(1f).fillMaxWidth().padding(start = space.xl.udp, end = space.xl.udp, top = 60.udp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                Modifier.padding(bottom = space.xxl.dp).size(100.dp).clip(CircleShape).background(colors.success),
+                Modifier.padding(bottom = space.xxl.udp).size(100.udp).clip(CircleShape).background(colors.success),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(t("complete.icon"), style = rnTextStyle(48f, 24f), color = Color(DesignTokens.Light.textOnPrimary))
             }
             Text(t("complete.title"), style = type.display.style(), color = colors.text, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = space.lg.dp))
+                modifier = Modifier.padding(bottom = space.lg.udp))
             Text(t("complete.description"), style = type.body.style(), color = colors.textSecondary, textAlign = TextAlign.Center,
-                modifier = Modifier.padding(bottom = space.xxl.dp))
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(space.sm.dp)) {
+                modifier = Modifier.padding(bottom = space.xxl.udp))
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                 Text(t("complete.addMoreLater"), style = type.title.style(), color = colors.text,
-                    modifier = Modifier.padding(bottom = space.xs.dp))
+                    modifier = Modifier.padding(bottom = space.xs.udp))
                 for (key in listOf("details", "deescalation", "destinations", "contacts", "checklist")) {
                     Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-                        Box(Modifier.width(3.dp).fillMaxSize().clip(RoundedCornerShape(2.dp)).background(colors.border))
+                        Box(Modifier.width(3.udp).fillMaxSize().clip(RoundedCornerShape(2.udp)).background(colors.border))
                         Text(t("complete.nextSteps.$key"), style = type.bodyBold.style(), color = colors.textSecondary,
-                            modifier = Modifier.padding(vertical = space.sm.dp, horizontal = space.md.dp))
+                            modifier = Modifier.padding(vertical = space.sm.udp, horizontal = space.md.udp))
                     }
                 }
             }
         }
-        Box(Modifier.padding(start = space.xl.dp, end = space.xl.dp, top = space.xl.dp, bottom = space.xxl.dp)) {
+        Box(Modifier.padding(start = space.xl.udp, end = space.xl.udp, top = space.xl.udp, bottom = space.xxl.udp)) {
             PrimaryButton(
                 t("complete.goHome"), "onboarding-complete-home",
                 textStyle = rnTextStyle(18f, 24f, fontWeight = 600),
                 verticalPadding = space.lg,
-                onClick = { scope.launch { store.completeStep("complete"); onFinish() } },
+                onClick = {
+                    trackStep(true, "complete")
+                    Analytics.track(AnalyticsEvent.ONBOARDING_COMPLETED)
+                    scope.launch { store.completeStep("complete"); onFinish() }
+                },
             )
         }
     }

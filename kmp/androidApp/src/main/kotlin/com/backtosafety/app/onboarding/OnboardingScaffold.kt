@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.udp
 import com.backtosafety.core.DesignTokens
 
 /**
@@ -42,7 +43,7 @@ fun OnboardingScaffold(
             Modifier
                 .weight(1f)
                 .then(if (scrolls) Modifier.verticalScroll(rememberScrollState()) else Modifier)
-                .padding(start = DesignTokens.Spacing.xl.dp, end = DesignTokens.Spacing.xl.dp, top = contentTop.dp, bottom = contentBottom.dp),
+                .padding(start = DesignTokens.Spacing.xl.udp, end = DesignTokens.Spacing.xl.udp, top = contentTop.dp, bottom = contentBottom.dp),
             content = content,
         )
         Column(

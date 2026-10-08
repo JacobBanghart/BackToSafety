@@ -1,6 +1,8 @@
 package com.backtosafety.app.readout
 
 import android.content.ClipData
+import com.backtosafety.core.AnalyticsEvent
+import com.backtosafety.core.Analytics
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -52,6 +54,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.Icon
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.hairline
@@ -134,6 +137,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         val ok = runCatching {
             context.getSystemService(ClipboardManager::class.java)!!.setPrimaryClip(ClipData.newPlainText(null, text))
         }.isSuccess
+        if (ok) Analytics.track(if (kind == Copied.SCRIPT) AnalyticsEvent.READOUT_SCRIPT_COPIED else AnalyticsEvent.READOUT_DETAILS_COPIED)
         if (ok) copied = kind else Toast.makeText(context, "${t("copyFailed")}: ${t(failedKey)}", Toast.LENGTH_LONG).show()
     }
 
@@ -141,16 +145,22 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         Modifier.fillMaxSize().background(colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
     ) {
-        ScreenHeader(t("screenTitle"), "readout", onBack)
+        ScreenHeader(t("screenTitle"), "readout", onBack = {
+            Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "home", "source" to "readout_back"))
+            onBack()
+        })
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.lg.dp),
-            verticalArrangement = Arrangement.spacedBy(space.md.dp),
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.lg.udp),
+            verticalArrangement = Arrangement.spacedBy(space.md.udp),
         ) {
             // Call 911: the most prominent action.
             val callShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
             Box(
-                Modifier.fillMaxWidth().testTag("readout-call-911").shadow(2.dp, callShape).clip(callShape)
-                    .clickable { dial(emergencyNumber) }.background(error).padding(vertical = space.lg.dp),
+                Modifier.fillMaxWidth().testTag("readout-call-911").shadow(2.udp, callShape).clip(callShape)
+                    .clickable {
+                        Analytics.track(AnalyticsEvent.READOUT_911_CALLED)
+                        dial(emergencyNumber)
+                    }.background(error).padding(vertical = space.lg.udp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(t("callButton"), style = rnTextStyle(type.bodyLarge.fontSize, type.bodyLarge.lineHeight, 700), color = white)
@@ -165,7 +175,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     SectionLabel("phone.connection.fill", t("sections.script.label"), success, Modifier.weight(1f))
                     Icon(if (expanded) "chevron.up" else "chevron.down", 16f, colors.textSecondary)
                 }
-                val hint = Modifier.padding(top = space.xxs.dp, bottom = space.xs.dp)
+                val hint = Modifier.padding(top = space.xxs.udp, bottom = space.xs.udp)
                 if (expanded) {
                     Text(t("sections.script.hint"), style = type.caption.style(), color = colors.textSecondary, modifier = hint)
                     Text(script, style = rnTextStyle(16f, 22f), color = colors.text, modifier = Modifier.testTag("readout-script-text"))
@@ -174,7 +184,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                             t("sections.script.missingDetails", mapOf("details" to missing.joinToString(", "))),
                             style = rnTextStyle(type.caption.fontSize, 18f, type.caption.fontWeight, type.caption.letterSpacing),
                             color = warning,
-                            modifier = Modifier.padding(top = space.sm.dp).testTag("readout-script-missing"),
+                            modifier = Modifier.padding(top = space.sm.udp).testTag("readout-script-missing"),
                         )
                     }
                 } else {
@@ -198,9 +208,9 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     SectionLabel("eye.fill", t("sections.appearance.title"), colors.primary)
                     @OptIn(ExperimentalLayoutApi::class)
                     FlowRow(
-                        Modifier.padding(bottom = space.xs.dp),
-                        horizontalArrangement = Arrangement.spacedBy(space.sm.dp),
-                        verticalArrangement = Arrangement.spacedBy(space.sm.dp),
+                        Modifier.padding(bottom = space.xs.udp),
+                        horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+                        verticalArrangement = Arrangement.spacedBy(space.sm.udp),
                     ) {
                         p.height?.ifEmpty { null }?.let { InfoChip(t("sections.appearance.height"), it) }
                         p.weight?.ifEmpty { null }?.let { InfoChip(t("sections.appearance.weight"), it) }
@@ -215,7 +225,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                         p.mobilityLevel?.ifEmpty { null }?.let { InfoChip(t("sections.appearance.mobility"), describeMobility(it, t)) }
                     }
                     if (needsVehicleCheck(p.mobilityLevel)) {
-                        WarnNote(t("vehicleCheck.${vehicleCheckKind(p.mobilityLevel!!).key}"), 14f, Modifier.padding(top = space.sm.dp))
+                        WarnNote(t("vehicleCheck.${vehicleCheckKind(p.mobilityLevel!!).key}"), 14f, Modifier.padding(top = space.sm.udp))
                     }
                     p.identifyingMarks?.ifEmpty { null }?.let { InfoRow(t("sections.appearance.identifyingMarks"), it) }
                 }
@@ -265,7 +275,10 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     if (hotline != null) {
                         InfoRow(
                             t("sections.devices.medicAlertHotline"), hotline,
-                            Modifier.testTag("readout-medicalert-hotline").clickable { dial(stripPhoneFormatting(hotline)) },
+                            Modifier.testTag("readout-medicalert-hotline").clickable {
+                                Analytics.track(AnalyticsEvent.READOUT_MEDICALERT_HOTLINE_CALLED)
+                                dial(stripPhoneFormatting(hotline))
+                            },
                         )
                     }
                 }
@@ -274,19 +287,22 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             if (contacts.isNotEmpty()) {
                 Card {
                     SectionLabel("phone.fill", t("contacts.title"), success)
-                    contacts.forEachIndexed { index, c -> ContactRow(t, c, index) { dial(c.phone) } }
+                    contacts.forEachIndexed { index, c -> ContactRow(t, c, index) {
+                        Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
+                        dial(c.phone)
+                    } }
                 }
             }
 
             // Copy actions
-            Column(verticalArrangement = Arrangement.spacedBy(space.sm.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                 val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
                 val label = type.body.style()
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("readout-copy-script").clip(shape)
+                    Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("readout-copy-script").clip(shape)
                         .clickable { copy(script, Copied.SCRIPT, "copyScriptFailed") }
-                        .background(colors.primary).padding(vertical = space.md.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.dp, Alignment.CenterHorizontally),
+                        .background(colors.primary).padding(vertical = space.md.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val done = copied == Copied.SCRIPT
@@ -294,10 +310,10 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     Text(t(if (done) "copiedScriptButton" else "copyScriptButton"), style = label, color = colors.textOnPrimary)
                 }
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("readout-copy-all").clip(shape)
+                    Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("readout-copy-all").clip(shape)
                         .clickable { copy(buildCopyBlock(input, t), Copied.ALL, "copyDetailsFailed") }
-                        .background(colors.card).rnBorder(1.dp, colors.border, shape).padding(vertical = space.md.dp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.dp, Alignment.CenterHorizontally),
+                        .background(colors.card).rnBorder(1.udp, colors.border, shape).padding(vertical = space.md.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val done = copied == Copied.ALL
@@ -313,9 +329,9 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             Column(
                 Modifier.fillMaxWidth().clip(alertShape)
                     .background(Color(if (colors.isDark) p9.c900 else s1.c100))
-                    .rnBorder(1.dp, Color(if (colors.isDark) p9.c700 else s1.c300), alertShape)
-                    .padding(space.lg.dp),
-                verticalArrangement = Arrangement.spacedBy(space.sm.dp),
+                    .rnBorder(1.udp, Color(if (colors.isDark) p9.c700 else s1.c300), alertShape)
+                    .padding(space.lg.udp),
+                verticalArrangement = Arrangement.spacedBy(space.sm.udp),
             ) {
                 Text(t("silverAlert.title"), style = type.bodyBold.style(), color = Color(if (colors.isDark) s1.c100 else p9.c900))
                 Text(
@@ -333,8 +349,8 @@ private fun Card(content: @Composable ColumnScope.() -> Unit) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Column(
-        Modifier.fillMaxWidth().clip(shape).background(colors.card).rnBorder(hairline, colors.border, shape).padding(space.lg.dp),
-        verticalArrangement = Arrangement.spacedBy(space.xs.dp),
+        Modifier.fillMaxWidth().clip(shape).background(colors.card).rnBorder(hairline, colors.border, shape).padding(space.lg.udp),
+        verticalArrangement = Arrangement.spacedBy(space.xs.udp),
         content = content,
     )
 }
@@ -342,8 +358,8 @@ private fun Card(content: @Composable ColumnScope.() -> Unit) {
 @Composable
 private fun SectionLabel(icon: String, text: String, color: Color, modifier: Modifier = Modifier) {
     Row(
-        modifier.padding(bottom = space.xs.dp),
-        horizontalArrangement = Arrangement.spacedBy(space.xs.dp),
+        modifier.padding(bottom = space.xs.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, 14f, color)
@@ -361,11 +377,11 @@ private fun InfoRow(label: String, value: String, modifier: Modifier = Modifier)
     Column(
         modifier.fillMaxWidth()
             .drawBehind { drawLine(InfoRowRule, Offset(0f, rule.toPx() / 2), Offset(size.width, rule.toPx() / 2), rule.toPx()) }
-            .padding(top = rule).padding(vertical = space.sm.dp),
+            .padding(top = rule).padding(vertical = space.sm.udp),
     ) {
         Text(
             label.uppercase(), style = rnTextStyle(type.caption.fontSize, type.caption.lineHeight, type.caption.fontWeight, 0.5f),
-            color = colors.textSecondary, modifier = Modifier.padding(bottom = 2.dp),
+            color = colors.textSecondary, modifier = Modifier.padding(bottom = 2.udp),
         )
         Text(value, style = rnTextStyle(16f, 22f), color = colors.text, maxLines = 4, overflow = TextOverflow.Ellipsis)
     }
@@ -376,8 +392,8 @@ private fun InfoChip(label: String, value: String) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
     Column(
-        Modifier.widthIn(min = 80.dp, max = 160.dp).clip(shape).background(colors.surface)
-            .rnBorder(hairline, colors.border, shape).padding(horizontal = space.md.dp, vertical = space.sm.dp),
+        Modifier.widthIn(min = 80.udp, max = 160.udp).clip(shape).background(colors.surface)
+            .rnBorder(hairline, colors.border, shape).padding(horizontal = space.md.udp, vertical = space.sm.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(label, style = type.small.style(), color = colors.textSecondary)
@@ -392,8 +408,8 @@ private fun WarnNote(text: String, iconSize: Float, modifier: Modifier = Modifie
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Row(
         modifier.fillMaxWidth().clip(shape).background(warning.copy(alpha = 0x15 / 255f))
-            .rnBorder(1.dp, warning.copy(alpha = 0x40 / 255f), shape).padding(space.md.dp),
-        horizontalArrangement = Arrangement.spacedBy(space.sm.dp),
+            .rnBorder(1.udp, warning.copy(alpha = 0x40 / 255f), shape).padding(space.md.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
     ) {
         Icon("exclamationmark.triangle.fill", iconSize, warning)
         Text(
@@ -407,17 +423,17 @@ private fun WarnNote(text: String, iconSize: Float, modifier: Modifier = Modifie
 private fun IdentityCard(t: Translate, p: Profile) {
     val colors = LocalAppColors.current
     Card {
-        Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
             val photoShape = RoundedCornerShape(DesignTokens.Radius.md.dp)
             val photo = rememberPhoto(p.photoUri)
             if (photo != null) {
-                Image(photo, null, Modifier.size(80.dp).clip(photoShape), contentScale = ContentScale.Crop)
+                Image(photo, null, Modifier.size(80.udp).clip(photoShape), contentScale = ContentScale.Crop)
             } else {
-                Box(Modifier.size(80.dp).clip(photoShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(80.udp).clip(photoShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
                     Icon("person.fill", 36f, colors.primary)
                 }
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
                 Text(p.name, style = type.headline.style(), color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 p.nickname?.ifEmpty { null }?.let {
                     Text(
@@ -428,8 +444,8 @@ private fun IdentityCard(t: Translate, p: Profile) {
                 }
                 p.dateOfBirth?.ifEmpty { null }?.let {
                     Row(
-                        Modifier.padding(top = space.xxs.dp),
-                        horizontalArrangement = Arrangement.spacedBy(space.xs.dp),
+                        Modifier.padding(top = space.xxs.udp),
+                        horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon("calendar", 12f, colors.textSecondary)
@@ -448,11 +464,11 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
     Row(
         Modifier.fillMaxWidth()
             .drawBehind { drawLine(colors.border, Offset(0f, rule.toPx() / 2), Offset(size.width, rule.toPx() / 2), rule.toPx()) }
-            .padding(top = rule).padding(top = space.sm.dp),
-        horizontalArrangement = Arrangement.spacedBy(space.md.dp),
+            .padding(top = rule).padding(top = space.sm.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.md.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.udp)) {
             Text(c.name, style = type.bodyBold.style(), color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val role = c.relationship?.ifEmpty { null }
                 ?: c.role?.let { t("roles.$it", mapOf("ns" to "contacts", "defaultValue" to it)) } ?: ""
@@ -461,8 +477,8 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
         val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
         Row(
             Modifier.testTag("readout-contact-$index-call").clip(shape).clickable(onClick = onCall).background(success)
-                .padding(horizontal = space.md.dp, vertical = space.sm.dp),
-            horizontalArrangement = Arrangement.spacedBy(space.xs.dp),
+                .padding(horizontal = space.md.udp, vertical = space.sm.udp),
+            horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon("phone.fill", 14f, white)

@@ -1,6 +1,7 @@
 package com.backtosafety.app.onboarding
 
 import androidx.compose.foundation.Image
+import com.backtosafety.app.ui.TrackStepViewed
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.graphics.BitmapFactory
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.core.DesignTokens
@@ -55,6 +57,7 @@ fun WelcomeScreen(
     onGetStarted: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    TrackStepViewed("welcome")
     val colors = LocalAppColors.current
     val featureBg = if (colors.isDark) Color.White.copy(alpha = 0.08f) else Color(DesignTokens.Neutral.c100)
     val optionBg = if (colors.isDark) Color.White.copy(alpha = 0.1f) else Color(DesignTokens.Neutral.c100)
@@ -72,19 +75,19 @@ fun WelcomeScreen(
             Modifier
                 .weight(1f)
                 .verticalScroll(scroll)
-                .padding(start = space.xl.dp, end = space.xl.dp, top = space.xxxl.dp, bottom = space.xl.dp),
+                .padding(start = space.xl.udp, end = space.xl.udp, top = space.xxxl.udp, bottom = space.xl.udp),
         ) {
             Column(
-                Modifier.fillMaxWidth().padding(bottom = space.xxl.dp),
+                Modifier.fillMaxWidth().padding(bottom = space.xxl.udp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Logo(Modifier.padding(bottom = space.xl.dp).size(180.dp))
+                Logo(Modifier.padding(bottom = space.xl.udp).size(180.udp))
                 Text(
                     t("welcome.title"),
                     style = rnTextStyle(36f, 44f, fontWeight = 700, letterSpacing = type.display.letterSpacing),
                     color = colors.text,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = space.lg.dp),
+                    modifier = Modifier.padding(bottom = space.lg.udp),
                 )
                 Text(
                     t("welcome.description"),
@@ -95,8 +98,8 @@ fun WelcomeScreen(
             }
 
             Column(
-                Modifier.padding(bottom = space.xxl.dp),
-                verticalArrangement = Arrangement.spacedBy(space.lg.dp),
+                Modifier.padding(bottom = space.xxl.udp),
+                verticalArrangement = Arrangement.spacedBy(space.lg.udp),
             ) {
                 for ((key, icon) in listOf("timer" to "⏱️", "readout" to "📋", "privacy" to "🔒")) {
                     Row(
@@ -104,14 +107,14 @@ fun WelcomeScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                             .background(featureBg)
-                            .padding(space.lg.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            .padding(space.lg.udp),
+                        horizontalArrangement = Arrangement.spacedBy(16.udp),
                     ) {
                         Box(
-                            Modifier.size(44.dp).clip(CircleShape).background(colors.primaryLight),
+                            Modifier.size(44.udp).clip(CircleShape).background(colors.primaryLight),
                             contentAlignment = Alignment.Center,
                         ) { Text(icon, style = rnTextStyle(22f, 24f)) }
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.dp)) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
                             Text(t("welcome.features.$key.title"), style = type.bodyBold.style(), color = colors.text)
                             Text(t("welcome.features.$key.description"), style = type.body.style(), color = colors.textSecondary)
                         }
@@ -119,14 +122,14 @@ fun WelcomeScreen(
                 }
             }
 
-            Column(Modifier.padding(bottom = space.xl.dp)) {
+            Column(Modifier.padding(bottom = space.xl.udp)) {
                 Text(
                     t("welcome.themeLabel").uppercase(),
                     style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
                     color = colors.textDisabled,
-                    modifier = Modifier.padding(bottom = space.md.dp),
+                    modifier = Modifier.padding(bottom = space.md.udp),
                 )
-                Row(horizontalArrangement = Arrangement.spacedBy(space.md.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     for ((value, label, icon) in listOf(
                         Triple("light", "welcome.themeOptions.light", "☀️"),
                         Triple("dark", "welcome.themeOptions.dark", "🌙"),
@@ -140,13 +143,13 @@ fun WelcomeScreen(
                                 .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                                 .background(if (selected) colors.primaryLight else optionBg)
                                 .border(
-                                    2.dp,
+                                    2.udp,
                                     if (selected) colors.tint else Color.Transparent,
                                     RoundedCornerShape(DesignTokens.Radius.lg.dp),
                                 )
                                 .clickable { onThemeChange(value) }
-                                .padding(space.md.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                                .padding(space.md.udp),
+                            horizontalArrangement = Arrangement.spacedBy(8.udp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(icon, style = rnTextStyle(20f, 24f))
@@ -163,7 +166,7 @@ fun WelcomeScreen(
             }
         }
 
-        Column(Modifier.padding(space.lg.dp), verticalArrangement = Arrangement.spacedBy(space.lg.dp)) {
+        Column(Modifier.padding(space.lg.udp), verticalArrangement = Arrangement.spacedBy(space.lg.udp)) {
             if (scroll.value <= 10) {
                 Text(
                     t("welcome.scrollHint").uppercase(),
@@ -176,12 +179,12 @@ fun WelcomeScreen(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 46.dp)
+                    .heightIn(min = 46.udp)
                     .testTag("onboarding-get-started")
                     .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                     .background(colors.primary)
                     .clickable(onClick = onGetStarted)
-                    .padding(vertical = space.md.dp),
+                    .padding(vertical = space.md.udp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

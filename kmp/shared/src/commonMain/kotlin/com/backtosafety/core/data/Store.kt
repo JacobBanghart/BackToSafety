@@ -11,6 +11,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
+import com.backtosafety.core.db.DestinationEntity
 import com.backtosafety.core.db.OnboardingStepEntity
 import com.backtosafety.core.db.ProfileEntity
 import com.backtosafety.core.db.SafetyCheckEntity
@@ -38,11 +39,57 @@ class Store(private val db: AppDatabase) {
      * row and later saves update it.
      */
     suspend fun saveProfile(change: (ProfileEntity) -> ProfileEntity) {
-        val current = db.profile().get() ?: ProfileEntity(name = "")
-        db.profile().save(change(current))
+        val now = sqliteNow()
+        val current = db.profile().get() ?: ProfileEntity(name = "", createdAt = now)
+        // updated_at as the RN update sets it; created_at kept (Room would otherwise write NULL).
+        db.profile().save(change(current).copy(createdAt = current.createdAt ?: now, updatedAt = now))
     }
 
-    suspend fun addContact(contact: ContactEntity): Long = db.contacts().insert(contact)
+    /**
+     * Adds a contact at [sortOrder], or after the last one (database/contacts.native.ts).
+     * Room would write created_at as NULL over the column default, so it's stamped here.
+     */
+    suspend fun addContact(contact: ContactEntity, sortOrder: Int? = null): Long {
+        val now = sqliteNow()
+        return db.contacts().insert(
+            contact.copy(
+                sortOrder = sortOrder ?: ((db.contacts().maxSortOrder() ?: -1) + 1),
+                createdAt = contact.createdAt ?: now, updatedAt = contact.updatedAt ?: now,
+            ),
+        )
+    }
+
+    /** Saves the edit form: every field, so a cleared one is cleared (F-35). */
+    suspend fun updateContact(c: ContactEntity) = db.contacts().update(
+        c.id, c.name, c.phone, c.relationship, c.role, c.address, c.notifyOnEmergency, c.shareMedicalInfo, c.notes,
+    )
+
+    suspend fun deleteContact(id: Long) = db.contacts().delete(id)
+
+    /** After a drag: each contact's sort order becomes its index, written only where it changed. */
+    suspend fun reorderContacts(ordered: List<ContactEntity>) = ordered.forEachIndexed { index, c ->
+        if (c.sortOrder != index) db.contacts().setSortOrder(c.id, index)
+    }
+
+    suspend fun addDestination(d: DestinationEntity, sortOrder: Int? = null): Long {
+        val now = sqliteNow()
+        return db.destinations().insert(
+            d.copy(
+                sortOrder = sortOrder ?: ((db.destinations().maxSortOrder() ?: -1) + 1),
+                createdAt = d.createdAt ?: now, updatedAt = d.updatedAt ?: now,
+            ),
+        )
+    }
+
+    suspend fun updateDestination(d: DestinationEntity) = db.destinations().update(
+        d.id, d.name, d.address, d.category, d.reason, d.distanceFromHome, d.riskLevel, d.notes,
+    )
+
+    suspend fun deleteDestination(id: Long) = db.destinations().delete(id)
+
+    suspend fun reorderDestinations(ordered: List<DestinationEntity>) = ordered.forEachIndexed { index, d ->
+        if (d.sortOrder != index) db.destinations().setSortOrder(d.id, index)
+    }
 
     suspend fun contacts() = db.contacts().all()
 
@@ -61,7 +108,7 @@ class Store(private val db: AppDatabase) {
     suspend fun incidents() = db.incidents().all()
 
     suspend fun createIncident(startedAt: String): Long =
-        db.incidents().insert(IncidentEntity(startedAt = startedAt, outcome = "ongoing"))
+        db.incidents().insert(IncidentEntity(startedAt = startedAt, outcome = "ongoing", createdAt = sqliteNow()))
 
     /**
      * Records what happened (spec/storage.md, incidents): [outcome] and [endedAt] when given,
@@ -154,3 +201,7 @@ internal fun ProfileEntity.toProfile() = Profile(
     dislikesTriggers = dislikesTriggers, safeWord = safeWord, locativeDeviceInfo = locativeDeviceInfo,
     idBracelets = idBracelets, medicAlertId = medicAlertId, medicAlertHotline = medicAlertHotline,
 )
+
+/** SQLite's CURRENT_TIMESTAMP: UTC, "YYYY-MM-DD HH:MM:SS". */
+internal fun sqliteNow(): String =
+    kotlin.time.Clock.System.now().toString().substring(0, 19).replace('T', ' ')

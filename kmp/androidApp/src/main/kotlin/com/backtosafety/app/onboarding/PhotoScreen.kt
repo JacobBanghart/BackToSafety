@@ -1,6 +1,10 @@
 package com.backtosafety.app.onboarding
 
 import android.content.Context
+import com.backtosafety.core.AnalyticsEvent
+import com.backtosafety.core.Analytics
+import com.backtosafety.app.ui.trackStep
+import com.backtosafety.app.ui.TrackStepViewed
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -41,6 +45,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.rememberPhotoPicker
+import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.SkipButton
@@ -53,9 +59,10 @@ import com.backtosafety.core.invoke
 import java.io.File
 import kotlinx.coroutines.launch
 
-/** Port of app/onboarding/photo.tsx. (RN also offers a square crop after picking; not yet here.) */
+/** Port of app/onboarding/photo.tsx. */
 @Composable
 fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onContinue: () -> Unit) {
+    TrackStepViewed("profile_photo")
     val colors = LocalAppColors.current
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
@@ -64,19 +71,13 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     var photoUri by remember { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
 
-    val pickFromLibrary = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) photoUri = savePhotoLocally(context, uri)
-    }
-    var cameraTarget by remember { mutableStateOf<File?>(null) }
-    val takePicture = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { taken ->
-        val file = cameraTarget
-        if (taken && file != null) photoUri = savePhotoLocally(context, Uri.fromFile(file))
-    }
+    val picker = rememberPhotoPicker { photoUri = it }
 
     OnboardingScaffold(
         scrolls = false,
         footer = {
             SkipButton(t("photo.skip"), "onboarding-photo-skip") {
+                trackStep(false, "profile_photo")
                 scope.launch { store.completeStep("profile_photo"); onContinue() }
             }
             PrimaryButton(
@@ -88,6 +89,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     scope.launch {
                         store.saveProfile { it.copy(photoUri = photoUri) }
                         store.completeStep("profile_photo")
+                        trackStep(true, "profile_photo")
                         saving = false
                         onContinue()
                     }
@@ -97,18 +99,18 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     ) {
         OnboardingStepHeader(activeStep = 2, totalSteps = 4, onBack = onBack)
         StepTitle(t("photo.title"))
-        Text(t("photo.subtitle"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xl.dp))
+        Text(t("photo.subtitle"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xl.udp))
 
-        Box(Modifier.fillMaxWidth().padding(bottom = space.xl.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.fillMaxWidth().padding(bottom = space.xl.udp), contentAlignment = Alignment.Center) {
             val bitmap = remember(photoUri) {
                 photoUri?.let { BitmapFactory.decodeFile(Uri.parse(it).path)?.asImageBitmap() }
             }
             if (bitmap != null) {
-                Image(bitmap, null, Modifier.size(200.dp).clip(CircleShape), contentScale = ContentScale.Crop)
+                Image(bitmap, null, Modifier.size(200.udp).clip(CircleShape), contentScale = ContentScale.Crop)
             } else {
                 Column(
                     Modifier
-                        .size(200.dp)
+                        .size(200.udp)
                         .clip(CircleShape)
                         .background(colors.surface)
                         .drawBehind {
@@ -123,20 +125,20 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("📷", style = rnTextStyle(48f, 56f), modifier = Modifier.padding(top = space.xs.dp))
-                    Text(t("photo.noPhoto"), color = colors.textSecondary, modifier = Modifier.padding(top = space.sm.dp))
+                    Text("📷", style = rnTextStyle(48f, 56f), modifier = Modifier.padding(top = space.xs.udp))
+                    Text(t("photo.noPhoto"), color = colors.textSecondary, modifier = Modifier.padding(top = space.sm.udp))
                 }
             }
         }
 
-        Column(Modifier.padding(bottom = space.xl.dp), verticalArrangement = Arrangement.spacedBy(space.md.dp)) {
+        Column(Modifier.padding(bottom = space.xl.udp), verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
             OutlineButton(t("photo.takePhoto"), "onboarding-photo-take") {
-                val file = File(context.cacheDir, "camera_${System.currentTimeMillis()}.jpg")
-                cameraTarget = file
-                takePicture.launch(FileProvider.getUriForFile(context, "${context.packageName}.files", file))
+                Analytics.track(AnalyticsEvent.PROFILE_PHOTO_TAKEN)
+                picker.fromCamera()
             }
             OutlineButton(t("photo.chooseLibrary"), "onboarding-photo-library") {
-                pickFromLibrary.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                Analytics.track(AnalyticsEvent.PROFILE_PHOTO_CHOSEN)
+                picker.fromLibrary()
             }
         }
         Text(
@@ -157,22 +159,12 @@ private fun OutlineButton(label: String, testTag: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .testTag(testTag)
             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-            .border(1.dp, colors.primary, RoundedCornerShape(DesignTokens.Radius.lg.dp))
+            .border(1.udp, colors.primary, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .clickable(onClick = onClick)
             // RN's 1dp border adds to the height (14 padding + 1 border each side).
-            .padding(vertical = 15.dp),
+            .padding(vertical = 15.udp),
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = DesignTokens.Typography.bodyBold.style(), color = colors.primary)
     }
 }
-
-/**
- * Copies the picked image into filesDir as profile_photo_<epochMs>.jpg and returns its
- * file:// URI, the same place and form the RN app stores (spec/storage.md).
- */
-private fun savePhotoLocally(context: Context, source: Uri): String? = runCatching {
-    val dest = File(context.filesDir, "profile_photo_${System.currentTimeMillis()}.jpg")
-    context.contentResolver.openInputStream(source)!!.use { input -> dest.outputStream().use { input.copyTo(it) } }
-    Uri.fromFile(dest).toString()
-}.getOrNull()

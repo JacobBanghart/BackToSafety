@@ -12,6 +12,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextMotion
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int
@@ -30,8 +31,9 @@ fun Icon(name: String, size: Float, color: Color, modifier: Modifier = Modifier)
         glyph,
         modifier = modifier,
         color = color,
-        // A vector-icons glyph is RN text: its size rounds up to whole pixels too.
-        style = with(LocalDensity.current) { ceilPx(size.sp.toPx()).toSp() }.let {
+        // A vector-icons glyph is RN text with allowFontScaling={false}: sized in dp, so it
+        // ignores the system font scale, and like all RN text rounded up to whole pixels.
+        style = with(LocalDensity.current) { ceilPx(size.dp.toPx()).toSp() }.let {
             TextStyle(fontFamily = icons.font, fontSize = it, lineHeight = it, textMotion = TextMotion.Animated)
         },
     )

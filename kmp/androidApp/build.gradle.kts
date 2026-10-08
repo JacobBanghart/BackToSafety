@@ -34,6 +34,9 @@ android {
         versionName = Regex("\"version\"\\s*:\\s*\"([^\"]+)\"").find(repoRoot.resolve("app.json").readText())!!.groupValues[1]
         // Test seams (the debug clock), as EXPO_PUBLIC_TEST_SEAMS=1 does for the RN build.
         buildConfigField("boolean", "TEST_SEAMS", (findProperty("testSeams") == "true").toString())
+        // PostHog, from the same environment as the RN build; analytics stay off without a key.
+        buildConfigField("String", "POSTHOG_KEY", "\"${System.getenv("EXPO_PUBLIC_POSTHOG_KEY").orEmpty()}\"")
+        buildConfigField("String", "POSTHOG_HOST", "\"${System.getenv("EXPO_PUBLIC_POSTHOG_HOST") ?: "https://us.i.posthog.com"}\"")
     }
 
     signingConfigs {
@@ -69,4 +72,6 @@ dependencies {
     implementation(libs.activity.compose)
     implementation(libs.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.android.image.cropper)
+    implementation(libs.posthog.android)
 }

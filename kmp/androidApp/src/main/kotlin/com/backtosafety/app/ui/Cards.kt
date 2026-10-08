@@ -24,9 +24,9 @@ fun AppCard(modifier: Modifier = Modifier, surface: Boolean = false, content: @C
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Column(
-        modifier.padding(bottom = DesignTokens.Spacing.md.dp).fillMaxWidth().clip(shape)
+        modifier.padding(bottom = DesignTokens.Spacing.md.udp).fillMaxWidth().clip(shape)
             .background(if (surface) colors.surface else colors.card)
-            .rnBorder(1.dp, colors.border, shape).padding(DesignTokens.Spacing.lg.dp),
+            .rnBorder(1.udp, colors.border, shape).padding(DesignTokens.Spacing.lg.udp),
         content = content,
     )
 }
@@ -53,10 +53,10 @@ fun ListItem(
                 val w = 1.dp.toPx()
                 drawLine(rule, Offset(0f, size.height - w / 2), Offset(size.width, size.height - w / 2), w)
             }
-            .padding(bottom = 1.dp)
-            .padding(vertical = DesignTokens.Spacing.sm.dp),
+            .padding(bottom = 1.udp)
+            .padding(vertical = DesignTokens.Spacing.sm.udp),
     ) {
-        Text(label, style = DesignTokens.Typography.caption.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = 2.dp))
+        Text(label, style = DesignTokens.Typography.caption.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = 2.udp))
         Text(
             value, style = DesignTokens.Typography.body.style(), color = colors.text,
             modifier = if (testID != null) Modifier.testTag("$testID-value") else Modifier,
