@@ -139,8 +139,6 @@
       "onboarding-photo-library",
       "onboarding-photo-skip",
       "onboarding-photo-take",
-      "onboarding-theme-continue",
-      "onboarding-theme-{theme}",
       "onboarding-welcome-language-{lang}",
       "onboarding-welcome-theme-{theme}"
     ],
