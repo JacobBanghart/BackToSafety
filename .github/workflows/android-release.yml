@@ -23,12 +23,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
-
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
@@ -63,9 +57,6 @@ jobs:
           echo "Using Android SDK at $SDK_PATH"
           printf 'sdk.dir=%s\n' "$SDK_PATH" > kmp/local.properties
 
-      - name: Install dependencies
-        run: npm ci
-
       - name: Decode Android release keystore
         run: |
           printf '%s' "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > "$RUNNER_TEMP/release.keystore"
@@ -94,29 +85,26 @@ jobs:
           echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
 
-      - name: Stamp version into app.json
+      - name: Stamp version into version.json
         run: |
           VERSION="${{ steps.release_meta.outputs.version_name }}"
-          # Strip leading 'v' so the app displays e.g. "1.3.3" not "v1.3.3"
-          VERSION="${VERSION#v}"
-          VERSION_CODE="${{ steps.release_meta.outputs.version_code }}"
-          node -e "
-            const fs = require('fs');
-            const cfg = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-            cfg.expo.version = '$VERSION';
-            cfg.expo.android.versionCode = parseInt('$VERSION_CODE', 10);
-            fs.writeFileSync('app.json', JSON.stringify(cfg, null, 2) + '\n');
-          "
-          echo "Stamped app.json: version=$VERSION versionCode=$VERSION_CODE"
+          # Strip leading 'v' so the app displays e.g. "1.4.0" not "v1.4.0"
+          python3 - "${VERSION#v}" "${{ steps.release_meta.outputs.version_code }}" <<'PY'
+          import json, sys
+          v = json.load(open("version.json"))
+          v["version"], v["android"]["versionCode"] = sys.argv[1], int(sys.argv[2])
+          json.dump(v, open("version.json", "w"), indent=2)
+          PY
+          cat version.json
 
-      # The native app (kmp/androidApp). Version name and code come from the app.json stamped
+      # The native app (kmp/androidApp). Version name and code come from the version.json stamped
       # above; it signs with the same upload key the RN release used.
       - name: Build signed Android App Bundle
         run: ./gradlew :androidApp:bundleRelease --console=plain --build-cache -Dorg.gradle.parallel=true
         working-directory: kmp
         env:
-          EXPO_PUBLIC_POSTHOG_KEY: phc_yiHs692GvzSjuCHNUTpSGx99UrD5cnCmJD7mjD7WBoJN
-          EXPO_PUBLIC_POSTHOG_HOST: https://t.backtosafety.app
+          POSTHOG_KEY: phc_yiHs692GvzSjuCHNUTpSGx99UrD5cnCmJD7mjD7WBoJN
+          POSTHOG_HOST: https://t.backtosafety.app
           ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}

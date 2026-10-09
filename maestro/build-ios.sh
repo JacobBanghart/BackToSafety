@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
-# Builds the RN app as the parity harness runs it on iOS: a Release build (bundled JS, no dev
-# tools) with test seams on, for the arm64 simulator, unsigned. Prints the .app path.
-# Runs on a Mac with Xcode (the self-hosted runner, or any Mac with the repo's mise tools).
+# Builds the iOS app (kmp/iosApp) as the parity harness runs it: Release, with test
+# seams on, for the arm64 simulator, unsigned. Prints the .app path. Needs a Mac with Xcode,
+# XcodeGen (brew install xcodegen) and the repo's mise tools (Java, android-sdk for Gradle).
 
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-export EXPO_PUBLIC_TEST_SEAMS=1
-
-cd "$ROOT"
-[ -d node_modules ] || npm ci >&2
-cd ios
-# A stale local spec index misses new pod versions; refresh it only when needed.
-pod install >&2 || pod install --repo-update >&2
-xcodebuild -workspace BacktoSafety.xcworkspace -scheme BacktoSafety -configuration Release \
-  -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath "$ROOT/ios/build" ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO \
-  -quiet >&2
-echo "$ROOT/ios/build/Build/Products/Release-iphonesimulator/BacktoSafety.app"
+cd "$ROOT/kmp"
+./gradlew :shared:assembleSharedReleaseXCFramework --console=plain -q >&2
+cd iosApp
+xcodegen generate --quiet >&2
+xcodebuild -project BackToSafety.xcodeproj -scheme BackToSafety -configuration Release \
+  -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath build \
+  ARCHS=arm64 ONLY_ACTIVE_ARCH=NO CODE_SIGNING_ALLOWED=NO \
+  SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) TEST_SEAMS' -quiet >&2
+echo "$ROOT/kmp/iosApp/build/Build/Products/Release-iphonesimulator/BackToSafety.app"

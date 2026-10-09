@@ -15,7 +15,6 @@
 
 ## High-Value Technical Checks
 
-- [ ] Resolve production dependency vulnerabilities from `npm audit --omit=dev`.
 - [ ] Run release-build smoke tests on physical iOS and Android devices:
   - [ ] Onboarding flow
   - [ ] Emergency flow
@@ -30,7 +29,6 @@
 ## Polish (Recommended)
 
 - [ ] Replace starter README content in `README.md` with app-specific documentation.
-- [ ] Update generic not-found copy in `app/+not-found.tsx` to branded messaging.
 
 ## GitHub Pages + Domain
 

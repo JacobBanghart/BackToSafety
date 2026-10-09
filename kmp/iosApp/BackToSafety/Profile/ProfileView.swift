@@ -33,6 +33,9 @@ private struct ProfileForm: Equatable {
     var snapshot: [String] { textFields.map { self[$0] } + [dominantHand, resolvedMobility] }
 }
 
+/// A mobility option's testID suffix: "Uses cane" -> "uses-cane".
+private func slug(_ option: String) -> String { option.lowercased().replacingOccurrences(of: " ", with: "-") }
+
 /// What each field's input does to typed text (profile.tsx formatFieldInput).
 private func formatField(_ field: String, _ value: String) -> String {
     switch field {
@@ -238,7 +241,7 @@ struct ProfileView: View {
                                         .overlay(Capsule().strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
                                 }
                                 .buttonStyle(.pressable)
-                                .accessibilityIdentifier("profile-mobility-\(option.lowercased().replacingOccurrences(of: " ", with: "-"))")
+                                .accessibilityIdentifier("profile-mobility-\(slug(option))")
                             }
                         }
                         if f.mobility.contains("Other") {

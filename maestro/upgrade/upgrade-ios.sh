@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# L5 upgrade test on the iOS simulator: the SwiftUI app installs over the RN app (same
+# L5 upgrade test on the iOS simulator: a new build installs over an old one (same
 # bundle ID, so the data container stays) and must read its data.
 #
 #   upgrade-ios.sh install-over OLD.app NEW.app   fill data with OLD, install NEW over it, verify
 #
 # Runs on the Mac. SIM_UDID picks the simulator (default: the first booted nijii-* one).
-# The RN app keeps its database at Documents/SQLite/nijii.db (expo-sqlite), which is where
-# the SwiftUI app opens it. Plain bash 3 (macOS's /bin/bash).
+# The database lives at Documents/SQLite/nijii.db (where the RN app's expo-sqlite kept it), which is where
+# the app opens it. Plain bash 3 (macOS's /bin/bash).
 
 set -euo pipefail
 
@@ -27,7 +27,7 @@ case "${1:-}" in
     xcrun simctl install "$U" "$2"
     maestro --device "$U" test --no-ansi "$HERE/fill.yaml" >/tmp/upgrade-fill.log 2>&1 ||
       { echo "fill failed: /tmp/upgrade-fill.log"; exit 1; }
-    sleep 2 # RN saves the last tap asynchronously; let it land before the app is killed
+    sleep 2 # the app saves the last tap asynchronously; let it land before the app is killed
     xcrun simctl terminate "$U" "$PKG" >/dev/null 2>&1 || true
     before="$(settings)"
     xcrun simctl install "$U" "$3"

@@ -1,0 +1,10 @@
+{
+  "$comment": "The version both apps ship with. The release workflows stamp the tag's version and the run number here before building; the apps read it at build time.",
+  "version": "1.3.3",
+  "android": {
+    "versionCode": 13
+  },
+  "ios": {
+    "buildNumber": "13"
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "$comment": "PostHog event names both apps send (utils/analytics.ts AnalyticsEventName). Dashboards key on these, so a rename is a breaking change. Screens are tracked as $screen with the route path (e.g. /emergency) since the SDK 57 router change.",
+  "$comment": "PostHog event names both apps send (kmp/shared AnalyticsEvent is generated from this list; AnalyticsParityTest holds both apps' call sites to it). Dashboards key on these, so a rename is a breaking change. Screens are tracked as $screen with the route path (e.g. /emergency).",
   "events": [
     "contact_add_tapped",
     "contact_call_tapped",
@@ -33,7 +33,6 @@
     "readout_script_copied",
     "screen_viewed",
     "settings_account_deleted",
-    "settings_data_cleared",
     "settings_dev_mode_unlocked",
     "settings_language_changed",
     "settings_theme_changed"

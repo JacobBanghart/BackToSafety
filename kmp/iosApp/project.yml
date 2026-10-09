@@ -1,5 +1,5 @@
 # The SwiftUI app (PARITY_PLAN: KMP core + native UIs). `xcodegen generate` writes the Xcode
-# project from this file; maestro/build-ios-kotlin.sh builds it for the simulator.
+# project from this file; maestro/build-ios.sh builds it for the simulator.
 name: BackToSafety
 options:
   deploymentTarget:
@@ -20,24 +20,21 @@ targets:
     platform: iOS
     sources:
       - BackToSafety
-      # The RN app's strings and logo, so both apps show the same text and art.
+      # Strings and logo shared with the Android app, so both show the same text and art.
       - path: ../../i18n/locales
         type: folder
         buildPhase: resources
       - path: ../../assets/images/logo-full.png
         buildPhase: resources
-      # The RN app's icon and launch screen (expo prebuild output, committed under ios/).
-      - path: ../../ios/BacktoSafety/Images.xcassets
-      - path: ../../ios/BacktoSafety/SplashScreen.storyboard
-    # Version and build number come from app.json, as the RN app's do: the release workflow
+    # Version and build number come from version.json: the release workflow
     # stamps the tag's version and the run number there before building. Runs before signing.
     postBuildScripts:
-      - name: Version from app.json
+      - name: Version from version.json
         basedOnDependencyAnalysis: false
         script: |
           plist="$TARGET_BUILD_DIR/$INFOPLIST_PATH"
-          version=$(/usr/bin/plutil -extract expo.version raw "$SRCROOT/../../app.json")
-          build=$(/usr/bin/plutil -extract expo.ios.buildNumber raw "$SRCROOT/../../app.json")
+          version=$(/usr/bin/plutil -extract version raw "$SRCROOT/../../version.json")
+          build=$(/usr/bin/plutil -extract ios.buildNumber raw "$SRCROOT/../../version.json")
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" -c "Set :CFBundleVersion $build" "$plist"
     dependencies:
       - framework: ../shared/build/XCFrameworks/release/Shared.xcframework
@@ -47,16 +44,16 @@ targets:
       path: BackToSafety/Info.plist
       properties:
         CFBundleDisplayName: Back to Safety
-        # Set from app.json by the build phase below.
+        # Set from version.json by the build phase below.
         CFBundleShortVersionString: '0'
         CFBundleVersion: '0'
         UILaunchStoryboardName: SplashScreen
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
-        # Set from the environment at build time, as the RN app's EXPO_PUBLIC_ vars are.
-        PostHogKey: $(EXPO_PUBLIC_POSTHOG_KEY)
-        PostHogHost: $(EXPO_PUBLIC_POSTHOG_HOST)
+        # Set from the environment at build time.
+        PostHogKey: $(POSTHOG_KEY)
+        PostHogHost: $(POSTHOG_HOST)
         CFBundleURLTypes:
           - CFBundleURLSchemes: [backtosafety]
         NSCameraUsageDescription: Allow Back to Safety to use your camera to take a profile photo for emergency identification.

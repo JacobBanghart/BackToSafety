@@ -1,6 +1,5 @@
 [tools]
-# CI: Node 24 (iOS) / 20 (Android) and Temurin 17 for the Gradle build.
-node = "24.21.0"
+# Temurin 17 for the Gradle build (kmp/).
 java = "temurin-17.0.20+101"
 # Used by the .githooks/pre-commit secret scan.
 gitleaks = "8.30.1"

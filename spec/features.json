@@ -1,5 +1,5 @@
 {
-  "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>), web (Playwright, RN only), flows (Maestro, runs against both apps). spec/features.test.ts checks every reference and ratchets maxWithoutFlows (features without a flow and without a flowExempt reason): it may only go down.",
+  "$comment": "Feature inventory (PARITY_PLAN L1). Every user-visible feature, and what covers it: vectors (spec/vectors/<file>#<function>) and flows (Maestro, run against both apps). spec/check.py checks every reference and ratchets maxWithoutFlows (features without a flow and without a flowExempt reason): it may only go down.",
   "maxWithoutFlows": 0,
   "features": [
     {
@@ -7,9 +7,6 @@
       "description": "First launch goes to onboarding; once onboarded, onboarding screens redirect home.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -20,9 +17,6 @@
       "description": "Welcome screen with feature summary, theme picker, and (dev builds) language picker.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -33,10 +27,6 @@
       "description": "Name (required) and nickname.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts",
-          "e2e/readout.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -47,9 +37,6 @@
       "description": "Take or choose a photo, copied into the documents directory; skippable.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -63,9 +50,6 @@
           "formatters.json#formatHeightInput",
           "formatters.json#formatWeightInput"
         ],
-        "web": [
-          "e2e/readout.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -78,9 +62,6 @@
         "vectors": [
           "phone.json#formatPhoneInput"
         ],
-        "web": [
-          "e2e/readout.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -91,9 +72,6 @@
       "description": "Completion screen listing what to add later; goes home.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/onboarding.yaml"
         ]
@@ -104,7 +82,6 @@
       "description": "Header shows the person's photo and name; taps through to the profile.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -115,10 +92,6 @@
       "description": "Big button starts a new emergency search.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts",
-          "e2e/emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/emergency-resume.yaml"
         ]
@@ -132,7 +105,6 @@
           "emergency.json#secondsRemaining",
           "emergency.json#formatCountdown"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/emergency-countdown.yaml",
           "maestro/flows/emergency-resume.yaml"
@@ -144,7 +116,6 @@
       "description": "Contacts (with saved count) and Places shortcuts.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/contacts.yaml"
         ]
@@ -155,7 +126,6 @@
       "description": "Emergency info card: 911 script link and health notes summary.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/readout.yaml"
         ]
@@ -166,10 +136,6 @@
       "description": "Starting persists active_emergency and records the last-seen time.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/onboarding-emergency.spec.ts",
-          "e2e/emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/emergency-resume.yaml"
         ]
@@ -182,9 +148,6 @@
         "vectors": [
           "emergency.json#parseActiveEmergency",
           "emergency.json#secondsRemaining"
-        ],
-        "web": [
-          "e2e/persistence.spec.ts"
         ],
         "flows": [
           "maestro/flows/emergency-resume.yaml"
@@ -200,9 +163,6 @@
           "emergency.json#formatCountdown",
           "emergency.json#countdownAlerts"
         ],
-        "web": [
-          "e2e/emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/emergency-countdown.yaml"
         ]
@@ -215,9 +175,6 @@
         "vectors": [
           "emergency.json#buildInitialSteps"
         ],
-        "web": [
-          "e2e/emergency.spec.ts"
-        ],
         "flows": [
           "maestro/flows/emergency-resume.yaml"
         ]
@@ -228,7 +185,6 @@
       "description": "\"What are they wearing?\" input, persisted with the emergency; dismissible.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/emergency-resume.yaml"
         ]
@@ -241,7 +197,6 @@
         "vectors": [
           "emergency.json#directionHint"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -252,7 +207,6 @@
       "description": "Familiar-places step lists saved destinations.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/destinations.yaml"
         ]
@@ -263,7 +217,6 @@
       "description": "Call button dials the emergency number and marks the step.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/emergency-outcomes.yaml"
         ]
@@ -279,7 +232,6 @@
           "phone.json#normalizeUniqueSmsRecipients",
           "phone.json#normalizeSmsRecipient"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/alerts-and-calls.yaml"
         ]
@@ -290,9 +242,6 @@
       "description": "Found — Safe ends the emergency, records the incident, and shows the found guidance.",
       "coverage": {
         "vectors": [],
-        "web": [
-          "e2e/persistence.spec.ts"
-        ],
         "flows": [
           "maestro/flows/emergency-outcomes.yaml"
         ]
@@ -303,7 +252,6 @@
       "description": "Back asks to stay, leave (timer keeps running) or end the emergency.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/emergency-outcomes.yaml"
         ]
@@ -314,7 +262,6 @@
       "description": "Opens the readout from the emergency screen and returns.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/emergency-outcomes.yaml"
         ]
@@ -329,10 +276,6 @@
           "readout.json#missingScriptDetails",
           "age.json#ageOn"
         ],
-        "web": [
-          "e2e/persistence.spec.ts",
-          "e2e/readout.spec.ts"
-        ],
         "flows": [
           "maestro/flows/readout.yaml"
         ]
@@ -345,7 +288,6 @@
         "vectors": [
           "readout.json#buildScript"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/readout.yaml"
         ]
@@ -357,9 +299,6 @@
       "coverage": {
         "vectors": [
           "readout.json#buildCopyBlock"
-        ],
-        "web": [
-          "e2e/readout.spec.ts"
         ],
         "flows": [
           "maestro/flows/readout.yaml"
@@ -373,7 +312,6 @@
         "vectors": [
           "readout.json#needsVehicleCheck"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml",
           "maestro/flows/readout.yaml"
@@ -385,7 +323,6 @@
       "description": "Emergency contacts list with call buttons.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/readout.yaml"
         ]
@@ -396,7 +333,6 @@
       "description": "Prominent Call 911 button.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/readout.yaml"
         ]
@@ -412,7 +348,6 @@
           "formatters.json#formatMedicAlertIdInput",
           "phone.json#formatPhoneInput"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -423,7 +358,6 @@
       "description": "Replace the photo from camera or library.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/profile-photo.yaml"
         ]
@@ -438,7 +372,6 @@
           "age.json#parseDob",
           "age.json#formatDob"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -449,7 +382,6 @@
       "description": "Left / right / unknown selector.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -460,7 +392,6 @@
       "description": "Multi-select mobility options with a free-text Other.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -471,7 +402,6 @@
       "description": "Save persists and returns; unsaved changes prompt before leaving.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/profile.yaml"
         ]
@@ -482,7 +412,6 @@
       "description": "Ordered contact cards with role and relationship; empty state.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/contacts.yaml"
         ]
@@ -496,7 +425,6 @@
           "phone.json#formatPhoneInput",
           "phone.json#formatPhoneNumber"
         ],
-        "web": [],
         "flows": [
           "maestro/flows/contacts.yaml"
         ]
@@ -507,7 +435,6 @@
       "description": "Delete with confirmation.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/contacts.yaml"
         ]
@@ -518,7 +445,6 @@
       "description": "Import from the device address book.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/contacts-import.yaml"
         ]
@@ -529,7 +455,6 @@
       "description": "Long-press drag to reorder.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/gestures/contacts-setup.yaml"
         ]
@@ -540,7 +465,6 @@
       "description": "Call a contact.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/alerts-and-calls.yaml"
         ]
@@ -551,7 +475,6 @@
       "description": "Ordered place cards with category and risk; empty state.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/destinations.yaml"
         ]
@@ -562,7 +485,6 @@
       "description": "Add or edit a place with category (incl. Other), risk, address, distance, reason, notes; validation.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/destinations.yaml"
         ]
@@ -573,7 +495,6 @@
       "description": "Delete with confirmation.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/destinations.yaml"
         ]
@@ -584,7 +505,6 @@
       "description": "Long-press drag to reorder.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/gestures/destinations-setup.yaml"
         ]
@@ -595,7 +515,6 @@
       "description": "Detail modal with open-in-maps and edit.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/destinations.yaml"
         ]
@@ -606,7 +525,6 @@
       "description": "System / light / dark theme.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/settings.yaml"
         ]
@@ -617,7 +535,6 @@
       "description": "Language picker (dev builds only until Spanish ships).",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": []
       },
       "flowExempt": "Dev builds only until Spanish ships; the release test build has no language picker."
@@ -627,7 +544,6 @@
       "description": "Delete all on-device data after confirmation.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/settings.yaml"
         ]
@@ -638,7 +554,6 @@
       "description": "Tapping the version enables developer options.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/settings-dev-mode.yaml"
         ]
@@ -649,7 +564,6 @@
       "description": "App, version, platform, theme, DB schema version, copyable device ID.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/flows/settings.yaml"
         ]
@@ -660,7 +574,6 @@
       "description": "Every screen in light and dark.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/states/home.yaml"
         ]
@@ -671,7 +584,6 @@
       "description": "Every string in en and es.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": []
       },
       "notes": "Gated by i18n/locales.test.ts.",
@@ -682,7 +594,6 @@
       "description": "Text inputs stay visible above the keyboard (CLAUDE.md pattern).",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/states/onboarding-name-keyboard.yaml"
         ]
@@ -693,7 +604,6 @@
       "description": "Installing the Kotlin app over the RN app keeps all data (L5).",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": [
           "maestro/upgrade/verify.yaml"
         ]
@@ -705,7 +615,6 @@
       "description": "PostHog events and screen tracking.",
       "coverage": {
         "vectors": [],
-        "web": [],
         "flows": []
       },
       "flowExempt": "Nothing to observe on device: PostHog is disabled without a key. Event names are gated by spec/analytics-events.json."

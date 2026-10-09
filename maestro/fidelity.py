@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tier-2 fidelity ratchet (PARITY_PLAN L4): the Kotlin app against the RN goldens.
+"""Tier-2 fidelity ratchet (PARITY_PLAN L4): the native apps against the goldens (the RN app they replaced).
 
 Pixel-identical isn't possible across renderers (text anti-aliasing, image filtering),
 so each captured state has a mark in spec/fidelity/android.json: the share of pixels

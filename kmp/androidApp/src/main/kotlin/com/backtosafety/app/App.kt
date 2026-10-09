@@ -110,7 +110,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         store.seed()
-        // utils/analytics.ts initAnalytics: the device is the analytics identity.
+        // The device is the analytics identity (as on iOS).
         runCatching { store.deviceId() }.onSuccess { if (BuildConfig.POSTHOG_KEY.isNotEmpty()) PostHog.identify(it) }
         themePreference = store.setting(Store.THEME_PREFERENCE) ?: "system"
         // i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships.

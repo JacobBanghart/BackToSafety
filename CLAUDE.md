@@ -1,48 +1,31 @@
-# nijii-app
+# nijii-app (Back to Safety)
 
-## Keyboard avoidance — mandatory pattern
+Two native apps on one Kotlin Multiplatform core: `kmp/androidApp` (Compose) and `kmp/iosApp`
+(SwiftUI), both on `kmp/shared`. See `docs/ARCHITECTURE.md`.
 
-Any screen with a `TextInput` or `AppTextInput` MUST render it inside
-`components/KeyboardAvoidingScroll.tsx` — never hand-roll `KeyboardAvoidingView`
+## Change both apps together
 
-- `ScrollView` directly, and never put an input under a plain `View`/`ScrollView`
-  with no keyboard handling at all.
+A user-visible change lands in the Android and the iOS app in the same commit, and logic goes
+in `kmp/shared` rather than in either UI. What the apps must agree on lives in `spec/`:
 
-This app has no root-level layout that can wrap every screen in keyboard
-avoidance — Expo Router's `<Stack>` mounts each screen independently, screens
-have heterogeneous layouts (some have footer CTAs, some don't; some are pure
-scroll views, some aren't scrollable at all), and stack screens stay mounted
-underneath the active one, so a single wrapper above the `<Stack>` can't scope
-itself to whichever screen currently has a focused input. Per-screen is the
-correct pattern here, not a limitation to work around — but that makes it easy
-for a screen to be added without the mechanism, which is exactly what happened
-twice already:
+- New or renamed testIDs: `spec/testids.json`, then `python3 spec/check.py`.
+- Analytics events: `spec/analytics-events.json` (`AnalyticsEvent` is generated from it).
+- Colors, type and spacing: `spec/design-tokens.json` (`DesignTokens` is generated from it).
+- Strings: `i18n/locales/` (both apps read the same JSON).
+- Logic with fixed inputs and outputs: `spec/vectors/`, run by `VectorsTest`.
 
-- `app/onboarding/name.tsx` shipped with a plain `View` instead of any keyboard
-  wrapper — the field just sat there, keyboard covered the Continue button.
-- `app/emergency.tsx`'s "what are they wearing" input was in a bare `ScrollView`
-  with no `KeyboardAvoidingView` at all — never wired up in the first place.
+## Keyboard avoidance
 
-`KeyboardAvoidingScroll` also encodes a subtlety that's easy to get wrong by
-hand: when a screen has a `footer` (bottom CTA button that must stay above the
-keyboard), the wrapper needs `'padding'` behavior on iOS to shift the whole
-footer+scroll stack together. But the ScrollView's own
-`automaticallyAdjustKeyboardInsets` does the _same_ keyboard-height
-compensation independently — running both at once double-pads the bottom of
-the scroll content (huge gap under the last field, easy over-scroll). The
-component handles this by disabling `automaticallyAdjustKeyboardInsets`
-whenever a `footer` is passed. Do not re-enable it alongside a footer.
+Every screen with a text field keeps its focused field and its bottom button above the
+keyboard. Android: the screen takes the IME inset (`imePadding()` on the scroll container, or
+`windowInsetsPadding(WindowInsets.safeDrawing)`, which includes it, as `OnboardingScaffold`
+does). iOS: fields sit in a
+`ScrollView` with `.scrollDismissesKeyboard(.interactively)` (number and phone keypads have no
+Return key, so dragging the form is the way to close them). Screens shipped without this twice
+in the past.
 
-When adding a new screen with text input:
+## Visual fidelity
 
-```tsx
-<KeyboardAvoidingScroll
-  style={styles.scrollView}
-  contentContainerStyle={styles.content}
-  footer={<View style={styles.footer}>{/* bottom CTA, if any */}</View>}
->
-  {/* form fields */}
-</KeyboardAvoidingScroll>
-```
-
-See `docs/COMPONENT_LIBRARY.md` for the component's full prop reference.
+The apps are held to `spec/goldens/` (light, dark, large text) by `maestro/fidelity.py`;
+`maestro/README.md` has the commands. A deliberate visual change re-blesses the goldens and
+lowers or raises the marks in its own commit.

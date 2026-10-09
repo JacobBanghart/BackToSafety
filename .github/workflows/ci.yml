@@ -14,43 +14,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  checks:
-    name: Lint, types, unit tests, bundles
+  contracts:
+    name: Spec contracts (testIDs, features)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Node (mise.toml)
-        uses: jdx/mise-action@v5
-        with:
-          install_args: node
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Lint
-        run: npm run lint
-
-      - name: Format
-        run: npm run format:check
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Unit, spec and vector tests
-        run: npm test
-
-      - name: Expo dependency check
-        run: npx expo install --check
-
-      # Bundling catches what typecheck can't: SDK 57 shipped with every platform
-      # failing to bundle and nothing noticed until a release was attempted.
-      - name: Bundle every platform
-        run: |
-          for platform in web android ios; do
-            npx expo export --platform "$platform" --output-dir "dist-$platform"
-          done
+      # Both apps carry every testID in spec/testids.json, and every feature's coverage
+      # references resolve (spec/check.py).
+      - name: Check
+        run: python3 spec/check.py
 
   kotlin-core:
     name: Kotlin core (spec vectors)
@@ -76,14 +50,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Java and Node (mise.toml)
+      - name: Setup Java (mise.toml)
         uses: jdx/mise-action@v5
         with:
-          install_args: java node
-
-      # The app bundles the RN app's icon font and glyph map from node_modules.
-      - name: Install dependencies
-        run: npm ci
+          install_args: java
 
       - name: Build
         working-directory: kmp
@@ -107,35 +77,17 @@ jobs:
 
       # The shared core as an XCFramework, then the SwiftUI app against it, for the simulator.
       - name: Build
-        run: maestro/build-ios-kotlin.sh
+        run: maestro/build-ios.sh
 
-  e2e-web:
-    name: Playwright (web)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Node (mise.toml)
-        uses: jdx/mise-action@v5
-        with:
-          install_args: node
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
-
-      - name: Run Playwright
-        run: npm run e2e
-
-      - name: Upload report
-        if: failure()
-        uses: actions/upload-artifact@v7
-        with:
-          name: playwright-report
-          path: |
-            playwright-report/
-            test-results/
-          retention-days: 14
+      # The app bundle carries its resources: icon, launch screen, privacy manifest, strings,
+      # and the version from version.json.
+      - name: Check the bundle
+        run: |
+          set -euo pipefail
+          APP=kmp/iosApp/build/Build/Products/Release-iphonesimulator/BackToSafety.app
+          for f in Assets.car SplashScreen.storyboardc PrivacyInfo.xcprivacy locales/en/common.json logo-full.png; do
+            test -e "$APP/$f" || { echo "missing $f"; exit 1; }
+          done
+          test "$(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist")" = "$(plutil -extract version raw version.json)"
+          test "$(plutil -extract CFBundleVersion raw "$APP/Info.plist")" = "$(plutil -extract ios.buildNumber raw version.json)"
+          test "$(plutil -extract CFBundleIconName raw "$APP/Info.plist")" = AppIcon

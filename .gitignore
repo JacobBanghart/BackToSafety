@@ -1,52 +1,22 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
-node_modules/
-
-# Expo
-.expo/
-dist/
-web-build/
-playwright-report/
-test-results/
-expo-env.d.ts
-
 # Build outputs
 build/
 *.apk
 *.aab
 
-# Native
-.kotlin/
-*.orig.*
+# Signing material and secrets
 *.jks
 *.keystore
 *.p8
 *.p12
 *.key
-*.mobileprovision
-
-# Metro
-.metro-health-check*
-
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-bun.lock
-
-# macOS
-.DS_Store
 *.pem
-
-# local env files
+*.mobileprovision
 .env
 .env*.local
 
-# typescript
-*.tsbuildinfo
+# macOS
+.DS_Store
 
-app-example
 reference/12 steps.docx
 reference/Color Pallet
 reference/ColorPallet.png
@@ -59,8 +29,10 @@ reference/Wandering-Letter 04_25.docx
 
 # Maestro capture output (maestro/capture.sh)
 maestro/captures/
+maestro/gestures/ios/Gestures.xcodeproj/
+maestro/gestures/ios/build/
 
-# Kotlin rewrite (kmp/)
+# Gradle and Kotlin (kmp/)
 kmp/.gradle/
 kmp/.kotlin/
 kmp/build/
@@ -68,5 +40,3 @@ kmp/*/build/
 kmp/buildSrc/.gradle/
 kmp/buildSrc/.kotlin/
 kmp/local.properties
-maestro/gestures/ios/Gestures.xcodeproj/
-maestro/gestures/ios/build/

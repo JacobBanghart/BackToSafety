@@ -1,103 +1,57 @@
 # Back to Safety
 
-A React Native / Expo app for caregivers of people with dementia or other wandering risks. Profiles, emergency contacts, and familiar destinations are stored locally on device.
+An app for caregivers of people with dementia or other wandering risks: a guided 15-minute
+search when someone goes missing, a one-tap info sheet for 911, and the profile, emergency
+contacts and familiar places it draws on. Everything is stored on the device.
+
+Native on both platforms: Jetpack Compose on Android and SwiftUI on iOS, on a shared Kotlin
+Multiplatform core. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 - Privacy policy: https://backtosafety.app/privacy
-- GitHub Pages: https://jacobbanghart.github.io/BackToSafety/
-
----
+- Android package and iOS bundle ID: `com.backtosafety.app`
 
 ## Features
 
-- Emergency protocol: 11-step guided checklist with a 15-minute countdown timer, haptic alerts, one-tap 911 calling, and SMS alerts to emergency contacts
-- Profile: name, photo, medical conditions, medications, cognitive status, and de-escalation techniques
-- Emergency contacts: import from the device address book or add manually
-- Familiar destinations: saved places surfaced during the emergency checklist
-- Readout: formatted profile summary for first responders, one tap away during an emergency
-- Onboarding flow for first-time setup
-- i18n via `i18next` / `react-i18next`
-- Automatic light/dark theme
+- Emergency protocol: an 11-step checklist with a 15-minute countdown, haptic alerts, one-tap
+  911 calling, and an SMS to the alert circle
+- Info sheet: the 911 call script and full details, ready to read or copy
+- Profile: photo, appearance, medical, communication and device details
+- Emergency contacts: import from the address book or add by hand, drag to reorder
+- Familiar places: where to look first, with risk levels, drag to reorder
+- Light and dark themes; text that scales with Dynamic Type and font size
 
----
+## Building
 
-## Tech Stack
+Tools come from `mise.toml` (`mise install`): Java 17, the Android SDK, Maestro, gitleaks.
 
-| Layer         | Technology                                                      |
-| ------------- | --------------------------------------------------------------- |
-| Framework     | Expo SDK 54 (React Native 0.81)                                 |
-| Navigation    | Expo Router (file-based)                                        |
-| Local storage | SQLite via `expo-sqlite`, secure values via `expo-secure-store` |
-| Analytics     | PostHog (session replay + events)                               |
-| Testing       | Vitest (unit), Playwright (e2e web)                             |
-| CI / Releases | EAS Build + EAS Submit                                          |
-
----
-
-## Getting Started
-
-```bash
-npm install
-npx expo start
+```sh
+mise run android                       # build and run the Android app on a phone or emulator
+cd kmp && ./gradlew :shared:jvmTest     # shared core tests (vectors, store, migrations, parity)
+python3 spec/check.py                   # contracts: testIDs in both apps, feature coverage
 ```
 
-Run on a specific target:
+iOS (on a Mac with Xcode and XcodeGen):
 
-```bash
-npm run android   # Android emulator
-npm run ios       # iOS simulator
-npm run web       # Browser
+```sh
+cd kmp && ./gradlew :shared:assembleSharedReleaseXCFramework
+cd iosApp && xcodegen generate && open BackToSafety.xcodeproj    # then run on a simulator or phone
 ```
 
----
-
-## Scripts
-
-| Script                  | Description                          |
-| ----------------------- | ------------------------------------ |
-| `npm start`             | Start Expo dev server                |
-| `npm run android`       | Run on Android emulator              |
-| `npm run ios`           | Run on iOS simulator                 |
-| `npm run web`           | Run in browser                       |
-| `npm test`              | Run unit tests (Vitest)              |
-| `npm run test:coverage` | Unit tests with coverage report      |
-| `npm run e2e`           | Run Playwright end-to-end tests      |
-| `npm run lint`          | Lint with ESLint                     |
-| `npm run typecheck`     | TypeScript type check                |
-| `npm run format`        | Format with Prettier                 |
-| `npm run prebuild`      | Generate native Android/iOS projects |
-| `npm run build:apk`     | Build release APK locally            |
-| `npm run build:aab`     | Build release AAB locally            |
-
----
-
-## Project Structure
+## Repository
 
 ```
-app/               # Expo Router screens (file-based routing)
-  (tabs)/          # Tab navigator screens
-  onboarding/      # Onboarding flow
-  emergency.tsx    # Emergency protocol screen
-  contacts.tsx     # Emergency contacts
-  destinations.tsx # Familiar places
-  profile.tsx      # Profile editor
-  readout.tsx      # First-responder info sheet
-  settings.tsx     # App settings
-components/        # Shared UI components
-constants/         # Colors, typography, spacing, shadows
-context/           # React contexts (Profile, Theme, Onboarding)
-database/          # SQLite data layer (profile, contacts, destinations, incidents)
-i18n/              # Localization strings
-utils/             # Analytics, navigation helpers, phone utilities
-docs/              # Release guides, signing docs, store listing templates
+kmp/shared/       Kotlin Multiplatform core: store, migrations, protocol, readout, i18n
+kmp/androidApp/   Compose app
+kmp/iosApp/       SwiftUI app (project.yml -> Xcode project)
+spec/             Contracts both apps meet: tokens, events, testIDs, schema, vectors, goldens
+maestro/          Device flows, screenshot fidelity, upgrade and gesture tests
+i18n/locales/     Strings for both apps
+site/             Public website and privacy policy (GitHub Pages)
+docs/             Release, signing, store and product docs
 ```
-
----
 
 ## Releases
 
-Builds use EAS with auto-incrementing build numbers. See [`docs/release-step-by-step.md`](docs/release-step-by-step.md) for the release process and [`docs/android-signing-and-release.md`](docs/android-signing-and-release.md) for Android signing setup.
-
-Current version: 1.3.3 (build 13)
-
-- Android package: `com.backtosafety.app`
-- iOS bundle ID: `com.backtosafety.app`
+Push a `v*` tag: CI builds and signs both apps, uploads iOS to App Store Connect and attaches
+the Android bundle to the GitHub release. See
+[docs/release-step-by-step.md](docs/release-step-by-step.md).

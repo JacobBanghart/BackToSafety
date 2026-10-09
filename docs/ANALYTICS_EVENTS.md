@@ -1,33 +1,26 @@
 # Analytics Events Reference
 
-Back to Safety uses PostHog for anonymous, device-identifiable analytics. `utils/analytics.ts` exports a typed `track(event, properties)` helper.
+Back to Safety uses PostHog for anonymous, device-identifiable analytics. The event names are a
+contract, `spec/analytics-events.json`: the shared core generates `AnalyticsEvent` from it, and
+`AnalyticsParityTest` checks that both apps send every event.
 
 ---
 
 ## 1. Setup
 
-PostHog is configured in `utils/posthog.ts`:
-
-- Reads `EXPO_PUBLIC_POSTHOG_KEY` and `EXPO_PUBLIC_POSTHOG_HOST`.
-- Disabled when no API key is present.
-- Session replay is enabled with text and image masking.
-- A stable device ID is generated and used with `posthog.identify()`.
-
-The app is wrapped with `PostHogProvider` in `app/_layout.tsx`.
+- The key and host come from `POSTHOG_KEY` and `POSTHOG_HOST` at build time (the release
+  workflows set them). Without a key, PostHog isn't set up and no events are sent.
+- Session replay is on, with text inputs and images masked.
+- The app's stable device ID (the `device_id` setting) is the PostHog identity (`identify`).
+- Android: `MainActivity.setUpAnalytics`. iOS: `PostHogSetup.swift`.
 
 ---
 
-## 2. `track()` Signature
+## 2. Tracking
 
-```ts
-type AnalyticsProperties = Record<string, string | number | boolean | null>;
-
-export function track(name: AnalyticsEventName, properties?: AnalyticsProperties): void {
-  posthog.capture(name, properties);
-}
-```
-
-Properties must be JSON-serializable primitives (string, number, boolean, or null).
+Both apps call `Analytics.track(event, properties)` in the shared core with an `AnalyticsEvent`;
+named screens go through `Analytics.screen(name)` as PostHog `$screen` events. Properties are
+strings, numbers, booleans or null.
 
 ---
 
@@ -98,7 +91,6 @@ Properties must be JSON-serializable primitives (string, number, boolean, or nul
 | Event                        | Properties         | Description              |
 | ---------------------------- | ------------------ | ------------------------ |
 | `settings_dev_mode_unlocked` | —                  | Developer mode unlocked  |
-| `settings_data_cleared`      | —                  | Clear All Data used      |
 | `settings_theme_changed`     | `theme: string`    | Theme preference changed |
 | `settings_language_changed`  | `language: string` | Language changed         |
 
@@ -112,4 +104,4 @@ Properties must be JSON-serializable primitives (string, number, boolean, or nul
 
 ## 4. Disabling Analytics
 
-If `EXPO_PUBLIC_POSTHOG_KEY` is empty or absent, PostHog is initialized in a disabled state and no events are sent. The app still functions normally.
+If `POSTHOG_KEY` is empty or absent at build time, PostHog isn't set up and no events are sent. The app still works normally.

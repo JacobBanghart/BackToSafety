@@ -16,10 +16,8 @@ Use this as the single runbook for shipping Android releases to Google Play Inte
 1. Confirm privacy/support pages are live and correct.
 2. Confirm Play listing text is up to date (short and full description).
 3. Confirm policy-sensitive behavior is accurate (permissions, data usage, SMS handoff).
-4. Bump versions in `app.json`:
-   - `expo.version`
-   - `expo.android.versionCode`
-5. If schema changed, follow migration rules in `docs/release-versioning.md`.
+4. If the schema changed, follow the migration rules in `docs/release-versioning.md`.
+5. Push a `v*` tag: the release workflows stamp the version and build numbers.
 
 ## 2) Verify signing setup
 
@@ -33,9 +31,9 @@ Use this as the single runbook for shipping Android releases to Google Play Inte
 ## 3) Build signed Android bundle
 
 1. Open GitHub Actions.
-2. Run workflow: `Android Release Build`.
+2. Pushing the tag runs `Android Release Build` (or run it by hand).
 3. Wait for success.
-4. Download artifact: `app-release-aab`.
+4. Download the `app-release-aab-<version>` artifact, or the AAB attached to the GitHub release.
 
 ## 4) Complete Play Console compliance
 
@@ -54,7 +52,7 @@ Keep answers aligned with `docs/privacy-policy.md` and actual app behavior.
 
 1. Play Console -> Testing -> Internal testing.
 2. Create release.
-3. Upload `app-release.aab` from artifact.
+3. Upload the AAB from the artifact.
 4. Add release notes.
 5. Roll out to internal testers.
 

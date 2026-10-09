@@ -1,5 +1,12 @@
 # Parity Harness Plan — freezing the RN app before a Kotlin rewrite
 
+> **Status (2026-10-09): done.** Both native apps (Compose, SwiftUI) passed every gate below,
+> and the React Native app has been removed from the repo (it remains in git history). The
+> harness outlives it: `spec/` contracts, `maestro/` flows and the RN goldens in
+> `spec/goldens/` now hold the two native apps to each other and to the app they replaced.
+> TypeScript-side checks (Vitest, Playwright) went with the RN app; `spec/check.py` and
+> `AnalyticsParityTest` carry the cross-app ones forward.
+
 Goal: a Kotlin rewrite that loses no feature and no visual fidelity. The test suite, not
 human review, decides that. Built on `reactor-incremental-rebuild/HARNESS_PLAN.md`: there, the
 original game was the oracle and the Godot rebuild had to match it. Here, **the current RN app

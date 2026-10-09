@@ -32,6 +32,8 @@ final class AppModel: ObservableObject {
     func load() async {
         AppClock.shared.testSeamsEnabled = testSeams
         _ = try? await store.seed()
+        // The device is the analytics identity (as on Android).
+        if let deviceId = try? await store.deviceId() { identifyAnalytics(deviceId) }
         themePreference = (try? await store.setting(key: "theme_preference")) ?? "system"
         // Spanish only in debug builds until it ships.
         let saved = try? await store.setting(key: "language_preference")

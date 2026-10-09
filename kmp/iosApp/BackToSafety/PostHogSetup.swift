@@ -2,8 +2,8 @@ import Foundation
 import PostHog
 import Shared
 
-/// utils/posthog.ts: the same PostHog options as the RN app. The key comes from
-/// EXPO_PUBLIC_POSTHOG_KEY at build time; without one (dev and test builds) nothing is set up
+/// The same PostHog options as the Android app. The key comes from
+/// POSTHOG_KEY at build time; without one (dev and test builds) nothing is set up
 /// and every event goes nowhere.
 func setUpAnalytics() {
     let info = Bundle.main.infoDictionary ?? [:]
@@ -22,6 +22,7 @@ func setUpAnalytics() {
     config.sessionReplayConfig.maskAllTextInputs = true
     config.sessionReplayConfig.maskAllImages = true
     PostHogSDK.shared.setup(config)
+    analyticsEnabled = true
     Analytics.shared.sink = { name, properties in
         if name == Analytics.shared.SCREEN {
             var props = properties
@@ -31,4 +32,11 @@ func setUpAnalytics() {
             PostHogSDK.shared.capture(name, properties: properties)
         }
     }
+}
+
+private var analyticsEnabled = false
+
+/// Identifies the device to PostHog, once the store has its ID. No-op without a key.
+func identifyAnalytics(_ deviceId: String) {
+    if analyticsEnabled { PostHogSDK.shared.identify(deviceId) }
 }

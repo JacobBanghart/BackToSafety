@@ -1,5 +1,5 @@
 {
-  "$comment": "Selector contract (PARITY_PLAN rule 3). Every ID here must exist in the RN app (checked by spec/testids.test.ts) and in both Kotlin UIs: a Compose testTag (with testTagsAsResourceId) on Android, a SwiftUI accessibilityIdentifier on iOS. {placeholders} expand to every listed value; {index} is the 0-based position in the list.",
+  "$comment": "Selector contract (PARITY_PLAN rule 3). Every ID here exists in both apps: a Compose testTag (with testTagsAsResourceId) on Android and a SwiftUI accessibilityIdentifier on iOS, unless listed under iosOnly; spec/check.py checks the sources. {placeholders} expand to every listed value; {index} is the 0-based position in the list.",
   "placeholders": {
     "theme": [
       "system",
@@ -98,10 +98,6 @@
     "screenHeader": [
       "{id}-back",
       "{id}-title"
-    ],
-    "modal": [
-      "{id}-confirm",
-      "{id}-cancel"
     ]
   },
   "screenHeaders": [
@@ -111,10 +107,6 @@
     "profile",
     "readout",
     "settings"
-  ],
-  "modals": [
-    "contacts-modal",
-    "destinations-modal"
   ],
   "screens": {
     "onboarding": [
@@ -139,7 +131,6 @@
       "onboarding-photo-library",
       "onboarding-photo-skip",
       "onboarding-photo-take",
-      "onboarding-welcome-language-{lang}",
       "onboarding-welcome-theme-{theme}"
     ],
     "home": [
@@ -214,7 +205,6 @@
       "contacts-item-{index}-call",
       "contacts-item-{index}-edit",
       "contacts-item-{index}-name",
-      "contacts-modal",
       "contacts-save"
     ],
     "destinations": [
@@ -237,7 +227,6 @@
       "destinations-item-{index}-edit",
       "destinations-item-{index}-maps",
       "destinations-item-{index}-name",
-      "destinations-modal",
       "destinations-save"
     ],
     "settings": [
@@ -247,6 +236,13 @@
       "settings-language-{lang}",
       "settings-theme-{theme}",
       "settings-version"
+    ]
+  },
+  "iosOnly": {
+    "$comment": "iOS-only UI: the date-of-birth sheet (Android uses the platform date dialog).",
+    "ids": [
+      "profile-date-apply",
+      "profile-date-cancel"
     ]
   }
 }

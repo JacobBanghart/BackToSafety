@@ -1,4 +1,4 @@
-# Android Signing and Release (No Expo Account)
+# Android Signing and Release
 
 This project can produce Play Store-ready Android bundles using GitHub Actions + your own keystore.
 

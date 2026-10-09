@@ -39,6 +39,10 @@ for i in $(seq 0 $((COUNT - 1))); do
     'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 2; done'
   ANDROID_SERIAL="$serial" "$HERE/prepare-android.sh" >/dev/null
   ANDROID_SERIAL="$serial" "$HERE/seed-device.sh" >/dev/null
-  [ -n "$APK" ] && "$ADB" -s "$serial" install -r "$APK" >/dev/null
+  # A fresh install: a build signed with another key can't update over the old one.
+  if [ -n "$APK" ]; then
+    "$ADB" -s "$serial" uninstall com.backtosafety.app >/dev/null 2>&1 || true
+    "$ADB" -s "$serial" install "$APK" >/dev/null
+  fi
   echo "$serial ready"
 done

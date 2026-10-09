@@ -1,6 +1,8 @@
 # Emergency Protocol
 
-This document describes the 15-minute guided search protocol implemented in `app/emergency.tsx`.
+This document describes the 15-minute guided search protocol: the emergency screen in both apps
+(`EmergencyScreen.kt`, `EmergencyView.swift`), with the shared rules in
+`kmp/shared/.../Emergency.kt`, held to `spec/vectors/emergency.json`.
 
 ---
 
@@ -128,8 +130,7 @@ When the caregiver reaches the `familiar_places` step, saved destinations are su
 ### Alert emergency contacts (SMS)
 
 - Composes an SMS to contacts with `notifyOnEmergency = true`.
-- Native: uses `expo-sms`.
-- Web fallback: uses an `sms:` URL.
+- Opens the system message composer (Android: an `smsto:` intent; iOS: `MFMessageComposeViewController`).
 - Includes the missing person's name, last-seen information, and a request to help search.
 
 ### Info Sheet
@@ -157,18 +158,17 @@ The emergency screen writes incident records into the `incidents` table:
 
 Fields captured include `startedAt`, `wearing`, `areasChecked` (completed step IDs), and any available last-seen coordinates.
 
-The incidents module also exposes `getIncidentPatterns()` for aggregate statistics, but the app currently has no incident-history or insights screen.
+The app has no incident-history or insights screen.
 
 ---
 
 ## 11. Last Seen
 
-The caregiver can record when/where the person was last seen. This information is stored in `ProfileContext.lastSeen` and consumed by `/readout` to provide coordinates and timestamps to dispatch.
+The caregiver can record when/where the person was last seen. Last seen is the time the active emergency started; the info sheet shows it for dispatch.
 
 ---
 
 ## 12. Accessibility & Safety Notes
 
-- Haptics are triggered only on native platforms; web receives no tactile feedback.
-- The dialer and SMS composer require appropriate native permissions (phone/SMS) or web `tel:`/`sms:` URL support.
-- The protocol does **not** use or request GPS location automatically; Android permissions for location are explicitly blocked in `app.json`. Location is entered manually by the caregiver.
+- The dialer and SMS composer are the system's own; the app requests no phone or SMS permission.
+- The protocol does **not** use or request GPS location; neither app declares a location permission. Location is entered manually by the caregiver.
