@@ -1,6 +1,8 @@
 package com.backtosafety.app.onboarding
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.Analytics
 import com.backtosafety.app.ui.trackStep
@@ -52,7 +54,9 @@ fun CompleteScreen(t: Translate, store: Store, onFinish: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
         Column(
-            Modifier.weight(1f).fillMaxWidth().padding(start = space.xl.udp, end = space.xl.udp, top = 60.udp),
+            // Scrolls when large text makes it taller than the space above the button (F-42).
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                .padding(start = space.xl.udp, end = space.xl.udp, top = 60.udp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(

@@ -7,7 +7,7 @@ import { useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { posthog } from '@/utils/posthog';
 import { useEffect } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/ThemedText';
@@ -41,7 +41,13 @@ export default function CompleteScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.content}>
+      {/* Scrolls when large text or a small screen makes it taller than the space above the
+          footer, instead of running under the buttons (F-42). */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.iconContainer}>
           <ThemedText style={styles.icon}>{t('complete.icon')}</ThemedText>
         </View>
@@ -72,7 +78,7 @@ export default function CompleteScreen() {
             </View>
           ))}
         </View>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <Pressable
@@ -93,8 +99,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     paddingHorizontal: Spacing.xl,
     paddingTop: 60,
     alignItems: 'center',

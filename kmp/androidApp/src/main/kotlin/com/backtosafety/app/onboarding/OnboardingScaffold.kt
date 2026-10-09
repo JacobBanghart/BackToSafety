@@ -30,7 +30,6 @@ fun OnboardingScaffold(
     footerBottomPadding: Float = footerPadding,
     contentTop: Float = 20f,
     contentBottom: Float = 0f,
-    scrolls: Boolean = true,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
@@ -42,7 +41,7 @@ fun OnboardingScaffold(
         Column(
             Modifier
                 .weight(1f)
-                .then(if (scrolls) Modifier.verticalScroll(rememberScrollState()) else Modifier)
+                .verticalScroll(rememberScrollState())
                 .padding(start = DesignTokens.Spacing.xl.udp, end = DesignTokens.Spacing.xl.udp, top = contentTop.dp, bottom = contentBottom.dp),
             content = content,
         )

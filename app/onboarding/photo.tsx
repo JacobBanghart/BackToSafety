@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Href, useRouter } from 'expo-router';
 import { track } from '@/utils/analytics';
 import { useEffect, useState } from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { OnboardingStepHeader } from '@/components/OnboardingStepHeader';
@@ -125,7 +125,13 @@ export default function PhotoScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      <View style={styles.content}>
+      {/* Scrolls when large text or a small screen makes it taller than the space above the
+          footer, instead of running under the buttons (F-42). */}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         <OnboardingStepHeader activeStep={2} totalSteps={4} />
 
         <ThemedText type="title" style={styles.title}>
@@ -178,7 +184,7 @@ export default function PhotoScreen() {
         <ThemedText style={[styles.tip, { color: theme.textDisabled }]}>
           {t('photo.tip')}
         </ThemedText>
-      </View>
+      </ScrollView>
 
       <View style={styles.footer}>
         <Pressable testID="onboarding-photo-skip" style={styles.skipButton} onPress={handleSkip}>
@@ -209,8 +215,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
+  scroll: {
     flex: 1,
+  },
+  content: {
+    flexGrow: 1,
     paddingHorizontal: Spacing.xl,
     paddingTop: 20,
   },

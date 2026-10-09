@@ -74,7 +74,6 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     val picker = rememberPhotoPicker { photoUri = it }
 
     OnboardingScaffold(
-        scrolls = false,
         footer = {
             SkipButton(t("photo.skip"), "onboarding-photo-skip") {
                 trackStep(false, "profile_photo")
