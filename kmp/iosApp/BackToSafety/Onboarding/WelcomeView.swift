@@ -66,7 +66,7 @@ struct WelcomeView: View {
                                     .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? colors.primaryLight : optionBg))
                                     .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(selected ? colors.tint : .clear, lineWidth: 2))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.pressable)
                                 .accessibilityIdentifier("onboarding-welcome-theme-\(value)")
                             }
                         }
@@ -101,7 +101,7 @@ struct WelcomeView: View {
                         .frame(maxWidth: .infinity, minHeight: 46)
                         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.pressable)
                 .accessibilityIdentifier("onboarding-get-started")
                 RNText(t("welcome.privacy"), Typography.caption.spec, color: colors.textDisabled, align: .center)
                     .frame(maxWidth: .infinity)

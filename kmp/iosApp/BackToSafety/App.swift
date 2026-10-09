@@ -125,7 +125,7 @@ struct RootView: View {
                         }
                     }
                     .navigationDestination(for: Route.self) { route in
-                        NotPortedView(title: "\(route)")
+                        screen(route)
                     }
                 }
             } else {
@@ -135,6 +135,22 @@ struct RootView: View {
         .environment(\.appColors, colors)
         .preferredColorScheme(scheme)
         .task { await model.load() }
+    }
+}
+
+extension RootView {
+    @ViewBuilder
+    func screen(_ route: Route) -> some View {
+        let onboarding = model.t("onboarding")
+        let common = model.t("common")
+        switch route {
+        case .name: NameView(t: onboarding, tCommon: common)
+        case .photo: PhotoView(t: onboarding, tCommon: common)
+        case .appearance: AppearanceView(t: onboarding)
+        case .contact: ContactStepView(t: onboarding, tCommon: common)
+        case .complete: CompleteView(t: onboarding)
+        default: NotPortedView(title: "\(route)")
+        }
     }
 }
 

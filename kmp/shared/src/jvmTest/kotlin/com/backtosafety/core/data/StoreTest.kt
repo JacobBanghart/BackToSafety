@@ -153,4 +153,15 @@ class StoreTest {
         store.deleteDestination(park)
         assertEquals(listOf("Church"), store.destinations().map { it.name })
     }
+
+    @Test
+    fun updateProfileSetsGivenFieldsAndKeepsTheRest() = runBlocking {
+        val store = freshStore()
+        store.updateProfile(mapOf("name" to "Margaret Smith", "nickname" to "Maggie"))
+        store.updateProfile(mapOf("height" to "5'6\"", "nickname" to null))
+        val profile = store.profile()!!
+        assertEquals("Margaret Smith", profile.name)
+        assertEquals(null, profile.nickname)
+        assertEquals("5'6\"", profile.height)
+    }
 }

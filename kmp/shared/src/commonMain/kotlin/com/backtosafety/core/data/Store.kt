@@ -49,6 +49,14 @@ class Store(private val db: AppDatabase) {
      * Adds a contact at [sortOrder], or after the last one (database/contacts.native.ts).
      * Room would write created_at as NULL over the column default, so it's stamped here.
      */
+    /**
+     * A partial profile save by field name (the Profile property names), as the RN screens
+     * save: given fields are set (null clears), the rest kept. The SwiftUI app saves this way.
+     */
+    suspend fun updateProfile(values: Map<String, String?>) = saveProfile { profile ->
+        values.entries.fold(profile) { p, (field, value) -> p.with(field, value) }
+    }
+
     suspend fun addContact(contact: ContactEntity, sortOrder: Int? = null): Long {
         val now = sqliteNow()
         return db.contacts().insert(
@@ -205,3 +213,33 @@ internal fun ProfileEntity.toProfile() = Profile(
 /** SQLite's CURRENT_TIMESTAMP: UTC, "YYYY-MM-DD HH:MM:SS". */
 internal fun sqliteNow(): String =
     kotlin.time.Clock.System.now().toString().substring(0, 19).replace('T', ' ')
+
+private fun ProfileEntity.with(field: String, value: String?): ProfileEntity = when (field) {
+            "name" -> copy(name = value ?: "")
+            "nickname" -> copy(nickname = value)
+            "dateOfBirth" -> copy(dateOfBirth = value)
+            "photoUri" -> copy(photoUri = value)
+            "height" -> copy(height = value)
+            "weight" -> copy(weight = value)
+            "hairColor" -> copy(hairColor = value)
+            "eyeColor" -> copy(eyeColor = value)
+            "identifyingMarks" -> copy(identifyingMarks = value)
+            "medicalConditions" -> copy(medicalConditions = value)
+            "medications" -> copy(medications = value)
+            "allergies" -> copy(allergies = value)
+            "cognitiveStatus" -> copy(cognitiveStatus = value)
+            "dominantHand" -> copy(dominantHand = value)
+            "mobilityLevel" -> copy(mobilityLevel = value)
+            "communicationPreference" -> copy(communicationPreference = value)
+            "escalationSigns" -> copy(escalationSigns = value)
+            "deescalationTechniques" -> copy(deescalationTechniques = value)
+            "approachGuidance" -> copy(approachGuidance = value)
+            "likes" -> copy(likes = value)
+            "dislikesTriggers" -> copy(dislikesTriggers = value)
+            "safeWord" -> copy(safeWord = value)
+            "locativeDeviceInfo" -> copy(locativeDeviceInfo = value)
+            "idBracelets" -> copy(idBracelets = value)
+            "medicAlertId" -> copy(medicAlertId = value)
+            "medicAlertHotline" -> copy(medicAlertHotline = value)
+    else -> error("unknown profile field: $field")
+}
