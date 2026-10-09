@@ -1,0 +1,16 @@
+# Opens a backtosafety:// link (env LINK). iOS first asks "Open in 'Back to Safety'?" for a
+# custom-scheme link; confirm it, or it stays up and blocks whatever runs next.
+appId: com.backtosafety.app
+---
+- openLink: ${LINK}
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: Open
+          timeout: 3000
+          optional: true
+      - tapOn:
+          text: Open
+          optional: true

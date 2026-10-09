@@ -12,10 +12,22 @@ name: A photo chosen from the library is saved, shown, and offered to 911
     id: home-profile
 - tapOn:
     id: profile-photo-library
-# Android's system photo picker, then the image picker's crop screen.
-- tapOn: 'Photo taken on.*'
-- tapOn:
-    id: com.backtosafety.app:id/crop_image_menu_crop
+# The system photo picker (the added photo is the newest), then the square crop screen.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - tapOn: 'Photo taken on.*'
+      - tapOn:
+          id: com.backtosafety.app:id/crop_image_menu_crop
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          text: 'Photo, .*'
+          index: 0
+      - tapOn: Choose
 - assertVisible:
     id: profile-photo
 - tapOn:

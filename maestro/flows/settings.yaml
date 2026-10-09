@@ -15,14 +15,20 @@ name: Theme persists; deleting the account returns to onboarding
 - launchApp
 - tapOn:
     id: home-settings
-- assertVisible:
-    id: settings-device-id
+- scrollUntilVisible:
+    element:
+      id: settings-device-id
 
 - scrollUntilVisible:
     element:
       id: settings-delete-account
 - tapOn:
     id: settings-delete-account
-- tapOn: Delete Account
+# The confirmation's button: the "Delete Account" under the alert's message (the section
+# title and the button behind the alert say "Delete Account" too).
+- tapOn:
+    text: Delete Account
+    below:
+      text: 'This will permanently.*'
 - assertVisible:
     id: onboarding-get-started

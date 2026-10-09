@@ -1,4 +1,7 @@
 # Freezes the app clock (test seam) so countdowns and times are identical in every capture.
 appId: com.backtosafety.app
 ---
-- openLink: backtosafety://debug/clock?at=2026-10-06T09:00:00-07:00
+- runFlow:
+    file: open-link.yaml
+    env:
+      LINK: backtosafety://debug/clock?at=2026-10-06T09:00:00-07:00

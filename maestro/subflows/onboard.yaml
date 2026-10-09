@@ -22,6 +22,7 @@ appId: com.backtosafety.app
     when:
       true: ${NICKNAME != undefined && NICKNAME != ''}
     commands:
+      - runFlow: hide-keyboard.yaml
       - tapOn:
           id: onboarding-name-nickname
       - inputText: ${NICKNAME}

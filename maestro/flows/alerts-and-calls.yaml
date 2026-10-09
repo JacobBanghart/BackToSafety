@@ -15,11 +15,23 @@ name: Alerting the circle opens an SMS to the contacts; calling a contact opens 
     id: home-start-emergency
 - tapOn:
     id: emergency-alert-contacts
-- extendedWaitUntil:
-    visible: '.*URGENT: Margaret Smith is missing\..*'
-    timeout: 20000
-- launchApp:
-    stopApp: false
+# The iOS simulator has no Messages app or phone, so there the app reports it can't open
+# messaging, and a call goes nowhere; a device run covers both.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - extendedWaitUntil:
+          visible: '.*URGENT: Margaret Smith is missing\..*'
+          timeout: 20000
+      - launchApp:
+          stopApp: false
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - tapOn:
+          id: emergency-modal-info-ok
 - tapOn:
     id: emergency-back
 - tapOn:
@@ -30,6 +42,10 @@ name: Alerting the circle opens an SMS to the contacts; calling a contact opens 
     id: home-contacts
 - tapOn:
     id: contacts-item-0-call
-- extendedWaitUntil:
-    visible: '.*555.*123.*4567.*'
-    timeout: 20000
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - extendedWaitUntil:
+          visible: '.*555.*123.*4567.*'
+          timeout: 20000

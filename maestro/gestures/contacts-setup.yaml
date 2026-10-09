@@ -15,6 +15,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: contacts-form-name
 - inputText: Ben Second
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: contacts-form-phone
 - inputText: '5552220000'

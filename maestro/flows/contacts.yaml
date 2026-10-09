@@ -23,6 +23,7 @@ name: Add, validate, edit and delete an emergency contact
 - tapOn:
     id: contacts-form-name
 - inputText: Ana Lopez
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: contacts-form-phone
 - inputText: '+44 20 7946 0958'

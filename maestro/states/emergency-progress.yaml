@@ -38,7 +38,10 @@ appId: com.backtosafety.app
     direction: UP
 - tapOn:
     id: emergency-timer-label
-- openLink: backtosafety://debug/clock?advance=300
+- runFlow:
+    file: ../subflows/open-link.yaml
+    env:
+      LINK: backtosafety://debug/clock?advance=300
 # Leave and resume: the emergency screen reopens scrolled to the top, which scrolling
 # back up doesn't do reliably.
 - tapOn:

@@ -13,12 +13,20 @@ name: The countdown follows the clock and expires into the call-911 state
     id: emergency-timer-label
     text: Time remaining
 
-- openLink: backtosafety://debug/clock?advance=840
+- runFlow:
+    file: ../subflows/open-link.yaml
+
+    env:
+      LINK: backtosafety://debug/clock?advance=840
 - assertVisible:
     id: emergency-timer
     text: '0[01]:\d\d'
 
-- openLink: backtosafety://debug/clock?advance=60
+- runFlow:
+    file: ../subflows/open-link.yaml
+
+    env:
+      LINK: backtosafety://debug/clock?advance=60
 - assertVisible:
     id: emergency-timer
     text: '00:00'

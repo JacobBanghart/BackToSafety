@@ -18,6 +18,7 @@ name: Onboarding fills the profile and is not shown again
 - tapOn:
     id: onboarding-name-input
 - inputText: Margaret Smith
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-name-nickname
 - inputText: Maggie
@@ -48,6 +49,7 @@ name: Onboarding fills the profile and is not shown again
 - tapOn:
     id: onboarding-appearance-hair
 - inputText: Gray
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-appearance-eyes
 - inputText: Blue
@@ -58,6 +60,8 @@ name: Onboarding fills the profile and is not shown again
 - tapOn:
     id: onboarding-contact-name
 - inputText: John Smith
+# With the keyboard up, the lifted footer covers the phone field.
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-contact-phone
 - inputText: '5551234567'
