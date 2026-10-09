@@ -6,12 +6,12 @@ plugins {
     alias(libs.plugins.room)
 }
 
-val generateDesignTokens by tasks.registering(GenerateDesignTokens::class) {
+val generateDesignTokens = tasks.register<GenerateDesignTokens>("generateDesignTokens") {
     spec = rootProject.file("../spec/design-tokens.json")
     outputDir = layout.buildDirectory.dir("generated/tokens/commonMain/kotlin")
 }
 
-val generateAnalyticsEvents by tasks.registering(GenerateAnalyticsEvents::class) {
+val generateAnalyticsEvents = tasks.register<GenerateAnalyticsEvents>("generateAnalyticsEvents") {
     spec = rootProject.file("../spec/analytics-events.json")
     outputDir = layout.buildDirectory.dir("generated/analytics/commonMain/kotlin")
 }
@@ -21,7 +21,7 @@ kotlin {
         kotlin.srcDir(generateDesignTokens)
         kotlin.srcDir(generateAnalyticsEvents)
     }
-    androidLibrary {
+    android {
         namespace = "com.backtosafety.core"
         compileSdk = 37
         minSdk = 24

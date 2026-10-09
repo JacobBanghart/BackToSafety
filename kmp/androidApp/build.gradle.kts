@@ -5,7 +5,7 @@ plugins {
 
 // The RN app's shared assets: locale JSON and images, so both apps show the same text and art.
 val repoRoot = rootProject.file("..")
-val syncSharedAssets by tasks.registering(SyncSharedAssets::class) {
+val syncSharedAssets = tasks.register<SyncSharedAssets>("syncSharedAssets") {
     locales = repoRoot.resolve("i18n/locales")
     images = repoRoot.resolve("assets/images")
     // node_modules: run `npm ci` in the repo root before building the app.
@@ -14,7 +14,7 @@ val syncSharedAssets by tasks.registering(SyncSharedAssets::class) {
     outputDir = layout.buildDirectory.dir("generated/sharedAssets")
 }
 
-val syncLauncherResources by tasks.registering(SyncLauncherResources::class) {
+val syncLauncherResources = tasks.register<SyncLauncherResources>("syncLauncherResources") {
     rnRes = repoRoot.resolve("android/app/src/main/res")
     outputDir = layout.buildDirectory.dir("generated/launcherRes")
 }
