@@ -1,20 +1,92 @@
 {
-  "destinations-back": [
+  "contacts-back": [
     12.0,
-    77.0,
+    79.0,
     56.0,
-    99.0
+    101.0
   ],
-  "destinations-empty-add": [
-    107.0,
-    504.0,
-    295.0,
-    552.0
+  "contacts-form-address": [
+    17.0,
+    471.0,
+    385.0,
+    549.0
   ],
-  "destinations-title": [
-    127.0,
+  "contacts-form-name": [
+    17.0,
+    219.0,
+    385.0,
+    261.0
+  ],
+  "contacts-form-notes": [
+    17.0,
+    823.0,
+    385.0,
+    901.0
+  ],
+  "contacts-form-notify": [
+    16.0,
+    686.0,
+    386.0,
+    778.0
+  ],
+  "contacts-form-phone": [
+    17.0,
+    303.0,
+    385.0,
+    345.0
+  ],
+  "contacts-form-relationship": [
+    17.0,
+    387.0,
+    385.0,
+    429.0
+  ],
+  "contacts-form-role-caregiver": [
+    183.0,
+    590.0,
+    290.0,
+    626.0
+  ],
+  "contacts-form-role-family": [
+    298.0,
+    590.0,
+    385.0,
+    626.0
+  ],
+  "contacts-form-role-friend": [
+    128.0,
+    634.0,
+    214.0,
+    670.0
+  ],
+  "contacts-form-role-neighbor": [
+    16.0,
+    634.0,
+    120.0,
+    670.0
+  ],
+  "contacts-form-role-other": [
+    222.0,
+    634.0,
+    304.0,
+    670.0
+  ],
+  "contacts-form-role-primary_caregiver": [
+    16.0,
+    590.0,
+    175.0,
+    626.0
+  ],
+  "contacts-save": [
+    318.0,
     74.0,
-    274.0,
-    102.0
+    390.0,
+    106.0
+  ],
+  "contacts-title": [
+    143.0,
+    76.0,
+    258.0,
+    104.0
   ]
 }

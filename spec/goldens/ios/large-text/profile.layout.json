@@ -1,44 +1,68 @@
 {
-  "settings-back": [
+  "profile-back": [
     12.0,
-    77.0,
+    87.0,
     56.0,
-    99.0
+    109.0
   ],
-  "settings-delete-account": [
-    41.0,
-    630.0,
-    361.0,
-    690.0
+  "profile-dob-calendar": [
+    312.0,
+    655.0,
+    356.0,
+    699.0
   ],
-  "settings-theme-dark": [
-    262.0,
-    276.0,
-    360.0,
-    381.0
+  "profile-field-height": [
+    34.0,
+    754.0,
+    194.0,
+    796.0
   ],
-  "settings-theme-light": [
-    151.0,
-    276.0,
-    250.0,
-    381.0
+  "profile-field-name": [
+    34.0,
+    462.0,
+    368.0,
+    504.0
   ],
-  "settings-theme-system": [
-    41.0,
-    276.0,
-    139.0,
-    381.0
+  "profile-field-nickname": [
+    34.0,
+    558.0,
+    368.0,
+    600.0
   ],
-  "settings-title": [
-    149.0,
-    69.0,
-    252.0,
-    107.0
+  "profile-field-weight": [
+    208.0,
+    754.0,
+    368.0,
+    796.0
   ],
-  "settings-version": [
-    41.0,
-    861.0,
-    361.0,
-    937.0
+  "profile-photo-library": [
+    193.0,
+    282.0,
+    364.0,
+    331.0
+  ],
+  "profile-photo-take": [
+    37.0,
+    282.0,
+    181.0,
+    331.0
+  ],
+  "profile-save": [
+    309.0,
+    74.0,
+    390.0,
+    122.0
+  ],
+  "profile-section-personal": [
+    17.0,
+    356.0,
+    385.0,
+    424.0
+  ],
+  "profile-title": [
+    134.0,
+    79.0,
+    267.0,
+    117.0
   ]
 }

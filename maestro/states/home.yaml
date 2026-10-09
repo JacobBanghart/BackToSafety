@@ -9,3 +9,5 @@ appId: com.backtosafety.app
       NICKNAME: Maggie
       CONTACT_NAME: John Smith
       CONTACT_PHONE: '5551234567'
+- assertVisible:
+    id: home-start-emergency

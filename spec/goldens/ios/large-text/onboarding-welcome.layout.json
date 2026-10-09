@@ -1,20 +1,8 @@
 {
-  "onboarding-name-continue": [
+  "onboarding-get-started": [
     16.0,
-    762.0,
+    721.0,
     386.0,
-    824.0
-  ],
-  "onboarding-name-input": [
-    25.0,
-    342.0,
-    377.0,
-    388.0
-  ],
-  "onboarding-name-nickname": [
-    25.0,
-    455.0,
-    377.0,
-    501.0
+    783.0
   ]
 }

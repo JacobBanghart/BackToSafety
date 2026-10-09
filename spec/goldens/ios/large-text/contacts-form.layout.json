@@ -1,20 +1,86 @@
 {
-  "emergency-modal-leave-end": [
-    124.0,
-    542.0,
-    278.0,
-    599.0
+  "contacts-back": [
+    12.0,
+    83.0,
+    56.0,
+    105.0
   ],
-  "emergency-modal-leave-leave": [
+  "contacts-form-address": [
+    17.0,
+    525.0,
+    385.0,
+    603.0
+  ],
+  "contacts-form-name": [
+    17.0,
+    247.0,
+    385.0,
+    289.0
+  ],
+  "contacts-form-notify": [
+    16.0,
+    813.0,
+    386.0,
+    952.0
+  ],
+  "contacts-form-phone": [
+    17.0,
+    340.0,
+    385.0,
+    382.0
+  ],
+  "contacts-form-relationship": [
+    17.0,
+    433.0,
+    385.0,
+    475.0
+  ],
+  "contacts-form-role-caregiver": [
+    216.0,
+    653.0,
+    341.0,
+    696.0
+  ],
+  "contacts-form-role-family": [
+    16.0,
+    704.0,
+    114.0,
+    746.0
+  ],
+  "contacts-form-role-friend": [
+    252.0,
+    704.0,
+    350.0,
+    746.0
+  ],
+  "contacts-form-role-neighbor": [
+    122.0,
+    704.0,
+    244.0,
+    746.0
+  ],
+  "contacts-form-role-other": [
+    16.0,
+    754.0,
+    108.0,
+    797.0
+  ],
+  "contacts-form-role-primary_caregiver": [
+    16.0,
+    653.0,
     208.0,
-    468.0,
-    347.0,
-    526.0
+    696.0
   ],
-  "emergency-modal-leave-stay": [
-    55.0,
-    468.0,
-    196.0,
-    526.0
+  "contacts-save": [
+    318.0,
+    74.0,
+    390.0,
+    114.0
+  ],
+  "contacts-title": [
+    123.0,
+    75.0,
+    278.0,
+    113.0
   ]
 }

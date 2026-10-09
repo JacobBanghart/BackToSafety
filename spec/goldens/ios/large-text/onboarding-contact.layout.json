@@ -1,44 +1,32 @@
 {
-  "settings-back": [
-    12.0,
-    77.0,
-    56.0,
-    99.0
+  "onboarding-contact-continue": [
+    16.0,
+    767.0,
+    386.0,
+    824.0
   ],
-  "settings-delete-account": [
-    41.0,
-    630.0,
-    361.0,
-    690.0
+  "onboarding-contact-name": [
+    25.0,
+    375.0,
+    377.0,
+    421.0
   ],
-  "settings-theme-dark": [
-    262.0,
-    276.0,
-    360.0,
-    381.0
+  "onboarding-contact-phone": [
+    25.0,
+    484.0,
+    377.0,
+    530.0
   ],
-  "settings-theme-light": [
-    151.0,
-    276.0,
-    250.0,
-    381.0
+  "onboarding-contact-relationship": [
+    25.0,
+    592.0,
+    377.0,
+    638.0
   ],
-  "settings-theme-system": [
-    41.0,
-    276.0,
-    139.0,
-    381.0
-  ],
-  "settings-title": [
-    149.0,
-    69.0,
-    252.0,
-    107.0
-  ],
-  "settings-version": [
-    41.0,
-    861.0,
-    361.0,
-    937.0
+  "onboarding-contact-skip": [
+    16.0,
+    706.0,
+    386.0,
+    755.0
   ]
 }

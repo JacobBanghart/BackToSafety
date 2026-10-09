@@ -35,9 +35,17 @@ for mode in ${MODES:-light dark large-text}; do
       echo "   flow failed (see $OUT/$mode/$state.log)"
       continue
     }
+    # `maestro hierarchy` sometimes answers from another simulator when several Maestro sessions
+    # run at once: check it holds the testID the state flow last asserted, or ask again.
+    anchor="$(grep -oE 'id: [a-z0-9_-]+' "$ROOT/states/$state.yaml" | tail -1 | cut -d' ' -f2)"
+    for attempt in 1 2 3 4 5; do
+      maestro --device "$U" hierarchy >"$OUT/$mode/$state.hierarchy.json" 2>/dev/null || true
+      python3 "$ROOT/extract_layout_ios.py" "$OUT/$mode/$state.hierarchy.json" >"$OUT/$mode/$state.layout.json" 2>/dev/null || true
+      grep -q "\"$anchor\"" "$OUT/$mode/$state.layout.json" && break
+      [ "$attempt" = 5 ] && echo "   layout never showed $anchor (see $OUT/$mode/$state.layout.json)"
+      sleep 2
+    done
     xcrun simctl io "$U" screenshot --type=png "$OUT/$mode/$state.png" >/dev/null 2>&1
-    maestro --device "$U" hierarchy >"$OUT/$mode/$state.hierarchy.json" 2>/dev/null
-    python3 "$ROOT/extract_layout_ios.py" "$OUT/$mode/$state.hierarchy.json" >"$OUT/$mode/$state.layout.json"
     [ -n "${KEEP_XML:-}" ] || rm "$OUT/$mode/$state.hierarchy.json"
   done
 done
