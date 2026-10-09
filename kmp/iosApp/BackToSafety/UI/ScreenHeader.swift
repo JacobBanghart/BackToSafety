@@ -13,25 +13,28 @@ struct ScreenHeader<Right: View>: View {
     @Environment(\.appColors) private var colors
 
     var body: some View {
-        ZStack {
+        // The title is an overlay (absoluteFill in RN): it never sets the header's height, so a
+        // large-text title overflows the 52pt bar rather than growing it.
+        HStack(spacing: 0) {
+            Button(action: onBack) {
+                SFIcon("chevron.left", 22, colors.tint).frame(minWidth: 44, alignment: .leading).contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityIdentifier("\(testID)-back")
+            Spacer()
+            right().frame(minWidth: 44, alignment: .trailing)
+        }
+        .frame(maxWidth: .infinity, minHeight: 52 - 2 * Space.md)
+        .padding(Space.md)
+        .overlay {
             HStack(spacing: Space.xs) {
                 if let icon = titleIcon { SFIcon(icon.name, titleIconSize, icon.color) }
                 RNText(title, Typography.title.spec, color: colors.text, lines: 1)
                     .accessibilityIdentifier("\(testID)-title")
             }
             .padding(.horizontal, 44 + Space.md)
-            HStack(spacing: 0) {
-                Button(action: onBack) {
-                    SFIcon("chevron.left", 22, colors.tint).frame(minWidth: 44, alignment: .leading).contentShape(Rectangle())
-                }
-                .buttonStyle(.pressable)
-                .accessibilityIdentifier("\(testID)-back")
-                Spacer()
-                right().frame(minWidth: 44, alignment: .trailing)
-            }
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, minHeight: 52 - 2 * Space.md)
-        .padding(Space.md)
         .background(colors.background)
     }
 }

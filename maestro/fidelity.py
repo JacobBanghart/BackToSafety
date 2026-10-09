@@ -15,7 +15,11 @@ movement allowed there. Compose rounds each padding and border to whole pixels, 
 rounds positions once, so on a long screen the difference adds up past 2dp toward the
 bottom. Missing or unexpected testIDs always fail.
 
-Usage: fidelity.py CAPTURED_ROOT [--update]   (CAPTURED_ROOT/<mode>/<state>.png from capture.sh)
+--platform ios holds the SwiftUI app to spec/goldens/ios the same way, with its marks in
+spec/fidelity/ios.json and ios-layout.json (points, not dp).
+
+Usage: fidelity.py CAPTURED_ROOT [--platform android|ios] [--update]
+  (CAPTURED_ROOT/<mode>/<state>.png from capture.sh or capture-ios.sh)
 """
 
 import argparse
@@ -27,19 +31,22 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-MARKS = ROOT / "spec/fidelity/android.json"
-LAYOUT_MARKS = ROOT / "spec/fidelity/android-layout.json"
 LAYOUT_TOLERANCE_DP = 2.0
 LAYOUT_SLACK = 0.3  # dp
-GOLDENS = ROOT / "spec/goldens/android"
+# compare_screens.py options per platform: iOS screenshots are 3x (480 "dpi" makes its dp a
+# point), carry no navigation bar to crop, and the home indicator is ignored.
+COMPARE_ARGS = {
+    "android": [],
+    "ios": ["--dpi", "480", "--ignore-top-px", "0", "--ignore-bottom-px", "102"],
+}
 SLACK = 0.05  # percentage points of run-to-run headroom before a mark must be lowered
 
 
-def measure(captured: Path, mode: str) -> dict[str, tuple[float | None, float, list[str]]]:
+def measure(captured: Path, goldens: Path, mode: str, platform: str) -> dict[str, tuple[float | None, float, list[str]]]:
     """Per state: pixel difference %, largest element movement (dp), missing/unexpected IDs."""
     out = subprocess.run(
-        [sys.executable, str(HERE / "compare_screens.py"), str(captured / mode), str(GOLDENS / mode),
-         "--threshold-percent", "100", "--layout-tolerance-dp", "0"],
+        [sys.executable, str(HERE / "compare_screens.py"), str(captured / mode), str(goldens / mode),
+         "--threshold-percent", "100", "--layout-tolerance-dp", "0", *COMPARE_ARGS[platform]],
         capture_output=True, text=True,
     ).stdout
     results = {}
@@ -59,14 +66,18 @@ def measure(captured: Path, mode: str) -> dict[str, tuple[float | None, float, l
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("captured", type=Path)
+    p.add_argument("--platform", choices=sorted(COMPARE_ARGS), default="android")
     p.add_argument("--update", action="store_true")
     args = p.parse_args()
+    marks_file = ROOT / f"spec/fidelity/{args.platform}.json"
+    layout_marks_file = ROOT / f"spec/fidelity/{args.platform}-layout.json"
+    goldens = ROOT / f"spec/goldens/{args.platform}"
 
-    marks = json.loads(MARKS.read_text()) if MARKS.exists() else {}
-    layout_marks = json.loads(LAYOUT_MARKS.read_text()) if LAYOUT_MARKS.exists() else {}
+    marks = json.loads(marks_file.read_text()) if marks_file.exists() else {}
+    layout_marks = json.loads(layout_marks_file.read_text()) if layout_marks_file.exists() else {}
     failed = False
     for mode in sorted(d.name for d in args.captured.iterdir() if d.is_dir()):
-        for state, (pct, moved, layout_problems) in sorted(measure(args.captured, mode).items()):
+        for state, (pct, moved, layout_problems) in sorted(measure(args.captured, goldens, mode, args.platform).items()):
             key = f"{mode}/{state}"
             mark = marks.get(key)
             layout_mark = layout_marks.get(key)
@@ -95,8 +106,8 @@ def main() -> int:
             failed |= verdict != "ok"
             print(f"{verdict:4} {key}: {pct:.2f}%, moved {moved:.1f}dp")
     if args.update:
-        MARKS.write_text(json.dumps(dict(sorted(marks.items())), indent=2) + "\n")
-        LAYOUT_MARKS.write_text(json.dumps(dict(sorted(layout_marks.items())), indent=2) + "\n")
+        marks_file.write_text(json.dumps(dict(sorted(marks.items())), indent=2) + "\n")
+        layout_marks_file.write_text(json.dumps(dict(sorted(layout_marks.items())), indent=2) + "\n")
     return 1 if failed else 0
 
 

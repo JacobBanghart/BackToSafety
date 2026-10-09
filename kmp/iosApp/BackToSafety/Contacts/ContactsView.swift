@@ -295,7 +295,7 @@ struct ContactsView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(contact.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityIdentifier("contacts-item-\(index)-name")
+                        .rnID("contacts-item-\(index)-name", label: contact.name)
                     RNText(role + relationship, Typography.caption.spec, color: colors.textSecondary, lines: 1).padding(.top, 4)
                 }
                 .padding(.trailing, Space.md)

@@ -352,7 +352,8 @@ struct ProfileView: View {
             text: text, placeholder: placeholder, testID: testID,
             font: .systemFont(ofSize: 16 * rnFontMultiplier(dynamicType)), textColor: UIColor(colors.text),
             placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint),
-            insets: UIEdgeInsets(top: multiline ? 9 : 0, left: Space.md - 1, bottom: multiline ? 9 : 0, right: Space.md - 1),
+            insets: UIEdgeInsets(top: multiline ? 9 : 0, left: multiline ? Space.md : Space.md - 1, bottom: multiline ? 9 : 0,
+                                 right: multiline ? Space.md : Space.md - 1),
             multiline: multiline, keyboard: keyboard, capitalization: capitalization, format: format
         )
         .frame(height: multiline ? nil : 42)

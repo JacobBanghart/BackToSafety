@@ -83,12 +83,14 @@ struct ReadoutView: View {
                         RNText(t("sections.script.hint"), Typography.caption.spec, color: colors.textSecondary)
                             .padding(.top, Space.xxs).padding(.bottom, Space.xs)
                         RNText(script, TextSpec(size: 16, lineHeight: 22), color: colors.text)
-                            .accessibilityIdentifier("readout-script-text")
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
-                            RNText(t("sections.script.missingDetails", ["details": missing.joined(separator: ", ")]),
-                                   Typography.caption.spec.lineHeight(18), color: warning)
+                            let note = t("sections.script.missingDetails", ["details": missing.joined(separator: ", ")])
+                            RNText(note, Typography.caption.spec.lineHeight(18), color: warning)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .rnID("readout-script-missing", label: note)
                                 .padding(.top, Space.sm)
-                                .accessibilityIdentifier("readout-script-missing")
                         }
                     } else {
                         RNText(t("sections.script.collapsed"), Typography.caption.spec, color: colors.textSecondary)
@@ -316,6 +318,7 @@ struct ReadoutView: View {
                         SFIcon("phone.fill", 14, white)
                         RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyBold.spec, color: white)
                     }
+                    .fixedSize()
                     .padding(.horizontal, Space.md).padding(.vertical, Space.sm)
                     .background(RoundedRectangle(cornerRadius: Radius.md).fill(success))
                 }

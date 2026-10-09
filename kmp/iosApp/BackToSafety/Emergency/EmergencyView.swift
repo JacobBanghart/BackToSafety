@@ -3,7 +3,10 @@ import MessageUI
 import Shared
 import SwiftUI
 
-private enum EmergencyModal { case found, leave, noContacts, smsError }
+private enum EmergencyModal: Identifiable {
+    case found, leave, noContacts, smsError
+    var id: Self { self }
+}
 
 /// JS toLocaleTimeString() as Hermes formats it on iOS: the locale's "jms" skeleton.
 func localeTime(_ ms: Int64) -> String {
@@ -33,11 +36,8 @@ struct EmergencyView: View {
     private var emergencyNumber: String { tCommon("emergencyNumber") }
 
     var body: some View {
-        ZStack {
-            content
-                .accessibilityHidden(modal != nil) // as behind RN's Modal window
-            if let modal { modalView(modal) }
-        }
+        content
+        .rnModal(item: $modal) { modalView($0) }
         .background(colors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .task { await load() }
@@ -220,10 +220,10 @@ struct EmergencyView: View {
                     }
                 }
                 .frame(height: 6)
-                RNText(t("timer.stepsProgress", ["checked": checked.count, "total": steps.count]), Typography.caption.spec,
-                       color: .white.opacity(0.9), align: .center)
+                let progressText = t("timer.stepsProgress", ["checked": checked.count, "total": steps.count])
+                RNText(progressText, Typography.caption.spec, color: .white.opacity(0.9), align: .center)
                     .frame(maxWidth: .infinity)
-                    .accessibilityIdentifier("emergency-progress")
+                    .rnID("emergency-progress", label: progressText)
             }
             .padding(.top, Space.md)
         }
@@ -242,7 +242,7 @@ struct EmergencyView: View {
                 text: $wearing, placeholder: t("wearing.placeholder"), testID: "emergency-wearing-input",
                 font: .systemFont(ofSize: 16 * fontMultiplier), textColor: UIColor(colors.text),
                 placeholderColor: UIColor(Color(argb: Neutral.c400)), tint: UIColor(colors.tint),
-                insets: UIEdgeInsets(top: Space.sm - 1, left: Space.md - 1, bottom: Space.sm - 1, right: Space.md - 1),
+                insets: UIEdgeInsets(top: Space.sm - 1, left: Space.md, bottom: Space.sm - 1, right: Space.md),
                 multiline: true, lineHeight: 20 * fontMultiplier
             )
             .frame(minHeight: 62, maxHeight: 118)
@@ -251,6 +251,7 @@ struct EmergencyView: View {
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.inputBorder, lineWidth: 1))
             Button { showWearing = false } label: {
                 RNText(t("wearing.dismiss"), Typography.caption.spec, color: colors.textSecondary).padding(.vertical, Space.xs)
+                    .contentShape(Rectangle()).accessibilityElement(children: .combine)
             }
             .buttonStyle(.pressable)
             .accessibilityIdentifier("emergency-wearing-dismiss")
@@ -402,11 +403,12 @@ struct EmergencyView: View {
         let success = Color(argb: Semantic.success)
         func title(_ key: String) -> some View { RNText(t(key), Typography.title.spec, color: colors.text, align: .center) }
         func message(_ key: String) -> some View { RNText(t(key), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center) }
-        func button(_ label: String, _ testID: String, _ bg: Color, _ textColor: Color, outline: Bool = false, _ action: @escaping () -> Void) -> some View {
+        func button(_ label: String, _ testID: String, _ bg: Color, _ textColor: Color, outline: Bool = false, rowItem: Bool = false, _ action: @escaping () -> Void) -> some View {
             Button(action: action) {
                 RNText(label, Typography.bodyBold.spec, color: textColor)
                     .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
-                    .padding(.vertical, Space.md).padding(.horizontal, Space.lg)
+                    .padding(.vertical, Space.md + (outline ? 1 : 0)).padding(.horizontal, Space.lg + (outline ? 1 : 0))
+                    .frame(maxHeight: outline || rowItem ? .infinity : nil)
                     .background(RoundedRectangle(cornerRadius: Radius.md).fill(bg))
                     .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(outline ? colors.border : .clear, lineWidth: 1))
                     .contentShape(Rectangle())
@@ -431,11 +433,12 @@ struct EmergencyView: View {
                     message("modal.leave.message")
                     HStack(spacing: Space.md) {
                         button(t("modal.leave.stay"), "emergency-modal-leave-stay", .clear, colors.text, outline: true) { modal = nil }
-                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", colors.primary, white) {
+                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", colors.primary, white, rowItem: true) {
                             Analytics.shared.track(event: .emergencyLeave, properties: [:])
                             leave()
                         }
                     }
+                    .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Space.xs)
                     Button {
                         Analytics.shared.track(event: .emergencyCancelled, properties: ["checked_count": checked.count])
@@ -446,7 +449,9 @@ struct EmergencyView: View {
                             leave()
                         }
                     } label: {
-                        RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: Color(argb: Semantic.error)).padding(.vertical, Space.md)
+                        RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: Color(argb: Semantic.error))
+                            .padding(.vertical, Space.md)
+                            .contentShape(Rectangle()).accessibilityElement(children: .combine)
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("emergency-modal-leave-end")

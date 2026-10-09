@@ -182,6 +182,7 @@ struct HomeView: View {
                         RNText(t("emergencyInfo.script911"), Typography.caption.spec.weight(600), color: colors.tint)
                         SFIcon("chevron.right", 14, colors.tint)
                     }
+                    .fixedSize()
                     .padding(.horizontal, Space.sm).padding(.vertical, Space.xs)
                     .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
                 }

@@ -55,20 +55,11 @@ private func uiWeight(_ w: Int) -> UIFont.Weight {
     }
 }
 
-private func swiftUIWeight(_ w: Int) -> Font.Weight {
-    switch w {
-    case ..<350: return .light
-    case ..<450: return .regular
-    case ..<550: return .medium
-    case ..<650: return .semibold
-    case ..<750: return .bold
-    default: return .heavy
-    }
-}
-
-/// Text laid out the way RN's iOS text is (RCTAttributedTextUtils): every line exactly the
-/// line height, the glyphs centered in it (a baseline offset of half the spare height),
-/// sizes scaled by RN's Dynamic Type multiplier.
+/// Text laid out the way RN's iOS text is: an attributed string as RCTAttributedTextUtils
+/// builds it (every line exactly the line height, the glyphs centered in it by a baseline
+/// offset of half the spare height, sizes scaled by RN's Dynamic Type multiplier), measured
+/// and drawn with TextKit as RCTTextLayoutManager does. SwiftUI's Text breaks lines
+/// differently (it pushes a word down rather than leave one alone on the last line).
 struct RNText: View {
     let text: String
     let spec: TextSpec
@@ -86,20 +77,95 @@ struct RNText: View {
     }
 
     var body: some View {
+        TextKitText(string: attributed, lines: lines ?? 0)
+            .accessibilityElement()
+            .accessibilityLabel(text)
+            .accessibilityAddTraits(.isStaticText)
+    }
+
+    private var attributed: NSAttributedString {
         let m = rnFontMultiplier(dynamicType)
-        let size = spec.size * m
+        var font = UIFont.systemFont(ofSize: spec.size * m, weight: uiWeight(spec.weight))
+        if spec.italic, let italic = font.fontDescriptor.withSymbolicTraits(.traitItalic) {
+            font = UIFont(descriptor: italic, size: font.pointSize)
+        }
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = switch align {
+        case .center: .center
+        case .trailing: .right
+        default: .natural
+        }
+        var attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor(color)]
+        if spec.letterSpacing != 0 { attributes[.kern] = spec.letterSpacing * m }
         let lineHeight = spec.lineHeight * m
-        let fontLineHeight = UIFont.systemFont(ofSize: size, weight: uiWeight(spec.weight)).lineHeight
-        let spare = max(0, lineHeight - fontLineHeight)
-        Text(text)
-            .font(.system(size: size, weight: swiftUIWeight(spec.weight)))
-            .italic(spec.italic)
-            .kerning(spec.letterSpacing * m)
-            .foregroundStyle(color)
-            .multilineTextAlignment(align)
-            .lineLimit(lines)
-            .lineSpacing(spare)
-            .padding(.vertical, spare / 2)
+        if lineHeight > 0 {
+            paragraph.minimumLineHeight = lineHeight
+            paragraph.maximumLineHeight = lineHeight
+            if lineHeight >= font.lineHeight { attributes[.baselineOffset] = (lineHeight - font.lineHeight) / 2 }
+        }
+        attributes[.paragraphStyle] = paragraph
+        return NSAttributedString(string: text, attributes: attributes)
+    }
+}
+
+/// RCTTextLayoutManager: a TextKit stack with no line fragment padding, tail truncation when
+/// the lines are limited, and sizes rounded up to whole pixels.
+private struct TextKitText: UIViewRepresentable {
+    let string: NSAttributedString
+    let lines: Int
+
+    func makeUIView(context _: Context) -> TextKitView {
+        let view = TextKitView()
+        view.backgroundColor = .clear
+        view.isOpaque = false
+        view.contentMode = .redraw
+        view.isAccessibilityElement = false
+        return view
+    }
+
+    func updateUIView(_ view: TextKitView, context _: Context) {
+        if view.string != string || view.lines != lines {
+            view.string = string
+            view.lines = lines
+            view.setNeedsDisplay()
+        }
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView _: TextKitView, context _: Context) -> CGSize? {
+        let size = TextKitView.layout(string, lines: lines, width: proposal.width ?? .greatestFiniteMagnitude).used.size
+        let scale = UIScreen.main.scale
+        return CGSize(width: ceil(size.width * scale) / scale, height: ceil(size.height * scale) / scale)
+    }
+}
+
+private final class TextKitView: UIView {
+    var string = NSAttributedString()
+    var lines = 0
+
+    static func layout(_ string: NSAttributedString, lines: Int, width: CGFloat)
+        -> (manager: NSLayoutManager, container: NSTextContainer, storage: NSTextStorage, used: CGRect)
+    {
+        let container = NSTextContainer(size: CGSize(width: width, height: .greatestFiniteMagnitude))
+        container.lineFragmentPadding = 0
+        container.maximumNumberOfLines = lines
+        container.lineBreakMode = lines > 0 ? .byTruncatingTail : .byClipping
+        let manager = NSLayoutManager()
+        manager.usesFontLeading = false
+        manager.addTextContainer(container)
+        let storage = NSTextStorage(attributedString: string)
+        storage.addLayoutManager(manager)
+        manager.ensureLayout(for: container)
+        return (manager, container, storage, manager.usedRect(for: container))
+    }
+
+    override func draw(_: CGRect) {
+        // The layout manager holds its storage weakly: keep it alive while drawing.
+        let (manager, container, storage, _) = TextKitView.layout(string, lines: lines, width: bounds.width)
+        withExtendedLifetime(storage) {
+            let range = manager.glyphRange(for: container)
+            manager.drawBackground(forGlyphRange: range, at: .zero)
+            manager.drawGlyphs(forGlyphRange: range, at: .zero)
+        }
     }
 }
 
@@ -121,5 +187,19 @@ struct SFIcon: View {
             .scaledToFit()
             .frame(width: size, height: size)
             .foregroundStyle(color)
+    }
+}
+
+extension View {
+    /// An RN testID on a whole box: the element (and its bounds) is this view's frame, not
+    /// just the glyphs of the text inside it.
+    func rnID(_ id: String, label: String) -> some View {
+        accessibilityHidden(true).overlay {
+            Color.clear.contentShape(Rectangle())
+                .accessibilityElement()
+                .accessibilityLabel(label)
+                .accessibilityAddTraits(.isStaticText)
+                .accessibilityIdentifier(id)
+        }
     }
 }

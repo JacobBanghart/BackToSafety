@@ -36,16 +36,24 @@ for mode in ${MODES:-light dark large-text}; do
       continue
     }
     # `maestro hierarchy` sometimes answers from another simulator when several Maestro sessions
-    # run at once: check it holds the testID the state flow last asserted, or ask again.
+    # run at once, and a screen can still be settling (a Dynamic Type re-render, the keyboard
+    # going away). Keep a layout only when it holds the testID the state flow last asserted and
+    # reads the same before and after the screenshot; otherwise ask again.
     anchor="$(grep -oE 'id: [a-z0-9_-]+' "$ROOT/states/$state.yaml" | tail -1 | cut -d' ' -f2)"
-    for attempt in 1 2 3 4 5; do
+    layout() {
       maestro --device "$U" hierarchy >"$OUT/$mode/$state.hierarchy.json" 2>/dev/null || true
-      python3 "$ROOT/extract_layout_ios.py" "$OUT/$mode/$state.hierarchy.json" >"$OUT/$mode/$state.layout.json" 2>/dev/null || true
-      grep -q "\"$anchor\"" "$OUT/$mode/$state.layout.json" && break
-      [ "$attempt" = 5 ] && echo "   layout never showed $anchor (see $OUT/$mode/$state.layout.json)"
-      sleep 2
+      python3 "$ROOT/extract_layout_ios.py" "$OUT/$mode/$state.hierarchy.json" 2>/dev/null || true
+    }
+    before="$(layout)"
+    for attempt in 1 2 3 4 5 6; do
+      sleep 1
+      xcrun simctl io "$U" screenshot --type=png "$OUT/$mode/$state.png" >/dev/null 2>&1
+      after="$(layout)"
+      if [ "$before" = "$after" ] && grep -q "\"$anchor\"" <<<"$after"; then break; fi
+      [ "$attempt" = 6 ] && echo "   layout never settled with $anchor (see $OUT/$mode/$state.layout.json)"
+      before="$after"
     done
-    xcrun simctl io "$U" screenshot --type=png "$OUT/$mode/$state.png" >/dev/null 2>&1
+    printf '%s\n' "$after" >"$OUT/$mode/$state.layout.json"
     [ -n "${KEEP_XML:-}" ] || rm "$OUT/$mode/$state.hierarchy.json"
   done
 done

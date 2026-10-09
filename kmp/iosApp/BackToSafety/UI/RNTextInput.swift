@@ -72,9 +72,10 @@ struct RNTextInput: UIViewRepresentable {
             area.textContainerInset = insets
             area.keyboardType = keyboard
             area.autocapitalizationType = capitalization
-            area.placeholder.text = placeholder
-            area.placeholder.font = font
-            area.placeholder.textColor = placeholderColor
+            var placeholderAttributes = attributes
+            placeholderAttributes[.foregroundColor] = placeholderColor
+            area.placeholder.attributedText = NSAttributedString(string: placeholder, attributes: placeholderAttributes)
+            area.setNeedsLayout()
             area.placeholder.isHidden = !text.isEmpty
         }
     }
@@ -140,6 +141,7 @@ final class PlaceholderTextView: UITextView {
         super.layoutSubviews()
         let inset = textContainerInset
         let width = bounds.width - inset.left - inset.right
+        placeholder.preferredMaxLayoutWidth = width
         placeholder.frame = CGRect(x: inset.left, y: inset.top, width: width, height: placeholder.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude)).height)
     }
 }

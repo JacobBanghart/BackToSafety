@@ -79,12 +79,8 @@ struct DestinationsView: View {
                     Spacer()
                 }
             }
-            .accessibilityHidden(viewing != nil)
-            if let viewing {
-                detail(viewing).transition(.move(edge: .bottom)).zIndex(1)
-            }
         }
-        .animation(.easeOut(duration: 0.3), value: viewing?.id)
+        .rnModal(item: $viewing, fade: false) { detail($0) }
         .background(colors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .backGuard(unsaved && !saving)
@@ -301,7 +297,7 @@ struct DestinationsView: View {
                             categoryIcon(d, 16)
                             RNText(d.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .accessibilityIdentifier("destinations-item-\(index)-name")
+                                .rnID("destinations-item-\(index)-name", label: d.name)
                         }
                         HStack(spacing: Space.sm) {
                             riskBadge(d)
@@ -492,3 +488,5 @@ struct DestinationsView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 }
+
+extension DestinationEntity: @retroactive Identifiable {}

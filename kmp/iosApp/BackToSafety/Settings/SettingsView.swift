@@ -194,7 +194,8 @@ struct SettingsView: View {
     private func option(_ label: String, _ testID: String, _ selected: Bool, _ icon: String?, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 0) {
-                if let icon { RNText(icon, TextSpec(size: 24, lineHeight: 24), color: colors.text).padding(.bottom, Space.xs) }
+                // The emoji font is taller than the line; RN clamps it to the 24pt line height.
+                if let icon { RNText(icon, TextSpec(size: 24, lineHeight: 24), color: colors.text).frame(height: 24).padding(.bottom, Space.xs) }
                 RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.tint : colors.text)
             }
             .frame(maxWidth: .infinity)
