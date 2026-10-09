@@ -20,32 +20,66 @@ Multiplatform core. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - Familiar places: where to look first, with risk levels, drag to reorder
 - Light and dark themes; text that scales with Dynamic Type and font size
 
-## Building
+## Setup
 
-Tools come from `mise.toml` (`mise install`): Java 17, the Android SDK, Maestro, gitleaks.
-
-```sh
-mise run android                       # build and run the Android app on a phone or emulator
-cd kmp && ./gradlew :shared:jvmTest     # shared core tests (vectors, store, migrations, parity)
-python3 spec/check.py                   # contracts: testIDs in both apps, feature coverage
-mise run lint                          # ktlint and SwiftFormat (FIX=1 to fix)
-```
-
-iOS needs the Mac (Xcode and XcodeGen; `mise run ios:setup` checks):
+Tools are pinned in `mise.toml` and installed by [mise](https://mise.jdx.dev): Java 17, the
+Android SDK, Maestro, ktlint, SwiftFormat and gitleaks.
 
 ```sh
-mise run ios                           # build and run on a simulator
-cd kmp/iosApp && xcodegen generate && open BackToSafety.xcodeproj   # or work in Xcode; Run rebuilds the Kotlin core
-mise run ios:remote ios:flows          # from another machine: sync this copy to the Mac, run a task there
+curl https://mise.run | sh          # or: brew install mise (see mise.jdx.dev for shell activation)
+mise trust && mise install          # the pinned tools
+git config core.hooksPath .githooks # pre-commit secret scan, pre-push contract check
+mise tasks                          # every task below, with descriptions
 ```
 
-Device checks (both build the app, start devices, run, and shut down):
+Not installed by mise:
 
-```sh
-mise run android:flows      mise run ios:flows        # every Maestro flow plus the reorder gestures
-mise run android:fidelity   mise run ios:fidelity     # every screen in light/dark/large text vs the goldens
-mise run ios:runner                                   # make sure the Mac's release runner is up
-```
+| Needed for | What |
+| --- | --- |
+| Contract checks, screenshot comparison (`spec/check.py`, `maestro/*.py`) | Python 3, with [Pillow](https://pypi.org/project/pillow/) for the comparisons |
+| `ios:runner`, `ios:snapshots` | The [GitHub CLI](https://cli.github.com) (`gh`), signed in |
+| Android emulators on Linux | KVM (`/dev/kvm` writable, or the `kvm` group) |
+| Anything iOS (on the Mac) | Xcode with an iOS simulator runtime, and XcodeGen (`brew install xcodegen`); `mise run ios:setup` checks both |
+| `ios:remote` from another machine | SSH access to the Mac; `NIJII_MAC` (default `jacob@10.1.0.17`) and `NIJII_MAC_DIR` (default `nijii-remote`) say where |
+
+## Tasks
+
+Fast, no device (CI runs these on every push):
+
+| Task | What it does |
+| --- | --- |
+| `mise run check` | Spec contracts (`spec/check.py`) and the shared core's tests |
+| `mise run lint` | ktlint and SwiftFormat; `FIX=1` fixes what they can |
+| `mise run snapshots` | Android screen snapshots against `src/test/snapshots`; `RECORD=1` re-records |
+| `mise run ios:snapshots` | Copies the iOS snapshots CI recorded for this commit into the repo (iOS snapshots run on CI's Mac) |
+
+Run the apps:
+
+| Task | What it does |
+| --- | --- |
+| `mise run android` | Build and run the Android app on a connected phone, or an emulator it starts (`android:run`) |
+| `mise run android:emulator` | Start an emulator with a window (creates it the first time) |
+| `mise run android:sdk` | Install the SDK packages the build needs (the other Android tasks do this first) |
+| `mise run ios` | Build and run the iOS app on a simulator (`ios:run`; on the Mac) |
+| `mise run ios:sim [N]` | Boot N simulators with the harness's fixed status bar and contact |
+| `mise run ios:setup` | Check the Mac has Xcode, XcodeGen and a simulator runtime |
+
+To work in Xcode instead: `cd kmp/iosApp && xcodegen generate && open BackToSafety.xcodeproj`.
+Its first build phase rebuilds the shared Kotlin core, so Run always picks up Kotlin changes.
+
+On devices (build the app, start fresh devices, run, shut down; `DEVICES=n` sets how many):
+
+| Task | What it does |
+| --- | --- |
+| `mise run android:flows` / `ios:flows` | Every Maestro flow and the drag-to-reorder gestures |
+| `mise run android:fidelity` / `ios:fidelity` | Every screen in light, dark and large text against the goldens |
+
+The Mac:
+
+| Task | What it does |
+| --- | --- |
+| `mise run ios:remote <task>` | From another machine: copy this working copy to the Mac and run a task there (says so quickly when the Mac is asleep) |
+| `mise run ios:runner` | Check the Mac's GitHub Actions runner (iOS releases) and start it if the Mac is up |
 
 ## Repository
 

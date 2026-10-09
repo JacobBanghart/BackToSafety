@@ -4,13 +4,13 @@ The device side of `PARITY_PLAN.md`. The same YAML drives the Android (Compose) 
 (SwiftUI) apps, so it selects **only by testID** (`spec/testids.json`), never by coordinates. It matches visible text only where the text is the thing
 being tested.
 
-## One-time setup (devbox, Android)
+## Setup
 
-- Android SDK in `~/Android/Sdk`: `platform-tools`, `emulator`, `platforms;android-36`,
-  `build-tools;36.0.0`, `system-images;android-36;google_apis;x86_64`
-- AVD: `avdmanager create avd -n nijii-pixel7 -k "system-images;android-36;google_apis;x86_64" -d pixel_7`,
-  then `hw.ramSize=4096M` and `hw.cpu.ncore=8` in its `config.ini` (at 2 GB, adb drops under load)
-- `/dev/kvm` usable (the devbox gets it from CT 201's `dev0`); Maestro comes from `mise.toml`
+The `mise` tasks in the main README (`android:flows`, `android:fidelity`, `ios:flows`,
+`ios:fidelity`) wrap everything below; use them unless you need one step on its own. The
+Android SDK and Maestro come from `mise.toml`, and `start-emulator.sh` creates its
+`nijii-pixel7` emulator (API 36, 4 GB) the first time. Linux needs `/dev/kvm` usable (the devbox
+gets it from CT 201's `dev0`). iOS needs the Mac with Xcode and XcodeGen.
 
 ## Running
 
