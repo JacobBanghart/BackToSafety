@@ -39,6 +39,11 @@ final class AppModel: ObservableObject {
         onboarded = (try? await store.isOnboarded())?.boolValue ?? false
     }
 
+    func setLanguage(_ value: String) {
+        language = value
+        Task { try? await store.putSetting(key: "language_preference", value: value) }
+    }
+
     func setTheme(_ value: String) {
         themePreference = value
         Task { try? await store.putSetting(key: "theme_preference", value: value) }
@@ -119,7 +124,7 @@ struct RootView: View {
                 NavigationStack(path: $model.path) {
                     Group {
                         if onboarded {
-                            HomePlaceholder()
+                            HomeView(t: model.t("home"), emergencyNumber: model.t("common")("emergencyNumber"))
                         } else {
                             WelcomeView(t: model.t("onboarding"))
                         }
@@ -149,6 +154,12 @@ extension RootView {
         case .appearance: AppearanceView(t: onboarding)
         case .contact: ContactStepView(t: onboarding, tCommon: common)
         case .complete: CompleteView(t: onboarding)
+        case .emergency: EmergencyView(t: model.t("emergency"), tCommon: common)
+        case .readout: ReadoutView(t: model.t("readout"), tCommon: common)
+        case .settings: SettingsView(t: model.t("settings"), tCommon: common)
+        case .contacts: ContactsView(t: model.t("contacts"), tCommon: common)
+        case .destinations: DestinationsView(t: model.t("destinations"), tCommon: common)
+        case .profile: ProfileView(t: model.t("profile"), tCommon: common)
         default: NotPortedView(title: "\(route)")
         }
     }
@@ -160,15 +171,6 @@ struct NotPortedView: View {
     @Environment(\.appColors) private var colors
     var body: some View {
         ZStack { colors.background.ignoresSafeArea(); RNText(title, Typography.title.spec, color: colors.text) }
-            .toolbar(.hidden, for: .navigationBar)
-    }
-}
-
-struct HomePlaceholder: View {
-    @Environment(\.appColors) private var colors
-    var body: some View {
-        ZStack { colors.background.ignoresSafeArea(); RNText("home", Typography.title.spec, color: colors.text) }
-            .accessibilityIdentifier("home-start-emergency")
             .toolbar(.hidden, for: .navigationBar)
     }
 }

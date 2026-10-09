@@ -17,8 +17,23 @@ struct RNTextInput: UIViewRepresentable {
     var keyboard: UIKeyboardType = .default
     var capitalization: UITextAutocapitalizationType = .sentences
     var maxLength: Int? = nil
+    /// An RN lineHeight on the input (only multiline inputs set one on iOS).
+    var lineHeight: CGFloat? = nil
     var format: ((String) -> String)? = nil
     var onFocus: (Bool) -> Void = { _ in }
+
+    /// The text attributes RN gives an input with a lineHeight (RCTAttributedTextUtils).
+    fileprivate var attributes: [NSAttributedString.Key: Any] {
+        var attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: textColor]
+        if let lineHeight {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.minimumLineHeight = lineHeight
+            paragraph.maximumLineHeight = lineHeight
+            attrs[.paragraphStyle] = paragraph
+            attrs[.baselineOffset] = max(0, (lineHeight - font.lineHeight) / 2)
+        }
+        return attrs
+    }
 
     func makeUIView(context: Context) -> UIView {
         if multiline {
@@ -51,9 +66,8 @@ struct RNTextInput: UIViewRepresentable {
             field.autocorrectionType = keyboard == .default ? .default : .no
             field.attributedPlaceholder = NSAttributedString(string: placeholder, attributes: [.foregroundColor: placeholderColor, .font: font])
         } else if let area = view as? PlaceholderTextView {
-            if area.text != text { area.text = text }
-            area.font = font
-            area.textColor = textColor
+            area.typingAttributes = attributes
+            if area.text != text { area.attributedText = NSAttributedString(string: text, attributes: attributes) }
             area.tintColor = tint
             area.textContainerInset = insets
             area.keyboardType = keyboard
