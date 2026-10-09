@@ -88,6 +88,9 @@ jobs:
           for f in Assets.car SplashScreen.storyboardc PrivacyInfo.xcprivacy locales/en/common.json logo-full.png; do
             test -e "$APP/$f" || { echo "missing $f"; exit 1; }
           done
-          test "$(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist")" = "$(plutil -extract version raw version.json)"
-          test "$(plutil -extract CFBundleVersion raw "$APP/Info.plist")" = "$(plutil -extract ios.buildNumber raw version.json)"
-          test "$(plutil -extract CFBundleIconName raw "$APP/Info.plist")" = AppIcon
+          check() { [ "$2" = "$3" ] || { echo "$1: $2, expected $3"; exit 1; }; }
+          plist() { plutil -extract "$1" raw "$APP/Info.plist" 2>&1; }
+          json() { python3 -c "import json,sys; d=json.load(open('version.json')); print(eval(sys.argv[1]))" "$1"; }
+          check version "$(plist CFBundleShortVersionString)" "$(json 'd["version"]')"
+          check build "$(plist CFBundleVersion)" "$(json 'd["ios"]["buildNumber"]')"
+          check icon "$(plist CFBundleIconName)" AppIcon
