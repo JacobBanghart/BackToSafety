@@ -14,6 +14,11 @@ in `kmp/shared` rather than in either UI. What the apps must agree on lives in `
 - Strings: `i18n/locales/` (both apps read the same JSON).
 - Logic with fixed inputs and outputs: `spec/vectors/`, run by `VectorsTest`.
 
+## Before pushing
+
+`mise run check` (contracts and the shared core's tests) and `mise run lint` (ktlint,
+SwiftFormat; `FIX=1` fixes). CI runs both, and builds both apps.
+
 ## Keyboard avoidance
 
 Every screen with a text field keeps its focused field and its bottom button above the

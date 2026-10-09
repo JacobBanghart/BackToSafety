@@ -26,6 +26,21 @@ jobs:
       - name: Check
         run: python3 spec/check.py
 
+  lint:
+    name: Lint (ktlint, SwiftFormat)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup linters (mise.toml)
+        uses: jdx/mise-action@v5
+        with:
+          install_args: java ktlint swiftformat
+
+      - name: Lint
+        run: mise run lint
+
   kotlin-core:
     name: Kotlin core (spec vectors)
     runs-on: ubuntu-latest

@@ -28,6 +28,7 @@ Tools come from `mise.toml` (`mise install`): Java 17, the Android SDK, Maestro,
 mise run android                       # build and run the Android app on a phone or emulator
 cd kmp && ./gradlew :shared:jvmTest     # shared core tests (vectors, store, migrations, parity)
 python3 spec/check.py                   # contracts: testIDs in both apps, feature coverage
+mise run lint                          # ktlint and SwiftFormat (FIX=1 to fix)
 ```
 
 iOS needs the Mac (Xcode and XcodeGen; `mise run ios:setup` checks):

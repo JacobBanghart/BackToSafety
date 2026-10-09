@@ -1,10 +1,6 @@
 package com.backtosafety.app.onboarding
 
 import android.content.Context
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
-import com.backtosafety.app.ui.trackStep
-import com.backtosafety.app.ui.TrackStepViewed
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,19 +41,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.backtosafety.app.ui.LocalAppColors
-import com.backtosafety.app.ui.rememberPhotoPicker
-import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.SkipButton
+import com.backtosafety.app.ui.TrackStepViewed
+import com.backtosafety.app.ui.rememberPhotoPicker
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.trackStep
+import com.backtosafety.app.ui.udp
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.invoke
-import java.io.File
 import kotlinx.coroutines.launch
+import java.io.File
 
 /** Port of app/onboarding/photo.tsx. */
 @Composable

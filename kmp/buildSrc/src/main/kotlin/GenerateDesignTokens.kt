@@ -13,6 +13,7 @@ import org.gradle.api.tasks.TaskAction
  */
 abstract class GenerateDesignTokens : DefaultTask() {
     @get:InputFile abstract val spec: RegularFileProperty
+
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
 
     @TaskAction

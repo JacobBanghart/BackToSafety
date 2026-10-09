@@ -46,12 +46,12 @@ func rnFontMultiplier(_ size: DynamicTypeSize) -> CGFloat {
 
 private func uiWeight(_ w: Int) -> UIFont.Weight {
     switch w {
-    case ..<350: return .light
-    case ..<450: return .regular
-    case ..<550: return .medium
-    case ..<650: return .semibold
-    case ..<750: return .bold
-    default: return .heavy
+    case ..<350: .light
+    case ..<450: .regular
+    case ..<550: .medium
+    case ..<650: .semibold
+    case ..<750: .bold
+    default: .heavy
     }
 }
 
@@ -65,7 +65,7 @@ struct RNText: View {
     let spec: TextSpec
     var color: Color
     var align: TextAlignment = .leading
-    var lines: Int? = nil
+    var lines: Int?
     @Environment(\.dynamicTypeSize) private var dynamicType
 
     init(_ text: String, _ spec: TextSpec, color: Color, align: TextAlignment = .leading, lines: Int? = nil) {
@@ -144,8 +144,7 @@ private final class TextKitView: UIView {
     var lines = 0
 
     static func layout(_ string: NSAttributedString, lines: Int, width: CGFloat)
-        -> (manager: NSLayoutManager, container: NSTextContainer, storage: NSTextStorage, used: CGRect)
-    {
+        -> (manager: NSLayoutManager, container: NSTextContainer, storage: NSTextStorage, used: CGRect) {
         let container = NSTextContainer(size: CGSize(width: width, height: .greatestFiniteMagnitude))
         container.lineFragmentPadding = 0
         container.maximumNumberOfLines = lines

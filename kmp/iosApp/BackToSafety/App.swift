@@ -116,9 +116,9 @@ struct RootView: View {
 
     private var scheme: ColorScheme? {
         switch model.themePreference {
-        case "dark": return .dark
-        case "light": return .light
-        default: return nil
+        case "dark": .dark
+        case "light": .light
+        default: nil
         }
     }
 

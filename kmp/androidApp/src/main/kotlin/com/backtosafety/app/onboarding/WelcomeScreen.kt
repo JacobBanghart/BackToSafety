@@ -1,7 +1,7 @@
 package com.backtosafety.app.onboarding
 
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
-import com.backtosafety.app.ui.TrackStepViewed
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -39,11 +39,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import android.graphics.BitmapFactory
 import com.backtosafety.app.ui.LocalAppColors
-import com.backtosafety.app.ui.udp
+import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.udp
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
 import com.backtosafety.core.invoke

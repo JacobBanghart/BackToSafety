@@ -1,8 +1,6 @@
 package com.backtosafety.app.home
 
 import android.graphics.BitmapFactory
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -38,8 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -53,12 +51,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
-import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ActiveEmergency
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Profile
@@ -68,8 +68,8 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.secondsRemaining
-import kotlin.time.Instant
 import kotlinx.coroutines.delay
+import kotlin.time.Instant
 
 private val EMERGENCY_IDLE_BG = Color(0xFFEF4444)
 private val EMERGENCY_ACTIVE_BG = Color(0xFFB91C1C)

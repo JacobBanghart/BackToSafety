@@ -2,19 +2,19 @@ package com.backtosafety.core.data
 
 import com.backtosafety.core.ActiveEmergency
 import com.backtosafety.core.Profile
-import com.backtosafety.core.db.IncidentEntity
-import com.backtosafety.core.parseActiveEmergency
-import com.backtosafety.core.serializeActiveEmergency
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonPrimitive
 import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DestinationEntity
+import com.backtosafety.core.db.IncidentEntity
 import com.backtosafety.core.db.OnboardingStepEntity
 import com.backtosafety.core.db.ProfileEntity
 import com.backtosafety.core.db.SafetyCheckEntity
+import com.backtosafety.core.parseActiveEmergency
+import com.backtosafety.core.serializeActiveEmergency
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * The app's data, with the RN app's semantics (spec/storage.md): what's seeded on every
@@ -46,10 +46,6 @@ class Store(private val db: AppDatabase) {
     }
 
     /**
-     * Adds a contact at [sortOrder], or after the last one (database/contacts.native.ts).
-     * Room would write created_at as NULL over the column default, so it's stamped here.
-     */
-    /**
      * A partial profile save by field name (the Profile property names), as the RN screens
      * save: given fields are set (null clears), the rest kept. The SwiftUI app saves this way.
      */
@@ -57,6 +53,10 @@ class Store(private val db: AppDatabase) {
         values.entries.fold(profile) { p, (field, value) -> p.with(field, value) }
     }
 
+    /**
+     * Adds a contact at [sortOrder], or after the last one (database/contacts.native.ts).
+     * Room would write created_at as NULL over the column default, so it's stamped here.
+     */
     suspend fun addContact(contact: ContactEntity, sortOrder: Int? = null): Long {
         val now = sqliteNow()
         return db.contacts().insert(
@@ -215,31 +215,31 @@ internal fun sqliteNow(): String =
     kotlin.time.Clock.System.now().toString().substring(0, 19).replace('T', ' ')
 
 private fun ProfileEntity.with(field: String, value: String?): ProfileEntity = when (field) {
-            "name" -> copy(name = value ?: "")
-            "nickname" -> copy(nickname = value)
-            "dateOfBirth" -> copy(dateOfBirth = value)
-            "photoUri" -> copy(photoUri = value)
-            "height" -> copy(height = value)
-            "weight" -> copy(weight = value)
-            "hairColor" -> copy(hairColor = value)
-            "eyeColor" -> copy(eyeColor = value)
-            "identifyingMarks" -> copy(identifyingMarks = value)
-            "medicalConditions" -> copy(medicalConditions = value)
-            "medications" -> copy(medications = value)
-            "allergies" -> copy(allergies = value)
-            "cognitiveStatus" -> copy(cognitiveStatus = value)
-            "dominantHand" -> copy(dominantHand = value)
-            "mobilityLevel" -> copy(mobilityLevel = value)
-            "communicationPreference" -> copy(communicationPreference = value)
-            "escalationSigns" -> copy(escalationSigns = value)
-            "deescalationTechniques" -> copy(deescalationTechniques = value)
-            "approachGuidance" -> copy(approachGuidance = value)
-            "likes" -> copy(likes = value)
-            "dislikesTriggers" -> copy(dislikesTriggers = value)
-            "safeWord" -> copy(safeWord = value)
-            "locativeDeviceInfo" -> copy(locativeDeviceInfo = value)
-            "idBracelets" -> copy(idBracelets = value)
-            "medicAlertId" -> copy(medicAlertId = value)
-            "medicAlertHotline" -> copy(medicAlertHotline = value)
+    "name" -> copy(name = value ?: "")
+    "nickname" -> copy(nickname = value)
+    "dateOfBirth" -> copy(dateOfBirth = value)
+    "photoUri" -> copy(photoUri = value)
+    "height" -> copy(height = value)
+    "weight" -> copy(weight = value)
+    "hairColor" -> copy(hairColor = value)
+    "eyeColor" -> copy(eyeColor = value)
+    "identifyingMarks" -> copy(identifyingMarks = value)
+    "medicalConditions" -> copy(medicalConditions = value)
+    "medications" -> copy(medications = value)
+    "allergies" -> copy(allergies = value)
+    "cognitiveStatus" -> copy(cognitiveStatus = value)
+    "dominantHand" -> copy(dominantHand = value)
+    "mobilityLevel" -> copy(mobilityLevel = value)
+    "communicationPreference" -> copy(communicationPreference = value)
+    "escalationSigns" -> copy(escalationSigns = value)
+    "deescalationTechniques" -> copy(deescalationTechniques = value)
+    "approachGuidance" -> copy(approachGuidance = value)
+    "likes" -> copy(likes = value)
+    "dislikesTriggers" -> copy(dislikesTriggers = value)
+    "safeWord" -> copy(safeWord = value)
+    "locativeDeviceInfo" -> copy(locativeDeviceInfo = value)
+    "idBracelets" -> copy(idBracelets = value)
+    "medicAlertId" -> copy(medicAlertId = value)
+    "medicAlertHotline" -> copy(medicAlertHotline = value)
     else -> error("unknown profile field: $field")
 }

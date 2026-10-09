@@ -10,12 +10,12 @@ struct FormTextInput: View {
     @Binding var text: String
     let testID: String
     var placeholder = ""
-    var hint: String? = nil
+    var hint: String?
     var required = false
     var multiline = false
     var keyboard: UIKeyboardType = .default
     var capitalization: UITextAutocapitalizationType = .sentences
-    var format: ((String) -> String)? = nil
+    var format: ((String) -> String)?
     @State private var focused = false
     @Environment(\.appColors) private var colors
     @Environment(\.dynamicTypeSize) private var dynamicType
@@ -147,8 +147,8 @@ extension View {
 struct AppAlert: Identifiable {
     let id = UUID()
     let title: String
-    var message: String? = nil
-    var cancel: String? = nil
+    var message: String?
+    var cancel: String?
     var confirm = "OK"
     var destructive = false
     var action: () -> Void = {}
@@ -190,7 +190,8 @@ struct ReorderableColumn<Item, ID: Hashable, Content: View>: View {
                 let dragging = key == draggingID
                 content(item, index, dragging)
                     .background(GeometryReader { g in Color.clear.onAppear { heights[key] = g.size.height }
-                        .onChange(of: g.size.height) { _, h in heights[key] = h } })
+                            .onChange(of: g.size.height) { _, h in heights[key] = h }
+                    })
                     .offset(y: dragging ? offset : 0)
                     .zIndex(dragging ? 1 : 0)
                     .gesture(LongPressGesture(minimumDuration: 0.5).sequenced(before: DragGesture(minimumDistance: 0))

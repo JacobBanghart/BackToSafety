@@ -89,7 +89,7 @@ struct AppInput: View {
     var multiline = false
     var keyboard: UIKeyboardType = .default
     var capitalization: UITextAutocapitalizationType = .sentences
-    var format: ((String) -> String)? = nil
+    var format: ((String) -> String)?
     @Environment(\.appColors) private var colors
     @Environment(\.dynamicTypeSize) private var dynamicType
 
@@ -113,9 +113,9 @@ struct AppInput: View {
 struct PrimaryButton: View {
     let label: String
     let testID: String
-    var spec: TextSpec = TextSpec(size: 18, lineHeight: 24, weight: 600)
+    var spec: TextSpec = .init(size: 18, lineHeight: 24, weight: 600)
     var enabled = true
-    var dimmed: Bool? = nil
+    var dimmed: Bool?
     var verticalPadding: CGFloat = Space.md
     let action: () -> Void
     @Environment(\.appColors) private var colors

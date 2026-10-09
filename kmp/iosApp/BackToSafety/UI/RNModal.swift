@@ -39,7 +39,7 @@ private struct FadeIn<Content: View>: View {
 
 extension View {
     func rnModal<Item: Identifiable, Body: View>(item: Binding<Item?>, fade: Bool = true,
-                                                @ViewBuilder content: @escaping (Item) -> Body) -> some View {
+                                                 @ViewBuilder content: @escaping (Item) -> Body) -> some View {
         modifier(RNModal(item: item, fade: fade, body: content))
     }
 }

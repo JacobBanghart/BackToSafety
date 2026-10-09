@@ -1,23 +1,19 @@
 package com.backtosafety.app.emergency
 
 import android.content.Context
-import com.backtosafety.core.SEARCH_WINDOW_SECONDS
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
 import android.content.Intent
 import android.net.Uri
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.border
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -55,9 +51,9 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontStyle
@@ -68,7 +64,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
-import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.localeTime
@@ -76,12 +71,16 @@ import com.backtosafety.app.ui.negativeTopMargin
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ActiveEmergency
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.ChecklistStep
 import com.backtosafety.core.CountdownAlert
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Profile
+import com.backtosafety.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.core.Translate
 import com.backtosafety.core.buildAlertSms
 import com.backtosafety.core.buildInitialSteps
@@ -93,9 +92,9 @@ import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.normalizeUniqueSmsRecipients
 import com.backtosafety.core.secondsRemaining
-import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.time.Instant
 
 private enum class Modal { FOUND, LEAVE, NO_CONTACTS, SMS_ERROR }
 

@@ -8,3 +8,6 @@ maestro = "cli-2.11.0"
 # Android SDK command-line tools; sets ANDROID_HOME, and the mise-run android tasks install the
 # platform, build tools and emulator into it.
 android-sdk = "23.0"
+# Linters (mise run lint): Kotlin and Swift. Configured by .editorconfig and .swiftformat.
+ktlint = "1.8.0"
+swiftformat = { version = "0.63.1", no_app = true, rename_exe = "swiftformat" }

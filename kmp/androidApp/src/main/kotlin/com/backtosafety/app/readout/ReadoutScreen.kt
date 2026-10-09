@@ -1,8 +1,6 @@
 package com.backtosafety.app.readout
 
 import android.content.ClipData
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -54,7 +52,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.Icon
-import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.hairline
@@ -63,6 +60,9 @@ import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.udp
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Profile
@@ -79,10 +79,10 @@ import com.backtosafety.core.missingScriptDetails
 import com.backtosafety.core.needsVehicleCheck
 import com.backtosafety.core.stripPhoneFormatting
 import com.backtosafety.core.vehicleCheckKind
-import kotlin.time.Instant
 import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
+import kotlin.time.Instant
 
 private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
@@ -287,10 +287,12 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             if (contacts.isNotEmpty()) {
                 Card {
                     SectionLabel("phone.fill", t("contacts.title"), success)
-                    contacts.forEachIndexed { index, c -> ContactRow(t, c, index) {
-                        Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
-                        dial(c.phone)
-                    } }
+                    contacts.forEachIndexed { index, c ->
+                        ContactRow(t, c, index) {
+                            Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
+                            dial(c.phone)
+                        }
+                    }
                 }
             }
 

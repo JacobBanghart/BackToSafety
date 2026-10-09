@@ -14,10 +14,20 @@ import javax.inject.Inject
  * Icons font and its glyph map live in src/main/assets/icons.
  */
 abstract class SyncSharedAssets : DefaultTask() {
-    @get:InputDirectory @get:PathSensitive(PathSensitivity.RELATIVE) abstract val locales: DirectoryProperty
-    @get:InputDirectory @get:PathSensitive(PathSensitivity.RELATIVE) abstract val images: DirectoryProperty
-    @get:InputDirectory @get:PathSensitive(PathSensitivity.RELATIVE) abstract val spec: DirectoryProperty
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val locales: DirectoryProperty
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val images: DirectoryProperty
+
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val spec: DirectoryProperty
+
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
     @get:Inject abstract val fs: FileSystemOperations
 
     @TaskAction

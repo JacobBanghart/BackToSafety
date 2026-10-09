@@ -7,7 +7,7 @@ struct ScreenHeader<Right: View>: View {
     let title: String
     let testID: String
     let onBack: () -> Void
-    var titleIcon: (name: String, color: Color)? = nil
+    var titleIcon: (name: String, color: Color)?
     var titleIconSize: CGFloat = 18
     @ViewBuilder var right: () -> Right
     @Environment(\.appColors) private var colors

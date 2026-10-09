@@ -1,0 +1,24 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+
+# ktlint (mise run lint). The code keeps argument lists and modifier chains compact on one
+# line where they fit, so the rules that would rewrap every call are off; the rest (indent,
+# imports, spacing, blank lines, annotations) are enforced.
+[*.{kt,kts}]
+indent_size = 4
+ktlint_code_style = intellij_idea
+max_line_length = off
+ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_standard_argument-list-wrapping = disabled
+ktlint_standard_parameter-list-wrapping = disabled
+ktlint_standard_function-signature = disabled
+ktlint_standard_wrapping = disabled
+ktlint_standard_statement-wrapping = disabled
+ktlint_standard_multiline-if-else = disabled
+ktlint_standard_blank-line-between-when-conditions = disabled
+ktlint_standard_trailing-comma-on-call-site = disabled
+ktlint_standard_trailing-comma-on-declaration-site = disabled

@@ -5,22 +5,22 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AppClock
-import com.posthog.PersonProfiles
-import com.posthog.PostHog
-import com.posthog.android.PostHogAndroid
-import com.posthog.android.PostHogAndroidConfig
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.databaseBuilder
 import com.backtosafety.core.db.databasePath
 import com.backtosafety.core.db.openAppDatabase
+import com.posthog.PersonProfiles
+import com.posthog.PostHog
+import com.posthog.android.PostHogAndroid
+import com.posthog.android.PostHogAndroidConfig
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
@@ -69,8 +69,7 @@ class MainActivity : ComponentActivity() {
             val props = properties.filterValues { it != null } as Map<String, Any>
             if (name == Analytics.SCREEN) {
                 PostHog.screen(properties["\$screen_name"] as String, props - "\$screen_name")
-            }
-            else PostHog.capture(name, properties = props)
+            } else PostHog.capture(name, properties = props)
         }
     }
 

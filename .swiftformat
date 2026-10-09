@@ -1,0 +1,6 @@
+# SwiftFormat (mise run lint). The code keeps short bodies, guards and computed properties on
+# one line, so the wrapping rules are off; indentation, redundant code and the rest are on.
+--swiftversion 5.10
+--indent 4
+--maxwidth none
+--disable wrapIfStatementBodies,wrapPropertyBodies,wrapFunctionBodies,wrapLoopBodies,wrapMultilineStatementBraces,wrapArguments,blankLinesBetweenScopes,hoistAwait,opaqueGenericParameters

@@ -37,19 +37,19 @@ struct EmergencyView: View {
 
     var body: some View {
         content
-        .rnModal(item: $modal) { modalView($0) }
-        .background(colors.background.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
-        .task { await load() }
-        .onReceive(tick) { _ in tickCountdown() }
-        .onChange(of: wearing) { persist() }
-        .onChange(of: checked) { persist() }
-        .sheet(item: $sms) { draft in
-            MessageComposer(draft: draft) { sent in
-                if sent { Analytics.shared.track(event: .emergencyContactsAlerted, properties: ["recipient_count": draft.recipients.count]) }
+            .rnModal(item: $modal) { modalView($0) }
+            .background(colors.background.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
+            .task { await load() }
+            .onReceive(tick) { _ in tickCountdown() }
+            .onChange(of: wearing) { persist() }
+            .onChange(of: checked) { persist() }
+            .sheet(item: $sms) { draft in
+                MessageComposer(draft: draft) { sent in
+                    if sent { Analytics.shared.track(event: .emergencyContactsAlerted, properties: ["recipient_count": draft.recipients.count]) }
+                }
+                .ignoresSafeArea()
             }
-            .ignoresSafeArea()
-        }
     }
 
     @ViewBuilder private var content: some View {
@@ -143,7 +143,7 @@ struct EmergencyView: View {
         Task {
             if let id = try? await model.store.recordIncident(incidentId: state.incidentId, startedAt: state.startedAt,
                                                               checkedSteps: checkedIds, wearing: wearing, outcome: outcome, endedAt: endedAt),
-               state.incidentId == nil {
+                state.incidentId == nil {
                 self.state = ActiveEmergency(startedAt: state.startedAt, wearing: state.wearing, checkedSteps: state.checkedSteps, incidentId: id)
             }
         }

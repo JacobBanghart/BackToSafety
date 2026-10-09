@@ -4,13 +4,13 @@ import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.backtosafety.core.parseActiveEmergency
+import kotlinx.coroutines.runBlocking
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
 
 /**
  * The L5 contract at unit level: the Kotlin app must open the database the RN app left

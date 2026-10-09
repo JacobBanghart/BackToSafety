@@ -17,8 +17,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
-import com.backtosafety.app.ui.trackStep
-import com.backtosafety.core.AnalyticsEvent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -49,11 +47,13 @@ import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.Translations
-import com.posthog.PostHog
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.invoke
+import com.posthog.PostHog
 import kotlinx.coroutines.launch
 
 /** Each route's path in the RN app (expo-router), which analytics reports screens as. */

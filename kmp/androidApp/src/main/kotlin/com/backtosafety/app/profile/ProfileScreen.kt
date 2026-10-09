@@ -1,8 +1,6 @@
 package com.backtosafety.app.profile
 
 import android.app.DatePickerDialog
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -62,6 +60,8 @@ import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.MOBILITY_OPTIONS
@@ -144,6 +144,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     }
 
     val f = form
+
     // The snapshot compares what would be saved (RN compares the form plus resolved mobility).
     fun snapshot(x: ProfileForm?) = x?.let { Triple(it.text, it.dominantHand, it.resolvedMobility) }
     val unsaved = f != null && snapshot(f) != snapshot(initial)

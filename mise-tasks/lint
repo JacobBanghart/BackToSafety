@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#MISE description="Lint Kotlin (ktlint) and Swift (SwiftFormat); FIX=1 fixes what they can"
+set -euo pipefail
+kotlin=("kmp/**/*.kt" "kmp/**/*.kts" "!kmp/**/build/**")
+swift=(kmp/iosApp maestro/gestures/ios)
+if [ -n "${FIX:-}" ]; then
+  ktlint -F "${kotlin[@]}"
+  swiftformat --quiet "${swift[@]}"
+else
+  ktlint "${kotlin[@]}"
+  swiftformat --lint --quiet "${swift[@]}"
+fi
+echo "lint ok"

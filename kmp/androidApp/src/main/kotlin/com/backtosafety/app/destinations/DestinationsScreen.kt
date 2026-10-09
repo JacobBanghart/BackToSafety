@@ -1,8 +1,6 @@
 package com.backtosafety.app.destinations
 
 import android.content.Intent
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
 import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -72,6 +70,8 @@ import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store

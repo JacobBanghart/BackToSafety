@@ -16,13 +16,13 @@ struct RNTextInput: UIViewRepresentable {
     var multiline = false
     var keyboard: UIKeyboardType = .default
     var capitalization: UITextAutocapitalizationType = .sentences
-    var maxLength: Int? = nil
+    var maxLength: Int?
     /// An RN lineHeight on the input (only multiline inputs set one on iOS).
-    var lineHeight: CGFloat? = nil
+    var lineHeight: CGFloat?
     /// A multiline input's height limits (RN minHeight/maxHeight, inside the border).
     var minHeight: CGFloat = 0
     var maxHeight: CGFloat = .infinity
-    var format: ((String) -> String)? = nil
+    var format: ((String) -> String)?
     var onFocus: (Bool) -> Void = { _ in }
 
     /// The text attributes RN gives an input with a lineHeight (RCTAttributedTextUtils).

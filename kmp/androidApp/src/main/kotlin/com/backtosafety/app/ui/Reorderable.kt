@@ -41,50 +41,50 @@ fun <T> ReorderableColumn(
             // key(): a swap must move this item's composition (and its in-flight gesture)
             // with it; positional slots would restart pointerInput and cancel the drag.
             key(k) {
-            val dragging = k == draggingKey
-            Box(
-                Modifier
-                    .zIndex(if (dragging) 1f else 0f)
-                    .graphicsLayer { translationY = if (dragging) offset else 0f }
-                    .onSizeChanged { heights[k] = it.height }
-                    .pointerInput(k) {
-                        detectDragGesturesAfterLongPress(
-                            onDragStart = {
-                                draggingKey = k
-                                offset = 0f
-                                onDragStart()
-                            },
-                            onDrag = { change, amount ->
-                                change.consume()
-                                offset += amount.y
-                                val i = order.indexOfFirst { key(it) == k }
-                                if (offset > 0 && i < order.lastIndex) {
-                                    val next = heights[key(order[i + 1])] ?: return@detectDragGesturesAfterLongPress
-                                    if (offset > next / 2f) {
-                                        order = order.toMutableList().apply { add(i + 1, removeAt(i)) }
-                                        offset -= next
+                val dragging = k == draggingKey
+                Box(
+                    Modifier
+                        .zIndex(if (dragging) 1f else 0f)
+                        .graphicsLayer { translationY = if (dragging) offset else 0f }
+                        .onSizeChanged { heights[k] = it.height }
+                        .pointerInput(k) {
+                            detectDragGesturesAfterLongPress(
+                                onDragStart = {
+                                    draggingKey = k
+                                    offset = 0f
+                                    onDragStart()
+                                },
+                                onDrag = { change, amount ->
+                                    change.consume()
+                                    offset += amount.y
+                                    val i = order.indexOfFirst { key(it) == k }
+                                    if (offset > 0 && i < order.lastIndex) {
+                                        val next = heights[key(order[i + 1])] ?: return@detectDragGesturesAfterLongPress
+                                        if (offset > next / 2f) {
+                                            order = order.toMutableList().apply { add(i + 1, removeAt(i)) }
+                                            offset -= next
+                                        }
+                                    } else if (offset < 0 && i > 0) {
+                                        val prev = heights[key(order[i - 1])] ?: return@detectDragGesturesAfterLongPress
+                                        if (-offset > prev / 2f) {
+                                            order = order.toMutableList().apply { add(i - 1, removeAt(i)) }
+                                            offset += prev
+                                        }
                                     }
-                                } else if (offset < 0 && i > 0) {
-                                    val prev = heights[key(order[i - 1])] ?: return@detectDragGesturesAfterLongPress
-                                    if (-offset > prev / 2f) {
-                                        order = order.toMutableList().apply { add(i - 1, removeAt(i)) }
-                                        offset += prev
-                                    }
-                                }
-                            },
-                            onDragEnd = {
-                                draggingKey = null
-                                offset = 0f
-                                if (order != items) onReorder(order)
-                            },
-                            onDragCancel = {
-                                draggingKey = null
-                                offset = 0f
-                                order = items
-                            },
-                        )
-                    },
-            ) { itemContent(item, index, dragging) }
+                                },
+                                onDragEnd = {
+                                    draggingKey = null
+                                    offset = 0f
+                                    if (order != items) onReorder(order)
+                                },
+                                onDragCancel = {
+                                    draggingKey = null
+                                    offset = 0f
+                                    order = items
+                                },
+                            )
+                        },
+                ) { itemContent(item, index, dragging) }
             }
         }
     }

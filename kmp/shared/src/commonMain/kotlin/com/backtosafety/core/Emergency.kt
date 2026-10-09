@@ -1,16 +1,16 @@
 package com.backtosafety.core
 
-import kotlin.time.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import kotlin.time.Instant
 
 // The emergency search protocol: the checklist, the 15-minute countdown and the contact
 // alert text. Port of utils/emergency.ts; held to spec/vectors/emergency.json.
@@ -130,4 +130,3 @@ fun serializeActiveEmergency(e: ActiveEmergency): String = buildJsonObject {
     put("isActive", true)
     e.incidentId?.let { put("incidentId", it) }
 }.toString()
-

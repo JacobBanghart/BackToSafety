@@ -1,8 +1,6 @@
 package com.backtosafety.app.onboarding
 
 import androidx.compose.foundation.layout.Arrangement
-import com.backtosafety.app.ui.trackStep
-import com.backtosafety.app.ui.TrackStepViewed
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -17,12 +15,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.AppInput
-import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
+import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.trackStep
+import com.backtosafety.app.ui.udp
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store

@@ -5,17 +5,17 @@ import com.backtosafety.core.db.DATABASE_NAME
 import com.backtosafety.core.db.DestinationEntity
 import com.backtosafety.core.db.databaseBuilder
 import com.backtosafety.core.db.openAppDatabase
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonArray
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 
 class StoreTest {
     private val root = File(System.getProperty("repoRoot") ?: error("repoRoot system property not set"))

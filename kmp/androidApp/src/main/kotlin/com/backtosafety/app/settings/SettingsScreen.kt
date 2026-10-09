@@ -1,8 +1,6 @@
 package com.backtosafety.app.settings
 
 import android.app.AlertDialog
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.Analytics
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.background
@@ -41,9 +39,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
-import com.backtosafety.app.ui.Icon
-import com.backtosafety.app.ui.udp
 import com.backtosafety.app.ui.AppCard
+import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
@@ -52,6 +49,9 @@ import com.backtosafety.app.ui.rnLineHeight
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.rnTextStyleNatural
 import com.backtosafety.app.ui.style
+import com.backtosafety.app.ui.udp
+import com.backtosafety.core.Analytics
+import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store

@@ -22,9 +22,9 @@ struct AppCard<Content: View>: View {
 struct ListItem: View {
     let label: String
     let value: String
-    var testID: String? = nil
-    var ruleColor: Color? = nil
-    var onPress: (() -> Void)? = nil
+    var testID: String?
+    var ruleColor: Color?
+    var onPress: (() -> Void)?
     @Environment(\.appColors) private var colors
 
     var body: some View {

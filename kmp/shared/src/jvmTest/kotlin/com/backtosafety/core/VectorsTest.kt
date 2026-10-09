@@ -1,8 +1,5 @@
 package com.backtosafety.core
 
-import java.io.File
-import kotlin.test.Test
-import kotlin.test.fail
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -18,6 +15,9 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.put
+import java.io.File
+import kotlin.test.Test
+import kotlin.test.fail
 
 /**
  * Runs every JSON file in spec/vectors against the Kotlin core: the twin of

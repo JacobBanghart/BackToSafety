@@ -292,51 +292,51 @@ struct DestinationsView: View {
         // A tap gesture rather than a Button: a Button's own tap handling swallows the long
         // press that starts a reorder drag (RN's Pressable allows both).
         VStack(alignment: .leading, spacing: 0) {
-                HStack(alignment: .top, spacing: 0) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack(spacing: 10) {
-                            categoryIcon(d, 16)
-                            RNText(d.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .rnID("destinations-item-\(index)-name", label: d.name)
-                        }
-                        HStack(spacing: Space.sm) {
-                            riskBadge(d)
-                            categoryBadge(d)
-                        }
-                        .padding(.top, 6)
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 10) {
+                        categoryIcon(d, 16)
+                        RNText(d.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .rnID("destinations-item-\(index)-name", label: d.name)
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    Button { edit(d) } label: {
-                        SFIcon("pencil", 18, p600)
-                            .frame(width: 40, height: 40)
-                            .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
+                    HStack(spacing: Space.sm) {
+                        riskBadge(d)
+                        categoryBadge(d)
                     }
-                    .buttonStyle(.pressable)
-                    .accessibilityIdentifier("destinations-item-\(index)-edit")
+                    .padding(.top, 6)
                 }
-                .padding(.bottom, Space.sm)
-                if let address = d.address, !address.isEmpty {
-                    Button { openMaps(address) } label: {
-                        HStack(spacing: 6) {
-                            SFIcon("location", 14, p600)
-                            RNText(address, Typography.caption.spec, color: addressColor, lines: 1).frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .padding(.vertical, Space.xs).padding(.horizontal, 10)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.surface))
-                    }
-                    .buttonStyle(.pressable)
-                    .accessibilityIdentifier("destinations-item-\(index)-maps")
-                    .padding(.bottom, Space.xs)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Button { edit(d) } label: {
+                    SFIcon("pencil", 18, p600)
+                        .frame(width: 40, height: 40)
+                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
                 }
+                .buttonStyle(.pressable)
+                .accessibilityIdentifier("destinations-item-\(index)-edit")
             }
-            .padding(Space.lg + 1)
-            .listCard(dragging: dragging, colors: colors)
-            .contentShape(Rectangle())
-            .onTapGesture { viewing = d }
-            .accessibilityElement(children: .contain)
-            .accessibilityAddTraits(.isButton)
-            .accessibilityIdentifier("destinations-item-\(index)")
+            .padding(.bottom, Space.sm)
+            if let address = d.address, !address.isEmpty {
+                Button { openMaps(address) } label: {
+                    HStack(spacing: 6) {
+                        SFIcon("location", 14, p600)
+                        RNText(address, Typography.caption.spec, color: addressColor, lines: 1).frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .padding(.vertical, Space.xs).padding(.horizontal, 10)
+                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.surface))
+                }
+                .buttonStyle(.pressable)
+                .accessibilityIdentifier("destinations-item-\(index)-maps")
+                .padding(.bottom, Space.xs)
+            }
+        }
+        .padding(Space.lg + 1)
+        .listCard(dragging: dragging, colors: colors)
+        .contentShape(Rectangle())
+        .onTapGesture { viewing = d }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityIdentifier("destinations-item-\(index)")
         .padding(.bottom, Space.md)
     }
 
