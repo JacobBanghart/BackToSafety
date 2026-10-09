@@ -2,7 +2,8 @@
 """Checks the spec contracts against the two apps (CI: contracts job).
 
 - spec/testids.json: every declared ID is in the Android app's Kotlin and the iOS app's Swift
-  (iosOnly ones only in Swift), with no ID declared twice and only known placeholders.
+  (iosOnly ones only in Swift), with no ID declared twice and only known placeholders, and the
+  option placeholders (role, category, risk, hand) match the database's CHECK constraints.
 - spec/features.json: unique IDs, every vector and flow reference resolves, and
   maxWithoutFlows matches the features still without a Maestro flow (it may only go down;
   maestro/sync_features.py lowers it).
@@ -46,6 +47,19 @@ def check_testids() -> None:
         misfiled = [i for i in ids if i != screen and not i.startswith(f"{screen}-")]
         if misfiled:
             problems.append(f"testids: filed under {screen} without its prefix: {misfiled}")
+
+    # The UI's option lists stay inside the database's CHECK constraints.
+    schema = json.loads((ROOT / "spec/db-schema.json").read_text())
+
+    def allowed(table: str, column: str) -> list[str]:
+        check = next((c for c in schema["tables"][table]["checks"] if c.startswith(f"{column} IN")), "")
+        return sorted(re.findall(r"'([^']+)'", check))
+
+    for placeholder, table, column in (("role", "contacts", "role"), ("category", "destinations", "category"),
+                                       ("risk", "destinations", "risk_level"), ("hand", "profile", "dominant_hand")):
+        if sorted(contract["placeholders"][placeholder]) != allowed(table, column):
+            problems.append(f"testids: {{{placeholder}}} options differ from {table}.{column}'s CHECK: "
+                            f"{sorted(contract['placeholders'][placeholder])} vs {allowed(table, column)}")
 
     kotlin = string_literals(
         sorted((ROOT / "kmp/androidApp/src/main").rglob("*.kt")), r"\$\{[^}]*\}|\$\w+"

@@ -6,8 +6,6 @@ re-onboarding. This file is the contract. `spec/db-schema.json` pins the table s
 from the RN app's schema before it was removed; Room's migration and `DatabaseTest` hold the
 Kotlin store to it and to the committed fixture).
 
-Web builds keep data in AsyncStorage instead. That path is out of scope for the Kotlin apps.
-
 ## Database
 
 |                         |                                                                                                                                               |
@@ -22,7 +20,7 @@ Web builds keep data in AsyncStorage instead. That path is out of scope for the 
 Conventions: booleans are `INTEGER` 0/1. `created_at`/`updated_at` default to SQLite's
 `CURRENT_TIMESTAMP` (`YYYY-MM-DD HH:MM:SS`, UTC). Enum columns are enforced with `CHECK`
 constraints (see `db-schema.json`), and the UI options must stay inside them
-(`spec/testids.test.ts` checks this).
+(`spec/check.py` checks this).
 
 ## Rows with special meaning
 

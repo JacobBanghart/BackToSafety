@@ -28,5 +28,6 @@ git config core.hooksPath .githooks
 
 ## Notes
 
-- `android/app/debug.keystore` is present locally for Android debug builds but is not tracked in git.
+- The pre-push hook (`.githooks/pre-push`) runs `spec/check.py`.
+- Signing material (`*.keystore`, `*.jks`, `*.p12`, `*.p8`, `*.mobileprovision`) is ignored by git.
 - Never commit signing keys, `.env` files, API tokens, or credentials.

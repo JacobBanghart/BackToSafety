@@ -20,8 +20,9 @@ When a vulnerable adult goes missing, the app guides the caregiver through a str
 
 ## 2. Protocol Duration
 
-```ts
-const SEARCH_WINDOW_SECONDS = 15 * 60; // 15 minutes
+```kotlin
+const val SEARCH_WINDOW_SECONDS = 15 * 60 // Emergency.kt
+const val WARNING_AT_SECONDS = 5 * 60
 ```
 
 - A new emergency starts a 15-minute countdown.
@@ -56,21 +57,24 @@ The `call_911` title interpolates the local emergency number (`{{emergencyNumber
 
 Active emergencies are persisted to the `settings` table under key `active_emergency`:
 
-```ts
-type EmergencyState = {
-  startedAt: string; // ISO timestamp
-  wearing: string; // Clothing description
-  checkedSteps: string[]; // Array of completed step IDs
-  isActive: boolean; // Whether the protocol is still running
-};
+```json
+{
+  "startedAt": "2026-10-06T16:00:00.000Z",
+  "wearing": "Blue jacket",
+  "checkedSteps": ["home_search", "neighbors"],
+  "isActive": true,
+  "incidentId": 1
+}
 ```
+
+`ActiveEmergency` in the shared core reads and writes it; `spec/storage.md` has the contract.
 
 This lets the protocol survive app termination, phone calls, and when the user briefly leaves the screen.
 
 ### State lifecycle
 
-1. **Start**: tapping "Start Emergency Search" creates a new `EmergencyState` with `startedAt = now`, empty `checkedSteps`, and `isActive = true`.
-2. **Resume**: returning to `/emergency` within `SEARCH_WINDOW_SECONDS` reloads the state and recalculates remaining time.
+1. **Start**: tapping "Start Emergency Search" creates a new active emergency with `startedAt = now`, empty `checkedSteps`, and `isActive = true`.
+2. **Resume**: returning to the emergency screen within `SEARCH_WINDOW_SECONDS` reloads the state and recalculates remaining time.
 3. **Completion**: tapping "Found — Safe" sets `isActive = false`, clears the active emergency setting, and creates an incident with outcome `found`.
 4. **Cancellation/timeout**: the timer can expire with the protocol still active; the screen continues to display the checklist but marks expiration.
 
@@ -97,7 +101,7 @@ This lets the protocol survive app termination, phone calls, and when the user b
 
 ## 6. clothing / Appearance Input
 
-A "What were they wearing?" card captures clothing details. The value is persisted to `EmergencyState.wearing` and surfaced in the 911 readout.
+A "What were they wearing?" card captures clothing details. The value is persisted to the active emergency's `wearing` and surfaced in the 911 readout.
 
 ---
 

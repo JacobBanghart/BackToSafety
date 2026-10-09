@@ -64,7 +64,7 @@ strings, numbers, booleans or null.
 | -------------------------- | ------------------------------------------------------------ | ------------------------------- |
 | `destination_saved`        | `is_edit: boolean`, `category: string`, `risk_level: string` | Destination created or updated  |
 | `destination_deleted`      | `category: string`, `risk_level: string`                     | Destination deleted             |
-| `destination_add_tapped`   | —                                                            | Add-destination action started  |
+| `destination_add_tapped`   | `source: string` (when from home) | Add-destination action started  |
 | `destination_edit_tapped`  | —                                                            | Edit-destination action started |
 | `destination_open_in_maps` | —                                                            | Destination opened in maps app  |
 
@@ -82,15 +82,16 @@ strings, numbers, booleans or null.
 | ------------------------ | ---------- | -------------------------------------- |
 | `readout_911_called`     | —          | Call 911 from readout                  |
 | `readout_contact_called` | —          | Call an emergency contact from readout |
+| `readout_medicalert_hotline_called` | — | Call the MedicAlert hotline from readout |
 | `readout_script_copied`  | —          | 911 script copied to clipboard         |
 | `readout_details_copied` | —          | Full details copied to clipboard       |
-| `readout_open_in_maps`   | —          | Last-seen location opened in maps      |
 
 ### Settings
 
 | Event                        | Properties         | Description              |
 | ---------------------------- | ------------------ | ------------------------ |
 | `settings_dev_mode_unlocked` | —                  | Developer mode unlocked  |
+| `settings_account_deleted` | — | All data deleted (Delete Account) |
 | `settings_theme_changed`     | `theme: string`    | Theme preference changed |
 | `settings_language_changed`  | `language: string` | Language changed         |
 
@@ -98,7 +99,7 @@ strings, numbers, booleans or null.
 
 | Event           | Properties       | Description       |
 | --------------- | ---------------- | ----------------- |
-| `screen_viewed` | `screen: string` | Screen view event |
+| `screen_viewed` | `screen: string`, `source: string` | Screen view event |
 
 ---
 

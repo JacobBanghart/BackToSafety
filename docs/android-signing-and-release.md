@@ -106,20 +106,13 @@ Suggested smoke test list:
 
 ## Notes
 
-- The Android Gradle config reads signing credentials from env vars:
+- The app is `kmp/androidApp`; `./gradlew :androidApp:bundleRelease` (in `kmp/`) builds the AAB.
+- Its Gradle config signs with the upload key from these env vars when they're set:
   - `ANDROID_KEYSTORE_FILE`
   - `ANDROID_KEYSTORE_PASSWORD`
   - `ANDROID_KEY_ALIAS`
   - `ANDROID_KEY_PASSWORD`
-- Debug signing for release is disabled by default (`android.useDebugSigningInRelease=false`).
-- CI build speed optimizations are enabled:
-  - Gradle build cache (`org.gradle.caching=true`)
-  - GitHub Actions cache for Gradle wrapper/caches and native `.cxx` outputs
-  - Build uses `--build-cache --parallel`
-- CI initializes Android SDK in workflow (`android-actions/setup-android`) to avoid missing `ANDROID_HOME` errors.
-- CI installs required Android SDK packages (`platform-tools`, `platforms;android-36`, `build-tools;36.0.0`) and writes `android/local.properties` for self-hosted runners.
-- For local test-only signed release builds, you can temporarily pass:
-
-```bash
-./gradlew bundleRelease -Pandroid.useDebugSigningInRelease=true
-```
+- Without them (local and harness builds), release builds sign with the debug key so they
+  install on a device or emulator. Never upload one of those.
+- CI installs the Android SDK packages it needs (`platform-tools`, `platforms;android-37.0`,
+  `build-tools;36.0.0`) and writes `kmp/local.properties` for the self-hosted runner.

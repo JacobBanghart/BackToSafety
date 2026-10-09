@@ -142,11 +142,12 @@ and add each of these:
 | `ASC_API_KEY_ISSUER_ID`           | Issuer ID from Account Holder (Step 3)       |
 | `ASC_API_KEY_BASE64`              | base64 output from the .p8 file              |
 
-### Update the Workflow with Your Team ID
+### Team ID
 
-1. Find your 10-character Apple Team ID at **developer.apple.com → Account → Membership details**
-2. Open `.github/workflows/ios-release.yml`
-3. Find the line `REPLACE_WITH_YOUR_TEAM_ID` and replace it with your Team ID
+The workflow reads your 10-character Apple Team ID from the `IOS_TEAM_ID` secret
+(**developer.apple.com → Account → Membership details**). It signs the app target only
+(`RELEASE_TEAM_ID` and `RELEASE_PROFILE_UUID` in `kmp/iosApp/project.yml`), so the Swift
+packages aren't asked for a provisioning profile.
 
 ### Install the Self-Hosted Runner on Your Mac
 
@@ -159,6 +160,12 @@ and add each of these:
 ./svc.sh install
 ./svc.sh start
 ```
+
+The runner lives in `~/github/actions-runner` on the Mac and is labeled `self-hosted, macOS`.
+It runs as a launchd agent, so the Mac has to be awake and logged in as that user: turn off
+automatic sleep on power (`sudo pmset -c sleep 0`). The workflow needs Xcode, Homebrew's
+`xcodegen` (`brew install xcodegen`; the workflow adds `/opt/homebrew/bin` to `PATH`) and
+installs Java itself.
 
 ---
 
