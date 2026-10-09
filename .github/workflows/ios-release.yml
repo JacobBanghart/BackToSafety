@@ -27,9 +27,6 @@ jobs:
           node-version: '24'
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci
-
       # ── Version ───────────────────────────────────────────────────────────────
       - name: Derive version metadata from tag
         id: version
@@ -53,12 +50,24 @@ jobs:
           "
           echo "Stamped app.json: version=$VERSION buildNumber=$BUILD_NUMBER"
 
-      - name: Run Expo prebuild (iOS)
-        run: npx expo prebuild --platform ios --clean
-        env:
-          EXPO_NO_TELEMETRY: 1
-          EXPO_PUBLIC_POSTHOG_KEY: phc_yiHs692GvzSjuCHNUTpSGx99UrD5cnCmJD7mjD7WBoJN
-          EXPO_PUBLIC_POSTHOG_HOST: https://t.backtosafety.app
+      # The native app (kmp/iosApp): the shared Kotlin core as an XCFramework, then the
+      # SwiftUI project from project.yml. Version and build number come from the app.json
+      # stamped above, through the project's build phase.
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Build shared Kotlin framework
+        working-directory: kmp
+        run: ./gradlew :shared:assembleSharedReleaseXCFramework --console=plain
+
+      - name: Generate Xcode project
+        working-directory: kmp/iosApp
+        run: |
+          command -v xcodegen >/dev/null || brew install xcodegen
+          xcodegen generate
 
       # ── Signing ──────────────────────────────────────────────────────────────
       - name: Install distribution certificate
@@ -116,20 +125,17 @@ jobs:
       - name: Build iOS archive (.xcarchive)
         run: |
           set -euo pipefail
+          # Signing is set on the app target (project.yml) from RELEASE_TEAM_ID and
+          # RELEASE_PROFILE_UUID, so it doesn't reach the Swift packages.
           xcodebuild archive \
-            -workspace ios/BacktoSafety.xcworkspace \
-            -scheme BacktoSafety \
+            -project kmp/iosApp/BackToSafety.xcodeproj \
+            -scheme BackToSafety \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -configuration Release \
             -archivePath "$RUNNER_TEMP/BackToSafety.xcarchive" \
             -destination "generic/platform=iOS" \
-            CODE_SIGN_STYLE=Manual \
-            DEVELOPMENT_TEAM="$IOS_TEAM_ID" \
-            PROVISIONING_PROFILE_SPECIFIER="$PROVISIONING_PROFILE_UUID" \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            CURRENT_PROJECT_VERSION="${{ steps.version.outputs.build_number }}" \
-            MARKETING_VERSION="${{ steps.version.outputs.version_name }}" \
-            -allowProvisioningUpdates
+            RELEASE_TEAM_ID="$IOS_TEAM_ID" \
+            RELEASE_PROFILE_UUID="$PROVISIONING_PROFILE_UUID"
         env:
           PROVISIONING_PROFILE_UUID: ${{ env.PROVISIONING_PROFILE_UUID }}
           IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}

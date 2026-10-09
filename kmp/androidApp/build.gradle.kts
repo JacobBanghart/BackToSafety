@@ -52,7 +52,17 @@ android {
     // The RN repo's debug keystore (local, not committed), so this build can install over the
     // RN test build. Without it (CI), release builds are left unsigned.
     val parityKeystore = repoRoot.resolve("android/app/debug.keystore")
+    // The Play upload key, from android-release.yml (the same secrets the RN release used).
+    val uploadKeystore = System.getenv("ANDROID_KEYSTORE_FILE")?.let(::file)
     signingConfigs {
+        if (uploadKeystore != null) {
+            create("upload") {
+                storeFile = uploadKeystore
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
         if (parityKeystore.exists()) {
             create("parity") {
                 storeFile = parityKeystore
@@ -67,7 +77,7 @@ android {
         val parity = signingConfigs.findByName("parity")
         debug { if (parity != null) signingConfig = parity }
         release {
-            signingConfig = parity
+            signingConfig = signingConfigs.findByName("upload") ?: parity
             isMinifyEnabled = false
         }
     }
