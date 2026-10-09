@@ -2,4 +2,7 @@
     <!-- As android/app/src/main/res/values/colors.xml (the launcher icon and splash). -->
     <color name="splashscreen_background">#ffffff</color>
     <color name="iconBackground">#65276c</color>
+    <!-- Colors.light.background (constants/Colors.ts); values-night has the dark one. The app
+         sets it at runtime too, for an in-app theme that differs from the system's. -->
+    <color name="window_background">#ffffff</color>
 </resources>

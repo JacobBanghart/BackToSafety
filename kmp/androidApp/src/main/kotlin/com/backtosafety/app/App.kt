@@ -1,5 +1,21 @@
 package com.backtosafety.app
 
+import android.graphics.Path
+import android.graphics.drawable.ColorDrawable
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.PathInterpolator
+import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.Easing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.AnalyticsEvent
@@ -12,6 +28,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -30,6 +48,7 @@ import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
+import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.Translations
 import com.posthog.PostHog
@@ -44,6 +63,40 @@ private val RN_PATHS = mapOf(
     "home" to "/", "emergency" to "/emergency", "readout" to "/readout", "settings" to "/settings",
     "contacts" to "/contacts", "destinations" to "/destinations", "profile" to "/profile",
 )
+
+/**
+ * Screen transitions as the RN app's native stacks run them on Android (react-native-screens'
+ * res/anim), not NavHost's default cross-fade, which showed the window through both screens.
+ * app/onboarding/_layout.tsx slides its steps (slide_from_right: a full-width push, 400ms);
+ * the root stack uses the platform default (Android 13+: a 10% shift with a quick fade of the
+ * screen on top, 450ms).
+ */
+private val ONBOARDING_ROUTES = setOf("welcome", "name", "photo", "appearance", "contact", "complete")
+private val AccelerateDecelerate = Easing(AccelerateDecelerateInterpolator()::getInterpolation)
+private val FastOutExtraSlowIn = Easing(
+    PathInterpolator(
+        Path().apply {
+            cubicTo(0.05f, 0f, 0.133333f, 0.06f, 0.166666f, 0.4f)
+            cubicTo(0.208333f, 0.82f, 0.25f, 1f, 1f, 1f)
+        },
+    )::getInterpolation,
+)
+
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.inOnboarding() =
+    initialState.destination.route in ONBOARDING_ROUTES && targetState.destination.route in ONBOARDING_ROUTES
+
+/** The screen coming in; [from] is the side it enters from (1 right, -1 left). */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.enter(from: Int): EnterTransition =
+    if (inOnboarding()) slideInHorizontally(tween(400, easing = AccelerateDecelerate)) { from * it }
+    else slideInHorizontally(tween(450, easing = FastOutExtraSlowIn)) { from * it / 10 } +
+        // Only a pushed screen fades in; the one uncovered by a pop is already showing.
+        if (from > 0) fadeIn(tween(83, 50, LinearEasing)) else EnterTransition.None
+
+/** The screen going out; [to] is the side it leaves toward. */
+private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(to: Int): ExitTransition =
+    if (inOnboarding()) slideOutHorizontally(tween(400, easing = AccelerateDecelerate)) { to * it }
+    else slideOutHorizontally(tween(450, easing = FastOutExtraSlowIn)) { to * it / 10 } +
+        if (to > 0) fadeOut(tween(83, 35, LinearEasing)) else ExitTransition.None
 
 /** i18n/index.ts: languages released to users (Spanish awaits a native review). */
 private val SHIPPED_LANGUAGES = listOf("en")
@@ -85,6 +138,11 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
     }
 
     AppTheme(dark = dark) {
+        val background = LocalAppColors.current.background
+        // Whatever shows behind the screens is the theme's background: the in-app theme can
+        // differ from the system's, which the window's resource (values-night) follows.
+        val activity = LocalActivity.current
+        LaunchedEffect(background) { activity?.window?.setBackgroundDrawable(ColorDrawable(background.toArgb())) }
         val nav = rememberNavController()
         // app/_layout.tsx reports each screen as its route path.
         DisposableEffect(nav) {
@@ -94,7 +152,15 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
             nav.addOnDestinationChangedListener(listener)
             onDispose { nav.removeOnDestinationChangedListener(listener) }
         }
-        NavHost(nav, startDestination = if (start) "home" else "welcome", modifier = modifier) {
+        NavHost(
+            nav,
+            startDestination = if (start) "home" else "welcome",
+            modifier = modifier.background(background),
+            enterTransition = { enter(from = 1) },
+            exitTransition = { exit(to = -1) },
+            popEnterTransition = { enter(from = -1) },
+            popExitTransition = { exit(to = 1) },
+        ) {
             composable("welcome") {
                 WelcomeScreen(
                     t = onboarding,

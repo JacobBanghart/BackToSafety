@@ -2,6 +2,8 @@
     <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- The theme's background, not the Light theme's white, behind the screens. -->
+        <item name="android:windowBackground">@color/window_background</item>
     </style>
 
     <!-- The RN app's splash (Theme.App.SplashScreen): the logo on white, then the app theme. -->

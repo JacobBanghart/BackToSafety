@@ -1,0 +1,4 @@
+<resources>
+    <!-- Colors.dark.background (constants/Colors.ts). -->
+    <color name="window_background">#0a0a0a</color>
+</resources>
