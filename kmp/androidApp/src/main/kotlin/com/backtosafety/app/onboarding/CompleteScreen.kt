@@ -89,6 +89,7 @@ fun CompleteScreen(t: Translate, store: Store, onFinish: () -> Unit) {
                 onClick = {
                     trackStep(true, "complete")
                     Analytics.track(AnalyticsEvent.ONBOARDING_COMPLETED)
+                    Analytics.screen("home", mapOf("source" to "onboarding"))
                     scope.launch { store.completeStep("complete"); onFinish() }
                 },
             )

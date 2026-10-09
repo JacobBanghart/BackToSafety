@@ -26,4 +26,18 @@ class AnalyticsParityTest {
         assertTrue(rn.size > 30, "found only $rn in the RN source")
         assertEquals(rn, kotlin)
     }
+
+    @Test
+    fun kotlinNamesTheScreensTheRnAppNames() {
+        // posthog.screen('<name>', ...) calls; the route-path one (posthog.screen(pathname)) is
+        // the navigation listener in both apps.
+        val rn = (sources("app", "tsx") + sources("components", "tsx"))
+            .flatMap { Regex("""posthog\.screen\(\s*'([a-z_]+)'""").findAll(it).map { m -> m.groupValues[1] } }
+            .toSortedSet()
+        val kotlin = sources("kmp/androidApp/src/main", "kt")
+            .flatMap { Regex("""Analytics\.screen\(\s*"([a-z_]+)"""").findAll(it).map { m -> m.groupValues[1] } }
+            .toSortedSet()
+        assertEquals(setOf("home", "settings"), rn)
+        assertEquals(rn, kotlin)
+    }
 }

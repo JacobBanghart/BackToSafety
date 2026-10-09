@@ -10,8 +10,11 @@ object Analytics {
 
     fun track(event: AnalyticsEvent, properties: Map<String, Any?> = emptyMap()) = sink(event.wireName, properties)
 
-    /** A screen view, named by the RN app's route path (e.g. "/emergency"), as the RN app reports it. */
-    fun screen(path: String) = sink(SCREEN, mapOf("\$screen_name" to path))
+    /**
+     * A screen view: by the RN app's route path (e.g. "/emergency") on every navigation, plus
+     * the named ones some RN screens report themselves ("home", "settings").
+     */
+    fun screen(path: String, properties: Map<String, Any?> = emptyMap()) = sink(SCREEN, properties + ("\$screen_name" to path))
 
     const val SCREEN = "\$screen"
 }

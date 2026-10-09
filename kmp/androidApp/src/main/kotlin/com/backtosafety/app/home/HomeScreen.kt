@@ -88,6 +88,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
 
     // Reloaded every time home is shown (useFocusEffect).
     LaunchedEffect(Unit) {
+        Analytics.screen("home")
         profile = store.profile()
         contactCount = store.contacts().size
         emergency = store.activeEmergency()

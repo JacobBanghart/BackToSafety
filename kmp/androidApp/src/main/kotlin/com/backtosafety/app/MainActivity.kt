@@ -67,7 +67,9 @@ class MainActivity : ComponentActivity() {
         Analytics.sink = { name, properties ->
             @Suppress("UNCHECKED_CAST")
             val props = properties.filterValues { it != null } as Map<String, Any>
-            if (name == Analytics.SCREEN) PostHog.screen(properties["\$screen_name"] as String)
+            if (name == Analytics.SCREEN) {
+                PostHog.screen(properties["\$screen_name"] as String, props - "\$screen_name")
+            }
             else PostHog.capture(name, properties = props)
         }
     }

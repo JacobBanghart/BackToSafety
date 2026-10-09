@@ -83,7 +83,10 @@ fun SettingsScreen(
     var lastTap by remember { mutableLongStateOf(0L) }
     var deviceId by remember { mutableStateOf<String?>(null) }
     var deleting by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { deviceId = runCatching { store.deviceId() }.getOrNull() }
+    LaunchedEffect(Unit) {
+        Analytics.screen("settings")
+        deviceId = runCatching { store.deviceId() }.getOrNull()
+    }
 
     fun onVersionTap() {
         val now = System.currentTimeMillis()
