@@ -19,6 +19,9 @@ struct RNTextInput: UIViewRepresentable {
     var maxLength: Int? = nil
     /// An RN lineHeight on the input (only multiline inputs set one on iOS).
     var lineHeight: CGFloat? = nil
+    /// A multiline input's height limits (RN minHeight/maxHeight, inside the border).
+    var minHeight: CGFloat = 0
+    var maxHeight: CGFloat = .infinity
     var format: ((String) -> String)? = nil
     var onFocus: (Bool) -> Void = { _ in }
 
@@ -78,6 +81,19 @@ struct RNTextInput: UIViewRepresentable {
             area.setNeedsLayout()
             area.placeholder.isHidden = !text.isEmpty
         }
+    }
+
+    /// A multiline input sizes to its content as RN's does: the text, or the placeholder while
+    /// empty, plus the insets. Callers clamp it with min and max heights.
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView _: UIView, context _: Context) -> CGSize? {
+        guard multiline, let width = proposal.width, width.isFinite else { return nil }
+        var attrs = attributes
+        if text.isEmpty { attrs[.foregroundColor] = placeholderColor }
+        let content = NSAttributedString(string: text.isEmpty ? placeholder : text, attributes: attrs)
+        let textWidth = max(0, width - insets.left - insets.right)
+        let height = content.boundingRect(with: CGSize(width: textWidth, height: .greatestFiniteMagnitude),
+                                          options: [.usesLineFragmentOrigin], context: nil).height
+        return CGSize(width: width, height: min(maxHeight, max(minHeight, ceil(height) + insets.top + insets.bottom)))
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(self) }

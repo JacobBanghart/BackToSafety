@@ -11,6 +11,7 @@ struct SettingsView: View {
     let tCommon: Translate
     @EnvironmentObject private var model: AppModel
     @Environment(\.appColors) private var colors
+    @Environment(\.dynamicTypeSize) private var dynamicType
     @State private var devMode = isDebug
     @State private var tapCount = 0
     @State private var lastTap: TimeInterval = 0
@@ -195,7 +196,7 @@ struct SettingsView: View {
         Button(action: action) {
             VStack(spacing: 0) {
                 // The emoji font is taller than the line; RN clamps it to the 24pt line height.
-                if let icon { RNText(icon, TextSpec(size: 24, lineHeight: 24), color: colors.text).frame(height: 24).padding(.bottom, Space.xs) }
+                if let icon { RNText(icon, TextSpec(size: 24, lineHeight: 24), color: colors.text).frame(height: 24 * rnFontMultiplier(dynamicType)).padding(.bottom, Space.xs) }
                 RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.tint : colors.text)
             }
             .frame(maxWidth: .infinity)

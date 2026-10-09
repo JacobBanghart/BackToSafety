@@ -354,10 +354,9 @@ struct ProfileView: View {
             placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint),
             insets: UIEdgeInsets(top: multiline ? 9 : 0, left: multiline ? Space.md : Space.md - 1, bottom: multiline ? 9 : 0,
                                  right: multiline ? Space.md : Space.md - 1),
-            multiline: multiline, keyboard: keyboard, capitalization: capitalization, format: format
+            multiline: multiline, keyboard: keyboard, capitalization: capitalization, minHeight: 78, format: format
         )
         .frame(height: multiline ? nil : 42)
-        .frame(minHeight: multiline ? 78 : nil)
         .padding(1)
         .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
         .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))

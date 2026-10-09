@@ -100,10 +100,9 @@ struct AppInput: View {
             font: .systemFont(ofSize: size * m), textColor: UIColor(colors.text),
             placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint),
             insets: UIEdgeInsets(top: multiline ? Space.sm - 1 : 0, left: Space.lg - 1, bottom: multiline ? Space.sm - 1 : 0, right: Space.lg - 1),
-            multiline: multiline, keyboard: keyboard, capitalization: capitalization, format: format
+            multiline: multiline, keyboard: keyboard, capitalization: capitalization, minHeight: 78, format: format
         )
         .frame(height: multiline ? nil : 46)
-        .frame(minHeight: multiline ? 78 : nil)
         .padding(1)
         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.inputBackground))
         .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.inputBorder, lineWidth: 1))

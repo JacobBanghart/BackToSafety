@@ -243,9 +243,8 @@ struct EmergencyView: View {
                 font: .systemFont(ofSize: 16 * fontMultiplier), textColor: UIColor(colors.text),
                 placeholderColor: UIColor(Color(argb: Neutral.c400)), tint: UIColor(colors.tint),
                 insets: UIEdgeInsets(top: Space.sm - 1, left: Space.md, bottom: Space.sm - 1, right: Space.md),
-                multiline: true, lineHeight: 20 * fontMultiplier
+                multiline: true, lineHeight: 20 * fontMultiplier, minHeight: 62, maxHeight: 118
             )
-            .frame(minHeight: 62, maxHeight: 118)
             .padding(1)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.inputBorder, lineWidth: 1))

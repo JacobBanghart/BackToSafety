@@ -33,11 +33,10 @@ struct FormTextInput: View {
                 // A UITextView's text sits a point further in than a UITextField's.
                 insets: UIEdgeInsets(top: multiline ? Space.sm - 1 : 0, left: multiline ? Space.md : Space.md - 1,
                                      bottom: multiline ? Space.sm - 1 : 0, right: multiline ? Space.md : Space.md - 1),
-                multiline: multiline, keyboard: keyboard, capitalization: capitalization, format: format,
-                onFocus: { focused = $0 }
+                multiline: multiline, keyboard: keyboard, capitalization: capitalization, minHeight: 78, maxHeight: 118,
+                format: format, onFocus: { focused = $0 }
             )
             .frame(height: multiline ? nil : 42)
-            .frame(minHeight: multiline ? 78 : nil, maxHeight: multiline ? 118 : nil)
             .padding(1)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.inputBackground))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(focused ? colors.borderFocused : colors.inputBorder, lineWidth: 1))

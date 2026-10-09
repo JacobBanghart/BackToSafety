@@ -96,7 +96,8 @@ struct RNText: View {
         default: .natural
         }
         var attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: UIColor(color)]
-        if spec.letterSpacing != 0 { attributes[.kern] = spec.letterSpacing * m }
+        // RN scales font size and line height with Dynamic Type, but not letter spacing.
+        if spec.letterSpacing != 0 { attributes[.kern] = spec.letterSpacing }
         let lineHeight = spec.lineHeight * m
         if lineHeight > 0 {
             paragraph.minimumLineHeight = lineHeight
