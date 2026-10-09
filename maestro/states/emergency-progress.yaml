@@ -29,7 +29,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: emergency-wearing-input
 - inputText: Blue jacket, gray pants
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 # Blur the input so no blinking caret ends up in the capture. At large text the label
 # can end up just above the viewport once the keyboard is gone.
 - scrollUntilVisible:

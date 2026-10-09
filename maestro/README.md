@@ -46,4 +46,6 @@ byte-identical at zero tolerance, apart from the system bars, which the comparer
   moves time forward. Both work only in builds with test seams.
 - **Scroll before acting.** Elements below the fold need `scrollUntilVisible` first.
   Scroll back up before asserting on something near the top.
+- **Dismiss the keyboard with `subflows/hide-keyboard.yaml`**, not `hideKeyboard`: iOS has no
+  system dismiss, so on iOS it drags the form down (F-40).
 - **F-27.** The first tap after a fresh launch is sometimes dropped, so onboarding retries it.

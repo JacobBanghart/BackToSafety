@@ -34,6 +34,9 @@ export const KeyboardAvoidingScroll = forwardRef<ScrollView, KeyboardAvoidingScr
           style={[styles.flex, style]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          // iOS number and phone keypads have no Return key: dragging the form dismisses the
+          // keyboard, as iOS apps do (F-40). Android has the system back gesture for it.
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'none'}
           automaticallyAdjustKeyboardInsets={!footer}
           {...scrollViewProps}
         >

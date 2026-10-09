@@ -15,7 +15,7 @@ name: Add a place, view its detail, see it during an emergency, delete it
 - tapOn:
     id: destinations-form-name
 - inputText: Riverside Park
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: destinations-form-category-water
 - tapOn:
@@ -26,7 +26,7 @@ name: Add a place, view its detail, see it during an emergency, delete it
 - tapOn:
     id: destinations-form-reason
 - inputText: Walked the river path every morning
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: destinations-save
 - assertVisible:

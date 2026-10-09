@@ -13,7 +13,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: destinations-form-name
 - inputText: Anna Park
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: destinations-save
 - tapOn:
@@ -21,7 +21,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: destinations-form-name
 - inputText: Ben Church
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: destinations-save
 - assertVisible:

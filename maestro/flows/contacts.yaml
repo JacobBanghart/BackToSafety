@@ -30,7 +30,7 @@ name: Add, validate, edit and delete an emergency contact
 - assertVisible:
     id: contacts-form-phone
     text: '\+442079460958'
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: contacts-form-role-neighbor
 - tapOn:
@@ -47,7 +47,7 @@ name: Add, validate, edit and delete an emergency contact
     id: contacts-form-name
 - eraseText
 - inputText: Ana Lopez-Reyes
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: contacts-save
 - assertVisible:

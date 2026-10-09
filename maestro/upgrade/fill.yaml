@@ -16,14 +16,14 @@ appId: com.backtosafety.app
 - tapOn:
     id: profile-field-dateOfBirth
 - inputText: '03151940'
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - scrollUntilVisible:
     element:
       id: profile-field-height
 - tapOn:
     id: profile-field-height
 - inputText: '56'
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - scrollUntilVisible:
     element:
       id: profile-section-medical
@@ -32,7 +32,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: profile-field-medicalConditions
 - inputText: Moderate Alzheimer's
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - scrollUntilVisible:
     element:
       id: profile-hand-left
@@ -54,7 +54,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: destinations-form-name
 - inputText: Riverside Park
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: destinations-form-category-water
 - tapOn:
@@ -78,7 +78,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: emergency-wearing-input
 - inputText: Blue jacket
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - scrollUntilVisible:
     element:
       id: emergency-step-neighbors

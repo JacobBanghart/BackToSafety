@@ -14,7 +14,7 @@ appId: com.backtosafety.app
 - tapOn:
     id: onboarding-name-input
 - inputText: Margaret Smith
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-name-continue
 - assertVisible:

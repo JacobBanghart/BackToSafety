@@ -25,7 +25,7 @@ appId: com.backtosafety.app
       - tapOn:
           id: onboarding-name-nickname
       - inputText: ${NICKNAME}
-- hideKeyboard
+- runFlow: hide-keyboard.yaml
 - tapOn:
     id: onboarding-name-continue
 - tapOn:
@@ -40,11 +40,11 @@ appId: com.backtosafety.app
           id: onboarding-contact-name
       - inputText: ${CONTACT_NAME}
       # At large text the keyboard leaves only a sliver of the phone field showing.
-      - hideKeyboard
+      - runFlow: hide-keyboard.yaml
       - tapOn:
           id: onboarding-contact-phone
       - inputText: ${CONTACT_PHONE}
-      - hideKeyboard
+      - runFlow: hide-keyboard.yaml
       - tapOn:
           id: onboarding-contact-continue
 - runFlow:

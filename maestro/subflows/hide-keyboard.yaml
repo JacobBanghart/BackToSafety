@@ -1,0 +1,19 @@
+# Dismisses the keyboard the way a person would on each platform. Android: the system back
+# action (hideKeyboard). iOS has none, and number and phone keypads have no Return key, so
+# drag the form down, which dismisses it (KeyboardAvoidingScroll, F-40). The drag starts high
+# on the screen: with the keyboard up, a screen's footer button sits mid-screen.
+appId: com.backtosafety.app
+---
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - hideKeyboard
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: 50%, 25%
+          end: 50%, 75%
+          duration: 400

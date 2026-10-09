@@ -21,7 +21,7 @@ name: Onboarding fills the profile and is not shown again
 - tapOn:
     id: onboarding-name-nickname
 - inputText: Maggie
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-name-continue
 
@@ -51,7 +51,7 @@ name: Onboarding fills the profile and is not shown again
 - tapOn:
     id: onboarding-appearance-eyes
 - inputText: Blue
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-appearance-continue
 
@@ -64,7 +64,7 @@ name: Onboarding fills the profile and is not shown again
 - assertVisible:
     id: onboarding-contact-phone
     text: (555) 123-4567
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: onboarding-contact-continue
 

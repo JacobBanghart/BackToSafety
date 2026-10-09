@@ -21,8 +21,7 @@ name: Profile edits persist and reach the info sheet and emergency screen
 - assertVisible:
     id: profile-field-dateOfBirth
     text: 03/15/1940
-- hideKeyboard
-
+- runFlow: ../subflows/hide-keyboard.yaml
 # Medical & behavioral: hand and mobility.
 - scrollUntilVisible:
     element:
@@ -52,7 +51,7 @@ name: Profile edits persist and reach the info sheet and emergency screen
 - tapOn:
     id: profile-field-medicAlertHotline
 - inputText: '18004325378'
-- hideKeyboard
+- runFlow: ../subflows/hide-keyboard.yaml
 - tapOn:
     id: profile-save
 
