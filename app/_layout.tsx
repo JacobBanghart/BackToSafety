@@ -13,7 +13,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import 'react-native-reanimated';
 import { PostHogProvider } from 'posthog-react-native';
 
-import { primary } from '@/constants/Colors';
+import { Colors, primary } from '@/constants/Colors';
 import { OnboardingProvider, useOnboarding } from '@/context/OnboardingContext';
 import { ProfileProvider } from '@/context/ProfileContext';
 import { ThemeProvider, useTheme } from '@/context/ThemeContext';
@@ -62,6 +62,14 @@ function RootLayoutNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isOnboarded, segments]);
 
+  // The navigators paint their containers with the navigation theme's background, which shows
+  // around screens mid-transition. Use the app's background, not React Navigation's grays.
+  const baseTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const navigationTheme = {
+    ...baseTheme,
+    colors: { ...baseTheme.colors, background: Colors[colorScheme].background },
+  };
+
   if (isLoading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -73,7 +81,7 @@ function RootLayoutNav() {
   return (
     <SafeAreaProvider>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <NavigationThemeProvider value={navigationTheme}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
