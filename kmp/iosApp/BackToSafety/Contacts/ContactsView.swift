@@ -261,7 +261,7 @@ struct ContactsView: View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
                 SFIcon("plus", 20, white)
-                RNText(t("addContact"), Typography.bodyBold.spec, color: white, lines: 1)
+                RNText(t("addContact"), Typography.bodyBold.spec, color: white, lines: 1).fixedSize()
             }
             .frame(maxWidth: .infinity)
             .padding(Space.lg)
@@ -275,7 +275,7 @@ struct ContactsView: View {
         Button(action: importContact) {
             HStack(spacing: Space.sm) {
                 SFIcon("square.and.arrow.down", 18, colors.tint)
-                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.text, lines: 1)
+                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.text, lines: 1).fixedSize()
             }
             .frame(maxWidth: .infinity)
             .padding(Space.lg + 1)

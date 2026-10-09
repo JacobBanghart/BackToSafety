@@ -69,7 +69,7 @@ struct ProfileView: View {
         VStack(spacing: 0) {
             ScreenHeader(title: t("screenTitle"), testID: "profile", onBack: back) {
                 Button(action: save) {
-                    RNText(t(saving ? "saving" : "save"), Typography.bodyBold.spec, color: white, lines: 1)
+                    RNText(t(saving ? "saving" : "save"), Typography.bodyBold.spec, color: white, lines: 1).fixedSize()
                         .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
                         .frame(minWidth: 72)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
