@@ -16,8 +16,10 @@ in `kmp/shared` rather than in either UI. What the apps must agree on lives in `
 
 ## Before pushing
 
-`mise run check` (contracts and the shared core's tests) and `mise run lint` (ktlint,
-SwiftFormat; `FIX=1` fixes). CI runs both, and builds both apps.
+`mise run check` (contracts and the shared core's tests), `mise run lint` (ktlint,
+SwiftFormat; `FIX=1` fixes) and `mise run snapshots` (Android screens; `RECORD=1` after a
+deliberate visual change). CI runs these, the iOS snapshot tests, and builds both apps. A
+visual change re-records both platforms' snapshots in the same commit (`docs/ARCHITECTURE.md`).
 
 ## Keyboard avoidance
 

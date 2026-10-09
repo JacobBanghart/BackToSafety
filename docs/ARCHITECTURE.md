@@ -31,11 +31,25 @@ commit.
 
 ## Checks
 
-- `python3 spec/check.py`: testIDs present in both apps, feature coverage references resolve.
-- `./gradlew :shared:jvmTest` (in `kmp/`): logic vectors, the store and migrations (against the
-  committed upgrade fixture), analytics parity between the apps.
-- CI builds both apps on every push; the Maestro harness runs on the devbox (Android) and the
-  Mac (iOS), see `maestro/README.md`.
+Fast, no device (`mise run check`, `mise run lint`, `mise run snapshots`; all in CI):
+
+- `spec/check.py`: testIDs in both apps, feature coverage, locale parity, option lists vs the
+  schema.
+- `./gradlew :shared:jvmTest`: logic vectors, the store and migrations (against the committed
+  upgrade fixture), analytics parity between the apps.
+- ktlint and SwiftFormat (`.editorconfig`, `.swiftformat`).
+- Snapshot tests of every main screen in light, dark and large text. Android
+  (`androidApp/src/test`, Robolectric + Roborazzi) runs anywhere; iOS
+  (`iosApp/BackToSafetyTests`, swift-snapshot-testing) runs on CI's macOS runner, which is its
+  reference environment. To re-record iOS after a deliberate change, delete the affected
+  images under `__Snapshots__` and push: CI records them, fails, and uploads them as the
+  `ios-snapshots` artifact; `mise run ios:snapshots` copies them in to commit.
+
+On devices (the devbox for Android, the Mac for iOS; `maestro/README.md`):
+
+- `mise run android:flows` / `ios:flows`: every Maestro flow and the reorder gestures.
+- `mise run android:fidelity` / `ios:fidelity`: every screen against the goldens.
+- From the devbox, `mise run ios:remote <task>` runs any of these on the Mac.
 
 ## Releases
 

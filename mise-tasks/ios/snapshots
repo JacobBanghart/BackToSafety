@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#MISE description="Copy the iOS snapshot images CI recorded for this commit into BackToSafetyTests/__Snapshots__"
+# CI's macOS runner is the iOS snapshots' reference environment. After deleting references
+# (a deliberate visual change) and pushing, CI records new ones, fails, and uploads them as
+# the ios-snapshots artifact; this fetches them so they can be reviewed and committed.
+set -euo pipefail
+sha="$(git rev-parse HEAD)"
+run="$(gh run list --workflow ci.yml --commit "$sha" --json databaseId --jq '.[0].databaseId')"
+[ -n "$run" ] || { echo "no CI run for $sha yet: push first" >&2; exit 2; }
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+gh run download "$run" -n ios-snapshots -D "$tmp" || { echo "run $run has no ios-snapshots artifact (it uploads only when the snapshot step fails)" >&2; exit 2; }
+src="$(find "$tmp" -type d -name __Snapshots__ | head -1)"
+[ -n "$src" ] || { echo "no __Snapshots__ in the artifact" >&2; exit 1; }
+rsync -a "$src/" kmp/iosApp/BackToSafetyTests/__Snapshots__/
+git status --short kmp/iosApp/BackToSafetyTests/__Snapshots__
