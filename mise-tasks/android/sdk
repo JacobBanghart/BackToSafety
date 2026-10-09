@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#MISE description="Install the Android SDK packages the Kotlin app builds with (into mise's android-sdk)"
+set -euo pipefail
+# ANDROID_HOME and sdkmanager come from the android-sdk tool in mise.toml.
+packages=("platform-tools" "platforms;android-37.0" "build-tools;36.0.0")
+missing=()
+for p in "${packages[@]}"; do [ -d "$ANDROID_HOME/${p//;//}" ] || missing+=("$p"); done
+[ ${#missing[@]} -eq 0 ] && exit 0
+echo "Installing into $ANDROID_HOME: ${missing[*]}"
+yes | sdkmanager --licenses >/dev/null 2>&1 || true
+sdkmanager "${missing[@]}"

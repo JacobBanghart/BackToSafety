@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#MISE description="Start an Android emulator for the app (creates the 'nijii' device the first time)"
+#MISE depends=["android:sdk"]
+set -euo pipefail
+case "$(uname -m)" in aarch64 | arm64) abi=arm64-v8a ;; *) abi=x86_64 ;; esac
+image="system-images;android-36;google_apis;$abi"
+for p in emulator "$image"; do
+  [ -d "$ANDROID_HOME/${p//;//}" ] || { yes | sdkmanager --licenses >/dev/null 2>&1 || true; sdkmanager "$p"; }
+done
+
+avd=nijii
+if ! "$ANDROID_HOME/cmdline-tools/"*/bin/avdmanager list avd -c 2>/dev/null | grep -qx "$avd"; then
+  echo no | "$ANDROID_HOME/cmdline-tools/"*/bin/avdmanager create avd -n "$avd" -k "$image" -d pixel_7 >/dev/null
+  # 4 GB (at 2 GB adb drops under load), and the computer's keyboard types into the app.
+  printf 'hw.ramSize=4096M\nhw.keyboard=yes\n' >>"$HOME/.android/avd/$avd.avd/config.ini"
+fi
+
+adb="$ANDROID_HOME/platform-tools/adb"
+# Hardware acceleration: /dev/kvm on Linux. Until a fresh login picks up the kvm group,
+# passwordless sudo -g kvm works too.
+launch=()
+if [ "$(uname -s)" = Linux ] && [ ! -w /dev/kvm ]; then
+  if sudo -n -g kvm true 2>/dev/null; then
+    launch=(sudo -n -u "$USER" -g kvm env ANDROID_HOME="$ANDROID_HOME")
+  else
+    echo "Warning: /dev/kvm isn't writable, so the emulator will be very slow (add yourself to the kvm group)." >&2
+  fi
+fi
+window=()
+[ -n "${DISPLAY:-}${WAYLAND_DISPLAY:-}" ] || [ "$(uname -s)" = Darwin ] || window=(-no-window)
+nohup "${launch[@]}" "$ANDROID_HOME/emulator/emulator" -avd "$avd" -no-snapshot-save "${window[@]}" >/tmp/nijii-emulator.log 2>&1 &
+echo "Starting the emulator (log: /tmp/nijii-emulator.log)..."
+timeout 300 "$adb" wait-for-device
+timeout 300 bash -c "until [ \"\$('$adb' shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')\" = 1 ]; do sleep 2; done"
+echo "Emulator ready."

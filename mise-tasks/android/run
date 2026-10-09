@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#MISE description="Build the Kotlin Android app (kmp/) and run it on a connected phone, or an emulator"
+#MISE alias="android"
+#MISE depends=["android:sdk"]
+set -euo pipefail
+adb="$ANDROID_HOME/platform-tools/adb"
+if ! "$adb" devices | grep -qE $'\tdevice$'; then
+  echo "No phone connected; starting the emulator."
+  mise run android:emulator
+fi
+# The app bundles the RN app's icon font from node_modules.
+[ -d node_modules/@expo/vector-icons ] || npm ci
+cd kmp
+if ! out=$(./gradlew :androidApp:installDebug --console=plain 2>&1); then
+  echo "$out" | tail -25
+  if echo "$out" | grep -q INSTALL_FAILED_UPDATE_INCOMPATIBLE; then
+    echo >&2
+    echo "The RN app is installed with a different signing key. Uninstall it first (this deletes its data):" >&2
+    echo "  $adb uninstall com.backtosafety.app" >&2
+  fi
+  exit 1
+fi
+"$adb" shell am start -n com.backtosafety.app/.MainActivity >/dev/null
+echo "Installed and launched Back to Safety (Kotlin)."
