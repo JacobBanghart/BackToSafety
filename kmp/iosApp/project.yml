@@ -1,0 +1,50 @@
+# The SwiftUI app (PARITY_PLAN: KMP core + native UIs). `xcodegen generate` writes the Xcode
+# project from this file; maestro/build-ios-kotlin.sh builds it for the simulator.
+name: BackToSafety
+options:
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    DEVELOPMENT_TEAM: ""
+targets:
+  BackToSafety:
+    type: application
+    platform: iOS
+    sources:
+      - BackToSafety
+      # The RN app's strings and logo, so both apps show the same text and art.
+      - path: ../../i18n/locales
+        type: folder
+        buildPhase: resources
+      - path: ../../assets/images/logo-full.png
+        buildPhase: resources
+    dependencies:
+      - framework: ../shared/build/XCFrameworks/release/Shared.xcframework
+        embed: false
+    info:
+      path: BackToSafety/Info.plist
+      properties:
+        CFBundleDisplayName: Back to Safety
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLSchemes: [backtosafety]
+        NSCameraUsageDescription: Allow Back to Safety to use your camera to take a profile photo for emergency identification.
+        NSContactsUsageDescription: Allow Back to Safety to access your contacts so you can quickly import emergency contacts.
+        NSPhotoLibraryUsageDescription: Allow Back to Safety to access your photos so you can choose or update a profile picture for emergency identification.
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.backtosafety.app
+        PRODUCT_NAME: BackToSafety
+        TARGETED_DEVICE_FAMILY: "1"
+        MARKETING_VERSION: "1.3.3"
+        CURRENT_PROJECT_VERSION: "100"
+        OTHER_LDFLAGS: [-lsqlite3]
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
