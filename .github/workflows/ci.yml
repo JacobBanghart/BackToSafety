@@ -93,4 +93,7 @@ jobs:
           json() { python3 -c "import json,sys; d=json.load(open('version.json')); print(eval(sys.argv[1]))" "$1"; }
           check version "$(plist CFBundleShortVersionString)" "$(json 'd["version"]')"
           check build "$(plist CFBundleVersion)" "$(json 'd["ios"]["buildNumber"]')"
-          check icon "$(plist CFBundleIconName)" AppIcon
+          # Older Xcodes write the icon name only under CFBundleIcons.
+          icon=$(plutil -extract CFBundleIconName raw "$APP/Info.plist" 2>/dev/null ||
+            plist CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName)
+          check icon "$icon" AppIcon
