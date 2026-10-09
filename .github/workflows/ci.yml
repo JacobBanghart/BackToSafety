@@ -94,6 +94,9 @@ jobs:
           check version "$(plist CFBundleShortVersionString)" "$(json 'd["version"]')"
           check build "$(plist CFBundleVersion)" "$(json 'd["ios"]["buildNumber"]')"
           # Older Xcodes write the icon name only under CFBundleIcons.
-          icon=$(plutil -extract CFBundleIconName raw "$APP/Info.plist" 2>/dev/null ||
-            plist CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName)
+          if plutil -extract CFBundleIconName raw "$APP/Info.plist" >/dev/null 2>&1; then
+            icon=$(plist CFBundleIconName)
+          else
+            icon=$(plist CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName)
+          fi
           check icon "$icon" AppIcon
