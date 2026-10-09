@@ -119,6 +119,8 @@ const styles = StyleSheet.create({
   },
   icon: {
     fontSize: 48,
+    // ThemedText's 24 line height would clip the 48pt glyph: iOS showed the check as a "v" (F-43).
+    lineHeight: 56,
     color: Colors.light.textOnPrimary,
   },
   title: {

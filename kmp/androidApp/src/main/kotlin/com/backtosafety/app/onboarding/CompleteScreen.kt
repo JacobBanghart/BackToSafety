@@ -63,7 +63,7 @@ fun CompleteScreen(t: Translate, store: Store, onFinish: () -> Unit) {
                 Modifier.padding(bottom = space.xxl.udp).size(100.udp).clip(CircleShape).background(colors.success),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(t("complete.icon"), style = rnTextStyle(48f, 24f), color = Color(DesignTokens.Light.textOnPrimary))
+                Text(t("complete.icon"), style = rnTextStyle(48f, 56f), color = Color(DesignTokens.Light.textOnPrimary))
             }
             Text(t("complete.title"), style = type.display.style(), color = colors.text, textAlign = TextAlign.Center,
                 modifier = Modifier.padding(bottom = space.lg.udp))
