@@ -1,0 +1,20 @@
+{
+  "emergency-modal-leave-end": [
+    124.0,
+    542.0,
+    278.0,
+    599.0
+  ],
+  "emergency-modal-leave-leave": [
+    208.0,
+    468.0,
+    347.0,
+    526.0
+  ],
+  "emergency-modal-leave-stay": [
+    55.0,
+    468.0,
+    196.0,
+    526.0
+  ]
+}
