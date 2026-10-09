@@ -37,6 +37,8 @@ jobs:
       - name: Generate Xcode project
         working-directory: kmp/iosApp
         run: |
+          # The runner's service PATH leaves out Homebrew.
+          export PATH="/opt/homebrew/bin:$PATH"
           command -v xcodegen >/dev/null || brew install xcodegen
           xcodegen generate
 
