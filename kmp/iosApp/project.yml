@@ -25,6 +25,9 @@ targets:
         buildPhase: resources
       - path: ../../assets/images/logo-full.png
         buildPhase: resources
+      # The RN app's icon and launch screen (expo prebuild output, committed under ios/).
+      - path: ../../ios/BacktoSafety/Images.xcassets
+      - path: ../../ios/BacktoSafety/SplashScreen.storyboard
     dependencies:
       - framework: ../shared/build/XCFrameworks/release/Shared.xcframework
         embed: false
@@ -35,7 +38,7 @@ targets:
         CFBundleDisplayName: Back to Safety
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        UILaunchScreen: {}
+        UILaunchStoryboardName: SplashScreen
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
@@ -52,6 +55,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.backtosafety.app
         PRODUCT_NAME: BackToSafety
         TARGETED_DEVICE_FAMILY: '1'
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         MARKETING_VERSION: '1.3.3'
         CURRENT_PROJECT_VERSION: '100'
         OTHER_LDFLAGS: [-lsqlite3]
