@@ -81,6 +81,10 @@ final class AppModel: ObservableObject {
 struct BackToSafetyApp: App {
     @StateObject private var model = AppModel()
 
+    init() {
+        setUpAnalytics()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()

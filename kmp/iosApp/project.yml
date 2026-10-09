@@ -9,6 +9,10 @@ settings:
   base:
     SWIFT_VERSION: '5.0'
     DEVELOPMENT_TEAM: ''
+packages:
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    from: 3.0.0
 targets:
   BackToSafety:
     type: application
@@ -24,6 +28,7 @@ targets:
     dependencies:
       - framework: ../shared/build/XCFrameworks/release/Shared.xcframework
         embed: false
+      - package: PostHog
     info:
       path: BackToSafety/Info.plist
       properties:
@@ -34,6 +39,9 @@ targets:
         UIRequiresFullScreen: true
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        # Set from the environment at build time, as the RN app's EXPO_PUBLIC_ vars are.
+        PostHogKey: $(EXPO_PUBLIC_POSTHOG_KEY)
+        PostHogHost: $(EXPO_PUBLIC_POSTHOG_HOST)
         CFBundleURLTypes:
           - CFBundleURLSchemes: [backtosafety]
         NSCameraUsageDescription: Allow Back to Safety to use your camera to take a profile photo for emergency identification.
