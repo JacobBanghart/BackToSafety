@@ -1,5 +1,6 @@
 package com.backtosafety.core
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -60,8 +61,15 @@ class Translations(
         else -> value.toString()
     }
 
-    private companion object {
-        val PLACEHOLDER = Regex("""\{\{\s*(\w+)\s*\}\}""")
+    companion object {
+        /** From the locale files' raw JSON (locale -> namespace -> text), as the iOS app reads them. */
+        fun fromJson(resources: Map<String, Map<String, String>>): Translations = Translations(
+            resources.mapValues { (_, namespaces) ->
+                namespaces.mapValues { (_, json) -> Json.parseToJsonElement(json) as JsonObject }
+            },
+        )
+
+        private val PLACEHOLDER = Regex("""\{\{\s*(\w+)\s*\}\}""")
     }
 }
 

@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
@@ -28,8 +30,15 @@ kotlin {
     }
     // Plain JVM target: the vector tests run here, on the devbox, in seconds.
     jvm()
-    iosArm64()
-    iosSimulatorArm64()
+    // The SwiftUI app links the core as a static XCFramework (assembleSharedXCFramework).
+    val xcFramework = XCFramework("Shared")
+    listOf(iosArm64(), iosSimulatorArm64()).forEach {
+        it.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+            xcFramework.add(this)
+        }
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -37,6 +46,7 @@ kotlin {
             api(libs.kotlinx.datetime)
             api(libs.room.runtime)
             implementation(libs.sqlite.bundled)
+            implementation(libs.kotlinx.coroutines.core)
         }
         jvmTest.dependencies {
             implementation(kotlin("test"))
