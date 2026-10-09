@@ -26,6 +26,9 @@ androidComponents {
     }
 }
 
+/** app.json's "expo" block: the version and build numbers both apps ship with. */
+val expo = (groovy.json.JsonSlurper().parse(repoRoot.resolve("app.json")) as Map<*, *>)["expo"] as Map<*, *>
+
 android {
     namespace = "com.backtosafety.app"
     compileSdk = 37
@@ -35,9 +38,10 @@ android {
         applicationId = "com.backtosafety.app"
         minSdk = 24
         targetSdk = 36
-        versionCode = 100
-        // The RN app's version (app.json), so Settings > About reads the same.
-        versionName = Regex("\"version\"\\s*:\\s*\"([^\"]+)\"").find(repoRoot.resolve("app.json").readText())!!.groupValues[1]
+        // Version and build number come from app.json, as the RN app's do: the release
+        // workflow stamps the tag's version and the run number there before building.
+        versionCode = (expo["android"] as Map<*, *>)["versionCode"].toString().toInt()
+        versionName = expo["version"] as String
         // Test seams (the debug clock), as EXPO_PUBLIC_TEST_SEAMS=1 does for the RN build.
         buildConfigField("boolean", "TEST_SEAMS", (findProperty("testSeams") == "true").toString())
         // PostHog, from the same environment as the RN build; analytics stay off without a key.

@@ -89,6 +89,26 @@ jobs:
         working-directory: kmp
         run: ./gradlew :androidApp:assembleRelease --console=plain
 
+  kotlin-ios:
+    name: SwiftUI iOS app (build)
+    # GitHub-hosted: macOS minutes are free for public repositories.
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java (mise.toml)
+        uses: jdx/mise-action@v5
+        with:
+          install_args: java
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      # The shared core as an XCFramework, then the SwiftUI app against it, for the simulator.
+      - name: Build
+        run: maestro/build-ios-kotlin.sh
+
   e2e-web:
     name: Playwright (web)
     runs-on: ubuntu-latest
