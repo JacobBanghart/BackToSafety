@@ -63,6 +63,7 @@ jobs:
             -destination "platform=iOS,id=${{ inputs.device }}" \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -allowProvisioningUpdates \
+            -allowProvisioningDeviceRegistration \
             -authenticationKeyPath "$ASC_KEY_PATH" \
             -authenticationKeyID "$ASC_API_KEY_ID" \
             -authenticationKeyIssuerID "$ASC_API_KEY_ISSUER_ID" \
