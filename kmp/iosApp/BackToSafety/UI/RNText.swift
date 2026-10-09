@@ -159,12 +159,20 @@ private final class TextKitView: UIView {
     }
 
     override func draw(_: CGRect) {
-        // SwiftUI can place the text a fraction of a point narrower than it measured, and then
-        // the last word or letter wraps onto a line there's no room for ("Contacts" drew as
-        // "Contact"). When the layout doesn't fit the bounds, lay it out a hair wider.
-        var layout = TextKitView.layout(string, lines: lines, width: bounds.width)
-        if layout.used.height > bounds.height + 0.5 {
-            layout = TextKitView.layout(string, lines: lines, width: bounds.width + 2)
+        // TextKit can need a fraction of a point more than the width it measured, so text drawn
+        // at exactly that width loses its last letter to a hidden second line ("Contacts" drew as
+        // "Contact") or to an ellipsis ("Add Conta..."). Text that fits on one line within a
+        // couple of points of the bounds is laid out unconstrained; anything else that
+        // overflows its bounds gets a hair more width.
+        let natural = TextKitView.layout(string, lines: lines, width: .greatestFiniteMagnitude)
+        var layout: (manager: NSLayoutManager, container: NSTextContainer, storage: NSTextStorage, used: CGRect)
+        if natural.used.width <= bounds.width + 2 {
+            layout = TextKitView.layout(string, lines: lines, width: max(bounds.width, natural.used.width + 1))
+        } else {
+            layout = TextKitView.layout(string, lines: lines, width: bounds.width)
+            if layout.used.height > bounds.height + 0.5 {
+                layout = TextKitView.layout(string, lines: lines, width: bounds.width + 2)
+            }
         }
         // The layout manager holds its storage weakly: keep it alive while drawing.
         let (manager, container, storage, _) = layout
