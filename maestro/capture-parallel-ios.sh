@@ -13,6 +13,7 @@ if [ ${#states[@]} -eq 0 ]; then
   for f in "$HERE"/states/*.yaml; do states+=("$(basename "$f" .yaml)"); done
 fi
 mkdir -p "$OUT"
+rmdir /tmp/maestro-hierarchy.lock 2>/dev/null || true # left by an interrupted run
 pids=()
 for n in "${!sims[@]}"; do
   mine=()

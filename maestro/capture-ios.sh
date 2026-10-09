@@ -35,13 +35,16 @@ for mode in ${MODES:-light dark large-text}; do
       echo "   flow failed (see $OUT/$mode/$state.log)"
       continue
     }
-    # `maestro hierarchy` sometimes answers from another simulator when several Maestro sessions
-    # run at once, and a screen can still be settling (a Dynamic Type re-render, the keyboard
-    # going away). Keep a layout only when it holds the testID the state flow last asserted and
-    # reads the same before and after the screenshot; otherwise ask again.
+    # Overlapping `maestro hierarchy` calls on different simulators all answer with one
+    # simulator's tree, so capture-parallel-ios.sh's shards take turns (a mkdir lock). A screen
+    # can also still be settling (a Dynamic Type re-render, the keyboard going away): keep a
+    # layout only when it holds the testID the state flow last asserted and reads the same
+    # before and after the screenshot; otherwise ask again.
     anchor="$(grep -oE 'id: [a-z0-9_-]+' "$ROOT/states/$state.yaml" | tail -1 | cut -d' ' -f2)"
     layout() {
+      until mkdir /tmp/maestro-hierarchy.lock 2>/dev/null; do sleep 0.2; done
       maestro --device "$U" hierarchy >"$OUT/$mode/$state.hierarchy.json" 2>/dev/null || true
+      rmdir /tmp/maestro-hierarchy.lock
       python3 "$ROOT/extract_layout_ios.py" "$OUT/$mode/$state.hierarchy.json" 2>/dev/null || true
     }
     before="$(layout)"
