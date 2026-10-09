@@ -26,6 +26,21 @@ targets:
         buildPhase: resources
       - path: ../../assets/images/logo-full.png
         buildPhase: resources
+    # The shared Kotlin core, built by Gradle for whatever Xcode is building (configuration,
+    # simulator or device), so a Run always picks up Kotlin changes. Gradle needs Java and an
+    # Android SDK location (the core has an Android target); Xcode started from the Dock has
+    # neither, so they come from the repo's mise tools.
+    preBuildScripts:
+      - name: Build the shared Kotlin core
+        basedOnDependencyAnalysis: false
+        script: |
+          set -e
+          export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+          if command -v mise >/dev/null; then
+            eval "$(cd "$SRCROOT/../.." && mise env -s bash)"
+          fi
+          cd "$SRCROOT/.."
+          ./gradlew :shared:embedAndSignAppleFrameworkForXcode --console=plain
     # Version and build number come from version.json: the release workflow
     # stamps the tag's version and the run number there before building. Runs before signing.
     postBuildScripts:
@@ -37,8 +52,6 @@ targets:
           build=$(/usr/bin/plutil -extract ios.buildNumber raw "$SRCROOT/../../version.json")
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" -c "Set :CFBundleVersion $build" "$plist"
     dependencies:
-      - framework: ../shared/build/XCFrameworks/release/Shared.xcframework
-        embed: false
       - package: PostHog
     info:
       path: BackToSafety/Info.plist
@@ -65,7 +78,9 @@ targets:
         PRODUCT_NAME: BackToSafety
         TARGETED_DEVICE_FAMILY: '1'
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        OTHER_LDFLAGS: [-lsqlite3]
+        # The framework the build phase above puts here (static: linked, not embedded).
+        FRAMEWORK_SEARCH_PATHS: ['$(inherited)', '$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)']
+        OTHER_LDFLAGS: [-lsqlite3, -framework, Shared]
         ENABLE_USER_SCRIPT_SANDBOXING: NO
       configs:
         # Release signing for the App Store, from ios-release.yml (RELEASE_TEAM_ID,

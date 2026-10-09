@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#MISE description="Run a mise task on the Mac from here: syncs this working copy there first (mise run ios:remote ios:flows)"
+# NIJII_MAC (default jacob@10.1.0.17) and NIJII_MAC_DIR (default nijii-remote, under the Mac
+# user's home) say where. The copy there isn't a git clone: this working copy, uncommitted
+# changes included, is mirrored into it. Ignored files (build output, caches) are neither
+# sent nor deleted there, so incremental builds stay fast.
+set -euo pipefail
+[ $# -gt 0 ] || { echo "usage: mise run ios:remote <task> [args]   e.g. ios:flows, ios:fidelity, ios:run" >&2; exit 2; }
+host="${NIJII_MAC:-jacob@10.1.0.17}"
+dir="${NIJII_MAC_DIR:-nijii-remote}"
+if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$host" true 2>/dev/null; then
+  echo "The Mac ($host) is offline or asleep. iOS tasks need it; CI's iOS build runs without it." >&2
+  exit 3
+fi
+root="$(git rev-parse --show-toplevel)"
+rsync -a --delete --exclude .git --filter=':- .gitignore' "$root/" "$host:$dir/"
+# A login shell, so Homebrew and mise are on PATH.
+ssh -t -o BatchMode=yes "$host" "zsh -lic 'cd ~/$dir && mise trust -q . && mise run $(printf '%q ' "$@")'"

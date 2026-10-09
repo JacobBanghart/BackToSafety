@@ -41,18 +41,13 @@ jobs:
           PY
           cat version.json
 
-      # The native app (kmp/iosApp): the shared Kotlin core as an XCFramework, then the
-      # SwiftUI project from project.yml. Version and build number come from the version.json
-      # stamped above, through the project's build phase.
-      - name: Setup Java
-        uses: actions/setup-java@v5
+      # The native app (kmp/iosApp): the SwiftUI project from project.yml. Its first build phase
+      # builds the shared Kotlin core with Gradle (so it needs Java); a later one sets the version
+      # and build number from the version.json stamped above.
+      - name: Setup Java and the Android SDK (mise.toml)
+        uses: jdx/mise-action@v5
         with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Build shared Kotlin framework
-        working-directory: kmp
-        run: ./gradlew :shared:assembleSharedReleaseXCFramework --console=plain
+          install_args: java android-sdk
 
       - name: Generate Xcode project
         working-directory: kmp/iosApp

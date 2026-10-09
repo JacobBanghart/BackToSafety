@@ -30,3 +30,8 @@ for i in $(seq 1 "$N"); do
   echo "$udid"
 done
 rm -f "$vcf"
+# Exactly N: the runners use every booted nijii simulator, so shut down any beyond N.
+xcrun simctl list devices | grep -E 'nijii-[0-9]+ .*Booted' | while read -r line; do
+  i="$(echo "$line" | sed -E 's/.*nijii-([0-9]+).*/\1/')"
+  [ "$i" -le "$N" ] || xcrun simctl shutdown "$(echo "$line" | grep -oE '[0-9A-F-]{36}')"
+done

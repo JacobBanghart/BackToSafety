@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Run every Maestro flow and the reorder gestures on fresh simulators (DEVICES=3)"
+set -euo pipefail
+[ "$(uname -s)" = Darwin ] || { echo "iOS needs the Mac: mise run ios:remote ios:flows" >&2; exit 2; }
+app="$(maestro/build-ios.sh)"
+maestro/start-simulator.sh "${DEVICES:-3}" "$app" >/dev/null
+status=0
+maestro/run-flows.sh ios "$@" || status=1
+maestro/gestures/reorder-ios.sh || status=1
+exit $status

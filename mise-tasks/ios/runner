@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#MISE description="Make sure the Mac's GitHub Actions runner (iOS releases) is up: starts its service if the Mac is awake"
+set -euo pipefail
+host="${NIJII_MAC:-jacob@10.1.0.17}"
+repo="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
+status() { gh api "repos/$repo/actions/runners" --jq '.runners[] | select(.labels[].name == "macOS") | .status' | head -1; }
+if [ "$(status)" = online ]; then
+  echo "The Mac runner is online."
+  exit 0
+fi
+if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$host" true 2>/dev/null; then
+  echo "The Mac runner is offline and the Mac ($host) is asleep or away. Releases queue until it's back." >&2
+  exit 3
+fi
+echo "The Mac is up but its runner isn't; starting the service..."
+ssh -o BatchMode=yes "$host" 'cd ~/github/actions-runner && ./svc.sh start >/dev/null 2>&1 || ./svc.sh install >/dev/null && ./svc.sh start'
+for _ in $(seq 1 12); do
+  [ "$(status)" = online ] && { echo "The Mac runner is online."; exit 0; }
+  sleep 5
+done
+echo "The service started but the runner hasn't reported in; see ~/github/actions-runner/_diag on the Mac." >&2
+exit 1

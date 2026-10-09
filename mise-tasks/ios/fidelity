@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Capture every state x light/dark/large text on simulators and hold it to the goldens (DEVICES=6)"
+set -euo pipefail
+[ "$(uname -s)" = Darwin ] || { echo "iOS needs the Mac: mise run ios:remote ios:fidelity" >&2; exit 2; }
+out="${CAPTURES:-/tmp/nijii-captures/ios}"
+app="$(maestro/build-ios.sh)"
+maestro/start-simulator.sh "${DEVICES:-6}" "$app" >/dev/null
+rm -rf "$out"
+maestro/capture-parallel-ios.sh "$out" "$@"
+python3 maestro/fidelity.py "$out" --platform ios

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Fast checks, no device: spec contracts, then the shared core's tests"
+set -euo pipefail
+python3 spec/check.py
+cd kmp && ./gradlew :shared:jvmTest --console=plain -q
+echo "shared core tests ok"

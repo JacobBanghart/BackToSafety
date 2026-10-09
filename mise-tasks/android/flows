@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Run every Maestro flow and the reorder gestures on fresh emulators (DEVICES=4)"
+#MISE depends=["android:sdk"]
+set -euo pipefail
+apk="$(maestro/build-android.sh)"
+maestro/start-emulator.sh "${DEVICES:-4}" "$apk" >/dev/null
+trap 'maestro/stop-emulators.sh >/dev/null 2>&1 || true' EXIT
+status=0
+maestro/run-flows.sh android "$@" || status=1
+ANDROID_SERIAL="$("$ANDROID_HOME/platform-tools/adb" devices | awk '/^emulator-[0-9]+\tdevice$/ {print $1; exit}')" \
+  maestro/gestures/reorder.sh || status=1
+exit $status

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#MISE description="Build the iOS app and run it on a simulator (boots one if none is running)"
+#MISE alias="ios"
+set -euo pipefail
+[ "$(uname -s)" = Darwin ] || { echo "iOS needs the Mac: mise run ios:remote ios" >&2; exit 2; }
+app="$(maestro/build-ios.sh)"
+udid="$(xcrun simctl list devices | grep -E 'nijii-[0-9]+ .*Booted' | grep -oE '[0-9A-F-]{36}' | head -1)"
+[ -n "$udid" ] || udid="$(maestro/start-simulator.sh 1 | tail -1)"
+xcrun simctl install "$udid" "$app"
+xcrun simctl launch "$udid" com.backtosafety.app >/dev/null
+open -a Simulator 2>/dev/null || true
+echo "Installed and launched Back to Safety on $udid."

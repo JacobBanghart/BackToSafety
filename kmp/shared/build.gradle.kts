@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -30,13 +29,12 @@ kotlin {
     }
     // Plain JVM target: the vector tests run here, on the devbox, in seconds.
     jvm()
-    // The SwiftUI app links the core as a static XCFramework (assembleSharedXCFramework).
-    val xcFramework = XCFramework("Shared")
+    // The SwiftUI app links the core as a static framework, which its first Xcode build phase
+    // builds (embedAndSignAppleFrameworkForXcode) for the configuration and SDK being built.
     listOf(iosArm64(), iosSimulatorArm64()).forEach {
         it.binaries.framework {
             baseName = "Shared"
             isStatic = true
-            xcFramework.add(this)
         }
     }
 

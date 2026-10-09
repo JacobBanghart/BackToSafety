@@ -30,11 +30,20 @@ cd kmp && ./gradlew :shared:jvmTest     # shared core tests (vectors, store, mig
 python3 spec/check.py                   # contracts: testIDs in both apps, feature coverage
 ```
 
-iOS (on a Mac with Xcode and XcodeGen):
+iOS needs the Mac (Xcode and XcodeGen; `mise run ios:setup` checks):
 
 ```sh
-cd kmp && ./gradlew :shared:assembleSharedReleaseXCFramework
-cd iosApp && xcodegen generate && open BackToSafety.xcodeproj    # then run on a simulator or phone
+mise run ios                           # build and run on a simulator
+cd kmp/iosApp && xcodegen generate && open BackToSafety.xcodeproj   # or work in Xcode; Run rebuilds the Kotlin core
+mise run ios:remote ios:flows          # from another machine: sync this copy to the Mac, run a task there
+```
+
+Device checks (both build the app, start devices, run, and shut down):
+
+```sh
+mise run android:flows      mise run ios:flows        # every Maestro flow plus the reorder gestures
+mise run android:fidelity   mise run ios:fidelity     # every screen in light/dark/large text vs the goldens
+mise run ios:runner                                   # make sure the Mac's release runner is up
 ```
 
 ## Repository

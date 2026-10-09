@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#MISE description="Boot N iPhone 17 Pro simulators (default 1) with the harness's fixed status bar and contact"
+set -euo pipefail
+[ "$(uname -s)" = Darwin ] || { echo "iOS needs the Mac: mise run ios:remote ios:sim" >&2; exit 2; }
+maestro/start-simulator.sh "${1:-1}" >/dev/null
+open -a Simulator 2>/dev/null || true
+xcrun simctl list devices | grep -E 'nijii-[0-9]+ .*Booted'

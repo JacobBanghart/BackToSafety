@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#MISE description="Capture every state x light/dark/large text on fresh emulators and hold it to the goldens (DEVICES=4)"
+#MISE depends=["android:sdk"]
+set -euo pipefail
+out="${CAPTURES:-/tmp/nijii-captures/android}"
+apk="$(maestro/build-android.sh)"
+maestro/start-emulator.sh "${DEVICES:-4}" "$apk" >/dev/null
+trap 'maestro/stop-emulators.sh >/dev/null 2>&1 || true' EXIT
+rm -rf "$out"
+maestro/capture-parallel.sh "$out" "$@"
+python3 maestro/fidelity.py "$out"

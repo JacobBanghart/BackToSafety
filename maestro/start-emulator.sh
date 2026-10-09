@@ -4,8 +4,8 @@
 #
 #   start-emulator.sh [count] [apk]          GPU=guest|swiftshader_indirect (default guest)
 #
-# One-time setup (maestro/README.md): Android SDK in ~/Android/Sdk and the nijii-pixel7 AVD
-# (API 36 Google APIs x86_64, pixel_7, hw.ramSize=4096M, hw.cpu.ncore=8).
+# Uses $ANDROID_HOME (mise's android-sdk under `mise run`) and the nijii-pixel7 AVD, which it
+# creates the first time (API 36 Google APIs, pixel_7, hw.ramSize=4096M, hw.cpu.ncore=8).
 # /dev/kvm must be usable; until a fresh login picks up the kvm group, this uses sudo -g kvm.
 #
 # -read-only lets several instances share the one AVD, and every boot starts from the
@@ -21,6 +21,16 @@ GPU="${GPU:-guest}"
 export ANDROID_HOME="${ANDROID_HOME:-$HOME/Android/Sdk}"
 ADB="$ANDROID_HOME/platform-tools/adb"
 HERE="$(cd "$(dirname "$0")" && pwd)"
+
+# The AVD, the first time: the API 36 Google APIs image (adb root works on it), 4 GB, 8 cores.
+if [ ! -d "$HOME/.android/avd/nijii-pixel7.avd" ]; then
+  case "$(uname -m)" in aarch64 | arm64) abi=arm64-v8a ;; *) abi=x86_64 ;; esac
+  image="system-images;android-36;google_apis;$abi"
+  bin="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | head -1)"
+  [ -d "$ANDROID_HOME/system-images/android-36/google_apis/$abi" ] || { yes | "$bin/sdkmanager" --licenses >/dev/null 2>&1 || true; "$bin/sdkmanager" emulator "$image"; }
+  echo no | "$bin/avdmanager" create avd -n nijii-pixel7 -k "$image" -d pixel_7 >/dev/null
+  printf 'hw.ramSize=4096M\nhw.cpu.ncore=8\n' >>"$HOME/.android/avd/nijii-pixel7.avd/config.ini"
+fi
 
 for i in $(seq 0 $((COUNT - 1))); do
   port=$((5554 + 2 * i))

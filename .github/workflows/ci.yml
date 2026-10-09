@@ -75,7 +75,7 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      # The shared core as an XCFramework, then the SwiftUI app against it, for the simulator.
+      # The SwiftUI app for the simulator; its first build phase builds the shared Kotlin core.
       - name: Build
         run: maestro/build-ios.sh
 
