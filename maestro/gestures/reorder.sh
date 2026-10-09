@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Drag-to-reorder for contacts and places. Maestro can't hold-then-drag, so between a
 # setup flow and a verify flow this uses `adb shell input draganddrop` (long press, then
-# drag), aimed by testID bounds. Android only; iOS needs its own gesture driver.
+# drag), aimed by testID bounds. Android only; reorder-ios.sh is the iOS counterpart.
 #
 #   reorder.sh            runs contacts and destinations
 

@@ -68,3 +68,5 @@ kmp/*/build/
 kmp/buildSrc/.gradle/
 kmp/buildSrc/.kotlin/
 kmp/local.properties
+maestro/gestures/ios/Gestures.xcodeproj/
+maestro/gestures/ios/build/

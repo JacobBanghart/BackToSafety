@@ -289,8 +289,9 @@ struct DestinationsView: View {
     private var addressColor: Color { Color(argb: colors.isDark ? Primary.c300 : Primary.c700) }
 
     private func placeCard(_ d: DestinationEntity, _ index: Int, _ dragging: Bool) -> some View {
-        Button { viewing = d } label: {
-            VStack(alignment: .leading, spacing: 0) {
+        // A tap gesture rather than a Button: a Button's own tap handling swallows the long
+        // press that starts a reorder drag (RN's Pressable allows both).
+        VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: 0) {
                     VStack(alignment: .leading, spacing: 0) {
                         HStack(spacing: 10) {
@@ -332,9 +333,10 @@ struct DestinationsView: View {
             .padding(Space.lg + 1)
             .listCard(dragging: dragging, colors: colors)
             .contentShape(Rectangle())
-        }
-        .buttonStyle(.pressable)
-        .accessibilityIdentifier("destinations-item-\(index)")
+            .onTapGesture { viewing = d }
+            .accessibilityElement(children: .contain)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityIdentifier("destinations-item-\(index)")
         .padding(.bottom, Space.md)
     }
 

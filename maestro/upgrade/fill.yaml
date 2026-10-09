@@ -29,6 +29,15 @@ appId: com.backtosafety.app
       id: profile-section-medical
 - tapOn:
     id: profile-section-medical
+# On iOS, opening the section scrolls this field up under the header, where it still counts
+# as visible and a tap lands on the header: drag it back down first.
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - swipe:
+          start: 50%, 35%
+          end: 50%, 65%
 - tapOn:
     id: profile-field-medicalConditions
 - inputText: Moderate Alzheimer's
@@ -74,14 +83,18 @@ appId: com.backtosafety.app
 - tapOn:
     id: home-start-emergency
 - tapOn:
-    id: emergency-step-home_search
-- tapOn:
     id: emergency-wearing-input
 - inputText: Blue jacket
 - runFlow: ../subflows/hide-keyboard.yaml
+# The steps can sit below the fold (an iPhone 17 Pro, under the direction hint). Scroll to
+# the step after each one, so the tapped step is mid-screen rather than under the header.
 - scrollUntilVisible:
     element:
-      id: emergency-step-neighbors
-    centerElement: true
+      id: emergency-step-outside_immediate
+- tapOn:
+    id: emergency-step-home_search
+- scrollUntilVisible:
+    element:
+      id: emergency-step-radius_search
 - tapOn:
     id: emergency-step-neighbors
