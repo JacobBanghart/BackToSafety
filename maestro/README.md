@@ -29,6 +29,21 @@ python3 maestro/sync_features.py                # after adding a flow
 python3 maestro/fidelity.py /tmp/kt-captures     # Kotlin app vs RN goldens (tier 2 ratchet: pixels + layout)
 ```
 
+iOS runs on the Mac (`ssh jacob@10.1.0.17`, plain bash 3):
+
+```sh
+maestro/build-ios.sh                            # RN Release build for the simulator, test seams on
+maestro/build-ios-kotlin.sh                     # the SwiftUI app (kmp/iosApp)
+maestro/start-simulator.sh 6 APP                # 6 "nijii-N" iPhone 17 Pro simulators, app installed
+maestro/capture-parallel-ios.sh /tmp/captures   # every state x light/dark/large-text
+python3 maestro/fidelity.py /tmp/captures --platform ios
+maestro/gestures/reorder-ios.sh                 # drag-to-reorder (an XCUITest bundle drives the drag)
+maestro/upgrade/upgrade-ios.sh install-over RN.app SWIFTUI.app
+```
+
+Overlapping `maestro hierarchy` calls on different simulators all answer with one
+simulator's tree, so the parallel capture takes turns reading layouts.
+
 A full capture is 17 states × 3 modes. On 4 emulators that's about 12 minutes; serially it's
 about 45. Emulators use `-gpu guest` (software rendering inside Android). Two full runs were
 byte-identical at zero tolerance, apart from the system bars, which the comparer ignores.
