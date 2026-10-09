@@ -18,12 +18,16 @@ private let shippedLanguages = ["en"]
 
 @MainActor
 final class AppModel: ObservableObject {
-    let store = DatabaseBuilder_iosKt.openStore()
+    let store: Store
     private let translations = AppModel.loadTranslations()
     @Published var onboarded: Bool?
     @Published var themePreference = "system"
     @Published var language = "en"
     @Published var path: [Route] = []
+
+    init(store: Store = DatabaseBuilder_iosKt.openStore()) {
+        self.store = store
+    }
 
     func t(_ namespace: String) -> Translate {
         Translate(lookup: translations.translator(locale: language, namespace: namespace))
@@ -89,9 +93,15 @@ struct BackToSafetyApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView()
-                .environmentObject(model)
-                .onOpenURL(perform: handleTestSeam)
+            // Hosting the unit tests, the app stays out of the way: no screens, no database
+            // load, no clock changes under the snapshot tests.
+            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+                Color.clear
+            } else {
+                RootView()
+                    .environmentObject(model)
+                    .onOpenURL(perform: handleTestSeam)
+            }
         }
     }
 

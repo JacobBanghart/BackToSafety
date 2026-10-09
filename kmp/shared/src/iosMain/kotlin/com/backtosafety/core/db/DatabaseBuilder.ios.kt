@@ -24,7 +24,7 @@ fun databaseBuilder(path: String): RoomDatabase.Builder<AppDatabase> =
     Room.databaseBuilder<AppDatabase>(name = path).setQueryCoroutineContext(Dispatchers.IO)
 
 /** The SwiftUI app's entry point to the data: the store over the app's database. */
-fun openStore(): Store {
-    val path = databasePath()
-    return Store(openAppDatabase(path, databaseBuilder(path)))
-}
+fun openStore(): Store = openStoreAt(databasePath())
+
+/** A store on a database file of your choosing (the snapshot tests use a temporary one). */
+fun openStoreAt(path: String): Store = Store(openAppDatabase(path, databaseBuilder(path)))

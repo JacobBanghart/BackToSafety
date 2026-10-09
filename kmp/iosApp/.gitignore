@@ -3,3 +3,4 @@ BackToSafety.xcodeproj/
 BackToSafety/Info.plist
 build/
 build-device/
+build-tests/

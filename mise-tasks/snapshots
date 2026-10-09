@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#MISE description="Android snapshot tests: every main screen rendered on the JVM vs src/test/snapshots (RECORD=1 re-records)"
+set -euo pipefail
+cd kmp
+if [ -n "${RECORD:-}" ]; then
+  ./gradlew :androidApp:testDebugUnitTest -Precord --console=plain -q
+  echo "recorded androidApp/src/test/snapshots"
+else
+  ./gradlew :androidApp:testDebugUnitTest --console=plain -q || {
+    echo "differences: kmp/androidApp/build/outputs/roborazzi (RECORD=1 if deliberate)" >&2
+    exit 1
+  }
+  echo "snapshots match"
+fi

@@ -66,6 +66,18 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Snapshot tests: `./gradlew :androidApp:testDebugUnitTest` compares every screen with its
+    // reference image in src/test/snapshots; -Precord writes new references instead.
+    testOptions.unitTests {
+        isIncludeAndroidResources = true
+        all {
+            it.systemProperty("repoRoot", repoRoot.absolutePath)
+            val record = project.hasProperty("record")
+            it.systemProperty("roborazzi.test.record", record.toString())
+            it.systemProperty("roborazzi.test.verify", (!record).toString())
+        }
+    }
 }
 
 dependencies {
@@ -80,4 +92,14 @@ dependencies {
     implementation(libs.android.image.cropper)
     implementation(libs.posthog.android)
     implementation(libs.core.splashscreen)
+
+    testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(libs.roborazzi.junit)
+    testImplementation(platform(libs.compose.bom))
+    testImplementation(libs.compose.ui.test.junit4)
+    testImplementation(libs.sqlite.framework)
+    debugImplementation(libs.compose.ui.test.manifest)
 }

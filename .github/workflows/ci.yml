@@ -74,6 +74,18 @@ jobs:
         working-directory: kmp
         run: ./gradlew :androidApp:assembleRelease --console=plain
 
+      # Every main screen rendered on the JVM, compared with src/test/snapshots.
+      - name: Snapshot tests
+        working-directory: kmp
+        run: ./gradlew :androidApp:testDebugUnitTest --console=plain
+
+      - name: Upload snapshot differences
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-snapshot-diffs
+          path: kmp/androidApp/build/outputs/roborazzi/
+
   kotlin-ios:
     name: SwiftUI iOS app (build)
     # GitHub-hosted: macOS minutes are free for public repositories.
@@ -115,3 +127,24 @@ jobs:
             icon=$(plist CFBundleIcons.CFBundlePrimaryIcon.CFBundleIconName)
           fi
           check icon "$icon" AppIcon
+
+      # Every main screen on a fixed simulator, compared with BackToSafetyTests/__Snapshots__.
+      # A missing reference is recorded and fails the run: the upload has it to commit.
+      - name: Snapshot tests
+        working-directory: kmp/iosApp
+        run: |
+          set -euo pipefail
+          xcodebuild -version
+          sim=$(xcrun simctl list devices available | grep -m1 -E '^ +iPhone 16 Pro \(' | grep -oE '[0-9A-F-]{36}')
+          TEST_RUNNER_SNAPSHOT_ARTIFACTS="$RUNNER_TEMP/snapshot-diffs" xcodebuild test \
+            -project BackToSafety.xcodeproj -scheme BackToSafety -destination "id=$sim" \
+            -derivedDataPath build-tests CODE_SIGNING_ALLOWED=NO -quiet
+
+      - name: Upload snapshots
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-snapshots
+          path: |
+            kmp/iosApp/BackToSafetyTests/__Snapshots__/
+            ${{ runner.temp }}/snapshot-diffs/

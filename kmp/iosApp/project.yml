@@ -14,10 +14,15 @@ packages:
   PostHog:
     url: https://github.com/PostHog/posthog-ios
     from: 3.0.0
+  SnapshotTesting:
+    url: https://github.com/pointfreeco/swift-snapshot-testing
+    from: 1.17.0
 targets:
   BackToSafety:
     type: application
     platform: iOS
+    scheme:
+      testTargets: [BackToSafetyTests]
     sources:
       - BackToSafety
       # Strings and logo shared with the Android app, so both show the same text and art.
@@ -91,3 +96,15 @@ targets:
           PROVISIONING_PROFILE_SPECIFIER: $(RELEASE_PROFILE_UUID)
           CODE_SIGN_STYLE: Manual
           CODE_SIGN_IDENTITY: iPhone Distribution
+  # Snapshot tests of every main screen (BackToSafetyTests/__Snapshots__), hosted by the app.
+  BackToSafetyTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources: [BackToSafetyTests]
+    dependencies:
+      - target: BackToSafety
+      - package: SnapshotTesting
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.backtosafety.app.tests
+        GENERATE_INFOPLIST_FILE: YES
