@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#MISE description="Rust port: the core's tests (spec/vectors and the store), then the app compiles for Android"
+set -euo pipefail
+cd rust
+cargo test -p nijii-core
+cargo check -p nijii --target x86_64-linux-android

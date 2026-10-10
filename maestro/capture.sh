@@ -17,9 +17,11 @@ MAESTRO=(maestro)
 [ -n "${ANDROID_SERIAL:-}" ] && MAESTRO+=(--device "$ANDROID_SERIAL")
 DPI="$("$ADB" shell wm density | grep -oE '[0-9]+' | tail -1)"
 
+# STATES_DIR: the same states retargeted at another app (rust/scripts/retarget.sh).
+STATES_DIR="${STATES_DIR:-$ROOT/states}"
 states=("$@")
 if [ ${#states[@]} -eq 0 ]; then
-  for f in "$ROOT"/states/*.yaml; do states+=("$(basename "$f" .yaml)"); done
+  for f in "$STATES_DIR"/*.yaml; do states+=("$(basename "$f" .yaml)"); done
 fi
 
 set_mode() {
@@ -37,7 +39,7 @@ for mode in ${MODES:-light dark large-text}; do
   mkdir -p "$OUT/$mode"
   for state in "${states[@]}"; do
     echo "== $mode / $state"
-    "${MAESTRO[@]}" test --no-ansi "$ROOT/states/$state.yaml" >"$OUT/$mode/$state.log" 2>&1 || {
+    "${MAESTRO[@]}" test --no-ansi "$STATES_DIR/$state.yaml" >"$OUT/$mode/$state.log" 2>&1 || {
       echo "   flow failed (see $OUT/$mode/$state.log)"
       continue
     }

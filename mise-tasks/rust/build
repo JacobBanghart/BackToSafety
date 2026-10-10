@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Rust port: build the Android APK (TARGET=aarch64-linux-android for a phone). Prints the APK path."
+#MISE depends=["rust:sdk"]
+set -euo pipefail
+export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/29.0.14206865"
+cd rust/app
+dx build --platform android --target "${TARGET:-x86_64-linux-android}" ${RELEASE:+--release} >&2
+profile=debug; [ -z "${RELEASE:-}" ] || profile=release
+find "$PWD/../target/dx/nijii/$profile/android" -name '*.apk' -path '*outputs/apk*' | head -1

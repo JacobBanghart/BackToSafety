@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#MISE description="The oracle: install the KMP app (com.backtosafety.app) on ANDROID_SERIAL. Built once into ~/.cache/nijii-oracle; REBUILD=1 rebuilds."
+#MISE depends=["android:sdk"]
+set -euo pipefail
+cache="$HOME/.cache/nijii-oracle"
+mkdir -p "$cache"
+exec 9>"$cache/lock"
+flock 9
+if [ -n "${REBUILD:-}" ] || [ ! -f "$cache/oracle.apk" ]; then
+  # Same build the parity harness runs (release, test seams on), from this checkout's kmp/.
+  cp "$(maestro/build-android.sh)" "$cache/oracle.apk"
+  git rev-parse --short HEAD >"$cache/commit"
+fi
+flock -u 9
+if adb get-state >/dev/null 2>&1; then
+  adb uninstall com.backtosafety.app >/dev/null 2>&1 || true
+  adb install "$cache/oracle.apk" >/dev/null
+  echo "oracle (kmp @ $(cat "$cache/commit")) installed on ${ANDROID_SERIAL:-the device}"
+fi

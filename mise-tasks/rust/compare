@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#MISE description="Rust port vs the oracle: capture states (maestro/states) on ANDROID_SERIAL from both apps and compare layouts (MODES=light by default; PIXELS=1 also gates pixels)"
+set -euo pipefail
+: "${ANDROID_SERIAL:?set ANDROID_SERIAL to the lane emulator (rust/scripts/emulator.sh up <port>)}"
+out="${OUT:-/tmp/nijii-compare/$ANDROID_SERIAL}"
+export MODES="${MODES:-light}"
+rm -rf "$out" && mkdir -p "$out"
+mise run -q rust:oracle >/dev/null
+adb install -r "$(mise run -q rust:build)" >/dev/null
+STATES_DIR="$(rust/scripts/retarget.sh "$out/maestro-oracle" com.backtosafety.app)/states" maestro/capture.sh "$out/oracle" "$@"
+STATES_DIR="$(rust/scripts/retarget.sh "$out/maestro-rust")/states" maestro/capture.sh "$out/rust" "$@"
+[ -x .venv/bin/python ] || python3 -m venv .venv
+.venv/bin/pip install -q -r maestro/requirements.txt
+status=0
+for mode in $MODES; do
+  echo "== $mode: rust vs oracle"
+  # Layout (testID boxes within 2dp) is the gate across implementations, as for the native
+  # ports; a WebView never renders text pixel-identical to Compose.
+  .venv/bin/python maestro/compare_screens.py "$out/rust/$mode" "$out/oracle/$mode" $([ -n "${PIXELS:-}" ] || echo --skip-pixels) || status=1
+done
+echo "screenshots: $out/{rust,oracle}/<mode>/<state>.png"
+exit $status

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Install the Android SDK packages the Rust app builds with (NDK; into mise's android-sdk)"
+#MISE depends=["android:sdk"]
+set -euo pipefail
+ndk="ndk;29.0.14206865"
+[ -d "$ANDROID_HOME/${ndk//;//}" ] && exit 0
+echo "Installing into $ANDROID_HOME: $ndk"
+yes | sdkmanager --licenses >/dev/null 2>&1 || true
+sdkmanager "$ndk"
