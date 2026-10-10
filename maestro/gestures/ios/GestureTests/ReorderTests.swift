@@ -13,7 +13,10 @@ final class ReorderTests: XCTestCase {
         XCTAssertTrue(second.waitForExistence(timeout: 10))
         XCTAssertTrue(first.exists)
         let from = second.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        let to = first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: -30))
+        // Drop it clearly above the first card: the press-and-hold eats some of a synthesized
+        // drag's movement, and a drop just above the first name (-30) no longer crossed the
+        // halfway point that swaps them.
+        let to = first.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).withOffset(CGVector(dx: 0, dy: -80))
         from.press(forDuration: 1.0, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.5)
         sleep(1)
     }

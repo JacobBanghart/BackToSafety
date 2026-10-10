@@ -121,6 +121,8 @@ private struct TextKitText: UIViewRepresentable {
         view.isOpaque = false
         view.contentMode = .redraw
         view.isAccessibilityElement = false
+        // Static text, as RN's Text is: touches go to the views and gestures around it.
+        view.isUserInteractionEnabled = false
         return view
     }
 
@@ -207,14 +209,16 @@ struct SFIcon: View {
 
 extension View {
     /// An RN testID on a whole box: the element (and its bounds) is this view's frame, not
-    /// just the glyphs of the text inside it.
+    /// just the glyphs of the text inside it. The overlay only carries the accessibility
+    /// element; touches go through to the views and gestures around it.
     func rnID(_ id: String, label: String) -> some View {
         accessibilityHidden(true).overlay {
-            Color.clear.contentShape(Rectangle())
+            Color.clear
                 .accessibilityElement()
                 .accessibilityLabel(label)
                 .accessibilityAddTraits(.isStaticText)
                 .accessibilityIdentifier(id)
+                .allowsHitTesting(false)
         }
     }
 }
