@@ -124,3 +124,40 @@ Open questions for the owner:
    that would hide the caregiver's data. Is a visible error screen wanted instead?
 
 `data_migration_failed_properties` is ported (`store::`); the shell lane calls it at startup.
+
+#### data lane: startup analytics (2026-10-10)
+
+- `core/src/posthog.rs`: PostHog HTTP `/batch/` client on a background thread (ureq + rustls, no
+  OpenSSL). Same settings as the KMP SDK config: flush at 20 events or 10 s, 100 per request, 1000
+  queued (oldest dropped), failed batches retried at the next flush, people profiled only after
+  `identify` (`$process_person_profile: false` before). `Analytics` null properties are dropped,
+  as the KMP sink does.
+- `core/src/startup.rs`: app_ready properties and once-per-process guard, `report_data_migration`
+  (ok or failed after the first query), `report_open_failure` (a migration that can't open is
+  reported as data_migrated with ok=false), process uptime from /proc (Android's
+  `uptimeMillis - getStartUptimeMillis`), and the SDK lifecycle events ("Application
+  Installed/Updated/Opened", last version kept in `posthog_app_version` next to the database).
+- `app/src/platform/posthog.rs`: key and host from `POSTHOG_KEY` / `POSTHOG_HOST` at build time
+  (`app/build.rs`; no key, no sink, nothing sent), version and build from `version.json`
+  (`NIJII_VERSION`, android.versionCode). `app/src/startup.rs`: `open_store` (called by
+  `store::services()`) does what App.kt's launch effect does; `use_app_ready` (a hook inside
+  `store::provide()`) reports app_ready after the first render.
+- Tests: `core/tests/posthog.rs` (9, against a local fake server), `core/tests/startup.rs` (9).
+  `analytics_parity` has a new test for the events the core and startup send; the two
+  all-events/screens tests stay `#[ignore]`d because the remaining events (contacts, destinations,
+  emergency, onboarding, profile, readout, settings, save_failed, dial_failed, screen_viewed) are
+  the screen lanes'. Run them with `-- --ignored` after the merges to get the list that is left.
+- `rust:build` links with ureq/rustls (ring) and bundled SQLite; not run on an emulator (no free
+  slot after two 7-minute waits).
+
+For other lanes:
+
+- **Emergency lane:** app_ready also carries `notifications_enabled` and `exact_alarms` in KMP
+  (CountdownNotifications). Call `startup::set_device_readiness(|| props)` once the alarms exist;
+  until then they're omitted.
+- **Shell lane:** screens are already reported by your layout. The SDK also sends "Application
+  Backgrounded" when the app goes to the background; that needs a lifecycle hook from the platform
+  and isn't ported. Not ported either: session replay, error autocapture, feature flags
+  (`captureScreenViews` is off in KMP too).
+- The anonymous ID before `identify` is per process (the SDK persists it); events before identify
+  are not profiled, so only the link event differs.
