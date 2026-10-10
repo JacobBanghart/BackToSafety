@@ -1,5 +1,6 @@
 mod platform;
 mod screens;
+mod store;
 mod ui;
 
 use dioxus::prelude::*;
@@ -69,6 +70,7 @@ fn main() {
 
 #[component]
 fn App() -> Element {
+    store::provide();
     let settings = use_context_provider(|| {
         Signal::new(Settings {
             theme: ThemePreference::System,
