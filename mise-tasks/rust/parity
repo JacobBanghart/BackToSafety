@@ -49,17 +49,8 @@ while [ $# -gt 0 ]; do
 done
 
 out="${OUT:-/tmp/nijii-parity}"
-if [ -n "$up" ]; then
-  serials=""
-  for port in ${up//,/ }; do
-    rust/scripts/emulator.sh up "$port" >/dev/null
-    serials="${serials:+$serials,}emulator-$port"
-  done
-  trap 'for port in ${up//,/ }; do rust/scripts/emulator.sh down "$port"; done' EXIT
-fi
-[ -n "$serials" ] || serials="${ANDROID_SERIAL:-}"
-[ -n "$serials" ] || { echo "no device: set ANDROID_SERIAL, or pass --serials / --up" >&2; exit 2; }
-IFS=, read -ra devices <<<"$serials"
+[ -n "$up" ] || [ -n "$serials" ] || serials="${ANDROID_SERIAL:-}"
+[ -n "$up" ] || [ -n "$serials" ] || { echo "no device: set ANDROID_SERIAL, or pass --serials / --up" >&2; exit 2; }
 
 # What to run.
 list() { # <dir> <ext> -> names
@@ -70,20 +61,32 @@ if [ "$flows_arg" = none ]; then flows=(); elif [ -n "$flows_arg" ]; then IFS=, 
 for s in "${states[@]}"; do [ -f "maestro/states/$s.yaml" ] || { echo "no such state: $s" >&2; exit 2; }; done
 for f in "${flows[@]}"; do [ -f "maestro/flows/$f.yaml" ] || { echo "no such flow: $f" >&2; exit 2; }; done
 
-# The oracle and its capture cache.
-if [ ! -f "$HOME/.cache/nijii-oracle/oracle.apk" ]; then
-  ANDROID_SERIAL="${devices[0]}" mise run -q rust:oracle >/dev/null
-fi
-commit="$(cat "$HOME/.cache/nijii-oracle/commit" 2>/dev/null || echo unknown)"
-captures="$HOME/.cache/nijii-oracle/captures/$commit"
-mkdir -p "$captures"
-
 rm -rf "$out" && mkdir -p "$out"
 apk=""
 if [ ${#states[@]} -gt 0 ] || [ ${#flows[@]} -gt 0 ] || [ -n "$gestures" ]; then
   echo "building the Rust app"
   apk="$(mise run -q rust:build)"
 fi
+
+# Emulators come up after the build: a slot can take a long time to free up, and one booted
+# early would sit idle (or die) through the build on this shared box.
+if [ -n "$up" ]; then
+  serials=""
+  for port in ${up//,/ }; do
+    rust/scripts/emulator.sh up "$port" >/dev/null
+    serials="${serials:+$serials,}emulator-$port"
+  done
+  trap 'for port in ${up//,/ }; do rust/scripts/emulator.sh down "$port"; done' EXIT
+fi
+IFS=, read -ra devices <<<"$serials"
+
+# The oracle APK is built once into the cache; its captures are kept per oracle commit.
+if [ ! -f "$HOME/.cache/nijii-oracle/oracle.apk" ]; then
+  ANDROID_SERIAL="${devices[0]}" mise run -q rust:oracle >/dev/null
+fi
+commit="$(cat "$HOME/.cache/nijii-oracle/commit" 2>/dev/null || echo unknown)"
+captures="$HOME/.cache/nijii-oracle/captures/$commit"
+mkdir -p "$captures"
 
 # Shard round-robin: device i gets items i, i+n, ...
 shard() { # <index> <items...>
