@@ -15,7 +15,14 @@ cmd="${1:-list}"
 port="${2:-}"
 serial="emulator-$port"
 
-running() { pgrep -f 'qemu-system.*-port [0-9]+' -a | grep -oE -- '-port [0-9]+' | awk '{print $2}'; }
+# Ports of running emulators, by process name (not command-line text, which also matches any
+# shell whose command mentions qemu).
+running() {
+  local pid
+  for pid in $(pgrep qemu-system); do
+    tr '\0' ' ' </proc/"$pid"/cmdline 2>/dev/null | grep -oE -- '-port [0-9]+' | awk '{print $2}'
+  done
+}
 
 case "$cmd" in
   list) running ;;
@@ -25,21 +32,29 @@ case "$cmd" in
     ;;
   up)
     [ -n "$port" ] || { echo "usage: emulator.sh up <port>" >&2; exit 2; }
+    # The AVD exists once maestro/start-emulator.sh has run; make it the same way if not.
+    [ -d "$HOME/.android/avd/nijii-pixel7.avd" ] || { "$MAESTRO_DIR/start-emulator.sh" 1 >/dev/null; "$MAESTRO_DIR/stop-emulators.sh"; }
+    # Check and boot under one lock: two `up` calls for the same port at once used to both see
+    # it free and boot two emulators, the second unreachable but holding ~5 GB (2026-10-10).
+    exec 9>/tmp/nijii-emulator.lock
+    flock 9
     if ! running | grep -qx "$port"; then
-      # The AVD exists once maestro/start-emulator.sh has run; make it the same way if not.
-      [ -d "$HOME/.android/avd/nijii-pixel7.avd" ] || { "$MAESTRO_DIR/start-emulator.sh" 1 >/dev/null; "$MAESTRO_DIR/stop-emulators.sh"; }
-      exec 9>/tmp/nijii-emulator.lock
-      until flock 9 && [ "$(running | wc -l)" -lt "$MAX" ]; do
-        flock -u 9; echo "waiting for an emulator slot ($MAX in use)" >&2; sleep 30
+      until [ "$(running | wc -l)" -lt "$MAX" ]; do
+        flock -u 9; echo "waiting for an emulator slot ($MAX in use)" >&2; sleep 30; flock 9
+        running | grep -qx "$port" && break
       done
-      emu=("$ANDROID_HOME/emulator/emulator" -avd nijii-pixel7 -port "$port" -read-only -no-window
-        -no-audio -no-boot-anim -gpu guest -no-snapshot -no-metrics)
-      if [ -w /dev/kvm ]; then nohup "${emu[@]}" >"/tmp/emulator-$port.log" 2>&1 &
-      else nohup sudo -n -u "$USER" -g kvm env ANDROID_HOME="$ANDROID_HOME" "${emu[@]}" >"/tmp/emulator-$port.log" 2>&1 &
+      if ! running | grep -qx "$port"; then
+        emu=("$ANDROID_HOME/emulator/emulator" -avd nijii-pixel7 -port "$port" -read-only -no-window
+          -no-audio -no-boot-anim -gpu guest -no-snapshot -no-metrics)
+        if [ -w /dev/kvm ]; then nohup "${emu[@]}" >"/tmp/emulator-$port.log" 2>&1 &
+        else nohup sudo -n -u "$USER" -g kvm env ANDROID_HOME="$ANDROID_HOME" "${emu[@]}" >"/tmp/emulator-$port.log" 2>&1 &
+        fi
+        # Until qemu shows up, another `up` would think the port is free.
+        export -f running
+        timeout 60 bash -c 'until running | grep -qx "$1"; do sleep 1; done' _ "$port" || true
       fi
-      sleep 5
-      flock -u 9
     fi
+    flock -u 9
     timeout 600 "$ADB" -s "$serial" wait-for-device shell 'while [ -z "$(getprop sys.boot_completed)" ]; do sleep 2; done'
     ANDROID_SERIAL="$serial" "$MAESTRO_DIR/prepare-android.sh" >/dev/null
     ANDROID_SERIAL="$serial" "$MAESTRO_DIR/seed-device.sh" >/dev/null
