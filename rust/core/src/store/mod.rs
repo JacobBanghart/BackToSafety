@@ -687,3 +687,18 @@ fn save_incident(c: &Connection, i: &IncidentEntity) -> rusqlite::Result<()> {
     )?;
     Ok(())
 }
+
+/// data_migrated's properties when migrating from `from_version` failed after `duration_ms`.
+pub fn data_migration_failed_properties(
+    from_version: i32,
+    duration_ms: u64,
+    error_type: Option<&str>,
+) -> Properties {
+    let mut p = Properties::new();
+    p.insert("from_version".into(), json!(from_version));
+    p.insert("to_version".into(), json!(DATABASE_VERSION));
+    p.insert("ok".into(), json!(false));
+    p.insert("duration_ms".into(), json!(duration_ms));
+    p.insert("error".into(), json!(error_type.unwrap_or("unknown")));
+    p
+}

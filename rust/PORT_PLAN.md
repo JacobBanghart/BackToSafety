@@ -94,8 +94,8 @@ For other lanes:
   (Kotlin's `DatabaseOpen.migratingFrom`); `data_migrated_properties(from, ms)`,
   `readiness_properties()` and `device_id()` are ready for startup. A migration failure surfaces as
   `StoreError` from `Store::open`, which today panics at startup (see questions); the shell lane
-  decides how to report it (`data_migrated` with ok=false, `dataMigrationFailedProperties` is not
-  ported yet).
+  decides how to report it (`data_migrated` with ok=false:
+  `store::data_migration_failed_properties`).
 - Analytics: `Analytics::set_sink(...)` is process-wide. Tests that read it must serialize (see
   `core/tests/emergency_away.rs`). The two `analytics_parity` tests that need every screen are
   `#[ignore]`d; the orchestrator runs them with `--ignored` once all lanes have merged.
@@ -113,5 +113,4 @@ Open questions for the owner:
 2. If the database can't be opened at startup the app panics rather than opening an empty database
    that would hide the caregiver's data. Is a visible error screen wanted instead?
 
-Not done: `dataMigrationFailedProperties` (Kotlin AppDatabase.kt) belongs with the startup code in
-the shell lane.
+`data_migration_failed_properties` is ported (`store::`); the shell lane calls it at startup.
