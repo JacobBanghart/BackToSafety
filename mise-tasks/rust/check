@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 #MISE description="Rust port: the core's tests (spec/vectors and the store), then the app compiles for Android"
 set -euo pipefail
+# C dependencies (bundled SQLite) compile with the NDK's clang, as dx build sets up for the APK.
+ndk_bin="$(echo "$ANDROID_HOME"/ndk/29.0.14206865/toolchains/llvm/prebuilt/*/bin)"
+export CC_x86_64_linux_android="$ndk_bin/x86_64-linux-android24-clang"
+export AR_x86_64_linux_android="$ndk_bin/llvm-ar"
 cd rust
 cargo test -p nijii-core
 cargo check -p nijii --target x86_64-linux-android
