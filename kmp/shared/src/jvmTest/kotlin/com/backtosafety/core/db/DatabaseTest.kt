@@ -3,6 +3,7 @@ package com.backtosafety.core.db
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.backtosafety.core.data.Store
 import com.backtosafety.core.parseActiveEmergency
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -48,7 +49,15 @@ class DatabaseTest {
         assertTrue(before.getValue("profile").isNotEmpty(), "fixture has a profile")
 
         val db = openAppDatabase(path, databaseBuilder(path))
+        assertEquals(1, DatabaseOpen.migratingFrom, "reported as data_migrated from the RN schema")
         db.profile().get() // first use runs MIGRATION_1_2 and Room's schema validation
+        assertEquals(
+            mapOf(
+                "from_version" to 1, "to_version" to 2, "ok" to true, "duration_ms" to 12L, "has_profile" to true,
+                "contacts_count" to 1, "places_count" to 1, "incidents_count" to 1,
+            ),
+            Store(db).dataMigratedProperties(1, 12),
+        )
         db.close()
 
         for (table in tables) {
@@ -96,6 +105,7 @@ class DatabaseTest {
         val path = rnFixtureCopy()
         openAppDatabase(path, databaseBuilder(path)).also { it.profile().get() }.close()
         val again = openAppDatabase(path, databaseBuilder(path))
+        assertEquals(null, DatabaseOpen.migratingFrom, "nothing to migrate the second time")
         assertEquals("Margaret Smith", again.profile().get()?.name)
         again.close()
     }
@@ -104,6 +114,7 @@ class DatabaseTest {
     fun freshInstallCreatesVersionTwo() = runBlocking {
         val path = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).absolutePath
         val db = openAppDatabase(path, databaseBuilder(path))
+        assertEquals(null, DatabaseOpen.migratingFrom, "a fresh install isn't a migration")
         db.profile().save(ProfileEntity(name = "Ana"))
         assertEquals("Ana", db.profile().get()?.name)
         db.close()

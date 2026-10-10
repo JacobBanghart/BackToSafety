@@ -161,6 +161,32 @@ class Store(private val db: AppDatabase) {
 
     private var cachedDeviceId: String? = null
 
+    /**
+     * data_migrated's properties, after the first query migrated the database from
+     * [fromVersion] in [durationMs]: what came through, so a migration that lost data shows.
+     */
+    suspend fun dataMigratedProperties(fromVersion: Int, durationMs: Long): Map<String, Any?> {
+        val contacts = contacts()
+        return mapOf(
+            "from_version" to fromVersion,
+            "to_version" to com.backtosafety.core.db.DATABASE_VERSION,
+            "ok" to true,
+            "duration_ms" to durationMs,
+            "has_profile" to (profile() != null),
+            "contacts_count" to contacts.size,
+            "places_count" to destinations().size,
+            "incidents_count" to incidents().size,
+        )
+    }
+
+    /** app_ready's readiness properties (readinessProperties) from what's stored. */
+    suspend fun readinessProperties(): Map<String, Any?> {
+        val contacts = contacts()
+        return com.backtosafety.core.readinessProperties(
+            profile(), contacts.size, contacts.count { it.notifyOnEmergency }, destinations().size,
+        )
+    }
+
     /** The anonymous per-install ID (utils/device-id.ts): a random UUID, stored on first use. */
     @OptIn(ExperimentalUuidApi::class)
     suspend fun deviceId(): String = cachedDeviceId ?: (

@@ -15,7 +15,7 @@ import androidx.sqlite.driver.bundled.BundledSQLiteDriver
         ProfileEntity::class, ContactEntity::class, DestinationEntity::class, IncidentEntity::class,
         SafetyCheckEntity::class, SettingEntity::class, OnboardingStepEntity::class,
     ],
-    version = 2,
+    version = DATABASE_VERSION,
     exportSchema = true,
 )
 @ConstructedBy(AppDatabaseConstructor::class)
@@ -35,13 +35,25 @@ expect object AppDatabaseConstructor : RoomDatabaseConstructor<AppDatabase> {
 }
 
 const val DATABASE_NAME = "nijii.db"
+const val DATABASE_VERSION = 2
+
+/**
+ * What the last [openAppDatabase] found on disk: the older schema version Room is about to
+ * migrate from (1 = the RN app's database), or null when there was nothing to migrate. The
+ * migration itself runs on the first query; the apps report it as data_migrated.
+ */
+object DatabaseOpen {
+    var migratingFrom: Int? = null
+        internal set
+}
 
 /**
  * Opens the database at [path], first adopting a database the RN app left there. Each
  * platform supplies a builder for the right file location.
  */
 fun openAppDatabase(path: String, builder: RoomDatabase.Builder<AppDatabase>): AppDatabase {
-    adoptRnDatabase(path)
+    val onDisk = adoptRnDatabase(path)
+    DatabaseOpen.migratingFrom = onDisk?.takeIf { it in 1 until DATABASE_VERSION }
     return builder
         .setDriver(BundledSQLiteDriver())
         .addMigrations(MIGRATION_1_2)

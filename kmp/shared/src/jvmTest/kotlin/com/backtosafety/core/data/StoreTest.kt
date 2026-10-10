@@ -111,6 +111,29 @@ class StoreTest {
     }
 
     @Test
+    fun readinessCountsWhatIsStored() = runBlocking {
+        val store = freshStore()
+        assertEquals(
+            mapOf(
+                "has_profile" to false, "has_photo" to false, "has_medical" to false, "profile_fields_filled" to 0,
+                "contacts_count" to 0, "alert_contacts_count" to 0, "places_count" to 0,
+            ),
+            store.readinessProperties(),
+        )
+        store.saveProfile { it.copy(name = "Margaret Smith", medicalConditions = "Dementia", likes = "Gardening") }
+        store.addContact(ContactEntity(name = "Ana", phone = "1"))
+        store.addContact(ContactEntity(name = "Bo", phone = "2", notifyOnEmergency = false))
+        store.addDestination(DestinationEntity(name = "Riverside Park"))
+        assertEquals(
+            mapOf(
+                "has_profile" to true, "has_photo" to false, "has_medical" to true, "profile_fields_filled" to 2,
+                "contacts_count" to 2, "alert_contacts_count" to 1, "places_count" to 1,
+            ),
+            store.readinessProperties(),
+        )
+    }
+
+    @Test
     fun deviceIdIsCreatedOnceAndKept() = runBlocking {
         val path = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).absolutePath
         val first = Store(openAppDatabase(path, databaseBuilder(path))).deviceId()

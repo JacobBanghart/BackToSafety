@@ -65,6 +65,20 @@ class VectorsTest {
         today = localDate(o["today"]!!.str()!!),
     )
 
+    private fun ms(iso: String) = kotlin.time.Instant.parse(iso).toEpochMilliseconds()
+    private fun iso(ms: Long) = json(kotlin.time.Instant.fromEpochMilliseconds(ms).toString())
+    private fun alert(key: String) = CountdownAlert.entries.single { it.key == key }
+    private fun json(properties: Map<String, Any?>): JsonElement = JsonObject(
+        properties.mapValues { (_, v) ->
+            when (v) {
+                null -> JsonNull
+                is Boolean -> JsonPrimitive(v)
+                is Number -> JsonPrimitive(v)
+                else -> JsonPrimitive(v.toString())
+            }
+        },
+    )
+
     private fun readoutT(args: JsonArray) = translations.translator(args.str(0), "readout")
     private fun emergencyT(args: JsonArray) = translations.translator(args.str(0), "emergency")
 
@@ -116,6 +130,30 @@ class VectorsTest {
             json(buildAlertSms(emergencyT(a), o["name"]?.str(), o["startedTime"]!!.str()!!, o["wearing"]!!.str()!!))
         },
         "directionHint" to { a -> json(directionHint(emergencyT(a), a[1].str())) },
+        "alertDueAt" to { a -> iso(alertDueAtMs(alert(a.str(0)), ms(a.str(1)))) },
+        "alertsToSchedule" to { a ->
+            JsonArray(
+                alertsToSchedule(ms(a.str(0)), ms(a.str(1))).map { s ->
+                    buildJsonObject {
+                        put("alert", s.alert.key)
+                        put("fireAt", iso(s.fireAtMs))
+                    }
+                },
+            )
+        },
+        "catchUpAlert" to { a -> json(catchUpAlert(ms(a.str(0)), ms(a.str(1)), ms(a.str(2)))?.key) },
+        "countdownAlertProperties" to { a ->
+            json(countdownAlertProperties(alert(a.str(0)), AlertDelivery.entries.single { it.key == a.str(1) }))
+        },
+        "emergencyEndedProperties" to { a -> json(emergencyEndedProperties(ms(a.str(0)), ms(a.str(1)), a[2].jsonPrimitive.int)) },
+        "readinessProperties" to { a ->
+            val p = (a[0] as? JsonObject)?.let(::profile)
+            json(readinessProperties(p, a[1].jsonPrimitive.int, a[2].jsonPrimitive.int, a[3].jsonPrimitive.int))
+        },
+        "smsResultProperties" to { a ->
+            json(smsResultProperties(SmsResult.entries.single { it.key == a.str(0) }, a[1].jsonPrimitive.int))
+        },
+        "dialFailedProperties" to { a -> json(dialFailedProperties(DialTarget.entries.single { it.key == a.str(0) }, a.str(1))) },
         "parseActiveEmergency" to { a ->
             parseActiveEmergency(a[0].str())?.let { e ->
                 buildJsonObject {

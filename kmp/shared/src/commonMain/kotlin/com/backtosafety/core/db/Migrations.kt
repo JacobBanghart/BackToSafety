@@ -57,15 +57,21 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
 /**
  * An RN-created nijii.db has user_version 0 (expo-sqlite tracks versions in its own
  * schema_version table). Room would treat 0 as a brand-new database, so mark it as
- * version 1 and let MIGRATION_1_2 bring it to Room's shape. No file, no-op.
+ * version 1 and let MIGRATION_1_2 bring it to Room's shape. Returns the schema version now on
+ * disk (1 for an RN database), or null when there's no file yet.
  */
-fun adoptRnDatabase(path: String) {
-    val connection = runCatching { BundledSQLiteDriver().open(path, SQLITE_OPEN_READWRITE) }.getOrNull() ?: return
-    connection.use { db ->
+fun adoptRnDatabase(path: String): Int? {
+    val connection = runCatching { BundledSQLiteDriver().open(path, SQLITE_OPEN_READWRITE) }.getOrNull() ?: return null
+    return connection.use { db ->
         val userVersion = db.prepare("PRAGMA user_version").use { it.step(); it.getLong(0) }
         val isRnDatabase = db.prepare(
             "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'schema_version'",
         ).use { it.step(); it.getLong(0) > 0 }
-        if (userVersion == 0L && isRnDatabase) db.execSQL("PRAGMA user_version = 1")
+        if (userVersion == 0L && isRnDatabase) {
+            db.execSQL("PRAGMA user_version = 1")
+            1
+        } else {
+            userVersion.toInt()
+        }
     }
 }
