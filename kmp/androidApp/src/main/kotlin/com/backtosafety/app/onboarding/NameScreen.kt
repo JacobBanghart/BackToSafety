@@ -19,6 +19,7 @@ import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.TrackStepViewed
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
@@ -53,7 +54,10 @@ fun NameScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Uni
                             store.saveProfile { it.copy(name = name.trim(), nickname = nickname.trim().ifEmpty { null }) }
                             store.completeStep("profile_name")
                             trackStep(true, "profile_name")
-                        }.onSuccess { onContinue() }.onFailure { error = tCommon("saveFailed") }
+                        }.onSuccess { onContinue() }.onFailure { e ->
+                            reportSaveFailed("onboarding_name", "save", e)
+                            error = tCommon("saveFailed")
+                        }
                     }
                 },
             )

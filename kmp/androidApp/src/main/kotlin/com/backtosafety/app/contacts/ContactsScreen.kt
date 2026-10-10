@@ -69,7 +69,9 @@ import com.backtosafety.app.ui.ReorderableColumn
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.Toggle
 import com.backtosafety.app.ui.UnsavedChangesGuard
+import com.backtosafety.app.ui.dial
 import com.backtosafety.app.ui.listCard
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.showAlert
@@ -78,6 +80,7 @@ import com.backtosafety.app.ui.udp
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.DialTarget
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.ContactEntity
@@ -166,7 +169,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                 )
                 reload()
                 close()
-            }.onFailure { alert(false, t("errors.saveFailed")) }
+            }.onFailure { e -> reportSaveFailed("contacts", "save", e); alert(false, t("errors.saveFailed")) }
             saving = false
         }
     }
@@ -182,7 +185,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                         reload()
                         if (editing?.id == contact.id) close()
                     }
-                    .onFailure { alert(false, t("errors.deleteFailed")) }
+                    .onFailure { e -> reportSaveFailed("contacts", "delete", e); alert(false, t("errors.deleteFailed")) }
             }
         },
     )
@@ -275,14 +278,17 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                         onReorder = { ordered ->
                             contacts = ordered.mapIndexed { i, c -> c.copy(sortOrder = i) }
                             scope.launch {
-                                runCatching { store.reorderContacts(ordered) }.onFailure { alert(false, t("errors.reorderFailed")) }
+                                runCatching { store.reorderContacts(ordered) }.onFailure { e ->
+                                    reportSaveFailed("contacts", "reorder", e)
+                                    alert(false, t("errors.reorderFailed"))
+                                }
                                 reload()
                             }
                         },
                     ) { contact, index, dragging ->
                         ContactCard(t, contact, index, dragging, onCall = {
                             Analytics.track(AnalyticsEvent.CONTACT_CALL_TAPPED)
-                            context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:${contact.phone}")))
+                            dial(context, contact.phone, DialTarget.CONTACT, "contacts", tCommon)
                         }) {
                             Analytics.track(AnalyticsEvent.CONTACT_EDIT_TAPPED)
                             open(contact, contact.toForm())

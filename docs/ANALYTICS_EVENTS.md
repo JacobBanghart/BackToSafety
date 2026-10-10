@@ -41,11 +41,14 @@ strings, numbers, booleans or null.
 | ---------------------------- | -------------------------------------------------- | ------------------------------------- |
 | `emergency_started`          | —                                                  | User started a new emergency protocol |
 | `emergency_step_completed`   | `step: string`                                     | A protocol step was checked off       |
-| `emergency_completed`        | `checked_count: number`                            | User marked "Found — Safe"            |
-| `emergency_cancelled`        | `checked_count: number`                            | User cancelled the protocol           |
+| `emergency_completed`        | `checked_count: number`, `duration_s: number`      | User marked "Found — Safe"            |
+| `emergency_cancelled`        | `checked_count: number`, `duration_s: number`      | User cancelled the protocol           |
 | `emergency_911_called`       | `seconds_elapsed: number`, `checked_count: number` | User tapped Call 911 during protocol  |
 | `emergency_contacts_alerted` | `recipient_count: number`                          | User sent SMS alerts                  |
 | `emergency_leave`            | —                                                  | User left the emergency screen        |
+| `emergency_sms_result`       | `result: string`, `recipient_count: number`        | What became of the alert text: `sent`, `cancelled` or `failed` (iOS composer), `handed_off` to the messaging app (Android, which doesn't report back), `unavailable` (the device can't text) |
+| `countdown_alert`            | `kind: string`, `delivery: string`                 | The 5-minute `warning` or the `expired` alert reached the user: `in_app` on the emergency screen, or `catch_up` on returning to it after it came due. (Notifications while away aren't reported; the catch-up shows they were needed.) Sent by the shared core. |
+| `emergency_resumed`          | `away_s: number`, `catch_up: string \| null`        | Back on the emergency screen after time away (another screen, or the app in the background), and the alert caught up on, if any. Sent by the shared core. |
 
 ### Contacts
 
@@ -86,6 +89,15 @@ strings, numbers, booleans or null.
 | `readout_script_copied`  | —          | 911 script copied to clipboard         |
 | `readout_details_copied` | —          | Full details copied to clipboard       |
 
+### Failures
+
+| Event         | Properties                                          | Description |
+| ------------- | --------------------------------------------------- | ----------- |
+| `dial_failed` | `target: string`, `screen: string`                  | The device couldn't place a call (no phone app: tablets, iPads) and showed the number instead. `target`: `emergency`, `contact` or `medicalert`. |
+| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error. `error` is the error's type name, never its message. |
+
+Crashes and uncaught exceptions arrive as PostHog `$exception` events (error tracking autocapture, both apps).
+
 ### Settings
 
 | Event                        | Properties         | Description              |
@@ -99,7 +111,9 @@ strings, numbers, booleans or null.
 
 | Event | Properties | Description |
 | --- | --- | --- |
-| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS) | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. |
+| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS); readiness: `has_profile`, `has_photo`, `has_medical`, `profile_fields_filled`, `contacts_count`, `alert_contacts_count`, `places_count`, `notifications_enabled`, `exact_alarms` (Android) | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. The readiness properties say how prepared the app is before anyone needs it. |
+| `data_migrated` | `from_version`, `to_version`, `ok: boolean`, `duration_ms`; when ok `has_profile`, `contacts_count`, `places_count`, `incidents_count`; when not, `error` | The first launch after updating from the RN app converted its database. |
+| `notifications_permission` | `granted: boolean` | The answer to the one-time notification permission prompt (on home after onboarding; Android 13 and up, and iOS). Sent by the shared core. |
 
 ### Navigation
 

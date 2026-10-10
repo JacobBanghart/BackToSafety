@@ -152,6 +152,7 @@ struct DestinationsView: View {
                 await reload()
                 close()
             } catch {
+                reportSaveFailed(screen: "destinations", action: "save", error: error)
                 showError(validation: false, t("errors.saveFailed"))
             }
             saving = false
@@ -168,6 +169,7 @@ struct DestinationsView: View {
                     await reload()
                     if editing?.id == d.id { close() }
                 } catch {
+                    reportSaveFailed(screen: "destinations", action: "delete", error: error)
                     showError(validation: false, t("errors.deleteFailed"))
                 }
             }
@@ -211,7 +213,10 @@ struct DestinationsView: View {
                         onReorder: { ordered in
                             places = ordered
                             Task {
-                                do { try await model.store.reorderDestinations(ordered: ordered) } catch { showError(validation: false, t("errors.reorderFailed")) }
+                                do { try await model.store.reorderDestinations(ordered: ordered) } catch {
+                                    reportSaveFailed(screen: "destinations", action: "reorder", error: error)
+                                    showError(validation: false, t("errors.reorderFailed"))
+                                }
                                 await reload()
                             }
                         }

@@ -21,6 +21,8 @@ func setUpAnalytics() {
     config.sessionReplay = true
     config.sessionReplayConfig.maskAllTextInputs = true
     config.sessionReplayConfig.maskAllImages = true
+    // Crashes and uncaught exceptions as $exception events, as on Android.
+    config.errorTrackingConfig.autoCapture = true
     PostHogSDK.shared.setup(config)
     analyticsEnabled = true
     Analytics.shared.sink = { name, properties in

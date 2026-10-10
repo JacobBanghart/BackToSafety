@@ -111,7 +111,10 @@ class Store(private val db: AppDatabase) {
     suspend fun saveActiveEmergency(e: ActiveEmergency) = putSetting(ACTIVE_EMERGENCY, serializeActiveEmergency(e))
 
     /** Ends the emergency: stored as an empty string, not deleted (spec/storage.md). */
-    suspend fun clearActiveEmergency() = putSetting(ACTIVE_EMERGENCY, "")
+    suspend fun clearActiveEmergency() {
+        putSetting(ACTIVE_EMERGENCY, "")
+        putSetting(EMERGENCY_AWAY_FROM, "")
+    }
 
     suspend fun incidents() = db.incidents().all()
 
@@ -201,6 +204,12 @@ class Store(private val db: AppDatabase) {
 
     companion object {
         const val ACTIVE_EMERGENCY = "active_emergency"
+
+        /** When the time away from the emergency screen began (epoch ms), or empty (EmergencyAway). */
+        const val EMERGENCY_AWAY_FROM = "emergency_away_from"
+
+        /** Set once the notification permission prompt has been shown. */
+        const val NOTIFICATIONS_PROMPTED = "notifications_prompted"
         const val DEVICE_ID = "device_id"
         const val THEME_PREFERENCE = "theme_preference"
         const val LANGUAGE_PREFERENCE = "language_preference"

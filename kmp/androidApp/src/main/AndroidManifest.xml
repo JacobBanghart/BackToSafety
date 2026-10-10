@@ -3,6 +3,10 @@
     xmlns:tools="http://schemas.android.com/tools">
     <!-- Countdown alerts (app/emergency.tsx). The RN app declares the same. -->
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Countdown alerts while the app isn't showing the emergency (CountdownNotifications):
+         notifications (asked for once, on home), on time if the user allows exact alarms. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <!-- Contact import (expo-contacts asks for both). -->
     <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.WRITE_CONTACTS" />
@@ -42,6 +46,9 @@
             android:exported="false"
             android:theme="@style/Theme.AppCompat.DayNight"
             tools:replace="android:exported" />
+        <receiver
+            android:name=".emergency.CountdownAlertReceiver"
+            android:exported="false" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"

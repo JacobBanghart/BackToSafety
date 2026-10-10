@@ -135,6 +135,7 @@ struct ContactsView: View {
                 await reload()
                 close()
             } catch {
+                reportSaveFailed(screen: "contacts", action: "save", error: error)
                 showError(validation: false, t("errors.saveFailed"))
             }
             saving = false
@@ -151,6 +152,7 @@ struct ContactsView: View {
                     await reload()
                     if editing?.id == contact.id { close() }
                 } catch {
+                    reportSaveFailed(screen: "contacts", action: "delete", error: error)
                     showError(validation: false, t("errors.deleteFailed"))
                 }
             }
@@ -219,7 +221,10 @@ struct ContactsView: View {
                         onReorder: { ordered in
                             contacts = ordered
                             Task {
-                                do { try await model.store.reorderContacts(ordered: ordered) } catch { showError(validation: false, t("errors.reorderFailed")) }
+                                do { try await model.store.reorderContacts(ordered: ordered) } catch {
+                                    reportSaveFailed(screen: "contacts", action: "reorder", error: error)
+                                    showError(validation: false, t("errors.reorderFailed"))
+                                }
                                 await reload()
                             }
                         }
@@ -304,7 +309,7 @@ struct ContactsView: View {
                 HStack(spacing: Space.sm) {
                     circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), "phone.fill") {
                         Analytics.shared.track(event: .contactCallTapped, properties: [:])
-                        if let url = URL(string: "tel:\(contact.phone)") { UIApplication.shared.open(url) }
+                        dial(contact.phone, target: .contact, screen: "contacts", tCommon: tCommon)
                     }
                     circleAction("contacts-item-\(index)-edit", colors.primary, "pencil") {
                         Analytics.shared.track(event: .contactEditTapped, properties: [:])

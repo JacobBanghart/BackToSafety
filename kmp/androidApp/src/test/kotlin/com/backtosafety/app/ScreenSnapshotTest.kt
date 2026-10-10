@@ -18,7 +18,10 @@ import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
+import com.backtosafety.core.AlertScheduler
 import com.backtosafety.core.AppClock
+import com.backtosafety.core.EmergencyAway
+import com.backtosafety.core.ScheduledAlert
 import com.backtosafety.core.Translate
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
@@ -26,6 +29,7 @@ import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DestinationEntity
 import com.github.takahirom.roborazzi.captureRoboImage
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -46,6 +50,11 @@ import java.util.TimeZone
  * up here first; the Maestro fidelity captures still hold the app to the goldens on devices.
  * `./gradlew :androidApp:testDebugUnitTest -Precord` re-records after a deliberate change.
  */
+private object NoScheduler : AlertScheduler {
+    override fun schedule(alerts: List<ScheduledAlert>) {}
+    override fun cancelAll() {}
+}
+
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], qualifiers = "w411dp-h914dp-xxhdpi")
@@ -138,5 +147,7 @@ class ScreenSnapshotTest(private val mode: String) {
 
     @Test fun profile() = snapshot("profile") { ProfileScreen(t("profile"), t("common"), store, {}, {}) }
 
-    @Test fun emergency() = snapshot("emergency") { EmergencyScreen(t("emergency"), t("common"), store, {}, {}) }
+    @Test fun emergency() = snapshot("emergency") {
+        EmergencyScreen(t("emergency"), t("common"), store, EmergencyAway(store, NoScheduler), CoroutineScope(Dispatchers.Unconfined), {}, {})
+    }
 }

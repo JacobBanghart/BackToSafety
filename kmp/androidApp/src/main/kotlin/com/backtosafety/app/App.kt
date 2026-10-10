@@ -1,10 +1,15 @@
 package com.backtosafety.app
 
+import android.Manifest
 import android.graphics.Path
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
+import android.os.SystemClock
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.PathInterpolator
 import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
@@ -20,14 +25,17 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -35,6 +43,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.backtosafety.app.contacts.ContactsScreen
 import com.backtosafety.app.destinations.DestinationsScreen
+import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.home.HomeScreen
 import com.backtosafety.app.onboarding.AppearanceScreen
@@ -51,8 +60,11 @@ import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
+import com.backtosafety.core.EmergencyAway
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
+import com.backtosafety.core.db.DatabaseOpen
+import com.backtosafety.core.db.dataMigrationFailedProperties
 import com.backtosafety.core.invoke
 import com.posthog.PostHog
 import kotlinx.coroutines.launch
@@ -104,13 +116,37 @@ private val SHIPPED_LANGUAGES = listOf("en")
 
 /** The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). */
 @Composable
-fun App(store: Store, translations: Translations, modifier: Modifier) {
+fun App(store: Store, translations: Translations, modifier: Modifier, openEmergencyRequests: State<Int>) {
     var onboarded by remember { mutableStateOf<Boolean?>(null) }
     var themePreference by remember { mutableStateOf("system") }
     var language by remember { mutableStateOf("en") }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val currentLanguage by rememberUpdatedState(language)
+    val notifications = remember {
+        CountdownNotifications(
+            context.applicationContext,
+            emergencyT = { translations.translator(currentLanguage, "emergency") },
+            emergencyNumber = { translations.translator(currentLanguage, "common")("emergencyNumber") },
+        )
+    }
+    val away = remember(store) { EmergencyAway(store, notifications) }
     LaunchedEffect(Unit) {
-        store.seed()
+        // The first query migrates a database the RN app left (data_migrated).
+        val migratingFrom = DatabaseOpen.migratingFrom
+        val migrationStart = SystemClock.elapsedRealtime()
+        val seeded = runCatching { store.seed() }
+        if (migratingFrom != null) {
+            val durationMs = SystemClock.elapsedRealtime() - migrationStart
+            Analytics.track(
+                AnalyticsEvent.DATA_MIGRATED,
+                seeded.fold(
+                    { store.dataMigratedProperties(migratingFrom, durationMs) },
+                    { dataMigrationFailedProperties(migratingFrom, durationMs, it::class.simpleName) },
+                ),
+            )
+        }
+        seeded.getOrThrow()
         // The device is the analytics identity (as on iOS).
         runCatching { store.deviceId() }.onSuccess { if (BuildConfig.POSTHOG_KEY.isNotEmpty()) PostHog.identify(it) }
         themePreference = store.setting(Store.THEME_PREFERENCE) ?: "system"
@@ -147,16 +183,38 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
         // The first screen's first frame: report how long the cold start took.
         LaunchedEffect(Unit) {
             withFrameNanos { }
-            AppReady.report()
+            AppReady.report {
+                store.readinessProperties() + mapOf(
+                    "notifications_enabled" to CountdownNotifications.enabled(context),
+                    "exact_alarms" to notifications.canScheduleExact(),
+                )
+            }
         }
         val nav = rememberNavController()
         // app/_layout.tsx reports each screen as its route path.
+        var route by remember { mutableStateOf<String?>(null) }
         DisposableEffect(nav) {
             val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+                route = destination.route
                 RN_PATHS[destination.route]?.let(Analytics::screen)
             }
             nav.addOnDestinationChangedListener(listener)
             onDispose { nav.removeOnDestinationChangedListener(listener) }
+        }
+        // Notifications for the countdown alerts: asked for once, on home after onboarding
+        // (Android 13 up; before that they're on). Not in test builds, where the system
+        // dialog would sit over the flows.
+        val askNotifications = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            scope.launch { away.notificationsAnswered(granted) }
+        }
+        LaunchedEffect(route) {
+            if (route != "home" || BuildConfig.TEST_SEAMS || Build.VERSION.SDK_INT < 33) return@LaunchedEffect
+            if (away.shouldAskForNotifications()) askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        // A tapped countdown alert opens the emergency, if it's still running.
+        LaunchedEffect(openEmergencyRequests.value) {
+            if (openEmergencyRequests.value == 0 || !start) return@LaunchedEffect
+            if (store.activeEmergency() != null && route != "emergency") nav.navigate("emergency")
         }
         NavHost(
             nav,
@@ -191,7 +249,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
             composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) } }
             composable("emergency") {
                 EmergencyScreen(
-                    emergency, common, store,
+                    emergency, common, store, away, scope,
                     onLeave = { if (!nav.popBackStack()) nav.navigate("home") },
                     onViewReadout = { nav.navigate("readout") },
                 )
@@ -211,7 +269,10 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
                         scope.launch { store.putSetting(Store.LANGUAGE_PREFERENCE, it) }
                     },
                     onBack = { nav.popBackStack() },
-                    onDeleted = { nav.navigate("welcome") { popUpTo(0) } },
+                    onDeleted = {
+                        scope.launch { away.ended() }
+                        nav.navigate("welcome") { popUpTo(0) }
+                    },
                 )
             }
             composable("contacts") { ContactsScreen(translations.translator(language, "contacts"), common, store) { nav.popBackStack() } }

@@ -3,8 +3,6 @@ package com.backtosafety.app.readout
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -54,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
+import com.backtosafety.app.ui.dial
 import com.backtosafety.app.ui.hairline
 import com.backtosafety.app.ui.localeDateTime
 import com.backtosafety.app.ui.rememberPhoto
@@ -65,6 +64,7 @@ import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.DialTarget
 import com.backtosafety.core.Profile
 import com.backtosafety.core.ReadoutInput
 import com.backtosafety.core.Translate
@@ -132,7 +132,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     val missing = missingScriptDetails(input, t)
     val emergencyNumber = tCommon("emergencyNumber")
 
-    fun dial(number: String) = context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$number")))
+    fun dial(number: String, target: DialTarget) = dial(context, number, target, "readout", tCommon)
     fun copy(text: String, kind: Copied, failedKey: String) {
         val ok = runCatching {
             context.getSystemService(ClipboardManager::class.java)!!.setPrimaryClip(ClipData.newPlainText(null, text))
@@ -159,7 +159,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 Modifier.fillMaxWidth().testTag("readout-call-911").shadow(2.udp, callShape).clip(callShape)
                     .clickable {
                         Analytics.track(AnalyticsEvent.READOUT_911_CALLED)
-                        dial(emergencyNumber)
+                        dial(emergencyNumber, DialTarget.EMERGENCY)
                     }.background(error).padding(vertical = space.lg.udp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -277,7 +277,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                             t("sections.devices.medicAlertHotline"), hotline,
                             Modifier.testTag("readout-medicalert-hotline").clickable {
                                 Analytics.track(AnalyticsEvent.READOUT_MEDICALERT_HOTLINE_CALLED)
-                                dial(stripPhoneFormatting(hotline))
+                                dial(stripPhoneFormatting(hotline), DialTarget.MEDICALERT)
                             },
                         )
                     }
@@ -290,7 +290,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     contacts.forEachIndexed { index, c ->
                         ContactRow(t, c, index) {
                             Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
-                            dial(c.phone)
+                            dial(c.phone, DialTarget.CONTACT)
                         }
                     }
                 }

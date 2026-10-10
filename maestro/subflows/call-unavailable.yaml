@@ -1,0 +1,12 @@
+# After a call button: the iOS simulator can't place calls, so the app shows "Can't Place
+# Calls" with the number (calls.unavailable). Dismiss it; Android opens the dialer instead.
+appId: com.backtosafety.app
+---
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: Can't Place Calls
+          timeout: 10000
+      - tapOn: OK

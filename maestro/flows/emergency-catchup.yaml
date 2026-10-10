@@ -1,0 +1,68 @@
+# Features: emergency.catch-up
+# Moves the app clock with the test seam while away from the emergency screen: an alert that
+# came due meanwhile shows on returning, once (spec/vectors/alerts.json#catchUpAlert).
+appId: com.backtosafety.app
+name: A countdown alert that came due while away shows on returning
+---
+- runFlow:
+    file: ../subflows/onboard.yaml
+    env:
+      NAME: Margaret Smith
+- tapOn:
+    id: home-start-emergency
+- assertVisible:
+    id: emergency-timer-label
+    text: Time remaining
+
+# Leave (the timer keeps running) and let 11 minutes pass: the warning came due.
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-leave
+- runFlow:
+    file: ../subflows/open-link.yaml
+    env:
+      LINK: backtosafety://debug/clock?advance=660
+- tapOn:
+    id: home-start-emergency
+- extendedWaitUntil:
+    visible: Under 5 Minutes Left
+    timeout: 10000
+- tapOn:
+    id: emergency-modal-catchup-ok
+- assertVisible:
+    id: emergency-timer
+    text: '0[34]:\d\d'
+
+# Once: back and forth again, nothing new came due.
+- tapOn:
+    id: emergency-back
+- tapOn:
+    id: emergency-modal-leave-leave
+- tapOn:
+    id: home-start-emergency
+- assertVisible:
+    id: emergency-timer
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: emergency-modal-catchup-ok
+
+# The expiry, away on the info sheet this time: it outranks the warning.
+- tapOn:
+    id: emergency-readout
+- assertVisible:
+    id: readout-script-toggle
+- runFlow:
+    file: ../subflows/open-link.yaml
+    env:
+      LINK: backtosafety://debug/clock?advance=300
+- tapOn:
+    id: readout-back
+- extendedWaitUntil:
+    visible: Time to Call 911
+    timeout: 10000
+- tapOn:
+    id: emergency-modal-catchup-ok
+- assertVisible:
+    id: emergency-timer-label
+    text: TIME TO CALL 911

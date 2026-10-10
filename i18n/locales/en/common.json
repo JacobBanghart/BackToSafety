@@ -32,5 +32,9 @@
     "screenTitle": "Oops!",
     "title": "This screen does not exist.",
     "link": "Go to home screen!"
+  },
+  "callUnavailable": {
+    "title": "Can't Place Calls",
+    "message": "This device can't make phone calls. Call {{number}} from a phone."
   }
 }

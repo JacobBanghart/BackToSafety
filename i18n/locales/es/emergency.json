@@ -104,5 +104,16 @@
       "message": "No se pudo abrir la app de mensajes."
     }
   },
-  "smsUnknownName": "Nuestro ser querido"
+  "smsUnknownName": "Nuestro ser querido",
+  "alerts": {
+    "warning": {
+      "title": "Quedan menos de 5 minutos",
+      "body": "Sigue buscando. Si no aparece cuando termine el temporizador, llama al {{emergencyNumber}}."
+    },
+    "expired": {
+      "title": "Hora de llamar al {{emergencyNumber}}",
+      "body": "Terminaron los 15 minutos de búsqueda. Llama al {{emergencyNumber}} ahora y pide una Alerta Plateada."
+    },
+    "channel": "Cuenta regresiva de emergencia"
+  }
 }

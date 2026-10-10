@@ -1,4 +1,4 @@
-# Features: emergency.alert-contacts, contacts.call
+# Features: emergency.alert-contacts, contacts.call, calls.unavailable
 appId: com.backtosafety.app
 name: Alerting the circle opens an SMS to the contacts; calling a contact opens the dialer
 ---
@@ -16,7 +16,7 @@ name: Alerting the circle opens an SMS to the contacts; calling a contact opens 
 - tapOn:
     id: emergency-alert-contacts
 # The iOS simulator has no Messages app or phone, so there the app reports it can't open
-# messaging, and a call goes nowhere; a device run covers both.
+# messaging, or call; a device run covers both.
 - runFlow:
     when:
       platform: Android
@@ -37,11 +37,20 @@ name: Alerting the circle opens an SMS to the contacts; calling a contact opens 
 - tapOn:
     id: emergency-modal-leave-end
 
-# Calling a contact opens the dialer with their number.
+# Calling a contact opens the dialer with their number. The iOS simulator can't place calls,
+# so there the app says so, with the number to call from a phone.
 - tapOn:
     id: home-contacts
 - tapOn:
     id: contacts-item-0-call
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - extendedWaitUntil:
+          visible: .*Call \(555\) 123-4567 from a phone.*
+          timeout: 10000
+- runFlow: ../subflows/call-unavailable.yaml
 - runFlow:
     when:
       platform: Android

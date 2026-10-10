@@ -6,8 +6,8 @@ import kotlin.test.assertEquals
 
 /**
  * Both apps send the analytics events spec/analytics-events.json names, and name the same
- * screens: every event is tracked somewhere in the Android app and in the iOS app, and the
- * Android app tracks nothing else.
+ * screens: every event is tracked somewhere in the Android app and in the iOS app (or in the
+ * shared core, which both run), and nothing else is tracked.
  */
 class AnalyticsParityTest {
     private val root = File(System.getProperty("repoRoot") ?: error("repoRoot system property not set"))
@@ -24,20 +24,28 @@ class AnalyticsParityTest {
     private fun swiftName(event: String) =
         event.split('_').mapIndexed { i, part -> if (i == 0) part else part.replaceFirstChar { it.uppercase() } }.joinToString("")
 
+    private fun kotlinEvents(dir: String) = sources(dir, "kt")
+        .flatMap { Regex("""AnalyticsEvent\.([A-Z_0-9]+)""").findAll(it).map { m -> m.groupValues[1].lowercase() } }
+        .toSortedSet()
+
+    /** Events the shared core sends itself, for both apps. */
+    private val sharedEvents = kotlinEvents("kmp/shared/src/commonMain")
+
     @Test
     fun androidSendsTheSpecEvents() {
-        val kotlin = sources("kmp/androidApp/src/main", "kt")
-            .flatMap { Regex("""AnalyticsEvent\.([A-Z_0-9]+)""").findAll(it).map { m -> m.groupValues[1].lowercase() } }
-            .toSortedSet()
-        assertEquals(events, kotlin)
+        assertEquals(events, (kotlinEvents("kmp/androidApp/src/main") + sharedEvents).toSortedSet())
     }
 
     @Test
     fun iosSendsTheSpecEvents() {
+        // Event cases on lines that track or pass an event, so a string key such as
+        // "errors.saveFailed" doesn't pass for the saveFailed event.
         val swift = sources("kmp/iosApp/BackToSafety", "swift")
+            .flatMap { it.lines() }
+            .filter { "track(" in it || "event:" in it }
             .flatMap { Regex("""\.([a-z][A-Za-z0-9]+)\b""").findAll(it).map { m -> m.groupValues[1] } }
             .toSet()
-        assertEquals(emptyList(), events.filter { swiftName(it) !in swift })
+        assertEquals(emptyList(), events.filter { swiftName(it) !in swift && it !in sharedEvents })
     }
 
     @Test

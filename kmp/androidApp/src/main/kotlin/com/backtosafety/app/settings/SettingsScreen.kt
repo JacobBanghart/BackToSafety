@@ -44,6 +44,7 @@ import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnLineHeight
 import com.backtosafety.app.ui.rnTextStyle
@@ -117,7 +118,8 @@ fun SettingsScreen(
                             Analytics.track(AnalyticsEvent.SETTINGS_ACCOUNT_DELETED)
                             onDeleted()
                         }
-                        .onFailure {
+                        .onFailure { e ->
+                            reportSaveFailed("settings", "delete_account", e)
                             AlertDialog.Builder(context).setTitle(tCommon("error")).setMessage(t("deleteAccountError"))
                                 .setPositiveButton("OK", null).show()
                         }

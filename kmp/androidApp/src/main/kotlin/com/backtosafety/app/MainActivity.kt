@@ -5,11 +5,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.Translations
@@ -25,6 +27,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 
 class MainActivity : ComponentActivity() {
+    /** Counts taps on countdown alert notifications; App opens the emergency for each. */
+    private val openEmergencyRequests = mutableIntStateOf(0)
+
     @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -33,13 +38,14 @@ class MainActivity : ComponentActivity() {
         AppClock.testSeamsEnabled = BuildConfig.TEST_SEAMS
         setUpAnalytics()
         handleTestSeam(intent)
+        handleAlertTap(intent)
         val path = databasePath(this)
         val store = Store(openAppDatabase(path, databaseBuilder(this, path)))
         val translations = loadTranslations()
         setContent {
             // testTag(...) values surface as Android resource IDs, matching the RN
             // app's testIDs, so the same Maestro flows drive both (spec/testids.json).
-            App(store, translations, Modifier.semantics { testTagsAsResourceId = true })
+            App(store, translations, Modifier.semantics { testTagsAsResourceId = true }, openEmergencyRequests)
         }
     }
 
@@ -76,6 +82,11 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleTestSeam(intent)
+        handleAlertTap(intent)
+    }
+
+    private fun handleAlertTap(intent: Intent?) {
+        if (intent?.getBooleanExtra(CountdownNotifications.EXTRA_OPEN_EMERGENCY, false) == true) openEmergencyRequests.intValue++
     }
 
     /**

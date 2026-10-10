@@ -37,7 +37,10 @@ struct NameView: View {
                         try await model.store.completeStep(step: "profile_name")
                         trackStep(true, "profile_name")
                         model.path.append(.photo)
-                    } catch { self.error = tCommon("saveFailed") }
+                    } catch {
+                        reportSaveFailed(screen: "onboarding_name", action: "save", error: error)
+                        self.error = tCommon("saveFailed")
+                    }
                 }
             }
         }
@@ -255,7 +258,10 @@ struct ContactStepView: View {
                         try await model.store.completeStep(step: "emergency_contact")
                         trackStep(true, "emergency_contact")
                         model.path.append(.complete)
-                    } catch { self.error = tCommon("saveFailed") }
+                    } catch {
+                        reportSaveFailed(screen: "onboarding_contact", action: "save", error: error)
+                        self.error = tCommon("saveFailed")
+                    }
                 }
             }
         }

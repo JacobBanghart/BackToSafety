@@ -32,5 +32,9 @@
     "screenTitle": "¡Uy!",
     "title": "Esta pantalla no existe.",
     "link": "¡Ir a la pantalla de inicio!"
+  },
+  "callUnavailable": {
+    "title": "No se pueden hacer llamadas",
+    "message": "Este dispositivo no puede hacer llamadas. Llama al {{number}} desde un teléfono."
   }
 }

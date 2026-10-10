@@ -145,6 +145,7 @@ class VectorsTest {
         "countdownAlertProperties" to { a ->
             json(countdownAlertProperties(alert(a.str(0)), AlertDelivery.entries.single { it.key == a.str(1) }))
         },
+        "emergencyResumedProperties" to { a -> json(emergencyResumedProperties(ms(a.str(0)), ms(a.str(1)), a[2].str()?.let(::alert))) },
         "emergencyEndedProperties" to { a -> json(emergencyEndedProperties(ms(a.str(0)), ms(a.str(1)), a[2].jsonPrimitive.int)) },
         "readinessProperties" to { a ->
             val p = (a[0] as? JsonObject)?.let(::profile)
@@ -153,6 +154,7 @@ class VectorsTest {
         "smsResultProperties" to { a ->
             json(smsResultProperties(SmsResult.entries.single { it.key == a.str(0) }, a[1].jsonPrimitive.int))
         },
+        "saveFailedProperties" to { a -> json(saveFailedProperties(a.str(0), a.str(1), a[2].str())) },
         "dialFailedProperties" to { a -> json(dialFailedProperties(DialTarget.entries.single { it.key == a.str(0) }, a.str(1))) },
         "parseActiveEmergency" to { a ->
             parseActiveEmergency(a[0].str())?.let { e ->

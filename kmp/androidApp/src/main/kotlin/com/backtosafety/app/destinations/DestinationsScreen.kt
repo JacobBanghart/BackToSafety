@@ -66,6 +66,7 @@ import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.UnsavedChangesGuard
 import com.backtosafety.app.ui.hairline
 import com.backtosafety.app.ui.listCard
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
@@ -192,7 +193,7 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
                 )
                 reload()
                 close()
-            }.onFailure { alert(false, t("errors.saveFailed")) }
+            }.onFailure { e -> reportSaveFailed("destinations", "save", e); alert(false, t("errors.saveFailed")) }
             saving = false
         }
     }
@@ -208,7 +209,7 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
                         reload()
                         if (editing?.id == d.id) close()
                     }
-                    .onFailure { alert(false, t("errors.deleteFailed")) }
+                    .onFailure { e -> reportSaveFailed("destinations", "delete", e); alert(false, t("errors.deleteFailed")) }
             }
         },
     )
@@ -280,7 +281,10 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
                             onReorder = { ordered ->
                                 places = ordered.mapIndexed { i, d -> d.copy(sortOrder = i) }
                                 scope.launch {
-                                    runCatching { store.reorderDestinations(ordered) }.onFailure { alert(false, t("errors.reorderFailed")) }
+                                    runCatching { store.reorderDestinations(ordered) }.onFailure { e ->
+                                        reportSaveFailed("destinations", "reorder", e)
+                                        alert(false, t("errors.reorderFailed"))
+                                    }
                                     reload()
                                 }
                             },

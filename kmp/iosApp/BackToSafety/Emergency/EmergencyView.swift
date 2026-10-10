@@ -5,6 +5,8 @@ import SwiftUI
 
 private enum EmergencyModal: Identifiable {
     case found, leave, noContacts, smsError
+    /// A countdown alert that came due while the screen wasn't showing (EmergencyAway).
+    case catchUpWarning, catchUpExpired
     var id: Self { self }
 }
 
@@ -31,6 +33,8 @@ struct EmergencyView: View {
     @State private var destinations: [DestinationEntity] = []
     @State private var modal: EmergencyModal?
     @State private var sms: SmsDraft?
+    @State private var visible = false
+    @Environment(\.scenePhase) private var scenePhase
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var emergencyNumber: String { tCommon("emergencyNumber") }
@@ -42,11 +46,34 @@ struct EmergencyView: View {
             .toolbar(.hidden, for: .navigationBar)
             .task { await load() }
             .onReceive(tick) { _ in tickCountdown() }
+            // Showing and not showing (another screen on top, or the app in the background):
+            // off the screen the countdown alerts are notifications; back on it, one that came
+            // due is caught up.
+            .onAppear {
+                visible = true
+                shown()
+            }
+            .onDisappear {
+                visible = false
+                away()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard visible else { return }
+                if phase == .background { away() } else if phase == .active { shown() }
+            }
             .onChange(of: wearing) { persist() }
             .onChange(of: checked) { persist() }
             .sheet(item: $sms) { draft in
-                MessageComposer(draft: draft) { sent in
-                    if sent { Analytics.shared.track(event: .emergencyContactsAlerted, properties: ["recipient_count": draft.recipients.count]) }
+                MessageComposer(draft: draft) { result in
+                    if result == .sent { Analytics.shared.track(event: .emergencyContactsAlerted, properties: ["recipient_count": draft.recipients.count]) }
+                    let outcome: SmsResult = switch result {
+                    case .sent: .sent
+                    case .cancelled: .cancelled
+                    default: .failed
+                    }
+                    Analytics.shared.track(event: .emergencySmsResult, properties: EmergencyAlertsKt.smsResultProperties(
+                        result: outcome, recipients: Int32(draft.recipients.count)
+                    ))
                 }
                 .ignoresSafeArea()
             }
@@ -113,18 +140,41 @@ struct EmergencyView: View {
     }
 
     /// Re-derived from the start time each tick; alerts fire when a threshold is crossed (F-16).
+    /// It ticks only while the screen shows; what comes due otherwise is EmergencyAway's.
     private func tickCountdown() {
-        guard secondsLeft > 0, let started = state.flatMap({ parseISO($0.startedAt) }) else { return }
-        let next = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
-        for alert in EmergencyKt.countdownAlerts(prev: secondsLeft, next: next) {
-            if alert == .warning {
-                UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            } else {
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-                AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
-            }
+        guard visible, scenePhase != .background, secondsLeft > 0, let started = state.flatMap({ parseISO($0.startedAt) }) else { return }
+        let now = AppClock.shared.nowMs()
+        let next = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: now)
+        for alert in model.away.inAppAlerts(prevSecondsLeft: secondsLeft, nextSecondsLeft: next, nowMs: now) {
+            buzz(alert)
         }
         secondsLeft = next
+    }
+
+    private func buzz(_ alert: CountdownAlert) {
+        if alert == .warning {
+            UINotificationFeedbackGenerator().notificationOccurred(.warning)
+        } else {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+        }
+    }
+
+    /// Back on the screen: the countdown picks up from now (what came due while away is the
+    /// catch-up's, not the tick's), and an alert that came due shows.
+    private func shown() {
+        if let started = state.flatMap({ parseISO($0.startedAt) }) {
+            secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
+        }
+        Task {
+            guard let alert = try? await model.away.shown(nowMs: AppClock.shared.nowMs()) else { return }
+            buzz(alert)
+            modal = alert == .warning ? .catchUpWarning : .catchUpExpired
+        }
+    }
+
+    private func away() {
+        Task { _ = try? await model.away.left(nowMs: AppClock.shared.nowMs()) }
     }
 
     /// Persists wearing and checked steps as they change.
@@ -166,10 +216,15 @@ struct EmergencyView: View {
     private func found() {
         Task {
             _ = try? await model.store.clearActiveEmergency()
-            Analytics.shared.track(event: .emergencyCompleted, properties: ["checked_count": checked.count])
+            Analytics.shared.track(event: .emergencyCompleted, properties: endedProperties())
             record(outcome: "found", ended: true)
             modal = .found
         }
+    }
+
+    private func endedProperties() -> [String: Any] {
+        let started = state.flatMap { parseISO($0.startedAt) }?.epochMs ?? AppClock.shared.nowMs()
+        return EmergencyAlertsKt.emergencyEndedProperties(startedAtMs: started, nowMs: AppClock.shared.nowMs(), checkedCount: Int32(checked.count))
     }
 
     private func call911() {
@@ -179,7 +234,7 @@ struct EmergencyView: View {
         ])
         // Calling always marks the step done; a second call must not un-check it (F-17).
         if !checked.contains("call_911") { toggle("call_911") }
-        if let url = URL(string: "tel:\(emergencyNumber)") { UIApplication.shared.open(url) }
+        dial(emergencyNumber, target: .emergency, screen: "emergency", tCommon: tCommon)
         record(outcome: "911_called")
     }
 
@@ -189,6 +244,9 @@ struct EmergencyView: View {
             let recipients = PhoneKt.normalizeUniqueSmsRecipients(phones: contacts.map(\.phone))
             if recipients.isEmpty { modal = .noContacts; return }
             guard MFMessageComposeViewController.canSendText(), let state, let started = parseISO(state.startedAt) else {
+                Analytics.shared.track(event: .emergencySmsResult, properties: EmergencyAlertsKt.smsResultProperties(
+                    result: .unavailable, recipients: Int32(recipients.count)
+                ))
                 modal = .smsError
                 return
             }
@@ -440,7 +498,7 @@ struct EmergencyView: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Space.xs)
                     Button {
-                        Analytics.shared.track(event: .emergencyCancelled, properties: ["checked_count": checked.count])
+                        Analytics.shared.track(event: .emergencyCancelled, properties: endedProperties())
                         // Ended without an outcome: stamp the end time, keep the outcome as it was.
                         record(ended: true)
                         Task {
@@ -455,6 +513,13 @@ struct EmergencyView: View {
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("emergency-modal-leave-end")
                     .padding(.top, Space.xs)
+                case .catchUpWarning, .catchUpExpired:
+                    let key = which == .catchUpWarning ? "warning" : "expired"
+                    let number = ["emergencyNumber": emergencyNumber]
+                    RNText(t("alerts.\(key).title", number), Typography.title.spec, color: colors.text, align: .center)
+                    RNText(t("alerts.\(key).body", number), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
+                    button(tCommon("ok"), "emergency-modal-catchup-ok",
+                           which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary, white) { modal = nil }
                 case .noContacts, .smsError:
                     title(which == .noContacts ? "modal.noContacts.title" : "modal.smsError.title")
                     message(which == .noContacts ? "modal.noContacts.message" : "modal.smsError.message")
@@ -480,7 +545,7 @@ struct SmsDraft: Identifiable {
 /// The system message composer, as expo-sms presents it.
 struct MessageComposer: UIViewControllerRepresentable {
     let draft: SmsDraft
-    let onFinish: (Bool) -> Void
+    let onFinish: (MessageComposeResult) -> Void
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> MFMessageComposeViewController {
@@ -498,7 +563,7 @@ struct MessageComposer: UIViewControllerRepresentable {
         let parent: MessageComposer
         init(_ parent: MessageComposer) { self.parent = parent }
         func messageComposeViewController(_: MFMessageComposeViewController, didFinishWith result: MessageComposeResult) {
-            parent.onFinish(result == .sent)
+            parent.onFinish(result)
             parent.dismiss()
         }
     }

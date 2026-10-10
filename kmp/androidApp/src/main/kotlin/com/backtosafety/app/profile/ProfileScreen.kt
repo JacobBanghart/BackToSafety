@@ -56,6 +56,7 @@ import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.UnsavedChangesGuard
 import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
@@ -178,7 +179,10 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 )
                 initial = x
                 onSaved()
-            }.onFailure { showAlert(context, tCommon("error"), tCommon("saveFailed")) }
+            }.onFailure { e ->
+                reportSaveFailed("profile", "save", e)
+                showAlert(context, tCommon("error"), tCommon("saveFailed"))
+            }
             saving = false
         }
     }

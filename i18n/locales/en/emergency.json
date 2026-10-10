@@ -104,5 +104,16 @@
       "message": "Could not open messaging app."
     }
   },
-  "smsUnknownName": "Our loved one"
+  "smsUnknownName": "Our loved one",
+  "alerts": {
+    "warning": {
+      "title": "Under 5 Minutes Left",
+      "body": "Keep searching. If they're not found when the timer ends, call {{emergencyNumber}}."
+    },
+    "expired": {
+      "title": "Time to Call {{emergencyNumber}}",
+      "body": "The 15-minute search is up. Call {{emergencyNumber}} now and request a Silver Alert."
+    },
+    "channel": "Emergency countdown"
+  }
 }

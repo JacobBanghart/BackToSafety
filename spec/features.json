@@ -169,6 +169,30 @@
       }
     },
     {
+      "id": "emergency.alerts-away",
+      "description": "Off the emergency screen (another screen, or the app in the background) the 5-minute warning and the expiry arrive as notifications, in the app's language; tapping one opens the emergency. Notification permission is asked once, on home.",
+      "coverage": {
+        "vectors": [
+          "alerts.json#alertDueAt",
+          "alerts.json#alertsToSchedule"
+        ],
+        "flows": []
+      },
+      "flowExempt": "Notifications are system UI and test builds don't ask for the permission. Covered by EmergencyAwayTest (shared rules), CountdownNotificationsTest (Android, Robolectric) and CountdownNotificationsTests (iOS, XCTest)."
+    },
+    {
+      "id": "emergency.catch-up",
+      "description": "Back on the emergency screen, an alert that came due while away shows once (the expiry over the warning).",
+      "coverage": {
+        "vectors": [
+          "alerts.json#catchUpAlert"
+        ],
+        "flows": [
+          "maestro/flows/emergency-catchup.yaml"
+        ]
+      }
+    },
+    {
       "id": "emergency.checklist",
       "description": "11-step protocol; tapping toggles a step; progress count; urgent steps flagged PRIORITY.",
       "coverage": {
@@ -222,6 +246,17 @@
         ]
       },
       "notes": "F-15, F-17."
+    },
+    {
+      "id": "calls.unavailable",
+      "description": "A device that can't place calls (tablets, iPads) says so, with the number to call from a phone.",
+      "coverage": {
+        "vectors": [],
+        "flows": [
+          "maestro/flows/alerts-and-calls.yaml"
+        ]
+      },
+      "notes": "The iOS simulator can't call, so the flow sees it there; DialTest covers Android."
     },
     {
       "id": "emergency.alert-contacts",

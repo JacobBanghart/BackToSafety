@@ -41,6 +41,13 @@ enum class AlertDelivery(val key: String) { IN_APP("in_app"), CATCH_UP("catch_up
 fun countdownAlertProperties(alert: CountdownAlert, delivery: AlertDelivery): Map<String, Any?> =
     mapOf("kind" to alert.key, "delivery" to delivery.key)
 
+/**
+ * emergency_resumed's properties: back on the emergency screen after [awayFromMs], and the
+ * alert caught up on, if any.
+ */
+fun emergencyResumedProperties(awayFromMs: Long, nowMs: Long, caughtUp: CountdownAlert?): Map<String, Any?> =
+    mapOf("away_s" to ((nowMs - awayFromMs) / 1000L).coerceAtLeast(0), "catch_up" to caughtUp?.key)
+
 /** emergency_completed's and emergency_cancelled's properties. */
 fun emergencyEndedProperties(startedAtMs: Long, nowMs: Long, checkedCount: Int): Map<String, Any?> =
     mapOf("checked_count" to checkedCount, "duration_s" to ((nowMs - startedAtMs) / 1000L).coerceAtLeast(0))
@@ -93,6 +100,9 @@ enum class DialTarget(val key: String) { EMERGENCY("emergency"), CONTACT("contac
 /** dial_failed's properties: the device couldn't place the call (no phone app: iPads, tablets). */
 fun dialFailedProperties(target: DialTarget, screen: String): Map<String, Any?> = mapOf("target" to target.key, "screen" to screen)
 
-/** save_failed's properties: a write to the store failed and the user saw an error. */
-fun saveFailedProperties(screen: String, action: String, error: Throwable?): Map<String, Any?> =
-    mapOf("screen" to screen, "action" to action, "error" to (error?.let { it::class.simpleName } ?: "unknown"))
+/**
+ * save_failed's properties: a write to the store failed and the user saw an error.
+ * [errorType] is the error's type name (never its message, which could hold what was typed).
+ */
+fun saveFailedProperties(screen: String, action: String, errorType: String?): Map<String, Any?> =
+    mapOf("screen" to screen, "action" to action, "error" to (errorType ?: "unknown"))

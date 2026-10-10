@@ -24,6 +24,7 @@ import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.SkipButton
 import com.backtosafety.app.ui.TrackStepViewed
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
@@ -80,7 +81,10 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                             )
                             store.completeStep("emergency_contact")
                             trackStep(true, "emergency_contact")
-                        }.onSuccess { onContinue() }.onFailure { error = tCommon("saveFailed") }
+                        }.onSuccess { onContinue() }.onFailure { e ->
+                            reportSaveFailed("onboarding_contact", "save", e)
+                            error = tCommon("saveFailed")
+                        }
                     }
                 },
                 dimmed = name.isBlank() || phone.isBlank(),

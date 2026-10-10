@@ -57,7 +57,7 @@ struct ReadoutView: View {
             VStack(alignment: .leading, spacing: Space.md) {
                 Button {
                     Analytics.shared.track(event: .readout911Called, properties: [:])
-                    dial(emergencyNumber)
+                    dial(emergencyNumber, .emergency)
                 } label: {
                     RNText(t("callButton"), Typography.bodyLarge.spec.weight(700), color: white)
                         .frame(maxWidth: .infinity)
@@ -176,8 +176,8 @@ struct ReadoutView: View {
 
     private func nonEmpty(_ s: String?) -> String? { (s ?? "").isEmpty ? nil : s }
 
-    private func dial(_ number: String) {
-        if let url = URL(string: "tel:\(number)") { UIApplication.shared.open(url) }
+    private func dial(_ number: String, _ target: DialTarget) {
+        BackToSafety.dial(number, target: target, screen: "readout", tCommon: tCommon)
     }
 
     private func copy(_ text: String, kind: String, event: AnalyticsEvent) {
@@ -262,7 +262,7 @@ struct ReadoutView: View {
                 if let hotline {
                     Button {
                         Analytics.shared.track(event: .readoutMedicalertHotlineCalled, properties: [:])
-                        dial(PhoneKt.stripPhoneFormatting(phone: hotline))
+                        dial(PhoneKt.stripPhoneFormatting(phone: hotline), .medicalert)
                     } label: { infoRow(t("sections.devices.medicAlertHotline"), hotline).contentShape(Rectangle()) }
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("readout-medicalert-hotline")
@@ -312,7 +312,7 @@ struct ReadoutView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     Analytics.shared.track(event: .readoutContactCalled, properties: [:])
-                    dial(c.phone)
+                    dial(c.phone, .contact)
                 } label: {
                     HStack(spacing: Space.xs) {
                         SFIcon("phone.fill", 14, white)

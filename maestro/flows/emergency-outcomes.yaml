@@ -13,6 +13,7 @@ name: Call 911, the info sheet, leaving, and Found
 # Call 911 opens the dialer with the number and checks its step (F-17: twice stays checked).
 - tapOn:
     id: emergency-call-911
+- runFlow: ../subflows/call-unavailable.yaml
 - assertVisible:
     text: '.*911.*'
 # Back from the dialer the way a person would: the app is not restarted.
@@ -23,6 +24,7 @@ name: Call 911, the info sheet, leaving, and Found
     text: 1/11 steps complete
 - tapOn:
     id: emergency-call-911
+- runFlow: ../subflows/call-unavailable.yaml
 # Back from the dialer the way a person would: the app is not restarted.
 - launchApp:
     stopApp: false

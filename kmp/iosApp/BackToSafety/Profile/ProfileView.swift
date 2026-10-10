@@ -147,6 +147,7 @@ struct ProfileView: View {
                 saving = false
                 model.path = []
             } catch {
+                reportSaveFailed(screen: "profile", action: "save", error: error)
                 alert = AppAlert(title: tCommon("error"), message: tCommon("saveFailed"))
                 saving = false
             }

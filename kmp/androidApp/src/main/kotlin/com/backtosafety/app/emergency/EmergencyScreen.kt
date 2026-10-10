@@ -1,5 +1,6 @@
 package com.backtosafety.app.emergency
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -37,6 +38,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -64,9 +66,14 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
+import com.backtosafety.app.ui.dial
 import com.backtosafety.app.ui.localeTime
 import com.backtosafety.app.ui.negativeTopMargin
 import com.backtosafety.app.ui.rnBorder
@@ -80,24 +87,38 @@ import com.backtosafety.core.AppClock
 import com.backtosafety.core.ChecklistStep
 import com.backtosafety.core.CountdownAlert
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.DialTarget
+import com.backtosafety.core.EmergencyAway
 import com.backtosafety.core.Profile
 import com.backtosafety.core.SEARCH_WINDOW_SECONDS
+import com.backtosafety.core.SmsResult
 import com.backtosafety.core.Translate
 import com.backtosafety.core.buildAlertSms
 import com.backtosafety.core.buildInitialSteps
-import com.backtosafety.core.countdownAlerts
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.DestinationEntity
 import com.backtosafety.core.directionHint
+import com.backtosafety.core.emergencyEndedProperties
 import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.normalizeUniqueSmsRecipients
 import com.backtosafety.core.secondsRemaining
+import com.backtosafety.core.smsResultProperties
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Instant
 
-private enum class Modal { FOUND, LEAVE, NO_CONTACTS, SMS_ERROR }
+private enum class Modal(val catchUp: CountdownAlert? = null) {
+    FOUND,
+    LEAVE,
+    NO_CONTACTS,
+    SMS_ERROR,
+
+    /** A countdown alert that came due while the screen wasn't showing (EmergencyAway). */
+    CATCH_UP_WARNING(CountdownAlert.WARNING),
+    CATCH_UP_EXPIRED(CountdownAlert.EXPIRED),
+}
 
 /** Port of app/emergency.tsx. */
 @Composable
@@ -105,6 +126,9 @@ fun EmergencyScreen(
     t: Translate,
     tCommon: Translate,
     store: Store,
+    away: EmergencyAway,
+    /** Outlives the screen, for the bookkeeping when it goes. */
+    appScope: CoroutineScope,
     onLeave: () -> Unit,
     onViewReadout: () -> Unit,
 ) {
@@ -151,18 +175,58 @@ fun EmergencyScreen(
         store.saveActiveEmergency(current.copy(wearing = wearing, checkedSteps = steps.filter { it.checked }.map { it.id }))
     }
 
-    // Countdown: re-derived from the start time each tick; alerts fire on crossing (F-16).
+    // Showing and not showing (another screen on top, or the app in the background): off the
+    // screen the countdown alerts are notifications; back on it, one that came due is caught up.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle) {
+        var showing = false
+        fun left() {
+            showing = false
+            appScope.launch { away.left(AppClock.nowMs()) }
+        }
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_START -> {
+                    showing = true
+                    appScope.launch {
+                        when (away.shown(AppClock.nowMs())) {
+                            CountdownAlert.WARNING -> Modal.CATCH_UP_WARNING
+                            CountdownAlert.EXPIRED -> Modal.CATCH_UP_EXPIRED
+                            null -> null
+                        }?.let {
+                            vibrate(context, it.catchUp!!)
+                            modal = it
+                        }
+                    }
+                }
+                Lifecycle.Event.ON_STOP -> left()
+                else -> {}
+            }
+        }
+        lifecycle.addObserver(observer)
+        onDispose {
+            lifecycle.removeObserver(observer)
+            if (showing) left()
+        }
+    }
+
+    // Countdown: re-derived from the start time each tick; alerts fire on crossing (F-16). It
+    // ticks only while the screen shows; what comes due otherwise is EmergencyAway's.
     LaunchedEffect(state?.startedAt) {
         val started = state?.let { Instant.parse(it.startedAt).toEpochMilliseconds() } ?: return@LaunchedEffect
-        var prev = secondsRemaining(started, AppClock.nowMs())
-        secondsLeft = prev
-        if (prev <= 0) haptics.performHapticFeedback(HapticFeedbackType.Reject)
-        while (prev > 0) {
-            delay(1000)
-            val next = secondsRemaining(started, AppClock.nowMs())
-            for (alert in countdownAlerts(prev, next)) vibrate(context, alert)
-            secondsLeft = next
-            prev = next
+        if (secondsRemaining(started, AppClock.nowMs()) <= 0) haptics.performHapticFeedback(HapticFeedbackType.Reject)
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            var prev = secondsRemaining(started, AppClock.nowMs())
+            away.inAppAlerts(prev, prev, AppClock.nowMs())
+            secondsLeft = prev
+            while (prev > 0) {
+                delay(1000)
+                val now = AppClock.nowMs()
+                val next = secondsRemaining(started, now)
+                for (alert in away.inAppAlerts(prev, next, now)) vibrate(context, alert)
+                secondsLeft = next
+                prev = next
+            }
         }
     }
 
@@ -186,6 +250,10 @@ fun EmergencyScreen(
             if (current.incidentId == null) state = current.copy(incidentId = id)
         }
     }
+
+    fun endedProperties() = emergencyEndedProperties(
+        Instant.parse(current.startedAt).toEpochMilliseconds(), AppClock.nowMs(), steps.count { it.checked },
+    )
 
     fun toggle(id: String) {
         if (steps.none { it.id == id && it.checked }) Analytics.track(AnalyticsEvent.EMERGENCY_STEP_COMPLETED, mapOf("step" to id))
@@ -232,7 +300,7 @@ fun EmergencyScreen(
                     onFound = {
                         scope.launch {
                             store.clearActiveEmergency()
-                            Analytics.track(AnalyticsEvent.EMERGENCY_COMPLETED, mapOf("checked_count" to steps.count { it.checked }))
+                            Analytics.track(AnalyticsEvent.EMERGENCY_COMPLETED, endedProperties())
                             record(outcome = "found", ended = true)
                             modal = Modal.FOUND
                         }
@@ -244,7 +312,7 @@ fun EmergencyScreen(
                         )
                         // Calling always marks the step done; a second call must not un-check it (F-17).
                         if (steps.none { it.id == "call_911" && it.checked }) toggle("call_911")
-                        context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$emergencyNumber")))
+                        dial(context, emergencyNumber, DialTarget.EMERGENCY, "emergency", tCommon)
                         record(outcome = "911_called")
                     },
                     onReadout = {
@@ -262,9 +330,17 @@ fun EmergencyScreen(
                             val message = buildAlertSms(t, profile?.name, startedTime, wearing)
                             val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + recipients.joinToString(";")))
                                 .putExtra("sms_body", message)
+                            // The messaging app doesn't say whether the text went: handed off is all we know.
                             runCatching { context.startActivity(intent) }
-                                .onSuccess { Analytics.track(AnalyticsEvent.EMERGENCY_CONTACTS_ALERTED, mapOf("recipient_count" to recipients.size)) }
-                                .onFailure { modal = Modal.SMS_ERROR }
+                                .onSuccess {
+                                    Analytics.track(AnalyticsEvent.EMERGENCY_CONTACTS_ALERTED, mapOf("recipient_count" to recipients.size))
+                                    Analytics.track(AnalyticsEvent.EMERGENCY_SMS_RESULT, smsResultProperties(SmsResult.HANDED_OFF, recipients.size))
+                                }
+                                .onFailure { e ->
+                                    val result = if (e is ActivityNotFoundException) SmsResult.UNAVAILABLE else SmsResult.FAILED
+                                    Analytics.track(AnalyticsEvent.EMERGENCY_SMS_RESULT, smsResultProperties(result, recipients.size))
+                                    modal = Modal.SMS_ERROR
+                                }
                         }
                     },
                 )
@@ -290,7 +366,7 @@ fun EmergencyScreen(
                     onLeave()
                 },
                 onEnd = {
-                    Analytics.track(AnalyticsEvent.EMERGENCY_CANCELLED, mapOf("checked_count" to steps.count { it.checked }))
+                    Analytics.track(AnalyticsEvent.EMERGENCY_CANCELLED, endedProperties())
                     modal = null
                     scope.launch {
                         record(ended = true)
@@ -650,6 +726,14 @@ private fun EmergencyModal(
                     Box(
                         Modifier.padding(top = space.xs.udp).testTag("emergency-modal-leave-end").clickable(onClick = onEnd).padding(vertical = space.md.udp),
                     ) { Text(t("modal.leave.end"), style = buttonText, color = Color(DesignTokens.Semantic.error)) }
+                }
+                Modal.CATCH_UP_WARNING, Modal.CATCH_UP_EXPIRED -> {
+                    val key = modal.catchUp!!.key
+                    val number = mapOf("emergencyNumber" to tCommon("emergencyNumber"))
+                    Text(t("alerts.$key.title", number), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
+                    Text(t("alerts.$key.body", number), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
+                    val bg = if (modal == Modal.CATCH_UP_EXPIRED) Color(DesignTokens.Semantic.error) else colors.primary
+                    fullButton(tCommon("ok"), "emergency-modal-catchup-ok", bg, onDismiss)
                 }
                 Modal.NO_CONTACTS, Modal.SMS_ERROR -> {
                     val noContacts = modal == Modal.NO_CONTACTS

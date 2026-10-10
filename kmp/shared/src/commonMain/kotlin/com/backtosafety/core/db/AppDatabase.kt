@@ -59,3 +59,12 @@ fun openAppDatabase(path: String, builder: RoomDatabase.Builder<AppDatabase>): A
         .addMigrations(MIGRATION_1_2)
         .build()
 }
+
+/** data_migrated's properties when migrating from [fromVersion] failed after [durationMs]. */
+fun dataMigrationFailedProperties(fromVersion: Int, durationMs: Long, errorType: String?): Map<String, Any?> = mapOf(
+    "from_version" to fromVersion,
+    "to_version" to DATABASE_VERSION,
+    "ok" to false,
+    "duration_ms" to durationMs,
+    "error" to (errorType ?: "unknown"),
+)
