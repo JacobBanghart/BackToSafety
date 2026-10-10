@@ -68,7 +68,12 @@ The orchestrator uses port 5554.
 
 ## Owner questions
 
-(none yet)
+1. **DB path (data):** the Rust app keeps `nijii.db` in `databases/`; the KMP app keeps it in
+   `<filesDir>/SQLite/`. That's fine while this stays an experiment. If the Rust app ever
+   replaced the KMP one, it would need the KMP path (or a copy on first launch). Not blocking.
+2. **DB open failure (data):** the app panics instead of opening an empty database that
+   would hide the caregiver's data. Do you want a visible error screen instead? Not
+   blocking.
 
 ## Lane notes
 
