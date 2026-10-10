@@ -22,13 +22,13 @@ from `rust-port`.
 
 | Lane | Port | Owns | Agent | Status |
 |---|---|---|---|---|
-| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | | starting |
-| shell | 5556 | `main.rs` routing/startup, `ui/`, `platform/` (JNI base, edge-to-edge, dark mode, font scale, back, deeplinks + debug clock seam, keyboard) | | starting |
-| onboarding | 5558 | `screens/onboarding.*` (name, photo, appearance, contact, complete), `platform/photo.rs` | | starting |
-| home | 5560 | `screens/home.*`, `screens/settings.*` | | starting |
-| emergency | 5562 | `screens/emergency.*`, `platform/alerts.rs` (AlarmManager), SMS and dial intents | | starting |
-| readout | 5564 | `screens/readout.*`, `screens/profile.*` (clipboard, share) | | starting |
-| contacts | 5566 | `screens/contacts.*`, `screens/destinations.*` (contact picker, reorder gestures) | | starting |
+| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | | `aba6906b305d83d7a` | running |
+| shell | 5556 | `main.rs` routing/startup, `ui/`, `platform/` (JNI base, edge-to-edge, dark mode, font scale, back, deeplinks + debug clock seam, keyboard) | | `a6bc77f81b965afdc` | running |
+| onboarding | 5558 | `screens/onboarding.*` (name, photo, appearance, contact, complete), `platform/photo.rs` | | `aa9228cf7917db373` | running |
+| home | 5560 | `screens/home.*`, `screens/settings.*` | | `af899f27403815313` | running |
+| emergency | 5562 | `screens/emergency.*`, `platform/alerts.rs` (AlarmManager), SMS and dial intents | | `a399373f46570d27a` | running |
+| readout | 5564 | `screens/readout.*`, `screens/profile.*` (clipboard, share) | | `a409ae7037f99154b` | running |
+| contacts | 5566 | `screens/contacts.*`, `screens/destinations.*` (contact picker, reorder gestures) | | `afa819db5fc29fc9f` | running |
 
 The orchestrator uses port 5554.
 
@@ -38,6 +38,19 @@ The orchestrator uses port 5554.
    `Store.kt` in snake_case. The orchestrator merges it into `rust-port` right away, and
    screen lanes `git merge rust-port`.
 2. Until then, screen lanes build layout and CSS against the oracle.
+
+## Orchestration
+
+- The orchestrator session runs a recurring cron (every 30 min) to resume work. Each tick it:
+  - re-reads this file
+  - checks each lane (`git -C ~/github/nijii-rust-<lane> log rust-port..`)
+  - resumes any agent that stopped on a usage or session limit, via SendMessage to its agent ID
+  - reviews and merges finished work into `rust-port` and runs `mise run rust:check`
+  - tells lanes to `git merge rust-port` when something they need has landed
+- If the orchestrator session itself is gone, a new session resumes from this file, the lane
+  branches and their notes. Agent IDs only work in the session that started them; a new
+  session starts fresh agents on the same worktrees ("continue from your lane notes and
+  commits").
 
 ## Merge log
 
