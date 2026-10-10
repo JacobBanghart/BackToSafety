@@ -4,6 +4,8 @@
 #
 #   start-emulator.sh [count] [apk]          GPU=guest|swiftshader_indirect (default guest)
 #
+# API=30 (default 36) picks the Android version, for checking older devices; each version has
+# its own AVD (nijii-pixel7, nijii-pixel7-api30, ...).
 # Uses $ANDROID_HOME (mise's android-sdk under `mise run`) and the nijii-pixel7 AVD, which it
 # creates the first time (API 36 Google APIs, pixel_7, hw.ramSize=4096M, hw.cpu.ncore=8).
 # /dev/kvm must be usable; until a fresh login picks up the kvm group, this uses sudo -g kvm.
@@ -23,18 +25,21 @@ ADB="$ANDROID_HOME/platform-tools/adb"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
 # The AVD, the first time: the API 36 Google APIs image (adb root works on it), 4 GB, 8 cores.
-if [ ! -d "$HOME/.android/avd/nijii-pixel7.avd" ]; then
+API="${API:-36}"
+AVD=nijii-pixel7
+[ "$API" = 36 ] || AVD="nijii-pixel7-api$API"
+if [ ! -d "$HOME/.android/avd/$AVD.avd" ]; then
   case "$(uname -m)" in aarch64 | arm64) abi=arm64-v8a ;; *) abi=x86_64 ;; esac
-  image="system-images;android-36;google_apis;$abi"
+  image="system-images;android-$API;google_apis;$abi"
   bin="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin | head -1)"
-  [ -d "$ANDROID_HOME/system-images/android-36/google_apis/$abi" ] || { yes | "$bin/sdkmanager" --licenses >/dev/null 2>&1 || true; "$bin/sdkmanager" emulator "$image"; }
-  echo no | "$bin/avdmanager" create avd -n nijii-pixel7 -k "$image" -d pixel_7 >/dev/null
-  printf 'hw.ramSize=4096M\nhw.cpu.ncore=8\n' >>"$HOME/.android/avd/nijii-pixel7.avd/config.ini"
+  [ -d "$ANDROID_HOME/system-images/android-$API/google_apis/$abi" ] || { yes | "$bin/sdkmanager" --licenses >/dev/null 2>&1 || true; "$bin/sdkmanager" emulator "$image"; }
+  echo no | "$bin/avdmanager" create avd -n "$AVD" -k "$image" -d pixel_7 >/dev/null
+  printf 'hw.ramSize=4096M\nhw.cpu.ncore=8\n' >>"$HOME/.android/avd/$AVD.avd/config.ini"
 fi
 
 for i in $(seq 0 $((COUNT - 1))); do
   port=$((5554 + 2 * i))
-  emu=("$ANDROID_HOME/emulator/emulator" -avd nijii-pixel7 -port "$port" -read-only -no-window
+  emu=("$ANDROID_HOME/emulator/emulator" -avd "$AVD" -port "$port" -read-only -no-window
     -no-audio -no-boot-anim -gpu "$GPU" -no-snapshot -no-metrics)
   if [ -w /dev/kvm ]; then
     nohup "${emu[@]}" >"/tmp/emulator-$port.log" 2>&1 &

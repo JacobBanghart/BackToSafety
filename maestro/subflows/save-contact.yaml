@@ -1,4 +1,10 @@
 # Saves the contact the Contacts app's insert screen was opened with (seed-device.sh).
 appId: com.google.android.contacts
 ---
-- tapOn: Save
+# Older Contacts apps (Android 11) first ask to add a backup account.
+- runFlow:
+    when:
+      visible: 'CANCEL|Cancel'
+    commands:
+      - tapOn: 'CANCEL|Cancel'
+- tapOn: 'SAVE|Save'

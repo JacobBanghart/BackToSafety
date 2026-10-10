@@ -74,6 +74,11 @@ jobs:
         working-directory: kmp
         run: ./gradlew :androidApp:assembleRelease --console=plain
 
+      # Android lint, errors only: calls to APIs newer than minSdk (API 24) crash older phones.
+      - name: Lint
+        working-directory: kmp
+        run: ./gradlew :androidApp:lintRelease --console=plain
+
       # Every main screen rendered on the JVM, compared with src/test/snapshots.
       - name: Snapshot tests
         working-directory: kmp

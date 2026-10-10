@@ -3,6 +3,7 @@ package com.backtosafety.app.emergency
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.activity.compose.BackHandler
@@ -302,13 +303,21 @@ fun EmergencyScreen(
     }
 }
 
+/** The countdown alerts' vibration, on every Android the app supports (API 24 up). */
 private fun vibrate(context: Context, alert: CountdownAlert) {
     val vibrator = context.getSystemService(Vibrator::class.java) ?: return
-    val effect = when (alert) {
-        CountdownAlert.WARNING -> VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK)
-        CountdownAlert.EXPIRED -> VibrationEffect.createWaveform(longArrayOf(0, 500, 200, 500), -1)
+    val pattern = when (alert) {
+        CountdownAlert.WARNING -> longArrayOf(0, 30, 80, 30)
+        CountdownAlert.EXPIRED -> longArrayOf(0, 500, 200, 500)
     }
-    vibrator.vibrate(effect)
+    when {
+        Build.VERSION.SDK_INT >= 29 && alert == CountdownAlert.WARNING ->
+            vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK))
+        Build.VERSION.SDK_INT >= 26 -> vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1))
+        else ->
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(pattern, -1)
+    }
 }
 
 @Composable

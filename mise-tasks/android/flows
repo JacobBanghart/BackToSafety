@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Run every Maestro flow and the reorder gestures on fresh emulators (DEVICES=4)"
+#MISE description="Run every Maestro flow and the reorder gestures on fresh emulators (DEVICES=4, API=30 for an older Android)"
 #MISE depends=["android:sdk"]
 set -euo pipefail
 apk="$(maestro/build-android.sh)"

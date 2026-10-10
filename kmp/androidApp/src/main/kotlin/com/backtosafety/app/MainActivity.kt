@@ -86,7 +86,8 @@ class MainActivity : ComponentActivity() {
         val uri = intent?.data ?: return
         if (uri.host != "debug" || uri.path != "/clock") return
         uri.getQueryParameter("at")?.let { at ->
-            runCatching { java.time.OffsetDateTime.parse(at).toInstant().toEpochMilli() }.getOrNull()
+            // kotlin.time, not java.time: java.time needs API 26 and the app supports 24.
+            runCatching { kotlin.time.Instant.parse(at).toEpochMilliseconds() }.getOrNull()
                 ?.let(AppClock::freeze)
         }
         uri.getQueryParameter("advance")?.toDoubleOrNull()?.let { AppClock.advance((it * 1000).toLong()) }
