@@ -184,3 +184,13 @@ For other lanes:
 - `rust:compare` and `rust:flows` keep their CLI. New optional env: `APK`, `SKIP_INSTALL`, and for
   compare `ORACLE_CAPTURES` / `ORACLE_REFRESH` (as above). `rust/scripts/parity_summary.py` builds
   the summary; `python3 rust/scripts/test_parity_summary.py` tests its parsing off-device.
+
+Tried on slot 5570 (`--up 5570 --states onboarding-welcome,settings --flows contacts --no-gestures
+--modes "light dark"`, against rust-port before the screens/shell merged): the oracle captures for
+both states in both modes landed in `~/.cache/nijii-oracle/captures/f4b5d88/` (so `--fast` skips
+them from now on), and the Rust app's launch worked (store opened and seeded, the stub Home
+showed), but the Rust captures and the flow failed because the stubs have no `onboarding-*` ids and
+startup routing isn't merged. The summary reported those as five failures with the log paths, as
+designed. A first attempt lost its emulator during the 11-minute APK bundling (the box was
+loaded); the runner now boots emulators after the build and reports a device that is gone as the
+reason rather than "not run". Re-run it once the lanes have merged.
