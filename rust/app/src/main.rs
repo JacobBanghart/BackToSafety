@@ -1,5 +1,6 @@
 mod platform;
 mod screens;
+mod startup;
 mod store;
 mod ui;
 

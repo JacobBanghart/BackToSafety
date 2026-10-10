@@ -59,13 +59,7 @@ static SERVICES: OnceLock<Services> = OnceLock::new();
 
 fn services() -> &'static Services {
     SERVICES.get_or_init(|| {
-        let path = database_path();
-        // A failure here would otherwise start the app on an empty database that hides the
-        // caregiver's data, so stop loudly instead.
-        let store = Arc::new(
-            Store::open(&path).unwrap_or_else(|e| panic!("can't open {}: {e}", path.display())),
-        );
-        store.seed().expect("seeding the database");
+        let store = crate::startup::open_store(&database_path());
         let away = Arc::new(EmergencyAway::new(store.clone(), alert_scheduler()));
         Services { store, away }
     })
@@ -82,6 +76,7 @@ pub fn provide() {
     let s = services().clone();
     use_context_provider(|| s.store.clone());
     use_context_provider(|| s.away.clone());
+    crate::startup::use_app_ready(s.store.clone());
 }
 
 /// The store, from context ([`provide`] ran in `App`).

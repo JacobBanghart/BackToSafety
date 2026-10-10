@@ -11,8 +11,10 @@ pub mod i18n;
 pub mod mobility;
 pub mod phone;
 pub mod photo;
+pub mod posthog;
 pub mod profile;
 pub mod readout;
+pub mod startup;
 pub mod store;
 
 pub use i18n::{Translations, Translator};

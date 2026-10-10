@@ -90,4 +90,30 @@ fn main() {
     println!("cargo:rerun-if-changed={}", logo.display());
     let b64 = base64::engine::general_purpose::STANDARD.encode(fs::read(&logo).unwrap());
     fs::write(out.join("logo.uri"), format!("data:image/png;base64,{b64}")).unwrap();
+
+    // PostHog and the version, at build time as in androidApp/build.gradle.kts: POSTHOG_KEY and
+    // POSTHOG_HOST come from the environment (no key: nothing is sent); the version and build
+    // number from version.json.
+    for var in ["POSTHOG_KEY", "POSTHOG_HOST"] {
+        println!("cargo:rerun-if-env-changed={var}");
+    }
+    println!(
+        "cargo:rustc-env=NIJII_POSTHOG_KEY={}",
+        env::var("POSTHOG_KEY").unwrap_or_default()
+    );
+    println!(
+        "cargo:rustc-env=NIJII_POSTHOG_HOST={}",
+        env::var("POSTHOG_HOST").unwrap_or_else(|_| "https://us.i.posthog.com".into())
+    );
+    let release_path = repo.join("version.json");
+    println!("cargo:rerun-if-changed={}", release_path.display());
+    let release: Value = serde_json::from_str(&fs::read_to_string(&release_path).unwrap()).unwrap();
+    println!(
+        "cargo:rustc-env=NIJII_VERSION={}",
+        release["version"].as_str().unwrap()
+    );
+    println!(
+        "cargo:rustc-env=NIJII_BUILD={}",
+        release["android"]["versionCode"]
+    );
 }
