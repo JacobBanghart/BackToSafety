@@ -105,6 +105,22 @@ fn rust_app_names_the_same_screens() {
     assert_eq!(screens, ["home", "settings"].map(String::from).into());
 }
 
+/// The events the core and the app's startup send for every screen (EmergencyAway, app_ready,
+/// data_migrated); the rest belong to the screens and are held to the spec by the ignored test.
+#[test]
+fn the_core_and_startup_send_their_events() {
+    let sent = sent_events();
+    for event in [
+        "app_ready",
+        "data_migrated",
+        "countdown_alert",
+        "emergency_resumed",
+        "notifications_permission",
+    ] {
+        assert!(sent.contains(event), "{event} is not sent by the core or the app");
+    }
+}
+
 #[test]
 fn nothing_sends_an_event_outside_the_spec() {
     // The enum is generated from the spec, so a stray name can't compile; this checks the
