@@ -58,7 +58,11 @@ android {
         release {
             // Without the upload key (local and harness builds), the debug key, so the APK installs.
             signingConfig = signingConfigs.findByName("upload") ?: signingConfigs.getByName("debug")
-            isMinifyEnabled = false
+            // R8: shrinks and optimises code and drops unused resources. The libraries bring
+            // their own keep rules; proguard-rules.pro has the app's.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 

@@ -88,6 +88,7 @@ struct BackToSafetyApp: App {
     @StateObject private var model = AppModel()
 
     init() {
+        AppReady.noteAppInit()
         setUpAnalytics()
     }
 
@@ -149,6 +150,9 @@ struct RootView: View {
                         screen(route)
                     }
                 }
+                // The first screen's first frame (the next turn of the run loop after it
+                // appears): report how long the cold start took.
+                .onAppear { DispatchQueue.main.async { AppReady.report() } }
             } else {
                 colors.background.ignoresSafeArea()
             }

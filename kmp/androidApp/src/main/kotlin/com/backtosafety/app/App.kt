@@ -25,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.navigation.NavBackStackEntry
@@ -143,6 +144,11 @@ fun App(store: Store, translations: Translations, modifier: Modifier) {
         // differ from the system's, which the window's resource (values-night) follows.
         val activity = LocalActivity.current
         LaunchedEffect(background) { activity?.window?.setBackgroundDrawable(ColorDrawable(background.toArgb())) }
+        // The first screen's first frame: report how long the cold start took.
+        LaunchedEffect(Unit) {
+            withFrameNanos { }
+            AppReady.report()
+        }
         val nav = rememberNavController()
         // app/_layout.tsx reports each screen as its route path.
         DisposableEffect(nav) {

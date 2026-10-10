@@ -95,6 +95,12 @@ strings, numbers, booleans or null.
 | `settings_theme_changed`     | `theme: string`    | Theme preference changed |
 | `settings_language_changed`  | `language: string` | Language changed         |
 
+### App lifecycle
+
+| Event | Properties | Description |
+| --- | --- | --- |
+| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS) | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. |
+
 ### Navigation
 
 | Event           | Properties       | Description       |
