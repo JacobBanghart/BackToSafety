@@ -61,6 +61,11 @@ The orchestrator uses port 5554.
   databases, EmergencyAway, an analytics sink generated from spec. 15 store tests pass. The
   `put_setting` updated_at is NULL, as in Kotlin (RN stamped it; nothing reads it).
 
+- 2026-10-10: merged `rust/data` milestone 2 (4cc925f). `use_store()` and
+  `use_emergency_away()` are in context, and the DatabaseTest, EmergencyAwayTest and
+  AnalyticsParity ports pass (2 ignored until the screens land). The Android DB path hasn't
+  run on a device yet; the shell lane checks it.
+
 ## Owner questions
 
 (none yet)
