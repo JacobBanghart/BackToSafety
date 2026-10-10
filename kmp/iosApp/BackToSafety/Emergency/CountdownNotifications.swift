@@ -22,9 +22,9 @@ final class CountdownNotifications: NSObject, AlertScheduler {
     func schedule(alerts: [ScheduledAlert]) {
         cancelAll()
         // The app's strings are read on the main thread; the shared core may call from another.
-        let (t, emergencyNumber) = Thread.isMainThread ? (emergencyT(), emergencyNumber())
+        let (t, numberText) = Thread.isMainThread ? (emergencyT(), emergencyNumber())
             : DispatchQueue.main.sync { (emergencyT(), emergencyNumber()) }
-        let number = ["emergencyNumber": emergencyNumber]
+        let number = ["emergencyNumber": numberText]
         for scheduled in alerts {
             let key = scheduled.alert.key
             let content = UNMutableNotificationContent()
