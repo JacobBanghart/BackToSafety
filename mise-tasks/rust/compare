@@ -1,13 +1,51 @@
 #!/usr/bin/env bash
 #MISE description="Rust port vs the oracle: capture states (maestro/states) on ANDROID_SERIAL from both apps and compare layouts (MODES=light by default; PIXELS=1 also gates pixels)"
+# Knobs for rust:parity (the plain CLI above is unchanged without them):
+#   APK=<path>            install this Rust APK instead of building one
+#   SKIP_INSTALL=1        the Rust APK is already installed; neither build nor install
+#   ORACLE_CAPTURES=<dir> keep the oracle's captures in <dir>/<mode>/<state>.{png,layout.json}
+#                         and capture only the states missing there (ORACLE_REFRESH=1: all)
 set -euo pipefail
 : "${ANDROID_SERIAL:?set ANDROID_SERIAL to the lane emulator (rust/scripts/emulator.sh up <port>)}"
 out="${OUT:-/tmp/nijii-compare/$ANDROID_SERIAL}"
 export MODES="${MODES:-light}"
 rm -rf "$out" && mkdir -p "$out"
-mise run -q rust:oracle >/dev/null
-adb install -r "$(mise run -q rust:build)" >/dev/null
-STATES_DIR="$(rust/scripts/retarget.sh "$out/maestro-oracle" com.backtosafety.app)/states" maestro/capture.sh "$out/oracle" "$@"
+
+capture_oracle() { # <out-dir> [state...]
+  STATES_DIR="$(rust/scripts/retarget.sh "$out/maestro-oracle" com.backtosafety.app)/states" maestro/capture.sh "$@"
+}
+
+oracle_dir="$out/oracle"
+if [ -z "${ORACLE_CAPTURES:-}" ]; then
+  mise run -q rust:oracle >/dev/null
+  capture_oracle "$oracle_dir" "$@"
+else
+  oracle_dir="$ORACLE_CAPTURES"
+  mkdir -p "$oracle_dir"
+  states=("$@")
+  [ ${#states[@]} -gt 0 ] || for f in maestro/states/*.yaml; do states+=("$(basename "$f" .yaml)"); done
+  installed=
+  for mode in $MODES; do
+    missing=()
+    for s in "${states[@]}"; do
+      if [ -n "${ORACLE_REFRESH:-}" ] || [ ! -f "$oracle_dir/$mode/$s.png" ] || [ ! -f "$oracle_dir/$mode/$s.layout.json" ]; then
+        missing+=("$s")
+      fi
+    done
+    [ ${#missing[@]} -gt 0 ] || { echo "oracle $mode: cached"; continue; }
+    [ -n "$installed" ] || { mise run -q rust:oracle >/dev/null; installed=1; }
+    echo "oracle $mode: capturing ${missing[*]}"
+    MODES="$mode" capture_oracle "$out/oracle" "${missing[@]}"
+    mkdir -p "$oracle_dir/$mode"
+    for s in "${missing[@]}"; do
+      [ -f "$out/oracle/$mode/$s.png" ] && cp "$out/oracle/$mode/$s".{png,layout.json} "$oracle_dir/$mode/"
+    done
+  done
+fi
+
+if [ -z "${SKIP_INSTALL:-}" ]; then
+  adb install -r "${APK:-$(mise run -q rust:build)}" >/dev/null
+fi
 STATES_DIR="$(rust/scripts/retarget.sh "$out/maestro-rust")/states" maestro/capture.sh "$out/rust" "$@"
 [ -x .venv/bin/python ] || python3 -m venv .venv
 .venv/bin/pip install -q -r maestro/requirements.txt
@@ -16,7 +54,7 @@ for mode in $MODES; do
   echo "== $mode: rust vs oracle"
   # Layout (testID boxes within 2dp) is the gate across implementations, as for the native
   # ports; a WebView never renders text pixel-identical to Compose.
-  .venv/bin/python maestro/compare_screens.py "$out/rust/$mode" "$out/oracle/$mode" $([ -n "${PIXELS:-}" ] || echo --skip-pixels) || status=1
+  .venv/bin/python maestro/compare_screens.py "$out/rust/$mode" "$oracle_dir/$mode" $([ -n "${PIXELS:-}" ] || echo --skip-pixels) || status=1
 done
-echo "screenshots: $out/{rust,oracle}/<mode>/<state>.png"
+echo "screenshots: $out/rust/<mode>/<state>.png and $oracle_dir/<mode>/<state>.png"
 exit $status

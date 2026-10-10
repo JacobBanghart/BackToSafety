@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #MISE description="Rust port: run Maestro flows (maestro/flows, retargeted at the Rust app) on ANDROID_SERIAL only. Args: flow names (default all)"
+# Knobs for rust:parity: APK=<path> installs that APK instead of building one; SKIP_INSTALL=1
+# means the Rust APK is already installed.
 set -euo pipefail
 : "${ANDROID_SERIAL:?set ANDROID_SERIAL to the lane emulator (rust/scripts/emulator.sh up PORT)}"
 out="${OUT:-/tmp/nijii-flows-rust/$ANDROID_SERIAL}"
 rm -rf "$out" && mkdir -p "$out"
-adb install -r "$(mise run -q rust:build)" >/dev/null
+[ -n "${SKIP_INSTALL:-}" ] || adb install -r "${APK:-$(mise run -q rust:build)}" >/dev/null
 tree="$(rust/scripts/retarget.sh "$out/maestro")"
 names=("$@")
 [ ${#names[@]} -gt 0 ] || for f in "$tree"/flows/*.yaml; do names+=("$(basename "$f" .yaml)"); done
