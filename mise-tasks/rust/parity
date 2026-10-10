@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+#MISE description="Rust port parity run: every maestro state in light/dark/large-text vs the oracle, every flow, and the reorder gestures; writes /tmp/nijii-parity/summary.md. See --help."
+set -euo pipefail
+
+usage() {
+  cat <<'U'
+usage: mise run rust:parity -- [options]
+
+Runs, on the emulators you give it:
+  states    every maestro/states/*.yaml in each mode, captured from the Rust app and the oracle
+            and compared by layout (rust:compare)
+  flows     every maestro/flows/*.yaml against the Rust app (rust:flows)
+  gestures  maestro/gestures/reorder.sh retargeted at the Rust app
+Writes /tmp/nijii-parity/summary.md (and results.json): one row per state and mode, per flow, per
+gesture, with pass/fail, the layout deltas and the screenshot paths. Exit status 1 if anything fails.
+
+Devices (one is enough; more shard the work and run in parallel):
+  ANDROID_SERIAL=emulator-5570          the single device, or
+  --serials emulator-5570,emulator-5572 shard across these
+  --up 5570,5572                        boot these ports (rust/scripts/emulator.sh, waits for a
+                                        slot) and shut them down at the end; implies --serials
+
+Selection (a kind with no filter runs in full; "none" skips it):
+  --states a,b | none    state names (home,settings,...)
+  --flows a,b  | none    flow names
+  --no-gestures          skip the reorder gestures
+  --modes "light dark"   modes to compare (default: light dark large-text)
+
+Oracle captures live in ~/.cache/nijii-oracle/captures/<oracle commit>/<mode>/<state>.*:
+  (default)   the oracle is recaptured for the selected states and the cache refreshed
+  --fast      only states missing from the cache are captured: the oracle is captured once
+Other: PIXELS=1 also gates pixels (as rust:compare). OUT=<dir> instead of /tmp/nijii-parity.
+U
+}
+
+states_arg="" flows_arg="" gestures=1 fast="" modes="light dark large-text" serials="${PARITY_SERIALS:-}" up=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -h|--help) usage; exit 0 ;;
+    --states) states_arg="$2"; shift 2 ;;
+    --flows) flows_arg="$2"; shift 2 ;;
+    --no-gestures) gestures=""; shift ;;
+    --modes) modes="$2"; shift 2 ;;
+    --serials) serials="$2"; shift 2 ;;
+    --up) up="$2"; shift 2 ;;
+    --fast) fast=1; shift ;;
+    *) echo "unknown option: $1" >&2; usage >&2; exit 2 ;;
+  esac
+done
+
+out="${OUT:-/tmp/nijii-parity}"
+[ -n "$up" ] || [ -n "$serials" ] || serials="${ANDROID_SERIAL:-}"
+[ -n "$up" ] || [ -n "$serials" ] || { echo "no device: set ANDROID_SERIAL, or pass --serials / --up" >&2; exit 2; }
+
+# What to run.
+list() { # <dir> <ext> -> names
+  for f in "$1"/*."$2"; do basename "$f" ".$2"; done
+}
+if [ "$states_arg" = none ]; then states=(); elif [ -n "$states_arg" ]; then IFS=, read -ra states <<<"$states_arg"; else mapfile -t states < <(list maestro/states yaml); fi
+if [ "$flows_arg" = none ]; then flows=(); elif [ -n "$flows_arg" ]; then IFS=, read -ra flows <<<"$flows_arg"; else mapfile -t flows < <(list maestro/flows yaml); fi
+for s in "${states[@]}"; do [ -f "maestro/states/$s.yaml" ] || { echo "no such state: $s" >&2; exit 2; }; done
+for f in "${flows[@]}"; do [ -f "maestro/flows/$f.yaml" ] || { echo "no such flow: $f" >&2; exit 2; }; done
+
+rm -rf "$out" && mkdir -p "$out"
+apk=""
+if [ ${#states[@]} -gt 0 ] || [ ${#flows[@]} -gt 0 ] || [ -n "$gestures" ]; then
+  echo "building the Rust app"
+  apk="$(mise run -q rust:build)"
+fi
+
+# Emulators come up after the build: a slot can take a long time to free up, and one booted
+# early would sit idle (or die) through the build on this shared box.
+if [ -n "$up" ]; then
+  serials=""
+  for port in ${up//,/ }; do
+    rust/scripts/emulator.sh up "$port" >/dev/null
+    serials="${serials:+$serials,}emulator-$port"
+  done
+  trap 'for port in ${up//,/ }; do rust/scripts/emulator.sh down "$port"; done' EXIT
+fi
+IFS=, read -ra devices <<<"$serials"
+
+# The oracle APK is built once into the cache; its captures are kept per oracle commit.
+if [ ! -f "$HOME/.cache/nijii-oracle/oracle.apk" ]; then
+  ANDROID_SERIAL="${devices[0]}" mise run -q rust:oracle >/dev/null
+fi
+commit="$(cat "$HOME/.cache/nijii-oracle/commit" 2>/dev/null || echo unknown)"
+captures="$HOME/.cache/nijii-oracle/captures/$commit"
+mkdir -p "$captures"
+
+# Shard round-robin: device i gets items i, i+n, ...
+shard() { # <index> <items...>
+  local i="$1" n=${#devices[@]} k=0; shift
+  for item in "$@"; do [ $((k % n)) -eq "$i" ] && echo "$item"; k=$((k + 1)); done
+}
+
+run_device() { # <index>
+  local i="$1" serial="${devices[$1]}" dir="$out/${devices[$1]}"
+  export ANDROID_SERIAL="$serial" APK="$apk"
+  mkdir -p "$dir"
+  mapfile -t my_states < <(shard "$i" "${states[@]}")
+  mapfile -t my_flows < <(shard "$i" "${flows[@]}")
+  { printf 'state %s\n' "${my_states[@]}"; printf 'flow %s\n' "${my_flows[@]}"; } | grep -v '^[a-z]* $' >"$dir/assigned" || true
+  # An emulator can die while the APK builds (the box is shared); say so instead of "not run".
+  if [ "$(adb -s "$serial" get-state 2>&1)" != device ] || ! adb install -r "$apk" >/dev/null 2>&1; then
+    echo "[$serial] unavailable: $(adb -s "$serial" get-state 2>&1 | head -1)"
+    echo "$serial was not available when the run started ($(adb -s "$serial" get-state 2>&1 | head -1))" >"$dir/unavailable"
+    return 0
+  fi
+  export SKIP_INSTALL=1
+  if [ ${#my_states[@]} -gt 0 ]; then
+    echo "[$serial] states: ${my_states[*]}"
+    OUT="$dir/compare" MODES="$modes" ORACLE_CAPTURES="$captures" ORACLE_REFRESH="$([ -n "$fast" ] || echo 1)" \
+      mise run -q rust:compare "${my_states[@]}" >"$dir/compare.log" 2>&1 || true
+  fi
+  if [ ${#my_flows[@]} -gt 0 ]; then
+    echo "[$serial] flows: ${my_flows[*]}"
+    OUT="$dir/flows" mise run -q rust:flows "${my_flows[@]}" >"$dir/flows.log" 2>&1 || true
+  fi
+  if [ "$i" -eq 0 ] && [ -n "$gestures" ]; then
+    echo "[$serial] gestures: reorder"
+    tree="$(rust/scripts/retarget.sh "$dir/maestro-gestures")"
+    "$tree/gestures/reorder.sh" >"$dir/gestures.log" 2>&1 || true
+    cp /tmp/reorder-*.log "$dir/" 2>/dev/null || true
+  fi
+  if [ "$(adb -s "$serial" get-state 2>&1)" != device ]; then
+    echo "$serial went offline during the run" >"$dir/unavailable"
+  fi
+  echo "[$serial] done"
+}
+
+pids=()
+for i in "${!devices[@]}"; do
+  run_device "$i" &
+  pids+=($!)
+done
+for pid in "${pids[@]}"; do wait "$pid" || true; done
+
+status=0
+python3 rust/scripts/parity_summary.py "$out" --captures "$captures" --commit "$commit" \
+  --modes "$modes" --states "${states[*]}" --flows "${flows[*]}" ${gestures:+--gestures} \
+  --serials "$serials" || status=1
+echo "summary: $out/summary.md"
+exit $status

@@ -166,3 +166,36 @@ For other lanes:
   (`captureScreenViews` is off in KMP too).
 - The anonymous ID before `identify` is per process (the SDK persists it); events before identify
   are not profiled, so only the link event differs.
+
+#### data lane: parity runner
+
+`mise run rust:parity -- [options]` (`--help` lists them) is the final-verification command:
+
+- Runs every `maestro/states` in light, dark and large-text through `rust:compare`'s logic, every
+  `maestro/flows` through `rust:flows`, and `maestro/gestures/reorder.sh` retargeted at the Rust
+  app, on one device (`ANDROID_SERIAL`) or sharded across several (`--serials a,b` or
+  `PARITY_SERIALS`; `--up 5570,5572` boots them with `emulator.sh` and shuts them down after).
+  The Rust APK is built once and installed per device; the shards run in parallel.
+- Writes `/tmp/nijii-parity/summary.md` and `results.json` (`OUT=` to move them): a failing list
+  first, then one row per state and mode (pass/fail, layout deltas from `compare_screens.py`, the
+  Rust and oracle screenshot paths), per flow (with the log), and per reorder gesture. Anything
+  with no result in the logs is a failure (`not run`, `Rust capture failed`, `oracle capture
+  missing`). Exit status 1 on any failure.
+- Filters: `--states a,b|none`, `--flows a,b|none`, `--no-gestures`, `--modes "light dark"`.
+  A kind with no filter runs in full.
+- Oracle cache: `~/.cache/nijii-oracle/captures/<oracle commit>/<mode>/<state>.{png,layout.json}`.
+  A plain run recaptures the oracle for the selected states and refreshes the cache; `--fast`
+  captures only what the cache lacks, so the oracle is captured once per oracle commit.
+- `rust:compare` and `rust:flows` keep their CLI. New optional env: `APK`, `SKIP_INSTALL`, and for
+  compare `ORACLE_CAPTURES` / `ORACLE_REFRESH` (as above). `rust/scripts/parity_summary.py` builds
+  the summary; `python3 rust/scripts/test_parity_summary.py` tests its parsing off-device.
+
+Tried on slot 5570 (`--up 5570 --states onboarding-welcome,settings --flows contacts --no-gestures
+--modes "light dark"`, against rust-port before the screens/shell merged): the oracle captures for
+both states in both modes landed in `~/.cache/nijii-oracle/captures/f4b5d88/` (so `--fast` skips
+them from now on), and the Rust app's launch worked (store opened and seeded, the stub Home
+showed), but the Rust captures and the flow failed because the stubs have no `onboarding-*` ids and
+startup routing isn't merged. The summary reported those as five failures with the log paths, as
+designed. A first attempt lost its emulator during the 11-minute APK bundling (the box was
+loaded); the runner now boots emulators after the build and reports a device that is gone as the
+reason rather than "not run". Re-run it once the lanes have merged.
