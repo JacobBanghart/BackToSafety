@@ -1,0 +1,2 @@
+# The screenshot comparison (compare_screens.py, fidelity.py); the fidelity tasks install it into .venv.
+pillow>=11

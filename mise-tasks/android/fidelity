@@ -8,4 +8,7 @@ maestro/start-emulator.sh "${DEVICES:-4}" "$apk" >/dev/null
 trap 'maestro/stop-emulators.sh >/dev/null 2>&1 || true' EXIT
 rm -rf "$out"
 maestro/capture-parallel.sh "$out" "$@"
-python3 maestro/fidelity.py "$out"
+# Pillow for the comparison, in the repo's own virtualenv.
+[ -x .venv/bin/python ] || python3 -m venv .venv
+.venv/bin/pip install -q -r maestro/requirements.txt
+.venv/bin/python maestro/fidelity.py "$out"

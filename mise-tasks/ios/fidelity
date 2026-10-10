@@ -7,4 +7,7 @@ app="$(maestro/build-ios.sh)"
 maestro/start-simulator.sh "${DEVICES:-6}" "$app" >/dev/null
 rm -rf "$out"
 maestro/capture-parallel-ios.sh "$out" "$@"
-python3 maestro/fidelity.py "$out" --platform ios
+# Pillow for the comparison, in the repo's own virtualenv.
+[ -x .venv/bin/python ] || python3 -m venv .venv
+.venv/bin/pip install -q -r maestro/requirements.txt
+.venv/bin/python maestro/fidelity.py "$out" --platform ios

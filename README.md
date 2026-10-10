@@ -36,7 +36,7 @@ Not installed by mise:
 
 | Needed for | What |
 | --- | --- |
-| Contract checks, screenshot comparison (`spec/check.py`, `maestro/*.py`) | Python 3, with [Pillow](https://pypi.org/project/pillow/) for the comparisons |
+| Contract checks, screenshot comparison (`spec/check.py`, `maestro/*.py`) | Python 3 (the fidelity tasks install Pillow into `.venv` themselves) |
 | `ios:runner`, `ios:snapshots` | The [GitHub CLI](https://cli.github.com) (`gh`), signed in |
 | Android emulators on Linux | KVM (`/dev/kvm` writable, or the `kvm` group) |
 | Anything iOS (on the Mac) | Xcode with an iOS simulator runtime, and XcodeGen (`brew install xcodegen`); `mise run ios:setup` checks both |

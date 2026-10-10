@@ -48,7 +48,10 @@ def measure(captured: Path, goldens: Path, mode: str, platform: str) -> dict[str
         [sys.executable, str(HERE / "compare_screens.py"), str(captured / mode), str(goldens / mode),
          "--threshold-percent", "100", "--layout-tolerance-dp", "0", *COMPARE_ARGS[platform]],
         capture_output=True, text=True,
-    ).stdout
+    )
+    if "Traceback" in out.stderr:
+        sys.exit(f"compare_screens.py crashed on {mode}:\n{out.stderr}")
+    out = out.stdout
     results = {}
     for line in out.splitlines():
         if not line.startswith(("ok ", "FAIL ")):
@@ -60,6 +63,9 @@ def measure(captured: Path, goldens: Path, mode: str, platform: str) -> dict[str
         # Whole-word only: a testID may itself contain "missing" (readout-script-missing).
         problems = [m.group(0) for m in re.finditer(r"(?<![\w-])(missing|unexpected) [\w-]+", line)]
         results[state] = (pct, max(moved, default=0.0), problems)
+    # Nothing compared is a failure, not a pass.
+    if not results and any((captured / mode).glob("*.png")):
+        sys.exit(f"no comparisons for {mode}: compare_screens.py printed nothing it could read")
     return results
 
 

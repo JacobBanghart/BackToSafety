@@ -70,7 +70,7 @@ struct HeaderSaveButton: View {
 
     var body: some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary), lines: 1).fixedSize()
+            RNText(label, Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary), lines: 1)
                 .padding(.horizontal, Space.md).padding(.vertical, Space.xs)
                 .frame(minWidth: 72)
                 .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
