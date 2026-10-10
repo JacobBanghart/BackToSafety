@@ -56,6 +56,10 @@ The orchestrator uses port 5554.
 
 - 2026-10-10: `rust-port` base: core + vectors, Welcome, skeleton (every route stubbed),
   harness tasks.
+- 2026-10-10: merged `rust/data` STORE API (5fd8eb4): rusqlite store with the Room v2 DDL and
+  identity hash (checked against kmp/shared/schemas), MIGRATION_1_2, adoption of RN
+  databases, EmergencyAway, an analytics sink generated from spec. 15 store tests pass. The
+  `put_setting` updated_at is NULL, as in Kotlin (RN stamped it; nothing reads it).
 
 ## Owner questions
 
