@@ -261,9 +261,11 @@ struct ContactsView: View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
                 SFIcon("plus", 20, white)
-                RNText(t("addContact"), Typography.bodyBold.spec, color: white, lines: 1)
+                RNText(t("addContact"), Typography.bodyBold.spec, color: white, lines: 1).fixedSize()
             }
-            .frame(maxWidth: .infinity)
+            // As in RN, where text doesn't shrink: at large sizes the label spills into the
+            // padding rather than truncating, and the two buttons keep equal widths.
+            .frame(minWidth: 0, maxWidth: .infinity)
             .padding(Space.lg)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
         }
@@ -275,9 +277,9 @@ struct ContactsView: View {
         Button(action: importContact) {
             HStack(spacing: Space.sm) {
                 SFIcon("square.and.arrow.down", 18, colors.tint)
-                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.text, lines: 1)
+                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.text, lines: 1).fixedSize()
             }
-            .frame(maxWidth: .infinity)
+            .frame(minWidth: 0, maxWidth: .infinity)
             .padding(Space.lg + 1)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
             .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
