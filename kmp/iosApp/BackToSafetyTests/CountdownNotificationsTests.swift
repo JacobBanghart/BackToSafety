@@ -89,7 +89,7 @@ final class CountdownNotificationsTests: XCTestCase {
         AppClock.shared.freeze(atMs: start + 120_000)
         _ = try await away.left(nowMs: start + 120_000)
         XCTAssertEqual(center.pending.map(\.identifier), ["countdown-warning", "countdown-expired"])
-        XCTAssertEqual(center.pending.map(interval), [601 - 120, 900 - 120])
+        XCTAssertEqual(center.pending.map(interval), [481, 780])
 
         AppClock.shared.freeze(atMs: start + 700_000)
         let caughtUp = try await away.shown(nowMs: start + 700_000)
