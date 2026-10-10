@@ -95,10 +95,16 @@ run_device() { # <index>
   local i="$1" serial="${devices[$1]}" dir="$out/${devices[$1]}"
   export ANDROID_SERIAL="$serial" APK="$apk"
   mkdir -p "$dir"
-  adb install -r "$apk" >/dev/null
-  export SKIP_INSTALL=1
   mapfile -t my_states < <(shard "$i" "${states[@]}")
   mapfile -t my_flows < <(shard "$i" "${flows[@]}")
+  { printf 'state %s\n' "${my_states[@]}"; printf 'flow %s\n' "${my_flows[@]}"; } | grep -v '^[a-z]* $' >"$dir/assigned" || true
+  # An emulator can die while the APK builds (the box is shared); say so instead of "not run".
+  if [ "$(adb -s "$serial" get-state 2>&1)" != device ] || ! adb install -r "$apk" >/dev/null 2>&1; then
+    echo "[$serial] unavailable: $(adb -s "$serial" get-state 2>&1 | head -1)"
+    echo "$serial was not available when the run started ($(adb -s "$serial" get-state 2>&1 | head -1))" >"$dir/unavailable"
+    return 0
+  fi
+  export SKIP_INSTALL=1
   if [ ${#my_states[@]} -gt 0 ]; then
     echo "[$serial] states: ${my_states[*]}"
     OUT="$dir/compare" MODES="$modes" ORACLE_CAPTURES="$captures" ORACLE_REFRESH="$([ -n "$fast" ] || echo 1)" \
@@ -113,6 +119,9 @@ run_device() { # <index>
     tree="$(rust/scripts/retarget.sh "$dir/maestro-gestures")"
     "$tree/gestures/reorder.sh" >"$dir/gestures.log" 2>&1 || true
     cp /tmp/reorder-*.log "$dir/" 2>/dev/null || true
+  fi
+  if [ "$(adb -s "$serial" get-state 2>&1)" != device ]; then
+    echo "$serial went offline during the run" >"$dir/unavailable"
   fi
   echo "[$serial] done"
 }

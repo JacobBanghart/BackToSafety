@@ -44,6 +44,17 @@ class ParityTests(unittest.TestCase):
         self.assertEqual(r["contacts"]["result"], "pass")
         self.assertEqual(r["destinations"]["result"], "fail")
 
+    def test_lost_device_is_the_reason(self):
+        with tempfile.TemporaryDirectory() as t:
+            out, captures = Path(t) / "out", Path(t) / "captures"
+            dev = out / "emulator-5570"
+            dev.mkdir(parents=True)
+            (dev / "assigned").write_text("state home\nflow contacts\n")
+            (dev / "unavailable").write_text("emulator-5570 was not available when the run started (offline)")
+            rows = ps.build(out, captures, ["light"], ["home"], ["contacts"], False)
+            self.assertIn("not available", rows[0]["deltas"][0])
+            self.assertIn("not available", rows[1]["detail"])
+
     def test_rows_and_missing_results(self):
         with tempfile.TemporaryDirectory() as t:
             out, captures = Path(t) / "out", Path(t) / "captures"

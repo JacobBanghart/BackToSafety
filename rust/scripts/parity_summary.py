@@ -81,6 +81,21 @@ def build(out: Path, captures: Path, modes: list[str], states: list[str], flows:
             for k, v in parse_gestures((d / "gestures.log").read_text(errors="replace")).items():
                 gesture_results[k] = (d, v)
 
+    # Why a device's rows have no result: it was gone before or during the run.
+    assigned: dict[tuple[str, str], str] = {}
+    unavailable: dict[str, str] = {}
+    for d in devices:
+        if (d / "unavailable").exists():
+            unavailable[d.name] = (d / "unavailable").read_text().strip()
+        if (d / "assigned").exists():
+            for line in (d / "assigned").read_text().splitlines():
+                kind, _, name = line.partition(" ")
+                assigned[(kind, name)] = d.name
+
+    def why_missing(kind: str, name: str) -> str | None:
+        device = assigned.get((kind, name))
+        return unavailable.get(device) if device else None
+
     rows = []
     for state in states:
         for mode in modes:
@@ -92,6 +107,8 @@ def build(out: Path, captures: Path, modes: list[str], states: list[str], flows:
                 result, deltas = found[1]["result"], found[1]["deltas"]
             elif dev and rust_png and not rust_png.exists():
                 result, deltas = "fail", [f"Rust capture failed (see {dev / 'compare/rust' / mode / (state + '.log')})"]
+            elif (reason := why_missing("state", state)) is not None:
+                result, deltas = "fail", [reason]
             elif not oracle_png.exists():
                 result, deltas = "fail", ["oracle capture missing"]
             else:
@@ -108,7 +125,8 @@ def build(out: Path, captures: Path, modes: list[str], states: list[str], flows:
             rows.append({"kind": "flow", "name": flow, "result": r["result"], "detail": r["detail"],
                          "log": r["log"] or str(d / "flows" / f"{flow}.log")})
         else:
-            rows.append({"kind": "flow", "name": flow, "result": "fail", "detail": "not run", "log": ""})
+            rows.append({"kind": "flow", "name": flow, "result": "fail",
+                         "detail": why_missing("flow", flow) or "not run", "log": ""})
     if gestures:
         for screen in ("contacts", "destinations"):
             found = gesture_results.get(screen)
