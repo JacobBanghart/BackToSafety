@@ -22,7 +22,7 @@ from `rust-port`.
 
 | Lane | Port | Owns | Agent | Status |
 |---|---|---|---|---|
-| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | `aba6906b305d83d7a` | running: AppReady + PostHog sink (`startup.rs`, `platform/posthog.rs`) |
+| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | `aba6906b305d83d7a` | running: `rust:parity` runner (all states × modes + flows, oracle captures cached per commit) |
 | shell | 5556 | `main.rs` routing/startup, `ui/`, `platform/` (JNI base, edge-to-edge, dark mode, font scale, back, deeplinks + debug clock seam, keyboard) | `a6bc77f81b965afdc` | running |
 | onboarding | 5558 | `screens/onboarding.*` (name, photo, appearance, contact, complete), `platform/photo.rs` | `aa9228cf7917db373` | running |
 | home | 5560 | `screens/home.*`, `screens/settings.*` | `af899f27403815313` | running |
@@ -65,6 +65,11 @@ The orchestrator uses port 5554.
   `use_emergency_away()` are in context, and the DatabaseTest, EmergencyAwayTest and
   AnalyticsParity ports pass (2 ignored until the screens land). The Android DB path hasn't
   run on a device yet; the shell lane checks it.
+
+- 2026-10-10: merged `rust/data` startup analytics (c880bdb): app_ready, data_migrated and
+  data_migration_failed, and a PostHog sink (ureq + rustls; the key comes from the environment
+  at build time, none in the repo). 18 new tests. Not yet run on a device; all 4 emulator
+  slots were busy with screen lanes.
 
 ## Owner questions
 
