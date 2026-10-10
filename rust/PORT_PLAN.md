@@ -22,7 +22,7 @@ from `rust-port`.
 
 | Lane | Port | Owns | Agent | Status |
 |---|---|---|---|---|
-| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | `aba6906b305d83d7a` | running: `rust:parity` runner (all states × modes + flows, oracle captures cached per commit) |
+| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | `aba6906b305d83d7a` | running: trial integration (`rust/integration`, `INTEGRATION.md`): conflicts and duplicates across lanes |
 | shell | 5556 | `main.rs` routing/startup, `ui/`, `platform/` (JNI base, edge-to-edge, dark mode, font scale, back, deeplinks + debug clock seam, keyboard) | `a6bc77f81b965afdc` | running |
 | onboarding | 5558 | `screens/onboarding.*` (name, photo, appearance, contact, complete), `platform/photo.rs` | `aa9228cf7917db373` | running |
 | home | 5560 | `screens/home.*`, `screens/settings.*` | `af899f27403815313` | running |
@@ -70,6 +70,10 @@ The orchestrator uses port 5554.
   data_migration_failed, and a PostHog sink (ureq + rustls; the key comes from the environment
   at build time, none in the repo). 18 new tests. Not yet run on a device; all 4 emulator
   slots were busy with screen lanes.
+
+- 2026-10-10: merged `rust/data` `rust:parity` (97447cc): states × modes, flows and gestures in
+  one run, with a pass/fail summary and oracle captures cached per oracle commit. The trial
+  run on device showed the store opens and seeds; the rows fail until the screens merge.
 
 ## Owner questions
 
