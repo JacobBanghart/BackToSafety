@@ -90,9 +90,11 @@ jobs:
 
           VERSION_NAME="$VERSION"
 
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
-          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          {
+            echo "version=$VERSION"
+            echo "version_code=$VERSION_CODE"
+            echo "version_name=$VERSION_NAME"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Stamp version into version.json
         run: |
