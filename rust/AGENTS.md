@@ -1,32 +1,23 @@
-# Rust core under the native apps (experiment)
+# Rust core under the native apps
 
-The goal: the existing native apps (`kmp/androidApp`, Jetpack Compose; `kmp/iosApp`, SwiftUI)
-running on a Rust core instead of `kmp/shared`. `rust/core` is that core: every rule,
-translations, the store (rusqlite, Room v2 schema), EmergencyAway and analytics, ported from
-`kmp/shared`. 50 Rust tests cover them, including all of `spec/vectors`.
+The native apps (`kmp/androidApp`, Jetpack Compose; `kmp/iosApp`, SwiftUI) run on `rust/core`
+through [UniFFI](https://mozilla.github.io/uniffi-rs/): every rule, the translations, the
+store (rusqlite, the Room v2 schema), EmergencyAway, analytics and the app clock. Generated
+Kotlin bindings serve Android and Swift bindings serve iOS; `rust/uniffi-bindgen` makes both.
+The Kotlin Multiplatform core (`kmp/shared`) that this replaced is in git history, and so is
+the first attempt (Dioxus in a WebView, `git log -- rust/app`), which the owner dropped.
 
-The apps reach the core through [UniFFI](https://mozilla.github.io/uniffi-rs/): generated
-Kotlin bindings on Android and Swift bindings on iOS. `kmp/shared` retires. This all lives
-on the `rust-port` branch; `main` is untouched and nothing ships from here.
+## The gates are the oracle, and the UI must not change
 
-History: a first attempt (2026-10-10) also wrote the UI in Rust (Dioxus in a WebView). The
-owner stopped it because every native feature needed workarounds, and switched to this
-design. It's in git history (`git log -- rust/app`) if anyone needs it.
+The UIs stay as they were; only what's under them changed. The gates:
 
-## The oracle is the KMP app, and the UI must not change
-
-The UIs stay exactly as they are; only what's under them changes. So the existing gates are
-the oracle, unchanged:
-
-- `mise run check`: spec/check.py contracts (testIDs, features, locales).
-- `mise run snapshots`: Roborazzi screen snapshots.
-- `mise run android:flows` / `android:fidelity`: Maestro flows and the RN goldens.
-- `ios:*`: the same on iOS.
+- `mise run check`: spec/check.py contracts, the Rust tests (all of `spec/vectors`, the store
+  and migrations, EmergencyAway, the FFI surface) and AnalyticsParityTest.
+- `mise run snapshots`: Roborazzi screen snapshots (Android; iOS snapshots run on CI's Mac).
+- `mise run android:flows` / `android:fidelity`: Maestro flows and the goldens. `ios:*`: the same.
 
 They must pass **without re-blessing anything**: no `RECORD=1`, no golden or vector edits.
-A difference means the Rust path behaves differently, and that's a bug to fix. Behavior
-questions are settled by the Kotlin code in `kmp/shared` (read it in git history once it's
-removed); its JVM tests are ported in `rust/core/tests`.
+A difference means the core behaves differently from what shipped, and that's a bug to fix.
 
 ## Design rules
 
@@ -38,7 +29,7 @@ removed); its JVM tests are ported in `rust/core/tests`.
   - `AlertScheduler` (AlarmManager / UNUserNotificationCenter)
   - the analytics sink (the existing PostHog SDK in each app)
 - The database keeps the KMP app's file and path (`<filesDir>/SQLite/nijii.db` on Android,
-  and the iOS equivalent from DatabaseBuilder.ios.kt). The schema and Room identity hash
+  and where `iosApp/.../Core/AppStore.swift` opens it). The schema and Room identity hash
   are identical, so an install updated from the KMP app keeps its data. That's a test.
 - `DesignTokens` is UI, not core. Generate it inside each app from `spec/design-tokens.json`.
 - Tools come only from mise (`mise.toml`): cargo-ndk, uniffi-bindgen (built from the

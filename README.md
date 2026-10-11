@@ -48,7 +48,7 @@ Fast, no device (CI runs these on every push):
 
 | Task | What it does |
 | --- | --- |
-| `mise run check` | Spec contracts (`spec/check.py`) and the shared core's tests |
+| `mise run check` | Spec contracts (`spec/check.py`), the Rust core's tests and analytics parity |
 | `mise run lint` | ktlint and SwiftFormat; `FIX=1` fixes what they can |
 | `mise run snapshots` | Android screen snapshots against `src/test/snapshots`; `RECORD=1` re-records |
 | `mise run ios:snapshots` | Copies the iOS snapshots CI recorded for this commit into the repo (iOS snapshots run on CI's Mac) |
@@ -65,7 +65,7 @@ Run the apps:
 | `mise run ios:setup` | Check the Mac has Xcode, XcodeGen and a simulator runtime |
 
 To work in Xcode instead: `cd kmp/iosApp && xcodegen generate && open BackToSafety.xcodeproj`.
-Its first build phase rebuilds the shared Kotlin core, so Run always picks up Kotlin changes.
+Its first build phase rebuilds the Rust core (`ios:rust`), so Run always picks up Rust changes.
 
 On devices (build the app, start fresh devices, run, shut down; `DEVICES=n` sets how many):
 
@@ -84,7 +84,7 @@ The Mac:
 ## Repository
 
 ```
-kmp/shared/       Kotlin Multiplatform core: store, migrations, protocol, readout, i18n
+rust/core/         Rust core (UniFFI): store, migrations, protocol, readout, i18n, analytics
 kmp/androidApp/   Compose app
 kmp/iosApp/       SwiftUI app (project.yml -> Xcode project)
 spec/             Contracts both apps meet: tokens, events, testIDs, schema, vectors, goldens
