@@ -205,10 +205,7 @@ fn table_info(c: &Connection, table: &str) -> Vec<(String, String, bool, Option<
 #[test]
 fn schema_is_rooms_version_two_fresh_and_migrated() {
     let exported: Value = serde_json::from_str(
-        &std::fs::read_to_string(
-            root().join("spec/room-schema-v2.json"),
-        )
-        .unwrap(),
+        &std::fs::read_to_string(root().join("spec/room-schema-v2.json")).unwrap(),
     )
     .unwrap();
     let database = &exported["database"];

@@ -2,19 +2,47 @@
 //! Held to spec/vectors/phone.json.
 
 use crate::formatters::digits;
-use regex::Regex;
-use std::sync::LazyLock;
 
-static EXTENSION: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)[ \t\n\r]*(?:ext\.?|x|#)[ \t\n\r]*([0-9]+)[ \t\n\r]*$").unwrap()
-});
+fn is_space(c: char) -> bool {
+    matches!(c, ' ' | '\t' | '\n' | '\r')
+}
+
+/// The extension at the end of `phone`: where it starts (including the space before it) and its
+/// digits. The pattern `(?i)[ \t\n\r]*(?:ext\.?|x|#)[ \t\n\r]*([0-9]+)[ \t\n\r]*$`, by hand: the
+/// regex crate cost 500 KB of the library. Leftmost match, so the longest keyword wins.
+#[doc(hidden)]
+pub fn find_extension(phone: &str) -> Option<(usize, &str)> {
+    let before_trailing = phone.trim_end_matches(is_space);
+    let digits_start = before_trailing
+        .trim_end_matches(|c: char| c.is_ascii_digit())
+        .len();
+    let digits = &before_trailing[digits_start..];
+    if digits.is_empty() {
+        return None;
+    }
+    let before_digits = phone[..digits_start].trim_end_matches(is_space);
+    let lower = before_digits.to_ascii_lowercase();
+    let keyword_len = if lower.ends_with("ext.") {
+        4
+    } else if lower.ends_with("ext") {
+        3
+    } else if lower.ends_with('x') || lower.ends_with('#') {
+        1
+    } else {
+        return None;
+    };
+    let keyword_start = before_digits.len() - keyword_len;
+    Some((
+        phone[..keyword_start].trim_end_matches(is_space).len(),
+        digits,
+    ))
+}
 
 pub fn format_phone_number(phone: &str) -> String {
     // Keep an extension readable instead of folding it into the number (F-4).
-    if let Some(c) = EXTENSION.captures(phone) {
-        let start = c.get(0).unwrap().start();
+    if let Some((start, ext)) = find_extension(phone) {
         if start > 0 {
-            return format!("{} ext. {}", format_phone_number(&phone[..start]), &c[1]);
+            return format!("{} ext. {}", format_phone_number(&phone[..start]), ext);
         }
     }
     let d = digits(phone);

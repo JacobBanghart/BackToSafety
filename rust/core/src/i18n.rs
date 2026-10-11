@@ -3,13 +3,41 @@
 //! set returnEmptyString: false), `{{var}}` interpolation and English/Spanish plurals.
 //! A key found nowhere comes back as its defaultValue, or else the key itself.
 
-use regex::{Captures, Regex};
 use serde_json::{Map, Value};
 use std::collections::HashMap;
-use std::sync::{Arc, LazyLock};
+use std::sync::Arc;
 
-static PLACEHOLDER: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\{\{[ \t]*([A-Za-z0-9_]+)[ \t]*\}\}").unwrap());
+/// Replaces `{{ name }}` placeholders (the pattern `\{\{[ \t]*([A-Za-z0-9_]+)[ \t]*\}\}`, by hand:
+/// the regex crate cost 500 KB of the library). `value` gives a name's text; an unknown name is
+/// left as written.
+#[doc(hidden)]
+pub fn interpolate(template: &str, mut value: impl FnMut(&str) -> Option<String>) -> String {
+    let blank = |c: char| c == ' ' || c == '\t';
+    let mut out = String::with_capacity(template.len());
+    let mut pos = 0;
+    while let Some(open) = template[pos..].find("{{").map(|i| pos + i) {
+        out.push_str(&template[pos..open]);
+        let inner = &template[open + 2..];
+        let trimmed = inner.trim_start_matches(blank);
+        let name_len = trimmed
+            .find(|c: char| !(c.is_ascii_alphanumeric() || c == '_'))
+            .unwrap_or(trimmed.len());
+        let after_name = trimmed[name_len..].trim_start_matches(blank);
+        if name_len > 0 && after_name.starts_with("}}") {
+            let end = template.len() - after_name.len() + 2;
+            match value(&trimmed[..name_len]) {
+                Some(v) => out.push_str(&v),
+                None => out.push_str(&template[open..end]),
+            }
+            pos = end;
+        } else {
+            out.push('{');
+            pos = open + 1;
+        }
+    }
+    out.push_str(&template[pos..]);
+    out
+}
 
 /// Variables for a lookup. `count` picks the plural form, `ns` reads from another
 /// namespace and `defaultValue` stands in for a missing key.
@@ -87,12 +115,7 @@ impl Translator {
             .or_else(|| tr.lookup(FALLBACK, ns, &key))
             .or_else(|| var("defaultValue").and_then(Value::as_str))
             .unwrap_or(&key);
-        PLACEHOLDER
-            .replace_all(template, |c: &Captures| match var(&c[1]) {
-                Some(v) => format_value(v),
-                None => c[0].to_string(),
-            })
-            .into_owned()
+        interpolate(template, |name| var(name).map(format_value))
     }
 
     fn plural_key(&self, ns: &str, key: &str, count: Option<&Value>) -> String {
