@@ -52,7 +52,8 @@ private object NoScheduler : AlertScheduler {
 
 @RunWith(ParameterizedRobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
-@Config(sdk = [35], qualifiers = "w411dp-h914dp-xxhdpi")
+// No NijiiApplication: it would start the core on its own thread.
+@Config(sdk = [35], qualifiers = "w411dp-h914dp-xxhdpi", application = android.app.Application::class)
 class ScreenSnapshotTest(private val mode: String) {
     companion object {
         @JvmStatic

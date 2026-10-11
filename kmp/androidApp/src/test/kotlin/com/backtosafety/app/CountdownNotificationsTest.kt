@@ -31,7 +31,8 @@ import java.io.File
  * alarm per alert, and each alarm posts its notification, which opens the emergency.
  */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+// No NijiiApplication: it would start the core on its own thread.
+@Config(sdk = [35], application = android.app.Application::class)
 class CountdownNotificationsTest {
     private val context = ApplicationProvider.getApplicationContext<Application>()
     private val translations: Translations by lazy {

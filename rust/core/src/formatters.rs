@@ -1,10 +1,14 @@
 //! As-you-type formatters for profile fields. Held to spec/vectors/formatters.json.
 
-use regex::Regex;
-use std::sync::LazyLock;
-
-static HEIGHT_WITHOUT_CLOSING_QUOTE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"^[0-9]'[0-9]{1,2}$").unwrap());
+/// `^[0-9]'[0-9]{1,2}$`: feet and inches typed without the closing quote.
+#[doc(hidden)]
+pub fn is_height_without_closing_quote(value: &str) -> bool {
+    let b = value.as_bytes();
+    matches!(b.len(), 3 | 4)
+        && b[0].is_ascii_digit()
+        && b[1] == b'\''
+        && b[2..].iter().all(u8::is_ascii_digit)
+}
 
 pub(crate) fn digits(value: &str) -> String {
     value.chars().filter(char::is_ascii_digit).collect()
@@ -19,7 +23,7 @@ pub fn format_height_input(value: &str) -> String {
     let mut d = take(&digits(value), 3).to_string();
     // `5'6` (closing quote gone) means backspace just removed the quote; remove the
     // last digit too, or the quote comes straight back (F-11).
-    if HEIGHT_WITHOUT_CLOSING_QUOTE.is_match(value) {
+    if is_height_without_closing_quote(value) {
         d.pop();
     }
     match d.len() {

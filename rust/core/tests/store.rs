@@ -60,6 +60,49 @@ fn seeding_inserts_the_rows_once() {
     assert!(checks.iter().all(|c| !c.completed));
 }
 
+/// A launch that finds every seed row writes nothing (no sqlite_sequence bump, so no commit
+/// waiting on the disk); one that finds a row missing puts back just that row.
+#[test]
+fn seeding_writes_only_what_is_missing() {
+    let path = temp_db();
+    let store = Store::open(&path).unwrap();
+    store.seed().unwrap();
+    store.complete_step("welcome").unwrap();
+    let sql = |q: &str| -> i64 {
+        rusqlite::Connection::open(&path)
+            .unwrap()
+            .query_row(q, [], |r| r.get(0))
+            .unwrap()
+    };
+    let sequence = "SELECT seq FROM sqlite_sequence WHERE name = 'safety_checks'";
+    assert_eq!(sql(sequence), 12);
+
+    store.seed().unwrap();
+    assert_eq!(sql(sequence), 12, "a warm launch doesn't touch the table");
+
+    let delete = |q: &str| {
+        rusqlite::Connection::open(&path)
+            .unwrap()
+            .execute(q, [])
+            .unwrap()
+    };
+    delete("DELETE FROM onboarding WHERE step = 'complete'");
+    delete("DELETE FROM safety_checks WHERE item_key = 'door_chimes'");
+    store.seed().unwrap();
+    assert_eq!(store.onboarding_steps().unwrap().len(), 6);
+    assert_eq!(store.safety_checks().unwrap().len(), 12);
+    let welcome = store
+        .onboarding_steps()
+        .unwrap()
+        .into_iter()
+        .find(|s| s.step == "welcome")
+        .unwrap();
+    assert!(
+        welcome.completed,
+        "rows that were there are left as they were"
+    );
+}
+
 #[test]
 fn onboarding_completes_step_by_step() {
     let store = fresh_store();

@@ -9,7 +9,7 @@ version = "1.4.0"
 # The library the apps ship: whole-program optimized and stripped (it was 5.8 MB per ABI
 # without this). Panics still unwind: UniFFI turns a panic into a Kotlin/Swift exception.
 [profile.release]
-opt-level = "s"
+opt-level = "z"
 lto = "fat"
 codegen-units = 1
 strip = "symbols"

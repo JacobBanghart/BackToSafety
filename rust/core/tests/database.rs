@@ -205,10 +205,7 @@ fn table_info(c: &Connection, table: &str) -> Vec<(String, String, bool, Option<
 #[test]
 fn schema_is_rooms_version_two_fresh_and_migrated() {
     let exported: Value = serde_json::from_str(
-        &std::fs::read_to_string(
-            root().join("spec/room-schema-v2.json"),
-        )
-        .unwrap(),
+        &std::fs::read_to_string(root().join("spec/room-schema-v2.json")).unwrap(),
     )
     .unwrap();
     let database = &exported["database"];
@@ -275,4 +272,38 @@ fn a_newer_database_is_refused_not_downgraded() {
         .unwrap();
     assert!(Store::open(&path).is_err());
     assert_eq!(user_version(&path), 3);
+}
+
+/// The SQLite the apps ship is trimmed (rust/.cargo/config.toml): what the store never uses is
+/// compiled out, and what it needs is in. Fails if cargo ran outside rust/ (the config isn't
+/// read) or the flags drift.
+#[test]
+fn bundled_sqlite_is_trimmed_to_what_the_store_uses() {
+    let c = Connection::open_in_memory().unwrap();
+    let used = |option: &str| -> bool {
+        c.query_row("SELECT sqlite_compileoption_used(?1)", [option], |r| {
+            r.get(0)
+        })
+        .unwrap()
+    };
+    for gone in [
+        "ENABLE_FTS3",
+        "ENABLE_FTS5",
+        "ENABLE_RTREE",
+        "ENABLE_DBSTAT_VTAB",
+        "ENABLE_STAT4",
+        "SOUNDEX",
+    ] {
+        assert!(!used(gone), "{gone} should be compiled out");
+    }
+    for omitted in ["OMIT_LOAD_EXTENSION", "OMIT_JSON", "OMIT_DEPRECATED"] {
+        assert!(used(omitted), "{omitted} should be set");
+    }
+    for kept in [
+        "DEFAULT_FOREIGN_KEYS",
+        "ENABLE_COLUMN_METADATA",
+        "THREADSAFE",
+    ] {
+        assert!(used(kept), "{kept} should stay");
+    }
 }

@@ -194,6 +194,27 @@ impl Store {
     /// Rows the RN app inserts on every launch (spec/seed.json), if missing.
     pub fn seed(&self) -> Result<()> {
         let mut c = self.conn();
+        // Only a first launch (or a cleared account) has rows to add. Checking first keeps every
+        // other launch from writing: INSERT OR IGNORE still bumps sqlite_sequence, and the
+        // commit that follows waits on the disk.
+        let marks = |n: usize| vec!["?"; n].join(",");
+        let present: i64 = c.query_row(
+            &format!(
+                "SELECT (SELECT COUNT(*) FROM onboarding WHERE step IN ({})) + \
+                        (SELECT COUNT(*) FROM safety_checks WHERE item_key IN ({}))",
+                marks(ONBOARDING_STEPS.len()),
+                marks(SAFETY_CHECKS.len())
+            ),
+            rusqlite::params_from_iter(
+                ONBOARDING_STEPS
+                    .iter()
+                    .chain(SAFETY_CHECKS.iter().map(|(_, key)| key)),
+            ),
+            |r| r.get(0),
+        )?;
+        if present == (ONBOARDING_STEPS.len() + SAFETY_CHECKS.len()) as i64 {
+            return Ok(());
+        }
         let tx = c.transaction()?;
         insert_onboarding_steps(&tx)?;
         for (category, key) in SAFETY_CHECKS {
