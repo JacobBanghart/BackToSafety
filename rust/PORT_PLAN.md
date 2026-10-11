@@ -72,6 +72,31 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
   the DOB investigation re-installing the same KMP package at the same moment. All passed
   on rerun.
 
+## Is it worth it? Android numbers (2026-10-10)
+
+The KMP app is `main` f4b5d88 (the cached oracle APK). The Rust app is rust-port after the
+size-tuned release profile and the 4 ABIs. Both are release builds with test seams, measured on
+the same API 36 x86_64 emulator. Each start is a cold start (`am start -W -S`) on the Welcome
+screen, 15 runs in each of two rounds.
+
+| | KMP | Rust core | Δ |
+|---|---|---|---|
+| APK, all ABIs | 8.2 MB | 17.3 MB | +9.1 MB |
+| Download per phone (arm64 split) | 4.6 MB | 7.1 MB | +2.4 MB (+53%) |
+| Native code per phone (arm64) | 1.2 MB (Room's SQLite) | 3.6 MB (core 3.4 + JNA 0.2) | +2.4 MB |
+| Rust lib before release tuning | | 5.8 MB per ABI | (LTO + strip: −41%) |
+| Cold start, median | 285 / 294 ms | 309 / 315 ms | +~20 ms (+7%) |
+| Memory (PSS, Welcome) | 30.6 MB | 33.0 / 34.4 MB | +2.4–3.7 MB |
+| Clean release build | 99 s | 150 s (cold Rust deps, 5 targets) | +51 s |
+| Rebuild after a core logic change | 79 s | 43 s | −36 s |
+| Core source (no tests) | 1,161 lines Kotlin | 3,326 lines Rust + 460 glue | ×3.3 |
+| Core tests | 651 lines | 1,632 lines | |
+
+On Android the Rust core costs size, start time and memory, and gains a faster edit-rebuild loop
+on core logic. Release tuning found along the way: the first build shipped an unstripped,
+un-LTO'd library, and dropped 32-bit ABIs, so 32-bit phones couldn't have installed it (both
+fixed in d30622f).
+
 ## Incident: 2026-10-10 reboot
 
 From about 13:50, free memory sat near 0.8 GB for over three hours, according to the Gradle
