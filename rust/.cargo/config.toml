@@ -4,7 +4,8 @@
 [env]
 # The bundled SQLite (libsqlite3-sys) minus what the app never uses. The store runs plain SQL
 # over the Room v2 schema in WAL mode: no full-text search, R-tree, DBSTAT, STAT4 (ANALYZE
-# statistics), SOUNDEX, extension loading, JSON functions, or the deprecated APIs. rusqlite's
+# statistics), SOUNDEX, extension loading, JSON functions, (ANALYZE, VACUUM and REINDEX break the amalgamation: undefined symbols),
+# UTF-16, authorizers, or the deprecated APIs. rusqlite's
 # own use and the store, database and migration tests (RN and KMP fixtures) hold this list.
 # Appended after libsqlite3-sys's own flags, so -U wins.
 LIBSQLITE3_FLAGS = """
@@ -14,5 +15,7 @@ LIBSQLITE3_FLAGS = """
 -DSQLITE_OMIT_JSON -DSQLITE_OMIT_DEPRECATED -DSQLITE_OMIT_SHARED_CACHE
 -DSQLITE_OMIT_PROGRESS_CALLBACK -DSQLITE_OMIT_TRACE -DSQLITE_OMIT_GET_TABLE
 -DSQLITE_OMIT_EXPLAIN -DSQLITE_OMIT_INCRBLOB -DSQLITE_OMIT_TCL_VARIABLE
+-DSQLITE_OMIT_UTF16
+-DSQLITE_OMIT_AUTHORIZATION -DSQLITE_OMIT_COMPLETE -DSQLITE_OMIT_BTREECOUNT
 -DSQLITE_DEFAULT_MEMSTATUS=0
 """
