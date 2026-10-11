@@ -5,13 +5,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.backtosafety.app.core.Analytics
-import com.backtosafety.core.ffi.AnalyticsEvent
-import com.backtosafety.core.ffi.DialTarget
 import com.backtosafety.app.core.Translate
-import com.backtosafety.core.ffi.dialFailedProperties
-import com.backtosafety.core.ffi.formatPhoneNumber
 import com.backtosafety.app.core.analyticsTypeName
 import com.backtosafety.app.core.invoke
+import com.backtosafety.core.ffi.AnalyticsEvent
+import com.backtosafety.core.ffi.DialTarget
+import com.backtosafety.core.ffi.dialFailedProperties
+import com.backtosafety.core.ffi.formatPhoneNumber
 import com.backtosafety.core.ffi.saveFailedProperties
 
 /**

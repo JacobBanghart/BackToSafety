@@ -55,6 +55,11 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.ui.FormDeleteButton
 import com.backtosafety.app.ui.FormTextInput
 import com.backtosafety.app.ui.HeaderSaveButton
@@ -71,13 +76,8 @@ import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
-import com.backtosafety.app.core.Analytics
 import com.backtosafety.core.ffi.AnalyticsEvent
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Store
 import com.backtosafety.core.ffi.DestinationEntity
-import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 private val space = DesignTokens.Spacing

@@ -1,7 +1,7 @@
 package com.backtosafety.app.core
 
-import com.backtosafety.core.ffi.Translations as CoreTranslations
 import com.backtosafety.core.ffi.Translator
+import com.backtosafety.core.ffi.Translations as CoreTranslations
 
 /**
  * Looks up a translated string. `vars` fill `{{name}}` placeholders; a `count` var picks the

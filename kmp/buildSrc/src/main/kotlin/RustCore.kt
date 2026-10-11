@@ -28,7 +28,9 @@ abstract class CargoTask : DefaultTask() {
     @get:Input abstract val cargoArgs: ListProperty<String>
 
     /** The Rust sources, so the tasks can be cached by their inputs. */
-    @get:InputFiles @get:PathSensitive(PathSensitivity.RELATIVE) abstract val sources: ConfigurableFileCollection
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val sources: ConfigurableFileCollection
 
     @get:Internal abstract val heavyScript: RegularFileProperty
 
@@ -75,9 +77,13 @@ abstract class UniffiKotlinBindings : DefaultTask() {
     @get:Internal abstract val workspace: DirectoryProperty
 
     /** The host library built by [CargoHostBuild]. */
-    @get:InputFile @get:PathSensitive(PathSensitivity.NONE) abstract val library: RegularFileProperty
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val library: RegularFileProperty
 
-    @get:InputFile @get:PathSensitive(PathSensitivity.NONE) abstract val bindgen: RegularFileProperty
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val bindgen: RegularFileProperty
 
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
 

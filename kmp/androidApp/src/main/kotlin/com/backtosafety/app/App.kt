@@ -41,6 +41,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.backtosafety.app.contacts.ContactsScreen
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.app.emergency.EmergencyScreen
@@ -57,12 +62,7 @@ import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.trackStep
-import com.backtosafety.app.core.Analytics
 import com.backtosafety.core.ffi.AnalyticsEvent
-import com.backtosafety.app.core.EmergencyAway
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.invoke
 import com.posthog.PostHog
 import kotlinx.coroutines.launch
 

@@ -3,10 +3,10 @@
 set -euo pipefail
 cd kmp
 if [ -n "${RECORD:-}" ]; then
-  ./gradlew :androidApp:testDebugUnitTest -Precord --console=plain -q
+  ../rust/scripts/heavy.sh ./gradlew :androidApp:testDebugUnitTest -Precord --console=plain -q
   echo "recorded androidApp/src/test/snapshots"
 else
-  ./gradlew :androidApp:testDebugUnitTest --console=plain -q || {
+  ../rust/scripts/heavy.sh ./gradlew :androidApp:testDebugUnitTest --console=plain -q || {
     echo "differences: kmp/androidApp/build/outputs/roborazzi (RECORD=1 if deliberate)" >&2
     exit 1
   }

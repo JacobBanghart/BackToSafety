@@ -3,12 +3,12 @@ package com.backtosafety.app.core
 import com.backtosafety.core.ffi.ChecklistStep
 import com.backtosafety.core.ffi.CountdownAlert
 import com.backtosafety.core.ffi.Date
+import com.backtosafety.core.ffi.Profile
 import com.backtosafety.core.ffi.VehicleCheckKind
 import com.backtosafety.core.ffi.countdownAlertKey
-import com.backtosafety.core.ffi.vehicleCheckKindKey
-import com.backtosafety.core.ffi.Profile
 import com.backtosafety.core.ffi.mobilityOptions
 import com.backtosafety.core.ffi.searchWindowSeconds
+import com.backtosafety.core.ffi.vehicleCheckKindKey
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 import com.backtosafety.core.ffi.ReadoutInput as CoreReadoutInput
@@ -19,8 +19,8 @@ import com.backtosafety.core.ffi.buildScript as coreBuildScript
 import com.backtosafety.core.ffi.describeMobility as coreDescribeMobility
 import com.backtosafety.core.ffi.directionHint as coreDirectionHint
 import com.backtosafety.core.ffi.formatDob as coreFormatDob
-import com.backtosafety.core.ffi.parseDob as coreParseDob
 import com.backtosafety.core.ffi.missingScriptDetails as coreMissingScriptDetails
+import com.backtosafety.core.ffi.parseDob as coreParseDob
 
 // The core's functions that take a translator, over the app's [Translate]. The rest of the
 // core's functions (formatters, phone, age, alerts) are imported from com.backtosafety.core.ffi.

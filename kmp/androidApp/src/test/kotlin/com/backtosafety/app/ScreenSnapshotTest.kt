@@ -7,6 +7,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import com.backtosafety.app.contacts.ContactsScreen
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.home.HomeScreen
@@ -16,14 +21,9 @@ import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.core.ffi.AlertScheduler
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.EmergencyAway
-import com.backtosafety.core.ffi.ScheduledAlert
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
 import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.DestinationEntity
+import com.backtosafety.core.ffi.ScheduledAlert
 import com.github.takahirom.roborazzi.captureRoboImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

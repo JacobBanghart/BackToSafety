@@ -59,6 +59,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.ui.FormDeleteButton
 import com.backtosafety.app.ui.FormTextInput
 import com.backtosafety.app.ui.HeaderSaveButton
@@ -77,15 +82,10 @@ import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
-import com.backtosafety.app.core.Analytics
 import com.backtosafety.core.ffi.AnalyticsEvent
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.core.ffi.DialTarget
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Store
 import com.backtosafety.core.ffi.ContactEntity
+import com.backtosafety.core.ffi.DialTarget
 import com.backtosafety.core.ffi.formatPhoneInput
-import com.backtosafety.app.core.invoke
 import com.backtosafety.core.ffi.normalizeSmsRecipient
 import kotlinx.coroutines.launch
 

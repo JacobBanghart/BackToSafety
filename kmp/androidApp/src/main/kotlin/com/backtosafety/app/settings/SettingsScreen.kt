@@ -39,6 +39,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.ui.AppCard
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.ListItem
@@ -51,12 +56,7 @@ import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.rnTextStyleNatural
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
-import com.backtosafety.app.core.Analytics
 import com.backtosafety.core.ffi.AnalyticsEvent
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 private const val TAPS_TO_UNLOCK = 7

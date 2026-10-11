@@ -11,11 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.app.core.Analytics
 import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.Translations
 import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.emergency.CountdownNotifications
 import com.posthog.PersonProfiles
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
