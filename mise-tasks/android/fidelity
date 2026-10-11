@@ -6,6 +6,7 @@ out="${CAPTURES:-/tmp/nijii-captures/android}"
 apk="$(maestro/build-android.sh)"
 maestro/start-emulator.sh "${DEVICES:-4}" "$apk" >/dev/null
 trap 'maestro/stop-emulators.sh >/dev/null 2>&1 || true' EXIT
+mkdir -p "$(dirname "$out")"
 rm -rf "$out"
 maestro/capture-parallel.sh "$out" "$@"
 # Pillow for the comparison, in the repo's own virtualenv.
