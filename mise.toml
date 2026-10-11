@@ -17,6 +17,9 @@ cargo-binstall = "1.25.2"
 "cargo:dioxus-cli" = "0.7.10"
 
 [env]
-# Cargo's parallel jobs for the Rust port (rust/). Several lanes build at once on this box, so
-# each takes a share; override per command: CARGO_BUILD_JOBS=64 mise run rust:build
+# Cargo's parallel jobs for the Rust port (rust/). Builds are queued one at a time across
+# worktrees (rust/scripts/heavy.sh); override per command: CARGO_BUILD_JOBS=32 mise run rust:build
 CARGO_BUILD_JOBS = "{{ get_env(name='CARGO_BUILD_JOBS', default='16') }}"
+# One build directory for every rust-port worktree: dependencies compile once, and the ~7 GB
+# per worktree (52 GB across 8 on 2026-10-10) isn't written again and again.
+CARGO_TARGET_DIR = "{{ get_env(name='CARGO_TARGET_DIR', default=env.HOME ~ '/.cache/nijii-rust-target') }}"

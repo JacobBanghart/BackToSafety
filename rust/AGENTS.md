@@ -39,8 +39,24 @@ from the repo root.
 | `mise run rust:compare [state…]` | capture `maestro/states` from both apps, gate on layout vs the oracle |
 | `mise run rust:flows [flow…]` | `maestro/flows` retargeted at the Rust app, on `ANDROID_SERIAL` only |
 
-`CARGO_BUILD_JOBS` defaults to 16, because lanes build at the same time. Override it per
-command if the box is idle: `CARGO_BUILD_JOBS=48 mise run rust:build`.
+## Load limits (since the 2026-10-10 reboot)
+
+Seven parallel lanes (4 emulators, 7 builds at 16 jobs each, Gradle daemons) exhausted the
+box's 48 GB. Reclaim and swap drove I/O pressure to ~90% and ssh died. So:
+
+- **At most 2 lanes run at once.**
+- **Builds are queued.** `rust:build` and `rust:check` go through `rust/scripts/heavy.sh`:
+  one build at a time across all worktrees, only with 8 GB+ available, at low CPU and I/O
+  priority. Every worktree shares one `CARGO_TARGET_DIR` (`~/.cache/nijii-rust-target`, set
+  in `mise.toml`).
+  - `rust:build` copies the APK to `rust/out/` and stops Gradle afterwards.
+  - Never run `cargo build` or `dx` outside these tasks.
+- **Emulators:** at most 2 (`EMULATOR_MAX`), and booting waits for 12 GB+ available. Each
+  one takes 5 to 9 GB.
+- **Watchdog:** the `nijii-watchdog` user service stops the newest emulator when memory runs
+  low. If your emulator disappears, that's why; check `journalctl --user -u nijii-watchdog`.
+- `emulator.sh stop-all` cleans up after agents that died. Run it only when no lane is
+  mid-run.
 
 ## Parallel work
 

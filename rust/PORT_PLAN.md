@@ -31,6 +31,15 @@ Causes, all from this port's parallel setup:
 - nothing measured memory, and agents that died at the session limit left their emulators and
   daemons running
 
+**Guardrails since then** (owner-approved, see `AGENTS.md` "Load limits"):
+- a memory check before every build and emulator boot
+- one queued build across worktrees, sharing one CARGO_TARGET_DIR
+- at most 2 emulators
+- low CPU and I/O priority
+- the `nijii-watchdog` service
+
+At most 2 lanes run at once.
+
 ## Lanes (wave 1)
 
 Each lane has its worktree at `~/github/nijii-rust-<lane>` on branch `rust/<lane>`, cut
