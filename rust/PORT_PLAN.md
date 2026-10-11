@@ -32,7 +32,7 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 
 | Agent | Branch | ID | Status |
 |---|---|---|---|
-| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running: phase 5 |
+| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | done |
 | ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | running: DOB-loss investigation (KMP app, read-only), then iOS gates after phase 5 |
 
 ## Merge log
@@ -63,6 +63,14 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
   kmp/shared. Gates: check, lint, 24 snapshots, 14/14 flows plus the gestures, 51/51
   fidelity; an upgrade from the KMP oracle APK keeps its data. On the merged rust-port the
   orchestrator re-ran `mise run check` and `mise run lint`; both pass.
+
+- 2026-10-10: merged `rust/ffi-android` phase 5 (1d2c1f5): kmp/shared, Room and the KMP plugins
+  deleted (−2.5k lines); AnalyticsParityTest is in androidApp and covers Kotlin, Swift and
+  rust/core; docs and CI updated (actionlint only, not run). On the merged tree the
+  orchestrator re-ran check, lint and snapshots; all pass, nothing re-recorded. `snapshots` now
+  stops its Gradle daemon. 7 of 14 flows failed once with "package not installed"; most likely
+  the DOB investigation re-installing the same KMP package at the same moment. All passed
+  on rerun.
 
 ## Incident: 2026-10-10 reboot
 
