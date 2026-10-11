@@ -15,7 +15,7 @@ via UniFFI. `kmp/shared` retires. The existing gates pass without re-blessing an
 | 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | ✅ (14/14 flows, 51/51 fidelity, 24 snapshots, upgrade from KMP keeps data) |
 | 3 | iOS: XCFramework + Swift bindings, built on the Mac; the Xcode project links it | agent **ffi-ios** | ✅ |
 | 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | ✅ (14/14 flows, upgrade from KMP keeps data, 50/51 fidelity) |
-| 5 | Delete kmp/shared, Room and KMP plugins; move AnalyticsParityTest; docs, CI workflows | agent **ffi-android** | in progress |
+| 5 | Delete kmp/shared, Room and KMP plugins; move AnalyticsParityTest; docs, CI workflows | agent **ffi-android** | ✅ (flows rerun after deletion: see the notes below) |
 
 At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-android` (branch
 `rust/ffi-android`) and `~/github/nijii-ffi-ios` (branch `rust/ffi-ios`), both cut from
@@ -297,3 +297,21 @@ from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: 
     fidelity task to create /tmp/nijii-captures (it was missing after the reboot).
   - Android no longer depends on kmp/shared (`project(":shared")` removed; shared stays for iOS).
     Not done by me: Room/KMP plugin removal, docs and CI workflow updates (phase 5).
+- 2026-10-10 Phase 5 (ffi-android):
+  - `kmp/shared`, Room, the KMP/KSP/serialization Gradle plugins, the unused libs and
+    `GenerateAnalyticsEvents` are deleted. The Room v2 schema the Rust migration test reads moved
+    to `spec/room-schema-v2.json`; the old Kotlin tests live on in `rust/core/tests`.
+  - `AnalyticsParityTest` is in `kmp/androidApp/src/test`: Android, iOS (Swift) and
+    `rust/core/src` against `spec/analytics-events.json` (3 tests pass).
+  - `mise run check` = `spec/check.py` + `cargo test` + the parity test through Gradle, which it
+    stops on exit (no daemon left).
+  - Docs: ARCHITECTURE, CLAUDE.md, AGENTS.md, README and the docs that cited kmp/shared.
+    Left as history: `PARITY_PLAN.md`, `spec/vectors/alerts.json`'s "source" field (vectors aren't
+    edited), this file.
+  - CI (read through plus `actionlint`, now in mise and `mise run lint`; nothing could be
+    pushed): ci.yml has a `rust-core` job (cargo test) in place of `kotlin-core`; the Android
+    job installs Rust, cargo-binstall + cargo-ndk (mise) and the NDK (sdkmanager, 29.0.14206865,
+    ANDROID_NDK_HOME), with NIJII_HEAVY=1 so Gradle's cargo calls skip the devbox queue;
+    android-release.yml (self-hosted) installs Rust, cargo-ndk and the NDK too. The Gradle
+    steps are otherwise unchanged. `lintRelease` passes locally. Untested on real runners:
+    mise's `cargo:cargo-ndk` install on ubuntu-latest (binstall) and sdkmanager NDK install.
