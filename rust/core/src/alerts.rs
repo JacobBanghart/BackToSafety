@@ -209,17 +209,17 @@ pub fn sms_result_properties(result: SmsResult, recipients: usize) -> Properties
 pub enum DialTarget {
     Emergency,
     Contact,
-    MedicAlert,
+    Medicalert,
 }
 
 impl DialTarget {
-    pub const ALL: [DialTarget; 3] = [Self::Emergency, Self::Contact, Self::MedicAlert];
+    pub const ALL: [DialTarget; 3] = [Self::Emergency, Self::Contact, Self::Medicalert];
 
     pub fn key(self) -> &'static str {
         match self {
             Self::Emergency => "emergency",
             Self::Contact => "contact",
-            Self::MedicAlert => "medicalert",
+            Self::Medicalert => "medicalert",
         }
     }
 }

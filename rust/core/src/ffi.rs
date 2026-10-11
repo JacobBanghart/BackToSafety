@@ -97,10 +97,10 @@ fn props_in(p: HashMap<String, PropValue>) -> Properties {
 #[derive(Debug, uniffi::Error)]
 pub enum StoreFailure {
     Sqlite {
-        message: String,
+        detail: String,
     },
     Io {
-        message: String,
+        detail: String,
     },
     /// `update_profile` was given a field that isn't a Profile property.
     UnknownProfileField {
@@ -115,7 +115,7 @@ pub enum StoreFailure {
 impl std::fmt::Display for StoreFailure {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            StoreFailure::Sqlite { message } | StoreFailure::Io { message } => f.write_str(message),
+            StoreFailure::Sqlite { detail } | StoreFailure::Io { detail } => f.write_str(detail),
             StoreFailure::UnknownProfileField { field } => {
                 write!(f, "unknown profile field: {field}")
             }
@@ -130,10 +130,10 @@ impl From<StoreError> for StoreFailure {
     fn from(e: StoreError) -> Self {
         match e {
             StoreError::Sqlite(_) => StoreFailure::Sqlite {
-                message: e.to_string(),
+                detail: e.to_string(),
             },
             StoreError::Io(_) => StoreFailure::Io {
-                message: e.to_string(),
+                detail: e.to_string(),
             },
             StoreError::UnknownProfileField(field) => StoreFailure::UnknownProfileField { field },
             StoreError::NewerDatabase(version) => StoreFailure::NewerDatabase { version },

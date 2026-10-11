@@ -9,6 +9,8 @@
 # BUILD_MIN_AVAIL_GB (default 8): wait until MemAvailable is at least this.
 # The lock is /tmp/nijii-build.lock; waiting builds say so on stderr.
 set -euo pipefail
+# Already inside a queued build (Gradle running cargo, say): the lock is held, just run.
+if [ -n "${NIJII_HEAVY:-}" ]; then exec "$@"; fi
 MIN_GB="${BUILD_MIN_AVAIL_GB:-8}"
 avail_gb() { awk '/^MemAvailable:/ {printf "%d", $2 / 1048576}' /proc/meminfo; }
 
@@ -21,4 +23,6 @@ until [ "$(avail_gb)" -ge "$MIN_GB" ]; do
   echo "heavy.sh: $(avail_gb) GB available, waiting for ${MIN_GB} GB" >&2
   sleep 20
 done
-nice -n 15 ionice -c2 -n7 "$@"
+# The command doesn't inherit the lock (fd 8): a Gradle daemon it starts would otherwise hold
+# the queue after the build is over. This script keeps the lock until the command exits.
+NIJII_HEAVY=1 nice -n 15 ionice -c2 -n7 "$@" 8>&-
