@@ -2,7 +2,7 @@
 
 This document describes the 15-minute guided search protocol: the emergency screen in both apps
 (`EmergencyScreen.kt`, `EmergencyView.swift`), with the shared rules in
-`kmp/shared/.../Emergency.kt`, held to `spec/vectors/emergency.json`.
+`rust/core/src/emergency.rs`, held to `spec/vectors/emergency.json`.
 
 ---
 
@@ -20,9 +20,9 @@ When a vulnerable adult goes missing, the app guides the caregiver through a str
 
 ## 2. Protocol Duration
 
-```kotlin
-const val SEARCH_WINDOW_SECONDS = 15 * 60 // Emergency.kt
-const val WARNING_AT_SECONDS = 5 * 60
+```rust
+pub const SEARCH_WINDOW_SECONDS: i64 = 15 * 60; // rust/core/src/emergency.rs
+pub const WARNING_AT_SECONDS: i64 = 5 * 60;
 ```
 
 - A new emergency starts a 15-minute countdown.
@@ -67,7 +67,7 @@ Active emergencies are persisted to the `settings` table under key `active_emerg
 }
 ```
 
-`ActiveEmergency` in the shared core reads and writes it; `spec/storage.md` has the contract.
+`ActiveEmergency` in the Rust core reads and writes it; `spec/storage.md` has the contract.
 
 This lets the protocol survive app termination, phone calls, and when the user briefly leaves the screen.
 

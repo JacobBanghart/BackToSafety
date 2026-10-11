@@ -33,6 +33,12 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
+      # The Rust core (rust/core), which Gradle builds with cargo-ndk for arm64-v8a and x86_64.
+      - name: Setup Rust and cargo-ndk (mise.toml)
+        uses: jdx/mise-action@v5
+        with:
+          install_args: rust cargo-binstall cargo:cargo-ndk
+
       - name: Configure Android SDK and local.properties
         run: |
           set -euo pipefail
@@ -52,7 +58,10 @@ jobs:
           "$SDKMANAGER_BIN" --sdk_root="$SDK_PATH" \
             "platform-tools" \
             "platforms;android-37.0" \
-            "build-tools;36.0.0"
+            "build-tools;36.0.0" \
+            "ndk;29.0.14206865"
+
+          echo "ANDROID_NDK_HOME=$SDK_PATH/ndk/29.0.14206865" >> "$GITHUB_ENV"
 
           echo "Using Android SDK at $SDK_PATH"
           printf 'sdk.dir=%s\n' "$SDK_PATH" > kmp/local.properties

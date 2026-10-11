@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Lint Kotlin (ktlint) and Swift (SwiftFormat); FIX=1 fixes what they can"
+#MISE description="Lint Kotlin (ktlint), Swift (SwiftFormat) and the GitHub workflows (actionlint); FIX=1 fixes what they can"
 set -euo pipefail
 kotlin=("kmp/**/*.kt" "kmp/**/*.kts" "!kmp/**/build/**")
 swift=(kmp/iosApp maestro/gestures/ios)
@@ -10,4 +10,5 @@ else
   ktlint "${kotlin[@]}"
   swiftformat --lint --quiet "${swift[@]}"
 fi
+actionlint
 echo "lint ok"

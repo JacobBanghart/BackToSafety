@@ -15,7 +15,7 @@ via UniFFI. `kmp/shared` retires. The existing gates pass without re-blessing an
 | 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | ✅ (14/14 flows, 51/51 fidelity, 24 snapshots, upgrade from KMP keeps data) |
 | 3 | iOS: XCFramework + Swift bindings, built on the Mac; the Xcode project links it | agent **ffi-ios** | ✅ |
 | 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | ✅ (14/14 flows, upgrade from KMP keeps data, 50/51 fidelity) |
-| 5 | Delete kmp/shared, Room and KMP plugins; move AnalyticsParityTest; docs, CI workflows | agent **ffi-android** | in progress |
+| 5 | Delete kmp/shared, Room and KMP plugins; move AnalyticsParityTest; docs, CI workflows | agent **ffi-android** | ✅ (flows rerun after deletion: see the notes below) |
 
 At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-android` (branch
 `rust/ffi-android`) and `~/github/nijii-ffi-ios` (branch `rust/ffi-ios`), both cut from
@@ -32,7 +32,7 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 
 | Agent | Branch | ID | Status |
 |---|---|---|---|
-| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running: phase 5 |
+| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | done |
 | ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | running: DOB-loss investigation (KMP app, read-only), then iOS gates after phase 5 |
 
 ## Merge log
@@ -63,6 +63,14 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
   kmp/shared. Gates: check, lint, 24 snapshots, 14/14 flows plus the gestures, 51/51
   fidelity; an upgrade from the KMP oracle APK keeps its data. On the merged rust-port the
   orchestrator re-ran `mise run check` and `mise run lint`; both pass.
+
+- 2026-10-10: merged `rust/ffi-android` phase 5 (1d2c1f5): kmp/shared, Room and the KMP plugins
+  deleted (−2.5k lines); AnalyticsParityTest is in androidApp and covers Kotlin, Swift and
+  rust/core; docs and CI updated (actionlint only, not run). On the merged tree the
+  orchestrator re-ran check, lint and snapshots; all pass, nothing re-recorded. `snapshots` now
+  stops its Gradle daemon. 7 of 14 flows failed once with "package not installed"; most likely
+  the DOB investigation re-installing the same KMP package at the same moment. All passed
+  on rerun.
 
 ## Incident: 2026-10-10 reboot
 
@@ -297,6 +305,29 @@ from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: 
     fidelity task to create /tmp/nijii-captures (it was missing after the reboot).
   - Android no longer depends on kmp/shared (`project(":shared")` removed; shared stays for iOS).
     Not done by me: Room/KMP plugin removal, docs and CI workflow updates (phase 5).
+- 2026-10-10 Phase 5 (ffi-android):
+  - `kmp/shared`, Room, the KMP/KSP/serialization Gradle plugins, the unused libs and
+    `GenerateAnalyticsEvents` are deleted. The Room v2 schema the Rust migration test reads moved
+    to `spec/room-schema-v2.json`; the old Kotlin tests live on in `rust/core/tests`.
+  - `AnalyticsParityTest` is in `kmp/androidApp/src/test`: Android, iOS (Swift) and
+    `rust/core/src` against `spec/analytics-events.json` (3 tests pass).
+  - `mise run check` = `spec/check.py` + `cargo test` + the parity test through Gradle, which it
+    stops on exit (no daemon left).
+  - Docs: ARCHITECTURE, CLAUDE.md, AGENTS.md, README and the docs that cited kmp/shared.
+    Left as history: `PARITY_PLAN.md`, `spec/vectors/alerts.json`'s "source" field (vectors aren't
+    edited), this file.
+  - CI (read through plus `actionlint`, now in mise and `mise run lint`; nothing could be
+    pushed): ci.yml has a `rust-core` job (cargo test) in place of `kotlin-core`; the Android
+    job installs Rust, cargo-binstall + cargo-ndk (mise) and the NDK (sdkmanager, 29.0.14206865,
+    ANDROID_NDK_HOME), with NIJII_HEAVY=1 so Gradle's cargo calls skip the devbox queue;
+    android-release.yml (self-hosted) installs Rust, cargo-ndk and the NDK too. The Gradle
+    steps are otherwise unchanged. `lintRelease` passes locally. Untested on real runners:
+    mise's `cargo:cargo-ndk` install on ubuntu-latest (binstall) and sdkmanager NDK install.
+  - Gates after the deletion: `mise run check`, `mise run lint` (with actionlint), `mise run
+    snapshots` pass. `DEVICES=1 mise run android:flows`: the first full run passed 7 of 14 flows
+    and the 7 others died at once with "Package com.backtosafety.app is not installed" (the
+    emulator lost its app mid-run; no watchdog entry, cause unknown); rerunning those 7 passed
+    (ok x7, both reorder gestures ok). Fidelity not rerun: nothing visual changed.
 
 ### DOB finding (ffi-ios, 2026-10-10)
 
@@ -355,7 +386,7 @@ way reproduces the bug, so the build is not the cause. The change belongs in the
 that edits two fields and asserts both after Save (e.g. add a nickname edit to
 `maestro/flows/profile.yaml`) and `maestro/upgrade/verify.yaml` already asserts the DOB.
 
-iOS: not affected. `ProfileView.swift` keeps the form in a state object edited by key
+iOS: not affected. `ProfileView.swift` keeps the form in one `@State` value edited by key
 (`form?[field] = ...` through bindings), with no captured snapshot. Evidence: the KMP-built
 iOS app was filled by the same `fill.yaml` on the Mac and `verify.yaml` (DOB `03/15/1940`,
 name, hand, mobility) passed after installing the Rust build over it (phase 4 notes above).

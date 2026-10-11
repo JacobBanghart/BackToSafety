@@ -1,7 +1,7 @@
 # Analytics Events Reference
 
 Back to Safety uses PostHog for anonymous, device-identifiable analytics. The event names are a
-contract, `spec/analytics-events.json`: the shared core generates `AnalyticsEvent` from it, and
+contract, `spec/analytics-events.json`: the Rust core generates `AnalyticsEvent` from it, and
 `AnalyticsParityTest` checks that both apps send every event.
 
 ---
@@ -18,7 +18,7 @@ contract, `spec/analytics-events.json`: the shared core generates `AnalyticsEven
 
 ## 2. Tracking
 
-Both apps call `Analytics.track(event, properties)` in the shared core with an `AnalyticsEvent`;
+Both apps call `Analytics.track(event, properties)` in the Rust core (through UniFFI) with an `AnalyticsEvent`;
 named screens go through `Analytics.screen(name)` as PostHog `$screen` events. Properties are
 strings, numbers, booleans or null.
 

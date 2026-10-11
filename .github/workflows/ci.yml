@@ -27,7 +27,7 @@ jobs:
         run: python3 spec/check.py
 
   lint:
-    name: Lint (ktlint, SwiftFormat)
+    name: Lint (ktlint, SwiftFormat, actionlint)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -36,39 +36,53 @@ jobs:
       - name: Setup linters (mise.toml)
         uses: jdx/mise-action@v5
         with:
-          install_args: java ktlint swiftformat
+          install_args: java ktlint swiftformat actionlint
 
       - name: Lint
         run: mise run lint
 
-  kotlin-core:
-    name: Kotlin core (spec vectors)
+  rust-core:
+    name: Rust core (spec vectors, store, migrations)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Java (mise.toml)
+      - name: Setup Rust (mise.toml)
         uses: jdx/mise-action@v5
         with:
-          install_args: java
+          install_args: rust
 
-      # The shared KMP core is held to the same spec/vectors as the RN app.
-      - name: JVM tests
-        working-directory: kmp
-        run: ./gradlew :shared:jvmTest --console=plain
+      # The core is held to spec/vectors, the committed upgrade fixture and the Room v2 schema.
+      - name: Tests
+        working-directory: rust
+        run: cargo test -p nijii-core
 
   kotlin-android:
     name: Kotlin Android app (build)
     runs-on: ubuntu-latest
+    env:
+      # The Gradle build runs cargo through rust/scripts/heavy.sh's queue, meant for the shared
+      # devbox; this runner is its own.
+      NIJII_HEAVY: '1'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Java (mise.toml)
+      # Java for Gradle; Rust with the Android targets (mise.toml) and cargo-ndk for the core,
+      # which Gradle builds for the device ABIs and for the JVM snapshot tests.
+      - name: Setup Java, Rust and cargo-ndk (mise.toml)
         uses: jdx/mise-action@v5
         with:
-          install_args: java
+          install_args: java rust cargo-binstall cargo:cargo-ndk
+
+      - name: Install the Android NDK
+        run: |
+          set -euo pipefail
+          ndk="ndk;29.0.14206865"
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "$ndk"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
 
       - name: Build
         working-directory: kmp
