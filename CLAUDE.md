@@ -3,8 +3,9 @@
 Two native apps on one Kotlin Multiplatform core: `kmp/androidApp` (Compose) and `kmp/iosApp`
 (SwiftUI), both on `kmp/shared`. See `docs/ARCHITECTURE.md`.
 
-On the `rust-port` branch, `rust/` is an experimental all-Rust port that treats the KMP app as
-its oracle: see `rust/AGENTS.md` (rules, parallel lanes) and `rust/PORT_PLAN.md` (state).
+On the `rust-port` branch, `rust/` is an experiment: the same native apps on a Rust core (via
+UniFFI) instead of `kmp/shared`. See `rust/AGENTS.md` (rules, load limits) and
+`rust/PORT_PLAN.md` (state).
 
 ## Change both apps together
 

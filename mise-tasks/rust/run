@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Rust port: build, install and launch on ANDROID_SERIAL (or the only device)"
-set -euo pipefail
-apk="$(mise run -q rust:build)"
-adb install -r "$apk" >/dev/null
-adb shell am force-stop com.backtosafety.rust
-adb shell monkey -p com.backtosafety.rust -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
-echo "launched com.backtosafety.rust on ${ANDROID_SERIAL:-the device}"

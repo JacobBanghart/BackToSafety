@@ -1,6 +1,0 @@
-[application]
-name = "nijii"
-
-[bundle]
-identifier = "com.backtosafety.rust"
-publisher = "Back to Safety"
