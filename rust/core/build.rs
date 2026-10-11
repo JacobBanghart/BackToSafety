@@ -4,8 +4,12 @@
 
 use std::{env, fs, path::Path};
 
+/// The variant name for a wire name: `app_ready` -> `AppReady`. A number keeps its underscores
+/// (`emergency_911_called` -> `Emergency_911_Called`), so UniFFI's SCREAMING_SNAKE_CASE for Kotlin
+/// reads EMERGENCY_911_CALLED, as the Kotlin core's generated enum did.
 fn camel(wire: &str) -> String {
-    wire.split('_')
+    let parts: Vec<String> = wire
+        .split('_')
         .map(|part| {
             let mut chars = part.chars();
             chars
@@ -13,7 +17,16 @@ fn camel(wire: &str) -> String {
                 .map(|c| c.to_ascii_uppercase().to_string() + chars.as_str())
                 .unwrap_or_default()
         })
-        .collect()
+        .collect();
+    let numeric = |p: &str| p.starts_with(|c: char| c.is_ascii_digit());
+    let mut out = String::new();
+    for (i, part) in parts.iter().enumerate() {
+        if i > 0 && (numeric(part) || numeric(&parts[i - 1])) {
+            out.push('_');
+        }
+        out += part;
+    }
+    out
 }
 
 fn main() {
@@ -32,6 +45,7 @@ fn main() {
     let mut out = String::from(
         "// Generated from spec/analytics-events.json by core/build.rs. Do not edit.\n\n\
          /// The PostHog events both apps send; [`AnalyticsEvent::wire_name`] is what dashboards see.\n\
+         #[allow(non_camel_case_types)]\n\
          #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, uniffi::Enum)]\n\
          pub enum AnalyticsEvent {\n",
     );
