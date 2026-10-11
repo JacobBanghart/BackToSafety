@@ -28,8 +28,15 @@ class AnalyticsParityTest {
         .flatMap { Regex("""AnalyticsEvent\.([A-Z_0-9]+)""").findAll(it).map { m -> m.groupValues[1].lowercase() } }
         .toSortedSet()
 
-    /** Events the shared core sends itself, for both apps. */
-    private val sharedEvents = kotlinEvents("kmp/shared/src/commonMain")
+    /** Events the Rust core sends itself (rust/core/src), for both apps: AppReady -> app_ready. */
+    private val rustEvents = File(root, "rust/core/src").walkTopDown().filter { it.isFile && it.extension == "rs" }
+        .flatMap { Regex("""AnalyticsEvent::([A-Za-z0-9_]+)""").findAll(it.readText()).map { m -> m.groupValues[1] } }
+        .map { it.replace(Regex("(?<=[a-z0-9])(?=[A-Z])"), "_").replace("__", "_").lowercase() }
+        .filter { it in events }
+        .toSortedSet()
+
+    /** Events the core sends itself, for both apps. */
+    private val sharedEvents = kotlinEvents("kmp/shared/src/commonMain") + rustEvents
 
     @Test
     fun androidSendsTheSpecEvents() {
