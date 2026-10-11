@@ -12,7 +12,7 @@
 # The Xcode project reads the slices inside the xcframework through LIBRARY_SEARCH_PATHS (see
 # project.yml), because Xcode resolves a referenced .xcframework before any build phase runs.
 #
-# Overrides (the scratch-crate check uses them): FFI_WORKSPACE (default rust), FFI_PACKAGE
+# Overrides (the scratch-crate check uses them): FFI_WORKSPACE (default core), FFI_PACKAGE
 # (nijii-core), FFI_OUT (ios/RustCore).
 set -euo pipefail
 [ "$(uname -s)" = Darwin ] || { echo "iOS needs the Mac: mise run ios:remote ios:core" >&2; exit 2; }
@@ -44,7 +44,7 @@ mkdir -p "$tmp/Generated" "$tmp/include"
 
 # Library mode: the bindings come from the metadata the macros left in the library itself.
 echo "== uniffi-bindgen (swift)" >&2
-cargo run --release --bin uniffi-bindgen -- generate --language swift \
+cargo run -p uniffi-bindgen --release --bin uniffi-bindgen -- generate --language swift \
   --library "$target_dir/aarch64-apple-ios-sim/release/$lib" --out-dir "$tmp/gen" >&2
 cp "$tmp"/gen/*.swift "$tmp/Generated/"
 cp "$tmp"/gen/*.h "$tmp/include/"

@@ -60,7 +60,7 @@ jobs:
 
       # The core is held to spec/vectors, the committed upgrade fixture and the Room v2 schema.
       - name: Tests
-        working-directory: rust
+        working-directory: core
         run: cargo test -p nijii-core
 
   kotlin-android:
