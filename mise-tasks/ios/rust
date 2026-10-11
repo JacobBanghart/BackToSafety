@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Build the Rust core for iOS: staticlibs (device, simulator), UniFFI Swift bindings, NijiiCore.xcframework (kmp/iosApp/RustCore)"
-# What the iOS app links in place of kmp/shared's Shared.framework. Runs on the Mac (from
+# What the iOS app links: the Rust core (rust/core). Runs on the Mac (from
 # Xcode's build phase, from maestro/build-ios.sh, or through mise run ios:remote ios:rust).
 #
 # Output, in kmp/iosApp/RustCore (ignored by git):
