@@ -216,8 +216,10 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             ) { Text(t(if (saving) "saving" else "save"), style = type.bodyBold.style(), color = white, maxLines = 1) }
         }
         if (f == null) return@Column
+        // Reads the form at call time, never `f`: fields keep the callback from the composition
+        // they were drawn in, so an edit built on that snapshot reverted every edit since.
         fun update(field: String, value: String) {
-            form = f.with(field, value)
+            form = form?.with(field, value)
         }
         val toggle: (String) -> Unit = { expanded = if (expanded == it) null else it }
         Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {

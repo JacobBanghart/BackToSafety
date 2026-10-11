@@ -22,6 +22,18 @@ name: Profile edits persist and reach the info sheet and emergency screen
     id: profile-field-dateOfBirth
     text: 03/15/1940
 - runFlow: ../subflows/hide-keyboard.yaml
+# A second field drawn alongside it keeps the date of birth (an edit used to revert the edits
+# made since the screen opened).
+- tapOn:
+    id: profile-field-height
+- inputText: '56'
+- assertVisible:
+    id: profile-field-height
+    text: 5'6"
+- assertVisible:
+    id: profile-field-dateOfBirth
+    text: 03/15/1940
+- runFlow: ../subflows/hide-keyboard.yaml
 # Medical & behavioral: hand and mobility.
 - scrollUntilVisible:
     element:
@@ -63,6 +75,9 @@ name: Profile edits persist and reach the info sheet and emergency screen
 - assertVisible:
     id: profile-field-dateOfBirth
     text: 03/15/1940
+- assertVisible:
+    id: profile-field-height
+    text: 5'6"
 - tapOn:
     id: profile-back
 
