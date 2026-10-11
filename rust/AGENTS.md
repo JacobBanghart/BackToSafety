@@ -47,7 +47,8 @@ box's 48 GB. Reclaim and swap drove I/O pressure to ~90% and ssh died. So:
   (`mise.toml`). Stop Gradle daemons after a build (`./gradlew --stop`).
 - **Emulators:** at most 2. Use `rust/scripts/emulator.sh up <port>` (it waits for a slot and
   for 12 GB+ available) and `down <port>`. Each takes 5 to 9 GB. The `nijii-watchdog` user
-  service stops the newest emulator when memory runs low; see `journalctl --user -u
+  service stops the newest emulator when memory runs low, and any emulator over 12 GB resident
+  (one grew to 31 GB on 2026-10-11); see `journalctl --user -u
   nijii-watchdog`.
 - Never run `maestro/stop-emulators.sh`, `capture-parallel.sh` or the `android:flows` /
   `android:fidelity` tasks as they are: they boot 4 emulators. Run them with `DEVICES=1`, or
