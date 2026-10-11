@@ -75,7 +75,19 @@ Guardrails since then (owner-approved; see AGENTS.md "Load limits"):
 
 ## Owner questions
 
-(none open)
+1. **iOS fidelity mark:** `large-text/contacts-list` measures 0.87%, under its 1.02% mark. The
+   pure KMP build prints the same line on the same Mac, so it isn't caused by this change.
+   Lower the mark (`fidelity.py --update`) or leave it?
+
+## Pending (orchestrator)
+
+- ffi-ios phase 4 is held back from merge until the store-open failure follows the oracle (every
+  call fails with the error and saves surface `save_failed`; no in-memory fallback), and the
+  dial flows re-run after the DialTarget rename.
+- Forward to ffi-android: export `report_open_failure`, so iOS can send the data_migrated
+  failure when the open itself fails.
+- The CI workflow edits (ci.yml, ios-release.yml install Rust and run `ios:rust`) haven't run;
+  they need a GitHub run, which needs a push. Ask the owner first.
 
 Settled:
 
