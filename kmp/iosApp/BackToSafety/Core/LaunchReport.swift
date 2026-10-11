@@ -1,30 +1,31 @@
 import Darwin
 import Foundation
-import Shared
 
-/// app_ready, once per process: how long a cold start took, from the process starting to the
-/// first frame of the first screen (home or welcome), the field measure of load time. With it,
-/// how ready the app is for an emergency (`readiness`, gathered after the time is taken).
+/// app_ready, once per process (the Rust core's AppReady sends it): how long a cold start took,
+/// from the process starting to the first frame of the first screen (home or welcome), the
+/// field measure of load time. With it, how ready the app is for an emergency (gathered by the
+/// core after the time is taken) and what only the device knows (notifications_enabled).
 ///
 /// iOS can prewarm the process well before the user opens the app (ActivePrewarm=1); then
 /// the start is when the app itself initialised, and the event says prewarmed.
 @MainActor
-enum AppReady {
+enum LaunchReport {
     private static var reported = false
+    private static let core = AppReady()
     private static let appInit = Date()
 
     /// Call from the app's init, so the prewarm fallback has its starting point.
     static func noteAppInit() { _ = appInit }
 
-    static func report(readiness: @escaping () async -> [String: Any]) {
+    static func report(store: AppStore, device: @escaping () async -> [String: Any]) {
         guard !reported else { return }
         reported = true
         let prewarmed = ProcessInfo.processInfo.environment["ActivePrewarm"] == "1"
         let start = prewarmed ? appInit : (processStart() ?? appInit)
         let startupMs = Int(Date().timeIntervalSince(start) * 1000)
         Task {
-            let properties = await readiness().merging(["startup_ms": startupMs, "prewarmed": prewarmed]) { _, timing in timing }
-            Analytics.shared.track(event: .appReady, properties: properties)
+            let properties = await device().merging(["prewarmed": prewarmed]) { _, timing in timing }
+            store.reportAppReady(core, startupMs: Int64(startupMs), device: propValues(properties))
         }
     }
 

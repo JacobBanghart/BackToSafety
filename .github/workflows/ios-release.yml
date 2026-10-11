@@ -41,13 +41,17 @@ jobs:
           PY
           cat version.json
 
-      # The native app (kmp/iosApp): the SwiftUI project from project.yml. Its first build phase
-      # builds the shared Kotlin core with Gradle (so it needs Java); a later one sets the version
-      # and build number from the version.json stamped above.
-      - name: Setup Java and the Android SDK (mise.toml)
+      # The native app (kmp/iosApp): the SwiftUI project from project.yml. The Rust core and its
+      # Swift bindings come first (mise run ios:rust: the project lists a generated file), then
+      # its first build phase refreshes them, and a later one sets the version and build number
+      # from the version.json stamped above.
+      - name: Setup Rust (mise.toml)
         uses: jdx/mise-action@v5
         with:
-          install_args: java android-sdk
+          install_args: rust
+
+      - name: Build the Rust core
+        run: mise run ios:rust
 
       - name: Generate Xcode project
         working-directory: kmp/iosApp

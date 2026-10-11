@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Builds the iOS app (kmp/iosApp) as the parity harness runs it: Release, with test
 # seams on, for the arm64 simulator, unsigned. Prints the .app path. Needs a Mac with Xcode,
-# XcodeGen (brew install xcodegen) and the repo's mise tools (Java, android-sdk for Gradle):
-# the project's first build phase builds the shared Kotlin core.
+# XcodeGen (brew install xcodegen) and the repo's mise tools (the Rust toolchain with the iOS
+# targets): mise run ios:rust builds the Rust core and its Swift bindings, and the project's
+# first build phase refreshes them.
 
 set -euo pipefail
 

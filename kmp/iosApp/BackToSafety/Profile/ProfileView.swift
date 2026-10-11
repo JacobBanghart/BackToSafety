@@ -1,5 +1,4 @@
 import AVFoundation
-import Shared
 import SwiftUI
 import UIKit
 
@@ -39,10 +38,10 @@ private func slug(_ option: String) -> String { option.lowercased().replacingOcc
 /// What each field's input does to typed text (profile.tsx formatFieldInput).
 private func formatField(_ field: String, _ value: String) -> String {
     switch field {
-    case "height": FormattersKt.formatHeightInput(value: value)
-    case "weight": FormattersKt.formatWeightInput(value: value)
-    case "medicAlertId": FormattersKt.formatMedicAlertIdInput(value: value)
-    case "medicAlertHotline": PhoneKt.formatPhoneInput(value: value)
+    case "height": formatHeightInput(value: value)
+    case "weight": formatWeightInput(value: value)
+    case "medicAlertId": formatMedicAlertIdInput(value: value)
+    case "medicAlertHotline": formatPhoneInput(value: value)
     default: value
     }
 }
@@ -94,7 +93,7 @@ struct ProfileView: View {
 
     private func load() async {
         let p = try? await model.store.profile()
-        let options = MobilityKt.MOBILITY_OPTIONS
+        let options = MOBILITY_OPTIONS
         let tokens = (p?.mobilityLevel ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let known = tokens.filter { options.contains($0) }
         let custom = tokens.filter { !options.contains($0) }
@@ -131,12 +130,12 @@ struct ProfileView: View {
                 let s = x[field].trimmingCharacters(in: .whitespacesAndNewlines)
                 return s.isEmpty ? nil : s
             }
-            // A nil must stay in the map (as NSNull, which Kotlin reads as null) so the field clears.
-            var values: [String: Any] = [:]
-            for field in textFields where field != "photoUri" { values[field] = v(field) as Any }
-            values["photoUri"] = (x["photoUri"].isEmpty ? nil : x["photoUri"]) as Any
-            values["dominantHand"] = x.dominantHand
-            values["mobilityLevel"] = (x.resolvedMobility.isEmpty ? nil : x.resolvedMobility) as Any
+            // A nil must stay in the map so the field clears.
+            var values: [String: String?] = [:]
+            for field in textFields where field != "photoUri" { values[field] = .some(v(field)) }
+            values["photoUri"] = .some(x["photoUri"].isEmpty ? nil : x["photoUri"])
+            values["dominantHand"] = .some(x.dominantHand)
+            values["mobilityLevel"] = .some(x.resolvedMobility.isEmpty ? nil : x.resolvedMobility)
             do {
                 try await model.store.updateProfile(values: values)
                 Analytics.shared.track(event: .profileSaved, properties: [
@@ -225,7 +224,7 @@ struct ProfileView: View {
                     }
                     group(t("fields.mobilityLevel")) {
                         FlowLayout(spacing: Space.sm) {
-                            ForEach(MobilityKt.MOBILITY_OPTIONS, id: \.self) { option in
+                            ForEach(MOBILITY_OPTIONS, id: \.self) { option in
                                 let selected = f.mobility.contains(option)
                                 Button {
                                     if selected {
@@ -235,7 +234,7 @@ struct ProfileView: View {
                                         form?.mobility.append(option)
                                     }
                                 } label: {
-                                    RNText(t(MobilityKt.MOBILITY_OPTION_KEYS[option] ?? option), Typography.body.spec.weight(500),
+                                    RNText(t(MOBILITY_OPTION_KEYS[option] ?? option), Typography.body.spec.weight(500),
                                            color: selected ? white : colors.text)
                                         .padding(.horizontal, Space.md + 1).padding(.vertical, Space.xs + 1)
                                         .background(Capsule().fill(selected ? colors.tint : .clear))
@@ -383,11 +382,11 @@ struct ProfileView: View {
                     text: binding("dateOfBirth"), placeholder: "MM/DD/YYYY", testID: "profile-field-dateOfBirth",
                     font: .systemFont(ofSize: 16 * rnFontMultiplier(dynamicType)), textColor: UIColor(colors.text),
                     placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint), insets: .zero,
-                    keyboard: .numberPad, maxLength: 10, format: { FormattersKt.formatDobInput(value: $0) }
+                    keyboard: .numberPad, maxLength: 10, format: { formatDobInput(value: $0) }
                 )
                 .frame(height: 44)
                 Button {
-                    pendingDob = AgeKt.parseDob(value: form?["dateOfBirth"] ?? "").map(toDate) ?? toDate(Kotlinx_datetimeLocalDate(year: 1940, month: 1, day: 1))
+                    pendingDob = parseDob(value: form?["dateOfBirth"] ?? "").map(toDate) ?? toDate(CalendarDate(year: 1940, month: 1, day: 1))
                     datePicking = true
                 } label: {
                     SFIcon("calendar", 18, colors.textSecondary).frame(minWidth: 44 - Space.sm, minHeight: 44).padding(.leading, Space.sm).contentShape(Rectangle())
@@ -403,8 +402,8 @@ struct ProfileView: View {
         }
     }
 
-    private func toDate(_ d: Kotlinx_datetimeLocalDate) -> Date {
-        Calendar.current.date(from: DateComponents(year: Int(d.year), month: Int(d.month.ordinal) + 1, day: Int(d.day))) ?? Date()
+    private func toDate(_ d: CalendarDate) -> Date {
+        Calendar.current.date(from: DateComponents(year: Int(d.year), month: Int(d.month), day: Int(d.day))) ?? Date()
     }
 
     private var dateModal: some View {
@@ -428,7 +427,7 @@ struct ProfileView: View {
                     .accessibilityIdentifier("profile-date-cancel")
                     Button {
                         let c = Calendar.current.dateComponents([.year, .month, .day], from: pendingDob)
-                        form?["dateOfBirth"] = AgeKt.formatDob(date: Kotlinx_datetimeLocalDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
+                        form?["dateOfBirth"] = formatDob(date: CalendarDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
                         datePicking = false
                     } label: {
                         RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: white)

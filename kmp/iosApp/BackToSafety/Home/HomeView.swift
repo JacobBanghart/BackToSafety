@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 
 private let emergencyIdle = Color(argb: 0xFFEF_4444)
@@ -60,7 +59,7 @@ struct HomeView: View {
     /// Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     private func updateCountdown() {
         guard let started = emergency.flatMap({ parseISO($0.startedAt) }) else { return }
-        secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
+        secondsLeft = secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
     }
 
     private func header(_ hasProfile: Bool) -> some View {
@@ -108,10 +107,10 @@ struct HomeView: View {
             (t("emergencyButton.timerExpiredTitle", ["emergencyNumber": emergencyNumber]), t("emergencyButton.timerExpiredSubtitle"))
         } else {
             (t("emergencyButton.activeTitle"), t("emergencyButton.remaining", [
-                "time": EmergencyKt.formatCountdown(seconds: secondsLeft), "checked": emergency?.checkedSteps.count ?? 0, "total": 11,
+                "time": formatCountdown(seconds: secondsLeft), "checked": emergency?.checkedSteps.count ?? 0, "total": 11,
             ]))
         }
-        let elapsed = emergency != nil && !expired ? CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS - secondsLeft) / CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS) : 0
+        let elapsed = emergency != nil && !expired ? CGFloat(searchWindowSeconds() - secondsLeft) / CGFloat(searchWindowSeconds()) : 0
         return Button { model.path.append(.emergency) } label: {
             HStack(spacing: 0) {
                 HStack(spacing: Space.md) {

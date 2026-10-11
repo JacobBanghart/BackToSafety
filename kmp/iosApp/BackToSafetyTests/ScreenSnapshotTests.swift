@@ -1,5 +1,4 @@
 @testable import BackToSafety
-import Shared
 import SnapshotTesting
 import SwiftUI
 import XCTest
@@ -17,7 +16,7 @@ final class ScreenSnapshotTests: XCTestCase {
         AppClock.shared.testSeamsEnabled = true
         AppClock.shared.freeze(atMs: 1_791_302_400_000) // 2026-10-06 16:00 UTC
         let path = NSTemporaryDirectory() + "snapshots-\(UUID().uuidString).db"
-        let store = DatabaseBuilder_iosKt.openStoreAt(path: path)
+        let store = try AppStore(Store.open(path: path))
         try await store.seed()
         try await store.updateProfile(values: [
             "name": "Margaret Smith", "nickname": "Maggie", "dateOfBirth": "03/15/1940",
@@ -32,7 +31,7 @@ final class ScreenSnapshotTests: XCTestCase {
             sortOrder: nil
         )
         _ = try await store.addDestination(
-            d: DestinationEntity(
+            destination: DestinationEntity(
                 id: 0, name: "Riverside Park", address: "100 River Rd", latitude: nil, longitude: nil,
                 category: "water", reason: nil, distanceFromHome: nil, riskLevel: "high", notes: nil, sortOrder: 0,
                 createdAt: nil, updatedAt: nil

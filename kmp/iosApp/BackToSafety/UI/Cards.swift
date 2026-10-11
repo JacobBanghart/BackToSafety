@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 
 /// components/AppCard.tsx: card background, 1pt border, radius lg, padding lg, margin below md.

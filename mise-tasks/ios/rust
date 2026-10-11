@@ -6,6 +6,7 @@
 # Output, in kmp/iosApp/RustCore (ignored by git):
 #   NijiiCore.xcframework   libnijii_core.a for ios-arm64 and ios-arm64-simulator, with Headers
 #   Generated/NijiiCore.swift   the UniFFI Swift bindings, compiled into the app
+#   Generated/DesignTokens.swift   from spec/design-tokens.json (generate-design-tokens.py)
 #   include/                the C header and module.modulemap (module NijiiCoreFFI)
 #
 # The Xcode project reads the slices inside the xcframework through LIBRARY_SEARCH_PATHS (see
@@ -51,6 +52,10 @@ modulemaps=("$tmp"/gen/*.modulemap)
 [ -e "${modulemaps[0]}" ] || { echo "uniffi-bindgen wrote no .modulemap" >&2; exit 1; }
 # Clang only recognises the file as a module map under this name.
 cp "${modulemaps[0]}" "$tmp/include/module.modulemap"
+
+# The design tokens are the app's, not the core's, but they are generated too and ride along:
+# one command makes every generated source the project lists.
+python3 "$root/kmp/iosApp/generate-design-tokens.py" "$tmp/Generated" >&2
 
 echo "== xcframework" >&2
 xcodebuild -create-xcframework \

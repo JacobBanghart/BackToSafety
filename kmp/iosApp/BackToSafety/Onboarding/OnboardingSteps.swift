@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 
 /// app/onboarding/name.tsx
@@ -149,11 +148,11 @@ struct AppearanceView: View {
                 HStack(alignment: .top, spacing: Space.md) {
                     Field(label: t("appearance.heightLabel")) {
                         AppInput(text: $height, placeholder: t("appearance.heightPlaceholder"), testID: "onboarding-appearance-height",
-                                 keyboard: .numberPad, format: { FormattersKt.formatHeightInput(value: $0) })
+                                 keyboard: .numberPad, format: { formatHeightInput(value: $0) })
                     }
                     Field(label: t("appearance.weightLabel")) {
                         AppInput(text: $weight, placeholder: t("appearance.weightPlaceholder"), testID: "onboarding-appearance-weight",
-                                 keyboard: .numberPad, format: { FormattersKt.formatWeightInput(value: $0) })
+                                 keyboard: .numberPad, format: { formatWeightInput(value: $0) })
                     }
                 }
                 HStack(alignment: .top, spacing: Space.md) {
@@ -215,7 +214,7 @@ struct ContactStepView: View {
                 }
                 Field(label: t("contact.phoneLabel")) {
                     AppInput(text: $phone, placeholder: t("contact.phonePlaceholder"), testID: "onboarding-contact-phone",
-                             keyboard: .phonePad, format: { PhoneKt.formatPhoneInput(value: $0) })
+                             keyboard: .phonePad, format: { formatPhoneInput(value: $0) })
                 }
                 Field(label: t("contact.relationshipLabel")) {
                     AppInput(text: $relationship, placeholder: t("contact.relationshipPlaceholder"), testID: "onboarding-contact-relationship",

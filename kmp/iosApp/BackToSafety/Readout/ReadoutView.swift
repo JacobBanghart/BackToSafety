@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 import UIKit
 
@@ -49,9 +48,9 @@ struct ReadoutView: View {
         let lastSeen = lastSeenMs.map(localeDateTime)
         let today = Calendar.current.dateComponents([.year, .month, .day], from: Date(timeIntervalSince1970: Double(AppClock.shared.nowMs()) / 1000))
         let input = ReadoutInput(profile: p, lastSeenTime: lastSeen,
-                                 today: Kotlinx_datetimeLocalDate(year: Int32(today.year!), month: Int32(today.month!), day: Int32(today.day!)))
-        let script = ReadoutKt.buildScript(input: input, t: t.lookup)
-        let missing = ReadoutKt.missingScriptDetails(input: input, t: t.lookup)
+                                 today: CalendarDate(year: Int32(today.year!), month: Int32(today.month!), day: Int32(today.day!)))
+        let script = buildScript(input: input, t: t.translator)
+        let missing = missingScriptDetails(input: input, t: t.translator)
         let hand = p.dominantHand.flatMap { $0.isEmpty || $0 == "unknown" ? nil : $0 }
         return ScrollView {
             VStack(alignment: .leading, spacing: Space.md) {
@@ -117,11 +116,11 @@ struct ReadoutView: View {
                             if let v = nonEmpty(p.hairColor) { chip(t("sections.appearance.hair"), v) }
                             if let v = nonEmpty(p.eyeColor) { chip(t("sections.appearance.eyes"), v) }
                             if let hand { chip(t("sections.appearance.dominantHand"), t(hand == "left" ? "sections.appearance.handLeft" : "sections.appearance.handRight")) }
-                            if let v = nonEmpty(p.mobilityLevel) { chip(t("sections.appearance.mobility"), MobilityKt.describeMobility(stored: v, t: t.lookup)) }
+                            if let v = nonEmpty(p.mobilityLevel) { chip(t("sections.appearance.mobility"), describeMobility(stored: v, t: t.translator)) }
                         }
                         .padding(.bottom, Space.xs)
-                        if ReadoutKt.needsVehicleCheck(mobilityLevel: p.mobilityLevel), let level = p.mobilityLevel {
-                            warnNote(t("vehicleCheck.\(ReadoutKt.vehicleCheckKind(mobilityLevel: level).key)"), 14).padding(.top, Space.sm)
+                        if needsVehicleCheck(mobilityLevel: p.mobilityLevel), let level = p.mobilityLevel {
+                            warnNote(t("vehicleCheck.\(vehicleCheckKind(mobilityLevel: level).key)"), 14).padding(.top, Space.sm)
                         }
                         if let v = nonEmpty(p.identifyingMarks) { infoRow(t("sections.appearance.identifyingMarks"), v) }
                     }
@@ -155,7 +154,7 @@ struct ReadoutView: View {
                     }
                     copyButton(script: false, label: copied == "all" ? t("copiedFullButton") : t("copyFullButton"),
                                icon: copied == "all" ? "checkmark.circle.fill" : "square.and.arrow.up") {
-                        copy(ReadoutKt.buildCopyBlock(input: input, t: t.lookup), kind: "all", event: .readoutDetailsCopied)
+                        copy(buildCopyBlock(input: input, t: t.translator), kind: "all", event: .readoutDetailsCopied)
                     }
                 }
 
@@ -262,7 +261,7 @@ struct ReadoutView: View {
                 if let hotline {
                     Button {
                         Analytics.shared.track(event: .readoutMedicalertHotlineCalled, properties: [:])
-                        dial(PhoneKt.stripPhoneFormatting(phone: hotline), .medicalert)
+                        dial(stripPhoneFormatting(phone: hotline), .medicalert)
                     } label: { infoRow(t("sections.devices.medicAlertHotline"), hotline).contentShape(Rectangle()) }
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("readout-medicalert-hotline")
@@ -316,7 +315,7 @@ struct ReadoutView: View {
                 } label: {
                     HStack(spacing: Space.xs) {
                         SFIcon("phone.fill", 14, white)
-                        RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyBold.spec, color: white)
+                        RNText(formatPhoneNumber(phone: c.phone), Typography.bodyBold.spec, color: white)
                     }
                     .fixedSize()
                     .padding(.horizontal, Space.md).padding(.vertical, Space.sm)
