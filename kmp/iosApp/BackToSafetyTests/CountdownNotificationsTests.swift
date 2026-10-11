@@ -36,7 +36,7 @@ final class CountdownNotificationsTests: XCTestCase {
         AppClock.shared.testSeamsEnabled = true
         AppClock.shared.freeze(atMs: start)
         center = FakeCenter()
-        model = AppModel(store: try! Store.open(path: NSTemporaryDirectory() + "alerts-\(UUID().uuidString).db"))
+        model = AppModel(store: AppStore(try! Store.open(path: NSTemporaryDirectory() + "alerts-\(UUID().uuidString).db")))
         notifications = CountdownNotifications(
             center: center,
             emergencyT: { [unowned self] in model.t("emergency", in: language) },
@@ -81,7 +81,7 @@ final class CountdownNotificationsTests: XCTestCase {
     /// Through the shared rules: leaving the emergency screen schedules what's to come, and
     /// returning clears it and catches up on what came due.
     func testLeavingAndReturning() async throws {
-        let away = EmergencyAway(store: model.store, scheduler: notifications)
+        let away = EmergencyAway(store: model.store.awayCore, scheduler: notifications)
         _ = try await model.store.saveActiveEmergency(emergency: ActiveEmergency(
             startedAt: "2026-10-06T16:00:00.000Z", wearing: "", checkedSteps: [], incidentId: nil
         ))

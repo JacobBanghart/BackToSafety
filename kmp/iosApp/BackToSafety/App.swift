@@ -12,19 +12,19 @@ private let shippedLanguages = ["en"]
 
 @MainActor
 final class AppModel: ObservableObject {
-    let store: Store
+    let store: AppStore
     private let translations = AppModel.loadTranslations()
     @Published var onboarded: Bool?
     @Published var themePreference = "system"
     @Published var language = "en"
     @Published var path: [Route] = []
     /// The countdown alerts on and off the emergency screen (the core's EmergencyAway).
-    private(set) lazy var away = EmergencyAway(store: store, scheduler: CountdownNotifications(
+    private(set) lazy var away = EmergencyAway(store: store.awayCore, scheduler: CountdownNotifications(
         emergencyT: { [unowned self] in t("emergency") },
         emergencyNumber: { [unowned self] in t("common")("emergencyNumber") }
     ))
 
-    init(store: Store = openAppStore()) {
+    init(store: AppStore = AppStore.open()) {
         self.store = store
     }
 
@@ -35,12 +35,7 @@ final class AppModel: ObservableObject {
     func load() async {
         AppClock.shared.testSeamsEnabled = testSeams
         // Seeds, and reports data_migrated if opening migrated a database the RN app left.
-        let store = store
-        try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            DispatchQueue.global(qos: .userInitiated).async {
-                continuation.resume(with: Result { try seedAndReportMigration(store: store) })
-            }
-        }
+        try? await store.seedAndReportMigration()
         // The device is the analytics identity (as on Android).
         if let deviceId = try? await store.deviceId() { identifyAnalytics(deviceId) }
         themePreference = (try? await store.setting(key: "theme_preference")) ?? "system"

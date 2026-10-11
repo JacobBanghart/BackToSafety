@@ -17,7 +17,7 @@ enum LaunchReport {
     /// Call from the app's init, so the prewarm fallback has its starting point.
     static func noteAppInit() { _ = appInit }
 
-    static func report(store: Store, device: @escaping () async -> [String: Any]) {
+    static func report(store: AppStore, device: @escaping () async -> [String: Any]) {
         guard !reported else { return }
         reported = true
         let prewarmed = ProcessInfo.processInfo.environment["ActivePrewarm"] == "1"
@@ -25,7 +25,7 @@ enum LaunchReport {
         let startupMs = Int(Date().timeIntervalSince(start) * 1000)
         Task {
             let properties = await device().merging(["prewarmed": prewarmed]) { _, timing in timing }
-            _ = core.report(startupMs: Int64(startupMs), store: store, device: propValues(properties))
+            store.reportAppReady(core, startupMs: Int64(startupMs), device: propValues(properties))
         }
     }
 
