@@ -15,6 +15,22 @@ iOS comes after Android, on the Mac.
   - `rust:*` mise tasks, and the oracle APK is cached.
 - Next: wave 1 below.
 
+## ⚠️ PAUSED (2026-10-10 17:25): box rebooted after memory exhaustion
+
+Do **not** resume the lanes until the owner approves the guardrails below. From about 13:50,
+free memory sat at roughly 0.8 GB for about 3h20m (Gradle daemon logs). Reclaim and swap on
+the loop-device rootfs pushed I/O pressure to ~90%. journald stopped at 17:12 and ssh died.
+Causes, all from this port's parallel setup:
+
+- up to 4 emulators at 5.3 to 8.8 GB each: the image falls back from `-gpu guest` to host
+  lavapipe rendering and grows, plus one duplicate emulator from the emulator.sh race
+  (fixed in dc649d8)
+- 7 worktrees building at once with CARGO_BUILD_JOBS=16 each, with ~52 GB of separate
+  target dirs
+- dx's Gradle bundling: 2 GB-heap daemons, some per worktree, that lingered after use
+- nothing measured memory, and agents that died at the session limit left their emulators and
+  daemons running
+
 ## Lanes (wave 1)
 
 Each lane has its worktree at `~/github/nijii-rust-<lane>` on branch `rust/<lane>`, cut
