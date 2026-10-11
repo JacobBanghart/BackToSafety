@@ -72,7 +72,7 @@ merges it into `rust-port`.
   first; the orchestrator dedupes when merging.
 - **Your emulator only.** Each lane has a port: `rust/scripts/emulator.sh up <port>` gives
   you `emulator-<port>`. Then `export ANDROID_SERIAL=emulator-<port>` for every adb, mise
-  and maestro command. At most `EMULATOR_MAX` (4) run at once; `up` waits for a slot.
+  and maestro command. At most `EMULATOR_MAX` (2) run at once; `up` waits for a slot and for free memory.
   - Run `emulator.sh down <port>` when you're done verifying. Never run
     `maestro/stop-emulators.sh`, `run-flows.sh` or `capture-parallel.sh`: they act on every
     emulator, including other lanes'.
