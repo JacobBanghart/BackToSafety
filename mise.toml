@@ -18,6 +18,8 @@ rust = { version = "1.99.0", targets = "aarch64-linux-android,armv7-linux-androi
 cargo-binstall = "1.25.2"
 # actionlint runs shellcheck on workflow scripts when it is installed (CI runners have it).
 shellcheck = "0.11.0"
+# Size analysis of the Rust core (which crates the shipped library is made of).
+"cargo:cargo-bloat" = "0.12.1"
 # Builds the Android .so files (androidApp Gradle build).
 "cargo:cargo-ndk" = "4.1.2"
 
