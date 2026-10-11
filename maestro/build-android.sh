@@ -7,5 +7,5 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/kmp"
 # Queued like every heavy build (rust/scripts/heavy.sh); it also builds the Rust core.
-"$ROOT/rust/scripts/heavy.sh" ./gradlew :androidApp:assembleRelease -PtestSeams=true --console=plain -q >&2
+"$ROOT/rust/scripts/heavy.sh" ./gradlew --no-daemon :androidApp:assembleRelease -PtestSeams=true --console=plain -q >&2
 echo "$ROOT/kmp/androidApp/build/outputs/apk/release/androidApp-release.apk"

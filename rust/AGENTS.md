@@ -52,6 +52,9 @@ box's 48 GB. Reclaim and swap drove I/O pressure to ~90% and ssh died. So:
 - Never run `maestro/stop-emulators.sh`, `capture-parallel.sh` or the `android:flows` /
   `android:fidelity` tasks as they are: they boot 4 emulators. Run them with `DEVICES=1`, or
   on your own emulator.
+- Never run `adb kill-server`, `adb reconnect` or `./gradlew --stop` across the board. One adb
+  server and the Gradle daemons serve every agent, and on 2026-10-10 an `adb kill-server` cut
+  another agent's flows off mid-run. Pin every adb and maestro call to your serial.
 - iOS work runs on the Mac (`ssh jacob@10.1.0.17`, see `mise run ios:remote`). The Mac is a
   laptop that may be asleep, so fail fast and say so.
 

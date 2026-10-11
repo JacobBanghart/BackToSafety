@@ -2,13 +2,11 @@
 #MISE description="Android snapshot tests: every main screen rendered on the JVM vs src/test/snapshots (RECORD=1 re-records)"
 set -euo pipefail
 cd kmp
-# A daemon would keep ~2 GB for hours (load limits, rust/AGENTS.md).
-trap './gradlew --stop >/dev/null 2>&1 || true' EXIT
 if [ -n "${RECORD:-}" ]; then
-  ../rust/scripts/heavy.sh ./gradlew :androidApp:testDebugUnitTest -Precord --console=plain -q
+  ../rust/scripts/heavy.sh ./gradlew --no-daemon :androidApp:testDebugUnitTest -Precord --console=plain -q
   echo "recorded androidApp/src/test/snapshots"
 else
-  ../rust/scripts/heavy.sh ./gradlew :androidApp:testDebugUnitTest --console=plain -q || {
+  ../rust/scripts/heavy.sh ./gradlew --no-daemon :androidApp:testDebugUnitTest --console=plain -q || {
     echo "differences: kmp/androidApp/build/outputs/roborazzi (RECORD=1 if deliberate)" >&2
     exit 1
   }

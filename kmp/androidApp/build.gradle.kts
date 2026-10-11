@@ -34,7 +34,8 @@ val buildRustAndroid = tasks.register<CargoNdkBuild>("buildRustAndroid") {
     workspace = rustWorkspace
     heavyScript = heavy
     sources.from(rustSources, specFiles)
-    abis = listOf("arm64-v8a", "x86_64")
+    // The four ABIs the KMP app shipped (its bundled SQLite had all four), so no device loses it.
+    abis = listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86")
     outputDir = layout.buildDirectory.dir("generated/rustJniLibs")
 }
 
@@ -80,7 +81,7 @@ android {
         versionName = release["version"] as String
         // Test seams (the debug clock) for the Maestro harness: -PtestSeams=true.
         // The ABIs the Rust core is built for.
-        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        ndk { abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64", "x86") }
         buildConfigField("boolean", "TEST_SEAMS", (findProperty("testSeams") == "true").toString())
         // PostHog, from the build environment; analytics stay off without a key.
         buildConfigField("String", "POSTHOG_KEY", "\"${System.getenv("POSTHOG_KEY").orEmpty()}\"")

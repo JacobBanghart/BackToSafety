@@ -5,6 +5,5 @@ python3 spec/check.py
 rust/scripts/heavy.sh cargo test -p nijii-core --manifest-path rust/Cargo.toml
 # AnalyticsParityTest scans both apps' sources and the core's against spec/analytics-events.json.
 cd kmp
-trap './gradlew --stop >/dev/null 2>&1 || true' EXIT
-../rust/scripts/heavy.sh ./gradlew :androidApp:testDebugUnitTest --tests '*AnalyticsParityTest' --console=plain -q
+../rust/scripts/heavy.sh ./gradlew --no-daemon :androidApp:testDebugUnitTest --tests '*AnalyticsParityTest' --console=plain -q
 echo "core tests and analytics parity ok"
