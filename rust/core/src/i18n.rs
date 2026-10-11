@@ -5,7 +5,7 @@
 
 use serde_json::{Map, Value};
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 /// Replaces `{{ name }}` placeholders (the pattern `\{\{[ \t]*([A-Za-z0-9_]+)[ \t]*\}\}`, by hand:
 /// the regex crate cost 500 KB of the library). `value` gives a name's text; an unknown name is
@@ -43,27 +43,69 @@ pub fn interpolate(template: &str, mut value: impl FnMut(&str) -> Option<String>
 /// namespace and `defaultValue` stands in for a missing key.
 pub type Vars<'a> = &'a [(&'a str, Value)];
 
-/// locale -> namespace -> parsed JSON
+/// One namespace's JSON, parsed the first time a string is looked up in it: a launch reads
+/// two or three of the fourteen files (the language and the screens shown), not all of them.
+struct Namespace {
+    text: String,
+    parsed: OnceLock<Option<Map<String, Value>>>,
+}
+
+impl Namespace {
+    fn get(&self) -> Option<&Map<String, Value>> {
+        self.parsed
+            .get_or_init(|| match serde_json::from_str(&self.text) {
+                Ok(Value::Object(o)) => Some(o),
+                _ => None,
+            })
+            .as_ref()
+    }
+}
+
+/// locale -> namespace -> JSON (parsed lazily)
 #[derive(Default, uniffi::Object)]
 pub struct Translations {
-    resources: HashMap<String, HashMap<String, Map<String, Value>>>,
+    resources: HashMap<String, HashMap<String, Namespace>>,
 }
 
 impl Translations {
+    /// From parsed JSON.
     pub fn new(resources: HashMap<String, HashMap<String, Map<String, Value>>>) -> Self {
-        Self { resources }
+        Self {
+            resources: resources
+                .into_iter()
+                .map(|(locale, namespaces)| {
+                    let namespaces = namespaces
+                        .into_iter()
+                        .map(|(ns, map)| {
+                            let parsed = OnceLock::new();
+                            let _ = parsed.set(Some(map));
+                            (
+                                ns,
+                                Namespace {
+                                    text: String::new(),
+                                    parsed,
+                                },
+                            )
+                        })
+                        .collect();
+                    (locale, namespaces)
+                })
+                .collect(),
+        }
     }
 
-    /// From raw locale JSON (locale -> namespace -> text).
+    /// From raw locale JSON (locale -> namespace -> text). Text that isn't a JSON object gives
+    /// a namespace with no strings.
     pub fn from_json<'a>(files: impl IntoIterator<Item = (&'a str, &'a str, &'a str)>) -> Self {
-        let mut resources: HashMap<String, HashMap<String, Map<String, Value>>> = HashMap::new();
+        let mut resources: HashMap<String, HashMap<String, Namespace>> = HashMap::new();
         for (locale, ns, text) in files {
-            if let Ok(Value::Object(o)) = serde_json::from_str(text) {
-                resources
-                    .entry(locale.into())
-                    .or_default()
-                    .insert(ns.into(), o);
-            }
+            resources.entry(locale.into()).or_default().insert(
+                ns.into(),
+                Namespace {
+                    text: text.into(),
+                    parsed: OnceLock::new(),
+                },
+            );
         }
         Self { resources }
     }
@@ -77,7 +119,7 @@ impl Translations {
     }
 
     fn lookup(&self, locale: &str, ns: &str, key: &str) -> Option<&str> {
-        let mut node = self.resources.get(locale)?.get(ns)?;
+        let mut node = self.resources.get(locale)?.get(ns)?.get()?;
         let mut parts = key.split('.').peekable();
         while let Some(part) = parts.next() {
             let next = node.get(part)?;
