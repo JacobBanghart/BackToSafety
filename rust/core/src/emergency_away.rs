@@ -20,13 +20,15 @@ use std::sync::{Arc, Mutex};
 
 /// Puts countdown alerts on the phone as local notifications. Each app has one: AlarmManager
 /// on Android, UNUserNotificationCenter on iOS.
+#[uniffi::export(with_foreign)]
 pub trait AlertScheduler: Send + Sync {
     /// Replaces whatever is scheduled with `alerts`.
-    fn schedule(&self, alerts: &[ScheduledAlert]);
+    fn schedule(&self, alerts: Vec<ScheduledAlert>);
 
     fn cancel_all(&self);
 }
 
+#[derive(uniffi::Object)]
 pub struct EmergencyAway {
     store: Arc<Store>,
     scheduler: Arc<dyn AlertScheduler>,
@@ -96,8 +98,7 @@ impl EmergencyAway {
                 &self.last_tick().unwrap_or(now_ms).to_string(),
             )?;
         }
-        self.scheduler
-            .schedule(&alerts_to_schedule(started, now_ms));
+        self.scheduler.schedule(alerts_to_schedule(started, now_ms));
         Ok(())
     }
 

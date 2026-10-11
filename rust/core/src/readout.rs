@@ -35,7 +35,7 @@ pub fn needs_vehicle_check(mobility_level: Option<&str>) -> bool {
     VEHICLE_MOBILITY_VALUES.iter().any(|v| value.contains(v))
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Enum)]
 pub enum VehicleCheckKind {
     Vehicle,
     Aid,

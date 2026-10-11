@@ -99,6 +99,7 @@ pub const SAFETY_CHECKS: [(&str, &str); 12] = [
     ("foundation", "safety_responsibility"),
 ];
 
+#[derive(uniffi::Object)]
 pub struct Store {
     conn: Mutex<Connection>,
     cached_device_id: Mutex<Option<String>>,
@@ -264,6 +265,12 @@ impl Store {
         changed.updated_at = Some(now);
         changed.save(&self.conn())?;
         Ok(())
+    }
+
+    /// Saves a whole profile row (the foreign-language form of [`Store::save_profile`], which
+    /// takes a closure): stamps `updated_at`, and `created_at` when it has none.
+    pub fn save_profile_entity(&self, entity: ProfileEntity) -> Result<()> {
+        self.save_profile(|_| entity)
     }
 
     /// A partial profile save by field name (the Profile property names, camelCase), as the RN

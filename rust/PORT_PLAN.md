@@ -84,3 +84,26 @@ Each agent appends its notes here.
   `core/uniffi.toml` (Kotlin package `com.backtosafety.core.ffi`), `mise run rust:bindings`
   (Kotlin into `$BINDINGS_OUT`, default `$CARGO_TARGET_DIR/bindings/kotlin`). The only export
   so far is `core_version()`. Next: M2, the full API.
+- 2026-10-10 M2 done (commit `FFI API: full surface`). The surface is `rust/core/src/ffi.rs`
+  plus derives in place (Record/Enum/Object). Conventions the wrappers can rely on:
+  - `i32` where Kotlin's core had `Int`, `i64` for `Long`; no unsigned types.
+  - Property bags are `{String: PropValue}` (`Null | Bool | Integer | Decimal | Text`, each with
+    `value`). Analytics sink: foreign trait `AnalyticsSink.on_event(name, properties)`, installed
+    with `analytics_set_sink(Some(sink))`; screens arrive as `$screen` with `$screen_name`.
+  - Translations: `Translations.from_json({locale: {namespace: json}})`, `.translator(locale, ns)`
+    gives a `Translator` object with `t(key)` / `tv(key, vars)` / `locale()`. Functions that
+    took a `Translate` take the `Translator`.
+  - `Store` is an object: `Store.open(path)` / `Store.open_in_memory()`, synchronous methods,
+    errors as `StoreFailure` (Sqlite, Io, UnknownProfileField, NewerDatabase). No closures:
+    `save_profile_entity(entity)` + `profile_entity()` replace `saveProfile { }`;
+    `update_profile({field: value?})` is the partial save. Setting keys come from `setting_keys()`.
+  - `EmergencyAway.new(store, scheduler)`, `AlertScheduler` is a foreign trait
+    (`schedule(alerts: [ScheduledAlert])`, `cancel_all()`).
+  - Dates are `Date {year, month, day}`; `ReadoutInput.today` is a `Date`.
+  - Enum `key`s (`countdown_alert_key` ...) and consts (`search_window_seconds()`) are functions.
+  - AppClock is `app_clock_*` free functions (`app_clock_handle_link` applies the
+    `backtosafety://debug/clock` seam link); `AppReady.report(startup_ms, store, device)` and
+    `seed_and_report_migration(store)` do app_ready / data_migrated.
+  - Removed: `posthog.rs` (the apps keep their PostHog SDK) and `ureq`, and the Dioxus CLI
+    from mise.toml. `lifecycle_events`, `report_open_failure` stay in core (tested) but aren't
+    exported: the SDK sends lifecycle events itself.

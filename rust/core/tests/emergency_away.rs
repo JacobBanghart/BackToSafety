@@ -17,8 +17,8 @@ struct FakeScheduler {
 }
 
 impl AlertScheduler for FakeScheduler {
-    fn schedule(&self, alerts: &[ScheduledAlert]) {
-        *self.scheduled.lock().unwrap() = alerts.to_vec();
+    fn schedule(&self, alerts: Vec<ScheduledAlert>) {
+        *self.scheduled.lock().unwrap() = alerts;
     }
     fn cancel_all(&self) {
         self.scheduled.lock().unwrap().clear();

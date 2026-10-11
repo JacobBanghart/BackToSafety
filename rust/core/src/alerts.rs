@@ -25,7 +25,7 @@ pub fn alert_due_at_ms(alert: CountdownAlert, started_at_ms: i64) -> i64 {
 }
 
 /// An alert for the phone to deliver as a notification at `fire_at_ms`.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, uniffi::Record)]
 pub struct ScheduledAlert {
     pub alert: CountdownAlert,
     pub fire_at_ms: i64,
@@ -57,7 +57,7 @@ pub fn catch_up_alert(
 }
 
 /// How a countdown alert reached the caregiver.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Enum)]
 pub enum AlertDelivery {
     InApp,
     CatchUp,
@@ -166,7 +166,7 @@ pub fn readiness_properties(
 }
 
 /// What happened to the alert text for the alert circle (emergency_sms_result).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Enum)]
 pub enum SmsResult {
     Sent,
     Cancelled,
@@ -205,7 +205,7 @@ pub fn sms_result_properties(result: SmsResult, recipients: usize) -> Properties
 }
 
 /// Which number a dial was for (dial_failed).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Enum)]
 pub enum DialTarget {
     Emergency,
     Contact,

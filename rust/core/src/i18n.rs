@@ -16,7 +16,7 @@ static PLACEHOLDER: LazyLock<Regex> =
 pub type Vars<'a> = &'a [(&'a str, Value)];
 
 /// locale -> namespace -> parsed JSON
-#[derive(Default)]
+#[derive(Default, uniffi::Object)]
 pub struct Translations {
     resources: HashMap<String, HashMap<String, Map<String, Value>>>,
 }
@@ -63,7 +63,7 @@ impl Translations {
 }
 
 /// `t` bound to a locale and a default namespace.
-#[derive(Clone)]
+#[derive(Clone, uniffi::Object)]
 pub struct Translator {
     translations: Arc<Translations>,
     pub locale: String,

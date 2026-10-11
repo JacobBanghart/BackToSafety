@@ -54,7 +54,7 @@ pub fn app_ready_properties(
 
 /// app_ready, once per process: how long a cold start took, from the process starting to the
 /// first frame of the first screen (home or welcome), the field measure of load time.
-#[derive(Default)]
+#[derive(Default, uniffi::Object)]
 pub struct AppReady {
     reported: AtomicBool,
 }
@@ -97,6 +97,14 @@ pub fn report_data_migration(store: &Store, seeded: &Result<()>) {
         Err(e) => data_migration_failed_properties(from, duration_ms, Some(e.type_name())),
     };
     Analytics::track(AnalyticsEvent::DataMigrated, properties);
+}
+
+/// Seeds the store (the first query, which is where an older database has migrated before),
+/// then reports data_migrated for it. What the apps call once at launch.
+pub fn seed_and_report_migration(store: &Store) -> Result<()> {
+    let seeded = store.seed();
+    report_data_migration(store, &seeded);
+    seeded
 }
 
 /// `Store::open` failed at `path` after `duration_ms`. If it was migrating an older database

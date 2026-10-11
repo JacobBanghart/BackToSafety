@@ -5,36 +5,64 @@
 use crate::profile::Profile;
 use rusqlite::{Row, params};
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct ProfileEntity {
+    #[uniffi(default = 1)]
     pub id: i64,
     pub name: String,
+    #[uniffi(default = None)]
     pub nickname: Option<String>,
+    #[uniffi(default = None)]
     pub date_of_birth: Option<String>,
+    #[uniffi(default = None)]
     pub photo_uri: Option<String>,
+    #[uniffi(default = None)]
     pub height: Option<String>,
+    #[uniffi(default = None)]
     pub weight: Option<String>,
+    #[uniffi(default = None)]
     pub hair_color: Option<String>,
+    #[uniffi(default = None)]
     pub eye_color: Option<String>,
+    #[uniffi(default = None)]
     pub identifying_marks: Option<String>,
+    #[uniffi(default = None)]
     pub medical_conditions: Option<String>,
+    #[uniffi(default = None)]
     pub medications: Option<String>,
+    #[uniffi(default = None)]
     pub allergies: Option<String>,
+    #[uniffi(default = None)]
     pub cognitive_status: Option<String>,
+    #[uniffi(default = None)]
     pub dominant_hand: Option<String>,
+    #[uniffi(default = None)]
     pub mobility_level: Option<String>,
+    #[uniffi(default = None)]
     pub communication_preference: Option<String>,
+    #[uniffi(default = None)]
     pub escalation_signs: Option<String>,
+    #[uniffi(default = None)]
     pub deescalation_techniques: Option<String>,
+    #[uniffi(default = None)]
     pub approach_guidance: Option<String>,
+    #[uniffi(default = None)]
     pub likes: Option<String>,
+    #[uniffi(default = None)]
     pub dislikes_triggers: Option<String>,
+    #[uniffi(default = None)]
     pub safe_word: Option<String>,
+    #[uniffi(default = None)]
     pub locative_device_info: Option<String>,
+    #[uniffi(default = None)]
     pub id_bracelets: Option<String>,
+    #[uniffi(default = None)]
     pub medic_alert_id: Option<String>,
+    #[uniffi(default = None)]
     pub medic_alert_hotline: Option<String>,
+    #[uniffi(default = None)]
     pub created_at: Option<String>,
+    #[uniffi(default = None)]
     pub updated_at: Option<String>,
 }
 
@@ -228,20 +256,30 @@ impl ProfileEntity {
     }
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct ContactEntity {
     /// 0 until stored (the database assigns it).
+    #[uniffi(default = 0)]
     pub id: i64,
     pub name: String,
     pub phone: String,
+    #[uniffi(default = None)]
     pub relationship: Option<String>,
+    #[uniffi(default = None)]
     pub role: Option<String>,
+    #[uniffi(default = None)]
     pub address: Option<String>,
+    #[uniffi(default = true)]
     pub notify_on_emergency: bool,
+    #[uniffi(default = false)]
     pub share_medical_info: bool,
+    #[uniffi(default = None)]
     pub notes: Option<String>,
+    #[uniffi(default = 0)]
     pub sort_order: i32,
+    #[uniffi(default = None)]
     pub created_at: Option<String>,
+    #[uniffi(default = None)]
     pub updated_at: Option<String>,
 }
 
@@ -291,21 +329,33 @@ impl ContactEntity {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, uniffi::Record)]
 pub struct DestinationEntity {
     /// 0 until stored (the database assigns it).
+    #[uniffi(default = 0)]
     pub id: i64,
     pub name: String,
+    #[uniffi(default = None)]
     pub address: Option<String>,
+    #[uniffi(default = None)]
     pub latitude: Option<f64>,
+    #[uniffi(default = None)]
     pub longitude: Option<f64>,
+    #[uniffi(default = None)]
     pub category: Option<String>,
+    #[uniffi(default = None)]
     pub reason: Option<String>,
+    #[uniffi(default = None)]
     pub distance_from_home: Option<String>,
+    #[uniffi(default = None)]
     pub risk_level: Option<String>,
+    #[uniffi(default = None)]
     pub notes: Option<String>,
+    #[uniffi(default = 0)]
     pub sort_order: i32,
+    #[uniffi(default = None)]
     pub created_at: Option<String>,
+    #[uniffi(default = None)]
     pub updated_at: Option<String>,
 }
 
@@ -336,27 +386,44 @@ impl DestinationEntity {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, uniffi::Record)]
 pub struct IncidentEntity {
     /// 0 until stored (the database assigns it).
+    #[uniffi(default = 0)]
     pub id: i64,
     pub started_at: String,
+    #[uniffi(default = None)]
     pub ended_at: Option<String>,
+    #[uniffi(default = None)]
     pub outcome: Option<String>,
+    #[uniffi(default = None)]
     pub last_seen_lat: Option<f64>,
+    #[uniffi(default = None)]
     pub last_seen_lon: Option<f64>,
+    #[uniffi(default = None)]
     pub last_seen_accuracy: Option<f64>,
+    #[uniffi(default = None)]
     pub found_lat: Option<f64>,
+    #[uniffi(default = None)]
     pub found_lon: Option<f64>,
+    #[uniffi(default = None)]
     pub found_location_name: Option<String>,
+    #[uniffi(default = None)]
     pub weather: Option<String>,
+    #[uniffi(default = None)]
     pub time_of_day: Option<String>,
+    #[uniffi(default = None)]
     pub trigger_identified: Option<String>,
+    #[uniffi(default = None)]
     pub wearing: Option<String>,
     /// JSON array of checked step IDs.
+    #[uniffi(default = None)]
     pub areas_checked: Option<String>,
+    #[uniffi(default = None)]
     pub people_contacted: Option<String>,
+    #[uniffi(default = None)]
     pub notes: Option<String>,
+    #[uniffi(default = None)]
     pub created_at: Option<String>,
 }
 
@@ -392,13 +459,18 @@ impl IncidentEntity {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, uniffi::Record)]
 pub struct SafetyCheckEntity {
+    #[uniffi(default = 0)]
     pub id: i64,
+    #[uniffi(default = None)]
     pub category: Option<String>,
     pub item_key: String,
+    #[uniffi(default = false)]
     pub completed: bool,
+    #[uniffi(default = None)]
     pub completed_at: Option<String>,
+    #[uniffi(default = None)]
     pub notes: Option<String>,
 }
 
@@ -415,18 +487,23 @@ impl SafetyCheckEntity {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, uniffi::Record)]
 pub struct SettingEntity {
     pub key: String,
+    #[uniffi(default = None)]
     pub value: Option<String>,
+    #[uniffi(default = None)]
     pub updated_at: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, uniffi::Record)]
 pub struct OnboardingStepEntity {
     pub step: String,
+    #[uniffi(default = false)]
     pub completed: bool,
+    #[uniffi(default = None)]
     pub completed_at: Option<String>,
+    #[uniffi(default = false)]
     pub skipped: bool,
 }
 

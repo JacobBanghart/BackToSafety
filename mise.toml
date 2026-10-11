@@ -11,10 +11,9 @@ android-sdk = "23.0"
 # Linters (mise run lint): Kotlin and Swift. Configured by .editorconfig and .swiftformat.
 ktlint = "1.8.0"
 swiftformat = { version = "0.63.1", no_app = true, rename_exe = "swiftformat" }
-# Rust port experiment (rust/): toolchain with the Android targets, and the Dioxus CLI.
+# Rust port experiment (rust/): toolchain with the Android targets.
 rust = { version = "1.99.0", targets = "aarch64-linux-android,x86_64-linux-android" }
 cargo-binstall = "1.25.2"
-"cargo:dioxus-cli" = "0.7.10"
 
 [env]
 # Cargo's parallel jobs for the Rust port (rust/). Builds are queued one at a time across

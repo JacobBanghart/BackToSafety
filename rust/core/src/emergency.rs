@@ -8,10 +8,10 @@ use serde_json::{Map, Value, json};
 pub const SEARCH_WINDOW_SECONDS: i64 = 15 * 60;
 pub const WARNING_AT_SECONDS: i64 = 5 * 60;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct ChecklistStep {
-    pub id: &'static str,
-    pub step: usize,
+    pub id: String,
+    pub step: i32,
     pub title: String,
     pub description: String,
     pub hint: Option<String>,
@@ -41,8 +41,8 @@ pub fn build_initial_steps(t: &Translator, emergency_number: &str) -> Vec<Checkl
         .iter()
         .enumerate()
         .map(|(i, &id)| ChecklistStep {
-            id,
-            step: i + 1,
+            id: id.to_string(),
+            step: i as i32 + 1,
             title: t.tv(&format!("steps.{id}.title"), vars(id == "call_911")),
             description: t.tv(
                 &format!("steps.{id}.description"),
@@ -61,7 +61,7 @@ pub fn seconds_remaining(started_at_ms: i64, now_ms: i64) -> i64 {
     (SEARCH_WINDOW_SECONDS - elapsed).clamp(0, SEARCH_WINDOW_SECONDS)
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, uniffi::Enum)]
 pub enum CountdownAlert {
     Warning,
     Expired,
@@ -140,12 +140,13 @@ pub fn direction_hint(t: &Translator, dominant_hand: Option<&str>) -> Option<Str
 }
 
 /// The `active_emergency` settings record (spec/storage.md).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct ActiveEmergency {
     pub started_at: String,
     pub wearing: String,
     pub checked_steps: Vec<String>,
     /// The incidents row for this emergency; absent for emergencies started before it existed.
+    #[uniffi(default = None)]
     pub incident_id: Option<i64>,
 }
 
