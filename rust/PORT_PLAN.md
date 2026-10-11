@@ -47,13 +47,13 @@ from `rust-port`.
 
 | Lane | Port | Owns | Agent | Status |
 |---|---|---|---|---|
-| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | `aba6906b305d83d7a` | running: trial integration (`rust/integration`, `INTEGRATION.md`): conflicts and duplicates across lanes |
-| shell | 5556 | `main.rs` routing/startup, `ui/`, `platform/` (JNI base, edge-to-edge, dark mode, font scale, back, deeplinks + debug clock seam, keyboard) | `a6bc77f81b965afdc` | running |
-| onboarding | 5558 | `screens/onboarding.*` (name, photo, appearance, contact, complete), `platform/photo.rs` | `aa9228cf7917db373` | running |
-| home | 5560 | `screens/home.*`, `screens/settings.*` | `af899f27403815313` | running |
-| emergency | 5562 | `screens/emergency.*`, `platform/alerts.rs` (AlarmManager), SMS and dial intents | `a399373f46570d27a` | running |
-| readout | 5564 | `screens/readout.*`, `screens/profile.*` (clipboard, share) | `a409ae7037f99154b` | running |
-| contacts | 5566 | `screens/contacts.*`, `screens/destinations.*` (contact picker, reorder gestures) | `afa819db5fc29fc9f` | running |
+| data | 5570 | `core/src/store/` (rusqlite; Room v2 schema), `EmergencyAway`, analytics sink, app-level store context | `aba6906b305d83d7a` | **running**: integration lead on `rust/integration` (INTEGRATION.md, dedupe, parity on device) |
+| shell | 5556 | `main.rs` routing/startup, `ui/`, `platform/` (JNI base, edge-to-edge, dark mode, font scale, back, deeplinks + debug clock seam, keyboard) | `a6bc77f81b965afdc` | paused (2-lane limit) |
+| onboarding | 5558 | `screens/onboarding.*` (name, photo, appearance, contact, complete), `platform/photo.rs` | `aa9228cf7917db373` | paused (2-lane limit) |
+| home | 5560 | `screens/home.*`, `screens/settings.*` | `af899f27403815313` | paused (2-lane limit) |
+| emergency | 5562 | `screens/emergency.*`, `platform/alerts.rs` (AlarmManager), SMS and dial intents | `a399373f46570d27a` | **running**: device verification (states + flows) |
+| readout | 5564 | `screens/readout.*`, `screens/profile.*` (clipboard, share) | `a409ae7037f99154b` | paused (2-lane limit) |
+| contacts | 5566 | `screens/contacts.*`, `screens/destinations.*` (contact picker, reorder gestures) | `afa819db5fc29fc9f` | paused (2-lane limit) |
 
 The orchestrator uses port 5554.
 
