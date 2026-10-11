@@ -84,14 +84,17 @@ The Mac:
 ## Repository
 
 ```
-core/         Rust core (UniFFI): store, migrations, protocol, readout, i18n, analytics
-android/app/   Compose app
-ios/       SwiftUI app (project.yml -> Xcode project)
-spec/             Contracts both apps meet: tokens, events, testIDs, schema, vectors, goldens
-maestro/          Device flows, screenshot fidelity, upgrade and gesture tests
-i18n/locales/     Strings for both apps
-site/             Public website and privacy policy (GitHub Pages)
-docs/             Release, signing, store and product docs
+core/          Rust core (UniFFI): store, migrations, protocol, readout, i18n, analytics
+android/       Android app (Jetpack Compose; Gradle project, module app/)
+ios/           iOS app (SwiftUI; project.yml -> Xcode project)
+spec/          Contracts both apps meet: tokens, events, testIDs, schema, vectors, goldens
+maestro/       Device flows, screenshot fidelity, upgrade and gesture tests
+i18n/locales/  Strings for both apps
+assets/        Shared images
+mise-tasks/    Every dev command (`mise tasks`)
+scripts/       Dev-box tooling: build queue, emulators, measurements, secret scan
+site/          Public website and privacy policy (GitHub Pages)
+docs/          Architecture, decisions, release, signing, store and product docs
 ```
 
 ## Releases

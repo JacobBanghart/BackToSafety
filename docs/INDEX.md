@@ -3,8 +3,8 @@
 ## Getting Started
 
 - [README.md](../README.md): project overview, setup and commands
-- [ARCHITECTURE.md](./ARCHITECTURE.md): the shared Kotlin core, the Compose and SwiftUI apps, contracts and harness
-- [PARITY_PLAN.md](../PARITY_PLAN.md): how the native apps were held to the React Native app they replaced
+- [ARCHITECTURE.md](./ARCHITECTURE.md): the Rust core, the Compose and SwiftUI apps, contracts and harness
+- [decisions/rust-core.md](./decisions/rust-core.md): why the shared core is Rust, with the measurements
 - [maestro/README.md](../maestro/README.md): device flows, screenshot fidelity, upgrade tests
 
 ## Product
@@ -24,6 +24,11 @@
 
 - [privacy-policy.md](./privacy-policy.md)
 - [google-play-listing-template.md](./google-play-listing-template.md)
+
+## History
+
+- [history/PARITY_PLAN.md](./history/PARITY_PLAN.md): how the native apps were held to the React Native app they replaced
+- [history/RUST_CORE_PORT_LOG.md](./history/RUST_CORE_PORT_LOG.md): the full log of the move from Kotlin Multiplatform to Rust
 
 ## Planning and Notes
 

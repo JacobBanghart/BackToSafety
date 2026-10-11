@@ -1,6 +1,6 @@
 # Maestro parity harness
 
-The device side of `PARITY_PLAN.md`. The same YAML drives the Android (Compose) and iOS
+The device side of `docs/history/PARITY_PLAN.md`. The same YAML drives the Android (Compose) and iOS
 (SwiftUI) apps, so it selects **only by testID** (`spec/testids.json`), never by coordinates. It matches visible text only where the text is the thing
 being tested.
 
