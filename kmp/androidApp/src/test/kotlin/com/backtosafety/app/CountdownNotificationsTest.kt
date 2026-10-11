@@ -9,10 +9,10 @@ import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.emergency.CountdownAlertReceiver
 import com.backtosafety.app.emergency.CountdownNotifications
-import com.backtosafety.core.AppClock
-import com.backtosafety.core.CountdownAlert
-import com.backtosafety.core.ScheduledAlert
-import com.backtosafety.core.Translations
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.core.ffi.CountdownAlert
+import com.backtosafety.core.ffi.ScheduledAlert
+import com.backtosafety.app.core.Translations
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

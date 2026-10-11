@@ -2,6 +2,8 @@ import groovy.json.JsonSlurper
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -16,14 +18,21 @@ abstract class GenerateDesignTokens : DefaultTask() {
 
     @get:OutputDirectory abstract val outputDir: DirectoryProperty
 
+    /** The generated file's package (androidApp keeps it in its own: com.backtosafety.app.core). */
+    @get:Input abstract val packageName: Property<String>
+
+    init {
+        packageName.convention("com.backtosafety.core")
+    }
+
     @TaskAction
     fun generate() {
         @Suppress("UNCHECKED_CAST")
         val tokens = JsonSlurper().parse(spec.get().asFile) as Map<String, Any>
         val out = StringBuilder()
-        out.appendLine("package com.backtosafety.core")
+        out.appendLine("package ${packageName.get()}")
         out.appendLine()
-        out.appendLine("// Generated from spec/design-tokens.json by :shared:generateDesignTokens. Do not edit.")
+        out.appendLine("// Generated from spec/design-tokens.json by generateDesignTokens. Do not edit.")
         out.appendLine()
         out.appendLine("object DesignTokens {")
 
@@ -59,7 +68,7 @@ abstract class GenerateDesignTokens : DefaultTask() {
         out.appendLine("    }")
         out.appendLine("}")
 
-        val dir = outputDir.get().asFile.resolve("com/backtosafety/core")
+        val dir = outputDir.get().asFile.resolve(packageName.get().replace('.', '/'))
         dir.mkdirs()
         dir.resolve("DesignTokens.kt").writeText(out.toString())
     }

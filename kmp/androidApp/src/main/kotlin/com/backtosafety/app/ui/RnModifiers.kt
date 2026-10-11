@@ -44,11 +44,11 @@ val Int.udp: Dp
 /** onboarding_step_viewed when a step's screen appears (each onboarding screen's mount effect). */
 @androidx.compose.runtime.Composable
 fun TrackStepViewed(step: String) = androidx.compose.runtime.LaunchedEffect(Unit) {
-    com.backtosafety.core.Analytics.track(com.backtosafety.core.AnalyticsEvent.ONBOARDING_STEP_VIEWED, mapOf("step" to step))
+    com.backtosafety.app.core.Analytics.track(com.backtosafety.core.ffi.AnalyticsEvent.ONBOARDING_STEP_VIEWED, mapOf("step" to step))
 }
 
 /** onboarding_step_completed / _skipped. */
-fun trackStep(completed: Boolean, step: String) = com.backtosafety.core.Analytics.track(
-    if (completed) com.backtosafety.core.AnalyticsEvent.ONBOARDING_STEP_COMPLETED else com.backtosafety.core.AnalyticsEvent.ONBOARDING_STEP_SKIPPED,
+fun trackStep(completed: Boolean, step: String) = com.backtosafety.app.core.Analytics.track(
+    if (completed) com.backtosafety.core.ffi.AnalyticsEvent.ONBOARDING_STEP_COMPLETED else com.backtosafety.core.ffi.AnalyticsEvent.ONBOARDING_STEP_SKIPPED,
     mapOf("step" to step),
 )

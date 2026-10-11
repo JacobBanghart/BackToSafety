@@ -16,7 +16,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.backtosafety.core.DesignTokens
+import com.backtosafety.app.core.DesignTokens
 
 /** components/AppCard.tsx: card background, 1dp border, radius lg, padding lg, margin below md. */
 @Composable

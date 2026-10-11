@@ -25,12 +25,12 @@ import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
-import com.backtosafety.core.DesignTokens
-import com.backtosafety.core.Translate
-import com.backtosafety.core.data.Store
-import com.backtosafety.core.formatHeightInput
-import com.backtosafety.core.formatWeightInput
-import com.backtosafety.core.invoke
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Store
+import com.backtosafety.core.ffi.formatHeightInput
+import com.backtosafety.core.ffi.formatWeightInput
+import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 /** Port of app/onboarding/appearance.tsx. */

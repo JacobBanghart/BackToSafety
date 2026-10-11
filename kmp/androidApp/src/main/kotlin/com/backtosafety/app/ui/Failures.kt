@@ -4,14 +4,15 @@ import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.DialTarget
-import com.backtosafety.core.Translate
-import com.backtosafety.core.dialFailedProperties
-import com.backtosafety.core.formatPhoneNumber
-import com.backtosafety.core.invoke
-import com.backtosafety.core.saveFailedProperties
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.core.ffi.AnalyticsEvent
+import com.backtosafety.core.ffi.DialTarget
+import com.backtosafety.app.core.Translate
+import com.backtosafety.core.ffi.dialFailedProperties
+import com.backtosafety.core.ffi.formatPhoneNumber
+import com.backtosafety.app.core.analyticsTypeName
+import com.backtosafety.app.core.invoke
+import com.backtosafety.core.ffi.saveFailedProperties
 
 /**
  * Opens the phone app at [number]. A device with no phone app (most tablets) can't: then it
@@ -33,4 +34,4 @@ fun dial(context: Context, number: String, target: DialTarget, screen: String, t
 
 /** save_failed: a write to the store failed and the user saw an error. */
 fun reportSaveFailed(screen: String, action: String, error: Throwable) =
-    Analytics.track(AnalyticsEvent.SAVE_FAILED, saveFailedProperties(screen, action, error::class.simpleName))
+    Analytics.track(AnalyticsEvent.SAVE_FAILED, saveFailedProperties(screen, action, error.analyticsTypeName()))

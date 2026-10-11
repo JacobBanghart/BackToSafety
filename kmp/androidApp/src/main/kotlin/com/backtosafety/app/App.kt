@@ -4,7 +4,6 @@ import android.Manifest
 import android.graphics.Path
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
-import android.os.SystemClock
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.PathInterpolator
 import androidx.activity.compose.LocalActivity
@@ -58,14 +57,12 @@ import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.trackStep
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.EmergencyAway
-import com.backtosafety.core.Translations
-import com.backtosafety.core.data.Store
-import com.backtosafety.core.db.DatabaseOpen
-import com.backtosafety.core.db.dataMigrationFailedProperties
-import com.backtosafety.core.invoke
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.core.ffi.AnalyticsEvent
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.invoke
 import com.posthog.PostHog
 import kotlinx.coroutines.launch
 
@@ -132,21 +129,8 @@ fun App(store: Store, translations: Translations, modifier: Modifier, openEmerge
     }
     val away = remember(store) { EmergencyAway(store, notifications) }
     LaunchedEffect(Unit) {
-        // The first query migrates a database the RN app left (data_migrated).
-        val migratingFrom = DatabaseOpen.migratingFrom
-        val migrationStart = SystemClock.elapsedRealtime()
-        val seeded = runCatching { store.seed() }
-        if (migratingFrom != null) {
-            val durationMs = SystemClock.elapsedRealtime() - migrationStart
-            Analytics.track(
-                AnalyticsEvent.DATA_MIGRATED,
-                seeded.fold(
-                    { store.dataMigratedProperties(migratingFrom, durationMs) },
-                    { dataMigrationFailedProperties(migratingFrom, durationMs, it::class.simpleName) },
-                ),
-            )
-        }
-        seeded.getOrThrow()
+        // Seeds, and reports data_migrated if opening migrated a database the RN app left.
+        store.seed()
         // The device is the analytics identity (as on iOS).
         runCatching { store.deviceId() }.onSuccess { if (BuildConfig.POSTHOG_KEY.isNotEmpty()) PostHog.identify(it) }
         themePreference = store.setting(Store.THEME_PREFERENCE) ?: "system"

@@ -21,7 +21,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import com.backtosafety.core.DesignTokens
+import com.backtosafety.app.core.DesignTokens
 
 // Pieces the contacts and places screens share (their RN styles are identical).
 

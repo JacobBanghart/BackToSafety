@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.udp
-import com.backtosafety.core.DesignTokens
+import com.backtosafety.app.core.DesignTokens
 
 /**
  * An onboarding step: scrolling content above a footer that stays above the keyboard

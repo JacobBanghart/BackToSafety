@@ -71,13 +71,13 @@ import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.DesignTokens
-import com.backtosafety.core.Translate
-import com.backtosafety.core.data.Store
-import com.backtosafety.core.db.DestinationEntity
-import com.backtosafety.core.invoke
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.core.ffi.AnalyticsEvent
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Store
+import com.backtosafety.core.ffi.DestinationEntity
+import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 private val space = DesignTokens.Spacing
