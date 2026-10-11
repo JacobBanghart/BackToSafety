@@ -84,3 +84,64 @@ Each agent appends its notes here.
   `core/uniffi.toml` (Kotlin package `com.backtosafety.core`), `mise run rust:bindings`
   (Kotlin into `$BINDINGS_OUT`, default `$CARGO_TARGET_DIR/bindings/kotlin`). The only export
   so far is `core_version()`. Next: M2, the full API.
+
+### ffi-ios notes
+
+**2026-10-10, phase 3 (pipeline) done and checked on the Mac.**
+
+- `mise run ios:rust` (Mac only; `mise run ios:remote ios:rust` from here) builds `nijii-core`
+  as a staticlib for `aarch64-apple-ios` and `aarch64-apple-ios-sim` (`cargo rustc --crate-type
+  staticlib`, so Android's cdylib setting is untouched), runs the workspace `uniffi-bindgen`
+  in library mode for Swift, and packages `kmp/iosApp/RustCore/` (gitignored):
+  `NijiiCore.xcframework`, `Generated/NijiiCore.swift`, `include/` (header + `module.modulemap`,
+  module `NijiiCoreFFI`). Output is replaced only when it changed, so Xcode doesn't relink for
+  nothing. Cold build 1 to 2 minutes on the Mac, incremental seconds.
+- Swift module name is set in `rust/core/uniffi.toml` (`[bindings.swift] module_name =
+  "NijiiCore"`): the generated Swift is compiled into the app target, the C module is
+  `NijiiCoreFFI`; nothing clashes with `Shared`.
+- `kmp/iosApp/project.yml`: a "Build the Rust core" pre-build phase before the Gradle one
+  (declares its output file), `RustCore/Generated` as sources, `-lnijii_core`, and
+  `LIBRARY_SEARCH_PATHS` per SDK into the xcframework's slices (Xcode resolves a referenced
+  `.xcframework` before any build phase runs, so a fresh checkout would fail; reading the
+  slices in place avoids that). `SWIFT_INCLUDE_PATHS` for the app and the test target.
+  `maestro/build-ios.sh` runs `ios:rust` before `xcodegen`, because the project lists the
+  generated file.
+- Evidence: `xcodebuild test -only-testing:BackToSafetyTests/RustCoreTests` on an iPhone
+  simulator passes (`coreVersion()` called through the UniFFI bindings from the running app);
+  a generic iOS (device) build compiles and links. `BackToSafetyTests/RustCoreTests.swift` is
+  the smoke test.
+- `ios:remote` now protects `kmp/iosApp/RustCore/` from rsync `--delete` (the ignore filter
+  didn't), and `build-tests/` is gitignored.
+- `mise.toml`: rust targets now include the two iOS ones (and `cargo:dioxus-cli` is still
+  installed although the WebView app is shelved; the orchestrator may drop it).
+- `kmp/iosApp/generate-design-tokens.py` writes `Generated/DesignTokens.swift` from
+  `spec/design-tokens.json` with the same shape the Kotlin framework exported
+  (`DesignTokens.Light.shared.text`, `Type_`, ...), so `Theme.swift` and `RNText.swift` don't
+  change. Not in `project.yml` yet: it would clash with `Shared.DesignTokens` until the switch.
+
+**Phase 4 plan (starts when the full API lands).** Adapters in `iosApp/BackToSafety/Core/`:
+`Analytics.shared.track(event:properties:)` (47 call sites) and `.screen`, `AppClock.shared`
+(`nowMs`, `freeze`, `advance`, `testSeamsEnabled`), `Translate`/translations lookup, the
+`EmergencyAway` + `AlertNotificationCenter` bridge, `Store` calls. Then drop `import Shared`
+from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: Store (about
+40 methods), `AppClock`, `Analytics`, `AnalyticsEvent`, `EmergencyAway`, `DatabaseBuilder_iosKt`
+(`openStore`, `openStoreAt`), and the top-level functions in `PhoneKt`, `EmergencyKt`,
+`ReadoutKt`, `MobilityKt`, `FormattersKt`, `AgeKt`, `EmergencyAlertsKt`, `AppDatabaseKt`.
+
+**ffi-ios requests (for ffi-android's API):**
+
+1. Export `Store` methods as `async` where the Kotlin ones are `suspend` (Swift awaits them
+   today; UniFFI async maps to `async throws`). Errors as a `#[uniffi::Error]` enum, not panics.
+2. Analytics sink as a foreign callback interface taking the wire name plus properties. PostHog
+   wants `[String: Any]`, so a small `PropertyValue` enum (string, int, double, bool, null; lists
+   and maps if the Kotlin properties use them) is easiest; I convert it in the adapter. The
+   event enum `AnalyticsEvent` should be exported (the Swift call sites pass `.appReady`).
+3. `AppClock` (`now_ms`, `freeze`, `advance`, `test_seams_enabled`) exported as functions or a
+   global object, shared by Store and EmergencyAway inside the core, so a frozen clock in the
+   UI freezes the core's too.
+4. `open_store(path)` taking an explicit path; iOS computes `<Documents>/SQLite/nijii.db`
+   itself (same as `DatabaseBuilder.ios.kt`) and creates the directory.
+5. The constants Swift reads as globals (`SEARCH_WINDOW_SECONDS`, `MOBILITY_OPTIONS`,
+   `MOBILITY_OPTION_KEYS`, `Analytics.SCREEN`) as exported functions or consts.
+6. Optional numbers and the `KotlinInt`-style boxing: please export `Option<i32>` and friends
+   plainly; Swift then sees `Int32?`.
