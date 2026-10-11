@@ -1,6 +1,5 @@
 import AudioToolbox
 import MessageUI
-import Shared
 import SwiftUI
 
 private enum EmergencyModal: Identifiable {
@@ -28,7 +27,7 @@ struct EmergencyView: View {
     @State private var checked: Set<String> = []
     @State private var wearing = ""
     @State private var showWearing = true
-    @State private var secondsLeft: Int32 = EmergencyKt.SEARCH_WINDOW_SECONDS
+    @State private var secondsLeft: Int32 = searchWindowSeconds()
     @State private var profile: Profile?
     @State private var destinations: [DestinationEntity] = []
     @State private var modal: EmergencyModal?
@@ -71,7 +70,7 @@ struct EmergencyView: View {
                     case .cancelled: .cancelled
                     default: .failed
                     }
-                    Analytics.shared.track(event: .emergencySmsResult, properties: EmergencyAlertsKt.smsResultProperties(
+                    Analytics.shared.track(event: .emergencySmsResult, properties: smsResultProperties(
                         result: outcome, recipients: Int32(draft.recipients.count)
                     ))
                 }
@@ -90,7 +89,7 @@ struct EmergencyView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.lg) {
                         timerCard
-                        if let hint = EmergencyKt.directionHint(t: t.lookup, dominantHand: profile?.dominantHand) {
+                        if let hint = directionHint(t: t.translator, dominantHand: profile?.dominantHand) {
                             RNText(hint, Typography.bodyBold.spec, color: Color(argb: Primary.c800))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(Space.md + 1)
@@ -117,7 +116,7 @@ struct EmergencyView: View {
 
     /// Load or start the emergency (spec/storage.md: active_emergency, incidents).
     private func load() async {
-        steps = EmergencyKt.buildInitialSteps(t: t.lookup, emergencyNumber: emergencyNumber)
+        steps = buildInitialSteps(t: t.translator, emergencyNumber: emergencyNumber)
         profile = try? await model.store.profile()
         destinations = (try? await model.store.destinations()) ?? []
         if let saved = try? await model.store.activeEmergency() {
@@ -129,12 +128,12 @@ struct EmergencyView: View {
             let incidentId = try? await model.store.createIncident(startedAt: startedAt)
             Analytics.shared.track(event: .emergencyStarted, properties: [:])
             let started = ActiveEmergency(startedAt: startedAt, wearing: "", checkedSteps: [], incidentId: incidentId)
-            _ = try? await model.store.saveActiveEmergency(e: started)
+            _ = try? await model.store.saveActiveEmergency(emergency: started)
             UINotificationFeedbackGenerator().notificationOccurred(.warning)
             state = started
         }
         if let started = state.flatMap({ parseISO($0.startedAt) }) {
-            secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
+            secondsLeft = secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
             if secondsLeft <= 0 { UINotificationFeedbackGenerator().notificationOccurred(.error) }
         }
     }
@@ -144,7 +143,7 @@ struct EmergencyView: View {
     private func tickCountdown() {
         guard visible, scenePhase != .background, secondsLeft > 0, let started = state.flatMap({ parseISO($0.startedAt) }) else { return }
         let now = AppClock.shared.nowMs()
-        let next = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: now)
+        let next = secondsRemaining(startedAtMs: started.epochMs, nowMs: now)
         for alert in model.away.inAppAlerts(prevSecondsLeft: secondsLeft, nextSecondsLeft: next, nowMs: now) {
             buzz(alert)
         }
@@ -164,24 +163,24 @@ struct EmergencyView: View {
     /// catch-up's, not the tick's), and an alert that came due shows.
     private func shown() {
         if let started = state.flatMap({ parseISO($0.startedAt) }) {
-            secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
+            secondsLeft = secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
         }
         Task {
-            guard let alert = try? await model.away.shown(nowMs: AppClock.shared.nowMs()) else { return }
+            guard let alert = try? model.away.shown(nowMs: AppClock.shared.nowMs()) else { return }
             buzz(alert)
             modal = alert == .warning ? .catchUpWarning : .catchUpExpired
         }
     }
 
     private func away() {
-        Task { _ = try? await model.away.left(nowMs: AppClock.shared.nowMs()) }
+        Task { _ = try? model.away.left(nowMs: AppClock.shared.nowMs()) }
     }
 
     /// Persists wearing and checked steps as they change.
     private func persist() {
         guard let state else { return }
         let saved = ActiveEmergency(startedAt: state.startedAt, wearing: wearing, checkedSteps: checkedIds, incidentId: state.incidentId)
-        Task { _ = try? await model.store.saveActiveEmergency(e: saved) }
+        Task { _ = try? await model.store.saveActiveEmergency(emergency: saved) }
     }
 
     private var checkedIds: [String] { steps.map(\.id).filter(checked.contains) }
@@ -224,13 +223,13 @@ struct EmergencyView: View {
 
     private func endedProperties() -> [String: Any] {
         let started = state.flatMap { parseISO($0.startedAt) }?.epochMs ?? AppClock.shared.nowMs()
-        return EmergencyAlertsKt.emergencyEndedProperties(startedAtMs: started, nowMs: AppClock.shared.nowMs(), checkedCount: Int32(checked.count))
+        return emergencyEndedProperties(startedAtMs: started, nowMs: AppClock.shared.nowMs(), checkedCount: Int32(checked.count))
     }
 
     private func call911() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         Analytics.shared.track(event: .emergency911Called, properties: [
-            "seconds_elapsed": EmergencyKt.SEARCH_WINDOW_SECONDS - secondsLeft, "checked_count": checked.count,
+            "seconds_elapsed": searchWindowSeconds() - secondsLeft, "checked_count": checked.count,
         ])
         // Calling always marks the step done; a second call must not un-check it (F-17).
         if !checked.contains("call_911") { toggle("call_911") }
@@ -241,16 +240,16 @@ struct EmergencyView: View {
     private func alertContacts() {
         Task {
             let contacts = (try? await model.store.emergencyContacts()) ?? []
-            let recipients = PhoneKt.normalizeUniqueSmsRecipients(phones: contacts.map(\.phone))
+            let recipients = normalizeUniqueSmsRecipients(phones: contacts.map(\.phone))
             if recipients.isEmpty { modal = .noContacts; return }
             guard MFMessageComposeViewController.canSendText(), let state, let started = parseISO(state.startedAt) else {
-                Analytics.shared.track(event: .emergencySmsResult, properties: EmergencyAlertsKt.smsResultProperties(
+                Analytics.shared.track(event: .emergencySmsResult, properties: smsResultProperties(
                     result: .unavailable, recipients: Int32(recipients.count)
                 ))
                 modal = .smsError
                 return
             }
-            let body = EmergencyKt.buildAlertSms(t: t.lookup, name: profile?.name, startedTime: localeTime(started.epochMs), wearing: wearing)
+            let body = buildAlertSms(t: t.translator, name: profile?.name, startedTime: localeTime(started.epochMs), wearing: wearing)
             sms = SmsDraft(recipients: recipients, body: body)
         }
     }
@@ -265,7 +264,7 @@ struct EmergencyView: View {
             RNText((expired ? t("timer.labelExpired", ["emergencyNumber": emergencyNumber]) : t("timer.labelActive")).uppercased(),
                    Typography.caption.spec.weight(600).spacing(1), color: .white.opacity(0.75))
                 .accessibilityIdentifier("emergency-timer-label")
-            RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 60, lineHeight: 72, weight: 700, letterSpacing: 2), color: white)
+            RNText(formatCountdown(seconds: secondsLeft), TextSpec(size: 60, lineHeight: 72, weight: 700, letterSpacing: 2), color: white)
                 .accessibilityIdentifier("emergency-timer")
             RNText(expired ? t("timer.hintExpired", ["emergencyNumber": emergencyNumber]) : t("timer.hintActive"),
                    Typography.body.spec, color: .white.opacity(0.9), align: .center)
@@ -414,7 +413,7 @@ struct EmergencyView: View {
                                         .background(RoundedRectangle(cornerRadius: Radius.sm).fill(error))
                                 }
                             }
-                            RNText(step.description_, TextSpec(size: 16, lineHeight: 20), color: colors.textSecondary)
+                            RNText(step.description, TextSpec(size: 16, lineHeight: 20), color: colors.textSecondary)
                             if let hint = step.hint {
                                 RNText("💡 \(hint)", Typography.caption.spec.italic(), color: Color(argb: Primary.c600))
                             }

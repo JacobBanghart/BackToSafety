@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 import UIKit
 
@@ -141,10 +140,10 @@ struct DestinationsView: View {
                     sortOrder: edit?.sortOrder ?? 0, createdAt: edit?.createdAt, updatedAt: edit?.updatedAt
                 )
                 if edit != nil {
-                    try await model.store.updateDestination(d: entity)
+                    try await model.store.updateDestination(destination: entity)
                 } else {
                     let next = (places ?? []).map { Int($0.sortOrder) }.max().map { $0 + 1 } ?? 0
-                    _ = try await model.store.addDestination(d: entity, sortOrder: KotlinInt(int: Int32(next)))
+                    _ = try await model.store.addDestination(destination: entity, sortOrder: Int32(next))
                 }
                 Analytics.shared.track(event: .destinationSaved, properties: [
                     "is_edit": edit != nil, "category": f.category, "risk_level": f.riskLevel,

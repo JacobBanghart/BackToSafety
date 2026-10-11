@@ -1,4 +1,3 @@
-import Shared
 import UIKit
 
 /// Opens the phone app at `number`. A device that can't place calls (an iPad without an
@@ -10,9 +9,9 @@ func dial(_ number: String, target: DialTarget, screen: String, tCommon: Transla
     UIApplication.shared.open(url) { opened in
         guard !opened else { return }
         Task { @MainActor in
-            Analytics.shared.track(event: .dialFailed, properties: EmergencyAlertsKt.dialFailedProperties(target: target, screen: screen))
+            Analytics.shared.track(event: .dialFailed, properties: dialFailedProperties(target: target, screen: screen))
             presentAlert(title: tCommon("callUnavailable.title"),
-                         message: tCommon("callUnavailable.message", ["number": PhoneKt.formatPhoneNumber(phone: number)]),
+                         message: tCommon("callUnavailable.message", ["number": formatPhoneNumber(phone: number)]),
                          ok: tCommon("ok"))
         }
     }
@@ -20,17 +19,21 @@ func dial(_ number: String, target: DialTarget, screen: String, tCommon: Transla
 
 /// save_failed: a write to the store failed and the user saw an error.
 func reportSaveFailed(screen: String, action: String, error: Error) {
-    Analytics.shared.track(event: .saveFailed, properties: EmergencyAlertsKt.saveFailedProperties(
+    Analytics.shared.track(event: .saveFailed, properties: saveFailedProperties(
         screen: screen, action: action, errorType: errorType(error)
     ))
 }
 
-/// An error's type name: the Kotlin exception's, for one thrown by the shared core.
+/// An error's type name (never its message, which could hold what was typed): the core's
+/// StoreError type names for a StoreFailure.
 func errorType(_ error: Error) -> String {
-    if let kotlin = (error as NSError).userInfo["KotlinException"] {
-        return String(describing: type(of: kotlin))
+    switch error as? StoreFailure {
+    case .Sqlite: "SqliteError"
+    case .Io: "IoError"
+    case .UnknownProfileField: "UnknownProfileField"
+    case .NewerDatabase: "NewerDatabase"
+    case nil: String(describing: type(of: error))
     }
-    return String(describing: type(of: error))
 }
 
 /// A system alert over whatever is showing, modals included.

@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 import UIKit
 
@@ -169,7 +168,7 @@ struct SettingsView: View {
             do {
                 try await model.store.clearAllData()
                 Analytics.shared.track(event: .settingsAccountDeleted, properties: [:])
-                _ = try? await model.away.ended()
+                _ = try? model.away.ended()
                 model.onboarded = false
                 model.path = []
             } catch {

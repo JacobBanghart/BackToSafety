@@ -1,6 +1,5 @@
 import Foundation
 import PostHog
-import Shared
 
 /// The same PostHog options as the Android app. The key comes from
 /// POSTHOG_KEY at build time; without one (dev and test builds) nothing is set up

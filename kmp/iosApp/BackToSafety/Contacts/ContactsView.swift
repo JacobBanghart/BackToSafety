@@ -1,5 +1,4 @@
 import Contacts
-import Shared
 import SwiftUI
 import UIKit
 
@@ -39,7 +38,7 @@ private struct ContactForm: Equatable {
 
 /// The key two numbers share when they're the same contact (contacts.tsx toPhoneKey).
 private func phoneKey(_ phone: String) -> String {
-    let n = PhoneKt.normalizeSmsRecipient(phone: phone)
+    let n = normalizeSmsRecipient(phone: phone)
     return n.hasPrefix("+") ? String(n.dropFirst()) : n
 }
 
@@ -124,10 +123,10 @@ struct ContactsView: View {
                     sortOrder: edit?.sortOrder ?? 0, createdAt: edit?.createdAt, updatedAt: edit?.updatedAt
                 )
                 if edit != nil {
-                    try await model.store.updateContact(c: entity)
+                    try await model.store.updateContact(contact: entity)
                 } else {
                     let next = (contacts ?? []).map { Int($0.sortOrder) }.max().map { $0 + 1 } ?? 0
-                    _ = try await model.store.addContact(contact: entity, sortOrder: KotlinInt(int: Int32(next)))
+                    _ = try await model.store.addContact(contact: entity, sortOrder: Int32(next))
                 }
                 Analytics.shared.track(event: .contactSaved, properties: [
                     "is_edit": edit != nil, "role": f.role, "notify_on_emergency": f.notifyOnEmergency,
@@ -195,7 +194,7 @@ struct ContactsView: View {
         let existing = Set((contacts ?? []).map { phoneKey($0.phone) }.filter { !$0.isEmpty })
         if existing.contains(phoneKey(phone)) { return showError(validation: true, t("errors.duplicatePhone")) }
         Analytics.shared.track(event: .contactImported, properties: [:])
-        open(nil, ContactForm(name: name, phone: PhoneKt.formatPhoneInput(value: phone)))
+        open(nil, ContactForm(name: name, phone: formatPhoneInput(value: phone)))
     }
 
     private func add() {
@@ -360,7 +359,7 @@ struct ContactsView: View {
                               placeholder: t("form.namePlaceholder"), required: true, capitalization: .words)
                 FormTextInput(label: t("form.phoneLabel"), text: $form.phone, testID: "contacts-form-phone",
                               placeholder: t("form.phonePlaceholder"), required: true, keyboard: .phonePad,
-                              format: { PhoneKt.formatPhoneInput(value: $0) })
+                              format: { formatPhoneInput(value: $0) })
                 FormTextInput(label: t("form.relationshipLabel"), text: $form.relationship, testID: "contacts-form-relationship",
                               placeholder: t("form.relationshipPlaceholder"))
                 FormTextInput(label: t("form.addressLabel"), text: $form.address, testID: "contacts-form-address",

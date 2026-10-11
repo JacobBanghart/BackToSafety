@@ -1,12 +1,5 @@
-import Shared
 import SwiftUI
 import UserNotifications
-
-/// Looks up a translated string: `t("key")` or `t("key", ["name": value])` (shared/I18n.kt).
-struct Translate {
-    let lookup: (String, [String: Any]) -> String
-    func callAsFunction(_ key: String, _ vars: [String: Any] = [:]) -> String { lookup(key, vars) }
-}
 
 /// The screens, as the RN app's routes.
 enum Route: Hashable {
@@ -25,35 +18,28 @@ final class AppModel: ObservableObject {
     @Published var themePreference = "system"
     @Published var language = "en"
     @Published var path: [Route] = []
-    /// The countdown alerts on and off the emergency screen (shared EmergencyAway).
+    /// The countdown alerts on and off the emergency screen (the core's EmergencyAway).
     private(set) lazy var away = EmergencyAway(store: store, scheduler: CountdownNotifications(
         emergencyT: { [unowned self] in t("emergency") },
         emergencyNumber: { [unowned self] in t("common")("emergencyNumber") }
     ))
 
-    init(store: Store = DatabaseBuilder_iosKt.openStore()) {
+    init(store: Store = openAppStore()) {
         self.store = store
     }
 
     func t(_ namespace: String, in language: String? = nil) -> Translate {
-        Translate(lookup: translations.translator(locale: language ?? self.language, namespace: namespace))
+        Translate(translator: translations.translator(locale: language ?? self.language, namespace: namespace))
     }
 
     func load() async {
         AppClock.shared.testSeamsEnabled = testSeams
-        // The first query migrates a database the RN app left (data_migrated).
-        let migratingFrom = DatabaseOpen.shared.migratingFrom?.int32Value
-        let migrationStart = Date()
-        var seedError: Error?
-        do { try await store.seed() } catch { seedError = error }
-        if let migratingFrom {
-            let durationMs = Int64(Date().timeIntervalSince(migrationStart) * 1000)
-            let properties = if let seedError {
-                AppDatabaseKt.dataMigrationFailedProperties(fromVersion: migratingFrom, durationMs: durationMs, errorType: errorType(seedError))
-            } else {
-                (try? await store.dataMigratedProperties(fromVersion: migratingFrom, durationMs: durationMs)) ?? [:]
+        // Seeds, and reports data_migrated if opening migrated a database the RN app left.
+        let store = store
+        try? await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            DispatchQueue.global(qos: .userInitiated).async {
+                continuation.resume(with: Result { try seedAndReportMigration(store: store) })
             }
-            Analytics.shared.track(event: .dataMigrated, properties: properties)
         }
         // The device is the analytics identity (as on Android).
         if let deviceId = try? await store.deviceId() { identifyAnalytics(deviceId) }
@@ -61,7 +47,7 @@ final class AppModel: ObservableObject {
         // Spanish only in debug builds until it ships.
         let saved = try? await store.setting(key: "language_preference")
         language = saved == "es" && (isDebug || shippedLanguages.contains("es")) ? "es" : "en"
-        onboarded = (try? await store.isOnboarded())?.boolValue ?? false
+        onboarded = (try? await store.isOnboarded()) ?? false
     }
 
     /// A tapped countdown alert: opens the emergency, if it's still running.
@@ -75,14 +61,14 @@ final class AppModel: ObservableObject {
     /// Notifications for the countdown alerts: asked for once, on home after onboarding. Not
     /// in test builds, where the system dialog would sit over the flows.
     func askForNotificationsOnce() async {
-        guard !testSeams, (try? await away.shouldAskForNotifications())?.boolValue == true else { return }
+        guard !testSeams, (try? away.shouldAskForNotifications()) == true else { return }
         let granted = (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
-        _ = try? await away.notificationsAnswered(granted: granted)
+        _ = try? away.notificationsAnswered(granted: granted)
     }
 
-    /// app_ready's readiness properties: what's stored, and whether alerts can be shown.
-    func readiness() async -> [String: Any] {
-        var properties = (try? await store.readinessProperties()) ?? [:]
+    /// app_ready's device properties: whether alerts can be shown (the core adds what's stored).
+    func deviceProperties() async -> [String: Any] {
+        var properties: [String: Any] = [:]
         let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
         properties["notifications_enabled"] = status == .authorized || status == .provisional || status == .ephemeral
         return properties
@@ -111,7 +97,7 @@ final class AppModel: ObservableObject {
             }
             resources[locale] = namespaces
         }
-        return Translations.companion.fromJson(resources: resources)
+        return Translations.fromJson(files: resources)
     }
 }
 
@@ -131,7 +117,7 @@ struct BackToSafetyApp: App {
     @StateObject private var model = AppModel()
 
     init() {
-        AppReady.noteAppInit()
+        LaunchReport.noteAppInit()
         setUpAnalytics()
         // Before launch finishes, so a tap on an alert that launched the app arrives.
         UNUserNotificationCenter.current().delegate = NotificationDelegate.shared
@@ -154,15 +140,7 @@ struct BackToSafetyApp: App {
     /// app/debug/clock.tsx: backtosafety://debug/clock?at=<ISO time> freezes the clock,
     /// ?advance=<seconds> moves it forward. Ignored unless built with TEST_SEAMS.
     private func handleTestSeam(_ url: URL) {
-        guard url.host == "debug", url.path == "/clock",
-              let items = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems else { return }
-        if let at = items.first(where: { $0.name == "at" })?.value,
-           let date = ISO8601DateFormatter().date(from: at) {
-            AppClock.shared.freeze(atMs: Int64(date.timeIntervalSince1970 * 1000))
-        }
-        if let advance = items.first(where: { $0.name == "advance" })?.value.flatMap(Double.init) {
-            AppClock.shared.advance(ms: Int64(advance * 1000))
-        }
+        AppClock.shared.handleLink(url)
     }
 }
 
@@ -198,7 +176,7 @@ struct RootView: View {
                 // The first screen's first frame (the next turn of the run loop after it
                 // appears): report how long the cold start took.
                 .onAppear {
-                    DispatchQueue.main.async { AppReady.report(readiness: model.readiness) }
+                    DispatchQueue.main.async { LaunchReport.report(store: model.store, device: model.deviceProperties) }
                     NotificationDelegate.shared.onOpenEmergency = model.openEmergency
                 }
                 .task(id: onboarded && model.path.isEmpty) {

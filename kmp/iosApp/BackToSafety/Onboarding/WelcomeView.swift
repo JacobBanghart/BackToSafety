@@ -1,4 +1,3 @@
-import Shared
 import SwiftUI
 
 /// First onboarding step. Port of app/onboarding/index.tsx.

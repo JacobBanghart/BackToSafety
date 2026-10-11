@@ -1,8 +1,7 @@
-import Shared
 import UserNotifications
 
 /// The countdown alerts as local notifications while the emergency screen isn't showing
-/// (shared EmergencyAway decides when). The text is translated when scheduled, in the app's
+/// (the core's EmergencyAway decides when). The text is translated when scheduled, in the app's
 /// language then. Tapping one opens the emergency ([NotificationDelegate]).
 final class CountdownNotifications: NSObject, AlertScheduler {
     static let identifiers = [CountdownAlert.warning, CountdownAlert.expired].map { "countdown-\($0.key)" }
@@ -21,7 +20,7 @@ final class CountdownNotifications: NSObject, AlertScheduler {
 
     func schedule(alerts: [ScheduledAlert]) {
         cancelAll()
-        // The app's strings are read on the main thread; the shared core may call from another.
+        // The app's strings are read on the main thread; the core may call from another.
         let (t, numberText) = Thread.isMainThread ? (emergencyT(), emergencyNumber())
             : DispatchQueue.main.sync { (emergencyT(), emergencyNumber()) }
         let number = ["emergencyNumber": numberText]
