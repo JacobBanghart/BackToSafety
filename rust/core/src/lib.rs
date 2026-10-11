@@ -20,3 +20,11 @@ pub mod store;
 pub use i18n::{Translations, Translator};
 pub use profile::Profile;
 pub use store::Store;
+
+uniffi::setup_scaffolding!();
+
+/// FFI smoke test: the apps call this to prove the native library loads and bindings work.
+#[uniffi::export]
+pub fn core_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}

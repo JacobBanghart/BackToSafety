@@ -32,8 +32,8 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 
 | Agent | Branch | ID | Status |
 |---|---|---|---|
-| ffi-android | `rust/ffi-android` | | starting |
-| ffi-ios | `rust/ffi-ios` | | starting |
+| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running |
+| ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | running |
 
 ## Merge log
 
@@ -76,3 +76,11 @@ Settled:
 ## Notes
 
 Each agent appends its notes here.
+
+### ffi-android notes
+
+- 2026-10-10 M1 done (commit `FFI API: UniFFI skeleton`): UniFFI 0.32.2 proc-macro mode in
+  `nijii-core` (crate types lib+cdylib+staticlib), `rust/uniffi-bindgen` workspace binary,
+  `core/uniffi.toml` (Kotlin package `com.backtosafety.core`), `mise run rust:bindings`
+  (Kotlin into `$BINDINGS_OUT`, default `$CARGO_TARGET_DIR/bindings/kotlin`). The only export
+  so far is `core_version()`. Next: M2, the full API.
