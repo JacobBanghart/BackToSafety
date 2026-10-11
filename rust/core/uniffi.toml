@@ -5,3 +5,7 @@ cdylib_name = "nijii_core"
 [bindings.swift]
 # The generated Swift file is compiled into the app; the C module is NijiiCoreFFI (not Shared).
 module_name = "NijiiCore"
+
+[bindings.swift.rename]
+# The generated Swift is compiled into the app module, where its Date would hide Foundation's.
+Date = "CalendarDate"
