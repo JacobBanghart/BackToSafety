@@ -11,11 +11,11 @@ via UniFFI. `kmp/shared` retires. The existing gates pass without re-blessing an
 | # | Phase | Who | Status |
 |---|---|---|---|
 | 0 | Rust core ported from kmp/shared, 50 tests (vectors, store, migrations, EmergencyAway) | done | ✅ |
-| 1 | UniFFI on `nijii-core`: exported API, generated Kotlin; Android libs via cargo-ndk; Gradle wiring | agent **ffi-android** | API ✅; Android libs and Gradle wiring in progress |
-| 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | in progress |
+| 1 | UniFFI on `nijii-core`: exported API, generated Kotlin; Android libs via cargo-ndk; Gradle wiring | agent **ffi-android** | ✅ |
+| 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | ✅ (14/14 flows, 51/51 fidelity, 24 snapshots, upgrade from KMP keeps data) |
 | 3 | iOS: XCFramework + Swift bindings, built on the Mac; the Xcode project links it | agent **ffi-ios** | ✅ |
 | 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | ✅ (14/14 flows, upgrade from KMP keeps data, 50/51 fidelity) |
-| 5 | Delete kmp/shared, Room and KMP plugins; docs, CI workflows | orchestrator | last |
+| 5 | Delete kmp/shared, Room and KMP plugins; move AnalyticsParityTest; docs, CI workflows | agent **ffi-android** | in progress |
 
 At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-android` (branch
 `rust/ffi-android`) and `~/github/nijii-ffi-ios` (branch `rust/ffi-ios`), both cut from
@@ -32,8 +32,8 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 
 | Agent | Branch | ID | Status |
 |---|---|---|---|
-| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running |
-| ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | done (phase 4); idle until phase 5 |
+| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running: phase 5 |
+| ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | running: DOB-loss investigation (KMP app, read-only), then iOS gates after phase 5 |
 
 ## Merge log
 
@@ -58,6 +58,11 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
   (no in-memory fallback). Evidence from the Mac: 14/14 flows and the gestures, the upgrade
   from the KMP app keeps its data, 50/51 fidelity. 6 snapshot diffs are environment-only:
   pixel-identical to the KMP build on the same simulator, which runs a newer OS than CI.
+
+- 2026-10-10: merged `rust/ffi-android` M3 (59643b3): androidApp on the Rust core and off
+  kmp/shared. Gates: check, lint, 24 snapshots, 14/14 flows plus the gestures, 51/51
+  fidelity; an upgrade from the KMP oracle APK keeps its data. On the merged rust-port the
+  orchestrator re-ran `mise run check` and `mise run lint`; both pass.
 
 ## Incident: 2026-10-10 reboot
 
@@ -86,6 +91,11 @@ Guardrails since then (owner-approved; see AGENTS.md "Load limits"):
    Lower the mark (`fidelity.py --update`) or leave it?
 
 ## Pending (orchestrator)
+
+- **Finding:** on Android, `maestro/upgrade/upgrade.sh install-over` fails at the
+  date-of-birth assertion even KMP→KMP: the KMP app's own fill loses the DOB. Either a real
+  bug in the shipping app or a flow timing problem; ffi-ios is investigating (read-only on
+  main).
 
 - Forward to ffi-android: export `report_open_failure`, so iOS can send the data_migrated
   failure when the open itself fails.
