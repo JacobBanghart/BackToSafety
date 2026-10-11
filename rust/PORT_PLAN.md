@@ -178,3 +178,53 @@ from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: 
   - Removed: `posthog.rs` (the apps keep their PostHog SDK) and `ureq`, and the Dioxus CLI
     from mise.toml. `lifecycle_events`, `report_open_failure` stay in core (tested) but aren't
     exported: the SDK sends lifecycle events itself.
+
+**2026-10-10, phase 4 (iosApp on the Rust core): done on this branch; gates run on the Mac
+(Xcode 26.4, iOS 26.4 simulators).**
+
+- The 22 files no longer `import Shared`; `kmp/iosApp` has no Gradle phase and no Shared
+  framework (`FRAMEWORK_SEARCH_PATHS`, `-framework Shared` gone). Adapters in
+  `BackToSafety/Core/`: `Analytics` (same `track`/`screen`/`sink` shape over `analyticsTrack` +
+  the `AnalyticsSink` foreign trait), `AppClock` (core clock, `handleLink` for the
+  debug/clock link), `Translate` (wraps `Translator`), `StoreAsync` (async overloads of every
+  `Store` method on a serial queue, so `try await store.x()` call sites stay and calls apply in
+  order off the main thread), `PropValues`, `Keys` (`.key` properties, `MOBILITY_OPTIONS`),
+  `AppStore` (`<Documents>/SQLite/nijii.db`, the KMP app's path), `LaunchReport` (was
+  `AppReady`; the core exports a class of that name, so the app's enum was renamed).
+  `CountdownNotifications` is still the `AlertScheduler`; PostHog stays the sink.
+- Swift renames in `rust/core/uniffi.toml` (`[bindings.swift.rename]`): the core's `Date` is
+  `CalendarDate` in Swift, because the bindings compile into the app module and a `Date` there
+  would hide Foundation's. Call sites changed: the free functions lost their `PhoneKt.`-style
+  prefixes (they're module globals now), `Kotlinx_datetimeLocalDate` is `CalendarDate`
+  (months are 1-based now), `t.lookup` is `t.translator`, `updateProfile` takes
+  `[String: String?]`.
+- DesignTokens: `kmp/iosApp/generate-design-tokens.py` is run by `ios:rust` into
+  `RustCore/Generated/DesignTokens.swift`.
+- CI (`ci.yml` kotlin-ios job, `ios-release.yml`) installs Rust instead of Java/Android SDK and
+  runs `mise run ios:rust` before xcodegen. Untested here (needs a GitHub run).
+- **Evidence (all on the Mac, nothing re-blessed, `__Snapshots__`, `spec/` and goldens
+  untouched):**
+  - `ios:flows`: all 14 Maestro flows ok, plus both reorder gestures.
+  - Upgrade test (`maestro/upgrade/upgrade-ios.sh install-over`): KMP-built app (Room
+    database) filled through the UI, then this build installed over it: "data and settings
+    survived", verify.yaml passes. This is the DB-carried-over check for iOS.
+  - `ios:fidelity`: 50 of 51 states ok. The one report, `large-text/contacts-list: 0.87%,
+    better than mark 1.02%: lower it`, is a ratchet note, not a regression: the pure KMP
+    build (commit before the pipeline) gives the identical line on this Mac. Left unlowered
+    (marks are not mine to bless; the owner may run `fidelity.py --update`).
+  - Snapshot tests (`BackToSafetyTests`, iPhone 16 Pro simulator on iOS 26.4): 6 of 8 screens
+    match the CI references (24 of 30 images); Contacts and Settings differ in the
+    green/red button colors, but the 6 images are byte-identical to the ones the KMP build
+    renders on the same Mac (pixel diff: none), so it is the simulator OS (CI is macOS 15), not
+    the change. A real check needs the CI runner: push and look at the `ios-snapshots` job.
+  - Unit tests: `CountdownNotificationsTests` (4, through the Rust `EmergencyAway`) and
+    `RustCoreTests` pass.
+- Decisions to look at:
+  - If `Store.open` throws (database from a newer app, full disk), `openAppStore()` logs and
+    falls back to an in-memory store so the app still starts; writes then aren't kept. Kotlin
+    failed on first query instead. Owner may prefer an error screen.
+  - `report_open_failure` (data_migrated as failed when open itself fails) isn't exported, so
+    that event is lost on iOS when open fails mid-migration. Request: export it.
+  - The Mac has no iPhone 16 Pro simulator by default; I created `nijii-ffi-16pro`.
+- Not done by me (orchestrator, phase 5): deleting `kmp/shared` and the Kotlin docs; the
+  Android side. `docs/ARCHITECTURE.md` still describes the KMP core.

@@ -495,4 +495,4 @@ struct DestinationsView: View {
     }
 }
 
-extension DestinationEntity: @retroactive Identifiable {}
+extension DestinationEntity: Identifiable {}
