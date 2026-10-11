@@ -48,7 +48,8 @@ optimizations, which also apply to iOS):
 
 | | KMP | Rust core |
 |---|---|---|
-| App bundle | 17.8 MB | 14.3 MB (−20%) |
+| App bundle (installed, `.app`) | 17.8 MB | 14.3 MB (−20%) |
+| Download (zipped IPA, unsigned) | 5.15 MB | 4.55 MB (−12%) |
 | Cold launch | 535 ms | 536 ms |
 | Memory (footprint) | 31 MB | 27 MB (−13%) |
 | Clean build | ~85 s | 127 s (with the simulator slice and bindgen) |
@@ -68,7 +69,7 @@ Getting Android to parity took four changes:
 ## Trade-offs
 
 - **For users:** about even. Android is +7% download and +1.7 MB memory, with the same start
-  time; iOS is smaller and lighter.
+  time. iOS is −12% download, −20% installed and −13% memory.
 - **For development:**
   - Core changes rebuild faster.
   - The core is about three times the lines of the Kotlin it replaced (3,300 against 1,200),
