@@ -315,3 +315,8 @@ from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: 
     android-release.yml (self-hosted) installs Rust, cargo-ndk and the NDK too. The Gradle
     steps are otherwise unchanged. `lintRelease` passes locally. Untested on real runners:
     mise's `cargo:cargo-ndk` install on ubuntu-latest (binstall) and sdkmanager NDK install.
+  - Gates after the deletion: `mise run check`, `mise run lint` (with actionlint), `mise run
+    snapshots` pass. `DEVICES=1 mise run android:flows`: the first full run passed 7 of 14 flows
+    and the 7 others died at once with "Package com.backtosafety.app is not installed" (the
+    emulator lost its app mid-run; no watchdog entry, cause unknown); rerunning those 7 passed
+    (ok x7, both reorder gestures ok). Fidelity not rerun: nothing visual changed.
