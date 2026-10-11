@@ -15,12 +15,13 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.backtosafety.app.MainActivity
 import com.backtosafety.app.R
-import com.backtosafety.core.AlertScheduler
-import com.backtosafety.core.AppClock
-import com.backtosafety.core.CountdownAlert
-import com.backtosafety.core.ScheduledAlert
-import com.backtosafety.core.Translate
-import com.backtosafety.core.invoke
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.invoke
+import com.backtosafety.app.core.key
+import com.backtosafety.core.ffi.AlertScheduler
+import com.backtosafety.core.ffi.CountdownAlert
+import com.backtosafety.core.ffi.ScheduledAlert
 
 /**
  * The countdown alerts as notifications while the emergency screen isn't showing (shared

@@ -33,7 +33,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
-import com.backtosafety.core.DesignTokens
+import com.backtosafety.app.core.DesignTokens
 
 private val space = DesignTokens.Spacing
 private val radius = DesignTokens.Radius

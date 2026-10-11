@@ -17,7 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.backtosafety.core.DesignTokens
+import com.backtosafety.app.core.DesignTokens
 
 /**
  * components/ScreenHeader.tsx: back chevron on the left, a title centered against the full

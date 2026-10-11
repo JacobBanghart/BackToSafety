@@ -246,3 +246,44 @@ from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: 
   - The Mac has no iPhone 16 Pro simulator by default; I created `nijii-ffi-16pro`.
 - Not done by me (orchestrator, phase 5): deleting `kmp/shared` and the Kotlin docs; the
   Android side. `docs/ARCHITECTURE.md` still describes the KMP core.
+
+- 2026-10-10 M3 (androidApp on the Rust core), state so far:
+  - Gradle (kmp/androidApp/build.gradle.kts + buildSrc/RustCore.kt): `buildRustHost` (cargo build
+    for this machine: the JNA lib the JVM tests load, and uniffi-bindgen), `generateCoreBindings`
+    (Kotlin bindings into build/generated/uniffi), `buildRustAndroid` (cargo-ndk, release,
+    arm64-v8a + x86_64 into jniLibs), `generateDesignTokens` into `com.backtosafety.app.core`.
+    JNA: aar for the app, jar for the JVM tests (`jna.library.path` = the host build). cargo-ndk
+    comes from mise (`cargo:cargo-ndk`, a prebuilt binary). `heavy.sh` is now re-entrant
+    (NIJII_HEAVY) and doesn't pass its lock fd to the command, so Gradle (and its daemon) can run
+    cargo under the queue without deadlocking or holding the queue after the build.
+  - Adapters in `com.backtosafety.app.core`: `Translate` (a class over the core `Translator`,
+    so the translator-taking core functions get the real object), `Translations`, `Analytics`
+    (sink = lambda over the foreign trait), `AppClock`, `Store` (suspend over the sync core on
+    `Store.dispatcher`, which snapshot tests set to Unconfined), `EmergencyAway`, `ReadoutInput`
+    and the translator functions, `parseDob`/`formatDob` over kotlinx LocalDate, the `key`
+    extensions, `Throwable.analyticsTypeName()` for save_failed/data_migrated (StoreFailure ->
+    the core's type names). Screens changed by imports only, plus: RnModifiers' fully qualified
+    names, ProfileScreen's dob imports, App.kt's launch effect (`store.seed()` now also reports
+    data_migrated, in the core), MainActivity (path, translations loading, the clock link via
+    `AppClock.handleLink`).
+  - Tests changed: ScreenSnapshotTest builds `Store.inMemory()` instead of Room;
+    AnalyticsParityTest (kmp/shared) also counts the events rust/core/src sends.
+  - Evidence: 24 snapshot tests + 9 others pass in verify mode against the committed PNGs
+    (no RECORD); `mise run check` and `mise run lint` pass.
+  - DB carry-over: maestro/upgrade fill.yaml on the cached KMP oracle APK, then
+    `adb install -r` of the Rust build, then verify.yaml: passes (profile, contact, place,
+    theme, running emergency with 2 steps and clothing, readout). Note: on this emulator the
+    oracle's own fill loses the date of birth (the KMP app, unchanged; the cause isn't diagnosed,
+    possibly typing before the profile form finishes loading), so `upgrade.sh install-over`
+    fails at the DOB assertion even oracle-to-oracle. I set date_of_birth with sqlite3 between
+    fill and install, and the DB dumps before/after the upgrade are identical except
+    emergency_away_from (EmergencyAway, as in KMP) and sqlite_sequence for safety_checks
+    (INSERT OR IGNORE re-seeding on launch). `upgrade.sh restore` of the committed KMP-written
+    fixture (spec/fixtures/upgrade/android) also reads back on the Rust build.
+  - Gates on `rust/ffi-android` (no RECORD, no golden/snapshot/vector edits): `mise run check`,
+    `mise run lint`, `mise run snapshots` ("snapshots match"), `DEVICES=1 mise run android:flows`
+    (14 flows + contacts/destinations reorder ok, 1148 s), `DEVICES=1 mise run android:fidelity`
+    (all 39 state/theme captures ok, 2478 s; needs a background timeout over 30 min). Fixed the
+    fidelity task to create /tmp/nijii-captures (it was missing after the reboot).
+  - Android no longer depends on kmp/shared (`project(":shared")` removed; shared stays for iOS).
+    Not done by me: Room/KMP plugin removal, docs and CI workflow updates (phase 5).

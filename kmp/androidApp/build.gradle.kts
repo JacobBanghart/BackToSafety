@@ -12,9 +12,53 @@ val syncSharedAssets = tasks.register<SyncSharedAssets>("syncSharedAssets") {
     outputDir = layout.buildDirectory.dir("generated/sharedAssets")
 }
 
+// The Rust core (rust/core) through UniFFI. cargo builds the library for this machine (the JVM
+// tests load it, and the Kotlin bindings are generated from it) and, with cargo-ndk, the
+// Android libraries the app ships. All of it runs through rust/scripts/heavy.sh's queue.
+val rustWorkspace = repoRoot.resolve("rust")
+val cargoTargetDir = System.getenv("CARGO_TARGET_DIR") ?: "${System.getProperty("user.home")}/.cache/nijii-rust-target"
+val rustSources = fileTree(rustWorkspace) {
+    include("Cargo.toml", "Cargo.lock", "core/**", "uniffi-bindgen/**")
+    exclude("**/target/**")
+}
+val specFiles = fileTree(repoRoot.resolve("spec")) { include("analytics-events.json") }
+val heavy = rustWorkspace.resolve("scripts/heavy.sh")
+
+val buildRustHost = tasks.register<CargoHostBuild>("buildRustHost") {
+    workspace = rustWorkspace
+    heavyScript = heavy
+    sources.from(rustSources, specFiles)
+}
+
+val buildRustAndroid = tasks.register<CargoNdkBuild>("buildRustAndroid") {
+    workspace = rustWorkspace
+    heavyScript = heavy
+    sources.from(rustSources, specFiles)
+    abis = listOf("arm64-v8a", "x86_64")
+    outputDir = layout.buildDirectory.dir("generated/rustJniLibs")
+}
+
+val generateCoreBindings = tasks.register<UniffiKotlinBindings>("generateCoreBindings") {
+    dependsOn(buildRustHost)
+    workspace = rustWorkspace
+    library = file("$cargoTargetDir/debug/libnijii_core.so")
+    bindgen = file("$cargoTargetDir/debug/uniffi-bindgen")
+    outputDir = layout.buildDirectory.dir("generated/uniffi/kotlin")
+}
+
+// DesignTokens is UI, so it's generated here from spec/design-tokens.json, not in the core.
+val generateDesignTokens = tasks.register<GenerateDesignTokens>("generateDesignTokens") {
+    spec = repoRoot.resolve("spec/design-tokens.json")
+    packageName = "com.backtosafety.app.core"
+    outputDir = layout.buildDirectory.dir("generated/tokens/kotlin")
+}
+
 androidComponents {
     onVariants { variant ->
         variant.sources.assets?.addGeneratedSourceDirectory(syncSharedAssets, SyncSharedAssets::outputDir)
+        variant.sources.jniLibs?.addGeneratedSourceDirectory(buildRustAndroid, CargoNdkBuild::outputDir)
+        variant.sources.kotlin?.addGeneratedSourceDirectory(generateCoreBindings, UniffiKotlinBindings::outputDir)
+        variant.sources.kotlin?.addGeneratedSourceDirectory(generateDesignTokens, GenerateDesignTokens::outputDir)
     }
 }
 
@@ -35,6 +79,8 @@ android {
         versionCode = (release["android"] as Map<*, *>)["versionCode"].toString().toInt()
         versionName = release["version"] as String
         // Test seams (the debug clock) for the Maestro harness: -PtestSeams=true.
+        // The ABIs the Rust core is built for.
+        ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
         buildConfigField("boolean", "TEST_SEAMS", (findProperty("testSeams") == "true").toString())
         // PostHog, from the build environment; analytics stay off without a key.
         buildConfigField("String", "POSTHOG_KEY", "\"${System.getenv("POSTHOG_KEY").orEmpty()}\"")
@@ -77,6 +123,9 @@ android {
         isIncludeAndroidResources = true
         all {
             it.systemProperty("repoRoot", repoRoot.absolutePath)
+            // The Rust core for this machine, which JNA loads in the JVM.
+            it.systemProperty("jna.library.path", "$cargoTargetDir/debug")
+            it.dependsOn(buildRustHost)
             val record = project.hasProperty("record")
             it.systemProperty("roborazzi.test.record", record.toString())
             it.systemProperty("roborazzi.test.verify", (!record).toString())
@@ -85,7 +134,8 @@ android {
 }
 
 dependencies {
-    implementation(project(":shared"))
+    implementation(libs.jna) { artifact { type = "aar" } }
+    implementation(libs.kotlinx.datetime)
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
@@ -97,6 +147,7 @@ dependencies {
     implementation(libs.posthog.android)
     implementation(libs.core.splashscreen)
 
+    testImplementation(libs.jna)
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)
     testImplementation(libs.roborazzi)
@@ -104,6 +155,5 @@ dependencies {
     testImplementation(libs.roborazzi.junit)
     testImplementation(platform(libs.compose.bom))
     testImplementation(libs.compose.ui.test.junit4)
-    testImplementation(libs.sqlite.framework)
     debugImplementation(libs.compose.ui.test.manifest)
 }

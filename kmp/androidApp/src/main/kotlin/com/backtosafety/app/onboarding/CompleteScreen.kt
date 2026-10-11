@@ -28,6 +28,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.TrackStepViewed
@@ -35,12 +40,7 @@ import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.DesignTokens
-import com.backtosafety.core.Translate
-import com.backtosafety.core.data.Store
-import com.backtosafety.core.invoke
+import com.backtosafety.core.ffi.AnalyticsEvent
 import kotlinx.coroutines.launch
 
 /** Port of app/onboarding/complete.tsx. */

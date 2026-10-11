@@ -39,14 +39,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
-import com.backtosafety.core.DesignTokens
-import com.backtosafety.core.Translate
-import com.backtosafety.core.invoke
 
 /** First onboarding step. Port of app/onboarding/index.tsx. */
 @Composable

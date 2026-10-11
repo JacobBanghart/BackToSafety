@@ -2,8 +2,8 @@ package com.backtosafety.app
 
 import android.os.Process
 import android.os.SystemClock
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.AnalyticsEvent
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.core.ffi.AnalyticsEvent
 
 /**
  * app_ready, once per process: how long a cold start took, from the process starting to the

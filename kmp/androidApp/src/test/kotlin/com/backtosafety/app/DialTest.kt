@@ -2,10 +2,10 @@ package com.backtosafety.app
 
 import android.app.Activity
 import android.content.Intent
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.ui.dial
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.DialTarget
-import com.backtosafety.core.Translations
+import com.backtosafety.core.ffi.DialTarget
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

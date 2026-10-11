@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.backtosafety.core.DesignTokens
+import com.backtosafety.app.core.DesignTokens
 
 /** The RN app's theme colors (constants/Colors.ts via spec/design-tokens.json). */
 class AppColors(val isDark: Boolean) {

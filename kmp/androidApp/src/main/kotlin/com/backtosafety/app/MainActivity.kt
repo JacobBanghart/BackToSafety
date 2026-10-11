@@ -11,20 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.emergency.CountdownNotifications
-import com.backtosafety.core.Analytics
-import com.backtosafety.core.AppClock
-import com.backtosafety.core.Translations
-import com.backtosafety.core.data.Store
-import com.backtosafety.core.db.databaseBuilder
-import com.backtosafety.core.db.databasePath
-import com.backtosafety.core.db.openAppDatabase
 import com.posthog.PersonProfiles
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
+import java.io.File
 
 class MainActivity : ComponentActivity() {
     /** Counts taps on countdown alert notifications; App opens the emergency for each. */
@@ -39,8 +35,8 @@ class MainActivity : ComponentActivity() {
         setUpAnalytics()
         handleTestSeam(intent)
         handleAlertTap(intent)
-        val path = databasePath(this)
-        val store = Store(openAppDatabase(path, databaseBuilder(this, path)))
+        // Where the RN app's expo-sqlite kept nijii.db, and the KMP app after it (spec/storage.md).
+        val store = Store.open(File(filesDir, "SQLite/nijii.db").absolutePath)
         val translations = loadTranslations()
         setContent {
             // testTag(...) values surface as Android resource IDs, matching the RN
@@ -94,23 +90,14 @@ class MainActivity : ComponentActivity() {
      * `?advance=<seconds>` moves it forward. The current screen stays; it re-reads the clock.
      */
     private fun handleTestSeam(intent: Intent?) {
-        val uri = intent?.data ?: return
-        if (uri.host != "debug" || uri.path != "/clock") return
-        uri.getQueryParameter("at")?.let { at ->
-            // kotlin.time, not java.time: java.time needs API 26 and the app supports 24.
-            runCatching { kotlin.time.Instant.parse(at).toEpochMilliseconds() }.getOrNull()
-                ?.let(AppClock::freeze)
-        }
-        uri.getQueryParameter("advance")?.toDoubleOrNull()?.let { AppClock.advance((it * 1000).toLong()) }
+        AppClock.handleLink(intent?.data?.toString() ?: return)
     }
 
     /** The RN app's i18n/locales JSON, synced into assets/locales at build time. */
-    private fun loadTranslations(): Translations = Translations(
+    private fun loadTranslations(): Translations = Translations.fromJson(
         assets.list("locales")!!.associateWith { locale ->
             assets.list("locales/$locale")!!.associate { file ->
-                file.removeSuffix(".json") to Json.parseToJsonElement(
-                    assets.open("locales/$locale/$file").bufferedReader().readText(),
-                ).jsonObject
+                file.removeSuffix(".json") to assets.open("locales/$locale/$file").bufferedReader().readText()
             }
         },
     )
