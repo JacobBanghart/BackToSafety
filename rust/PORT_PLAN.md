@@ -14,7 +14,7 @@ via UniFFI. `kmp/shared` retires. The existing gates pass without re-blessing an
 | 1 | UniFFI on `nijii-core`: exported API, generated Kotlin; Android libs via cargo-ndk; Gradle wiring | agent **ffi-android** | API ✅; Android libs and Gradle wiring in progress |
 | 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | in progress |
 | 3 | iOS: XCFramework + Swift bindings, built on the Mac; the Xcode project links it | agent **ffi-ios** | ✅ |
-| 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | in progress |
+| 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | ✅ (14/14 flows, upgrade from KMP keeps data, 50/51 fidelity) |
 | 5 | Delete kmp/shared, Room and KMP plugins; docs, CI workflows | orchestrator | last |
 
 At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-android` (branch
@@ -33,7 +33,7 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 | Agent | Branch | ID | Status |
 |---|---|---|---|
 | ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running |
-| ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | running |
+| ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | done (phase 4); idle until phase 5 |
 
 ## Merge log
 
@@ -52,6 +52,12 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 - 2026-10-10: merged `rust/ffi-android` M2 (80af3b4): full FFI API in package
   `com.backtosafety.core.ffi`, AppClock in core, the posthog client removed (apps keep their
   SDKs). 49 core tests pass.
+
+- 2026-10-10: merged `rust/ffi-ios` phase 4 (2579d7a): iosApp on the Rust core, with no `Shared`
+  imports and no Gradle phase. AppStore matches the oracle: a failed open throws on every call
+  (no in-memory fallback). Evidence from the Mac: 14/14 flows and the gestures, the upgrade
+  from the KMP app keeps its data, 50/51 fidelity. 6 snapshot diffs are environment-only:
+  pixel-identical to the KMP build on the same simulator, which runs a newer OS than CI.
 
 ## Incident: 2026-10-10 reboot
 
@@ -81,9 +87,6 @@ Guardrails since then (owner-approved; see AGENTS.md "Load limits"):
 
 ## Pending (orchestrator)
 
-- ffi-ios phase 4 is held back from merge until the store-open failure follows the oracle (every
-  call fails with the error and saves surface `save_failed`; no in-memory fallback), and the
-  dial flows re-run after the DialTarget rename.
 - Forward to ffi-android: export `report_open_failure`, so iOS can send the data_migrated
   failure when the open itself fails.
 - The CI workflow edits (ci.yml, ios-release.yml install Rust and run `ios:rust`) haven't run;
