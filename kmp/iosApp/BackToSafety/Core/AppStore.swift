@@ -28,7 +28,7 @@ final class AppStore: Sendable {
     /// Opens the database at `path` (adopting an RN database, migrating older schemas).
     static func open(path: String = databasePath()) -> AppStore {
         do {
-            return AppStore(try Store.open(path: path))
+            return try AppStore(Store.open(path: path))
         } catch {
             Logger(subsystem: "com.backtosafety.app", category: "store").error("store open failed: \(String(describing: error), privacy: .public)")
             return AppStore(failed: error)

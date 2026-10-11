@@ -43,7 +43,7 @@ final class FailedStoreTests: XCTestCase {
         XCTAssertEqual(try String(contentsOfFile: path, encoding: .utf8), "this is not an sqlite database, just text")
     }
 
-    func testADatabaseFromANewerAppFailsEverySave() async throws {
+    func testADatabaseFromANewerAppFailsEverySave() async {
         let path = tempPath()
         var db: OpaquePointer?
         XCTAssertEqual(sqlite3_open(path, &db), SQLITE_OK)

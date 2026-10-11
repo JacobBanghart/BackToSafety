@@ -220,9 +220,12 @@ from the 22 files and delete the Gradle phase. Shared symbols Swift uses today: 
   - Unit tests: `CountdownNotificationsTests` (4, through the Rust `EmergencyAway`) and
     `RustCoreTests` pass.
 - Decisions to look at:
-  - If `Store.open` throws (database from a newer app, full disk), `openAppStore()` logs and
-    falls back to an in-memory store so the app still starts; writes then aren't kept. Kotlin
-    failed on first query instead. Owner may prefer an error screen.
+  - If `Store.open` throws (database from a newer app, not a database, unreadable), the app
+    starts but `AppStore` is *failed*: every call throws the open error, so each save shows the
+    screens' save-failed error and `save_failed`, as the KMP app did when Room failed on every
+    query (no in-memory fallback). `FailedStoreTests` covers a garbage file and a
+    newer-version (user_version 999) database. EmergencyAway gets a scratch in-memory store
+    only in that state, so no user data goes there.
   - `report_open_failure` (data_migrated as failed when open itself fails) isn't exported, so
     that event is lost on iOS when open fails mid-migration. Request: export it.
   - The Mac has no iPhone 16 Pro simulator by default; I created `nijii-ffi-16pro`.

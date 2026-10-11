@@ -16,7 +16,7 @@ final class ScreenSnapshotTests: XCTestCase {
         AppClock.shared.testSeamsEnabled = true
         AppClock.shared.freeze(atMs: 1_791_302_400_000) // 2026-10-06 16:00 UTC
         let path = NSTemporaryDirectory() + "snapshots-\(UUID().uuidString).db"
-        let store = AppStore(try Store.open(path: path))
+        let store = try AppStore(Store.open(path: path))
         try await store.seed()
         try await store.updateProfile(values: [
             "name": "Margaret Smith", "nickname": "Maggie", "dateOfBirth": "03/15/1940",
