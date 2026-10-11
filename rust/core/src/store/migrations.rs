@@ -1,5 +1,5 @@
 //! Schema versions: 1 is the RN app's database (spec/db-schema.json), 2 is the same tables in
-//! Room's shape. Version 2's DDL is the exported schema (kmp/shared/schemas/.../2.json), so
+//! Room's shape. Version 2's DDL is the exported schema (spec/room-schema-v2.json), so
 //! the file is byte-compatible with what the Kotlin app's Room creates; the identity hash is
 //! Room's, kept in `room_master_table`, so either app opens the other's file.
 
@@ -44,7 +44,7 @@ pub(crate) fn create_v2(c: &Connection) -> rusqlite::Result<()> {
 /// Version 1 (the RN app's schema) to version 2 (Room's shape): every table is rebuilt from
 /// Room's CREATE statement and its rows copied across. Columns that were nullable in RN but are
 /// NOT NULL now take the RN default via COALESCE. Ported statement for statement from
-/// MIGRATION_1_2 (kmp/shared db/Migrations.kt).
+/// MIGRATION_1_2 (the retired kmp/shared db/Migrations.kt).
 const MIGRATION_1_2: [&str; 29] = [
     r#"CREATE TABLE `new_profile` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `nickname` TEXT, `date_of_birth` TEXT, `photo_uri` TEXT, `height` TEXT, `weight` TEXT, `hair_color` TEXT, `eye_color` TEXT, `identifying_marks` TEXT, `medical_conditions` TEXT, `medications` TEXT, `allergies` TEXT, `cognitive_status` TEXT, `dominant_hand` TEXT, `mobility_level` TEXT, `communication_preference` TEXT, `escalation_signs` TEXT, `deescalation_techniques` TEXT, `approach_guidance` TEXT, `likes` TEXT, `dislikes_triggers` TEXT, `safe_word` TEXT, `locative_device_info` TEXT, `id_bracelets` TEXT, `medic_alert_id` TEXT, `medic_alert_hotline` TEXT, `created_at` TEXT DEFAULT CURRENT_TIMESTAMP, `updated_at` TEXT DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(`id`))"#,
     r#"INSERT INTO `new_profile` (`id`, `name`, `nickname`, `date_of_birth`, `photo_uri`, `height`, `weight`, `hair_color`, `eye_color`, `identifying_marks`, `medical_conditions`, `medications`, `allergies`, `cognitive_status`, `dominant_hand`, `mobility_level`, `communication_preference`, `escalation_signs`, `deescalation_techniques`, `approach_guidance`, `likes`, `dislikes_triggers`, `safe_word`, `locative_device_info`, `id_bracelets`, `medic_alert_id`, `medic_alert_hotline`, `created_at`, `updated_at`) SELECT `id`, `name`, `nickname`, `date_of_birth`, `photo_uri`, `height`, `weight`, `hair_color`, `eye_color`, `identifying_marks`, `medical_conditions`, `medications`, `allergies`, `cognitive_status`, `dominant_hand`, `mobility_level`, `communication_preference`, `escalation_signs`, `deescalation_techniques`, `approach_guidance`, `likes`, `dislikes_triggers`, `safe_word`, `locative_device_info`, `id_bracelets`, `medic_alert_id`, `medic_alert_hotline`, `created_at`, `updated_at` FROM `profile`"#,

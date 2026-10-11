@@ -1,46 +1,41 @@
-package com.backtosafety.core
+package com.backtosafety.app
 
+import org.junit.Assert.assertEquals
+import org.junit.Test
 import java.io.File
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 /**
  * Both apps send the analytics events spec/analytics-events.json names, and name the same
  * screens: every event is tracked somewhere in the Android app and in the iOS app (or in the
- * shared core, which both run), and nothing else is tracked.
+ * Rust core, which both run), and nothing else is tracked. A scan of the sources, no device.
  */
 class AnalyticsParityTest {
     private val root = File(System.getProperty("repoRoot") ?: error("repoRoot system property not set"))
 
-    private fun sources(dir: String, ext: String) =
-        File(root, dir).walkTopDown().filter { it.isFile && it.extension == ext }.map { it.readText() }.toList()
+    private fun sources(dir: String, ext: String) = File(root, dir).walkTopDown().filter { it.isFile && it.extension == ext }.map { it.readText() }.toList()
 
     private val events: Set<String> =
         Regex(""""([a-z_0-9]+)"""").findAll(
             File(root, "spec/analytics-events.json").readText().substringAfter("\"events\"").substringBefore("]"),
         ).map { it.groupValues[1] }.toSortedSet()
 
-    /** The Swift name Kotlin/Native gives an enum entry: READOUT_911_CALLED -> readout911Called. */
-    private fun swiftName(event: String) =
-        event.split('_').mapIndexed { i, part -> if (i == 0) part else part.replaceFirstChar { it.uppercase() } }.joinToString("")
+    /** The Swift case UniFFI gives an enum variant: readout_911_called -> readout911Called. */
+    private fun swiftName(event: String) = event.split('_').mapIndexed { i, part -> if (i == 0) part else part.replaceFirstChar { it.uppercase() } }.joinToString("")
 
     private fun kotlinEvents(dir: String) = sources(dir, "kt")
         .flatMap { Regex("""AnalyticsEvent\.([A-Z_0-9]+)""").findAll(it).map { m -> m.groupValues[1].lowercase() } }
         .toSortedSet()
 
     /** Events the Rust core sends itself (rust/core/src), for both apps: AppReady -> app_ready. */
-    private val rustEvents = File(root, "rust/core/src").walkTopDown().filter { it.isFile && it.extension == "rs" }
-        .flatMap { Regex("""AnalyticsEvent::([A-Za-z0-9_]+)""").findAll(it.readText()).map { m -> m.groupValues[1] } }
+    private val coreEvents = sources("rust/core/src", "rs")
+        .flatMap { Regex("""AnalyticsEvent::([A-Za-z0-9_]+)""").findAll(it).map { m -> m.groupValues[1] } }
         .map { it.replace(Regex("(?<=[a-z0-9])(?=[A-Z])"), "_").replace("__", "_").lowercase() }
         .filter { it in events }
         .toSortedSet()
 
-    /** Events the core sends itself, for both apps. */
-    private val sharedEvents = kotlinEvents("kmp/shared/src/commonMain") + rustEvents
-
     @Test
     fun androidSendsTheSpecEvents() {
-        assertEquals(events, (kotlinEvents("kmp/androidApp/src/main") + sharedEvents).toSortedSet())
+        assertEquals(events, (kotlinEvents("kmp/androidApp/src/main") + coreEvents).toSortedSet())
     }
 
     @Test
@@ -52,7 +47,7 @@ class AnalyticsParityTest {
             .filter { "track(" in it || "event:" in it }
             .flatMap { Regex("""\.([a-z][A-Za-z0-9]+)\b""").findAll(it).map { m -> m.groupValues[1] } }
             .toSet()
-        assertEquals(emptyList(), events.filter { swiftName(it) !in swift && it !in sharedEvents })
+        assertEquals(emptyList<String>(), events.filter { swiftName(it) !in swift && it !in coreEvents })
     }
 
     @Test

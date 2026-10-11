@@ -1,11 +1,7 @@
 [versions]
 kotlin = "2.4.20"
 agp = "9.4.1"
-ksp = "2.3.12"
-room = "2.8.5"
-sqlite = "2.7.1"
 serialization = "1.11.0"
-coroutines = "1.11.0"
 datetime = "0.8.0"
 compose-bom = "2026.09.00"
 activity-compose = "1.13.0"
@@ -21,11 +17,7 @@ posthog-android = { module = "com.posthog:posthog-android", version = "3.72.1" }
 # The cropper expo-image-picker uses (allowsEditing), so the crop screen is the same.
 android-image-cropper = { module = "com.vanniktech:android-image-cropper", version = "4.7.0" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "datetime" }
-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
-sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
@@ -45,14 +37,8 @@ roborazzi-compose = { module = "io.github.takahirom.roborazzi:roborazzi-compose"
 roborazzi-junit = { module = "io.github.takahirom.roborazzi:roborazzi-junit-rule", version.ref = "roborazzi" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
-sqlite-framework = { module = "androidx.sqlite:sqlite-framework", version.ref = "sqlite" }
 junit = { module = "junit:junit", version = "4.13.2" }
 
 [plugins]
-kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 android-application = { id = "com.android.application", version.ref = "agp" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
-room = { id = "androidx.room", version.ref = "room" }

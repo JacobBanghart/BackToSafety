@@ -10,6 +10,8 @@ maestro = "cli-2.11.0"
 android-sdk = "23.0"
 # Linters (mise run lint): Kotlin and Swift. Configured by .editorconfig and .swiftformat.
 ktlint = "1.8.0"
+# Lints the GitHub Actions workflows (mise run lint).
+actionlint = "1.7.12"
 swiftformat = { version = "0.63.1", no_app = true, rename_exe = "swiftformat" }
 # Rust core experiment (rust/): toolchain with the Android and iOS (device, simulator) targets.
 rust = { version = "1.99.0", targets = "aarch64-linux-android,x86_64-linux-android,aarch64-apple-ios,aarch64-apple-ios-sim" }

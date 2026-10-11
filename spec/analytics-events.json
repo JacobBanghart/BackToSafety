@@ -1,5 +1,5 @@
 {
-  "$comment": "PostHog event names both apps send (kmp/shared AnalyticsEvent is generated from this list; AnalyticsParityTest holds both apps' call sites to it; an event the shared core sends counts for both). Dashboards key on these, so a rename is a breaking change. Screens are tracked as $screen with the route path (e.g. /emergency).",
+  "$comment": "PostHog event names both apps send (rust/core's AnalyticsEvent is generated from this list; AnalyticsParityTest holds both apps' call sites to it; an event the Rust core sends counts for both). Dashboards key on these, so a rename is a breaking change. Screens are tracked as $screen with the route path (e.g. /emergency).",
   "events": [
     "app_ready",
     "contact_add_tapped",

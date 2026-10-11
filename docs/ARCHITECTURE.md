@@ -1,12 +1,12 @@
 # Architecture
 
-Back to Safety is two native apps on one shared Kotlin core:
+Back to Safety is two native UIs on one Rust core:
 
 | Part | Where | What |
 | --- | --- | --- |
-| Shared core | `kmp/shared` | Kotlin Multiplatform: models, the SQLite store (Room, bundled SQLite), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, design tokens. Built for Android, the JVM (tests) and iOS (a static framework, `Shared`, which the iOS project's first build phase builds). |
-| Android app | `kmp/androidApp` | Jetpack Compose UI on the shared core. |
-| iOS app | `kmp/iosApp` | SwiftUI UI on the shared core. `project.yml` generates the Xcode project (`xcodegen generate`). |
+| Rust core | `rust/core` | Models, the SQLite store (rusqlite, the Room v2 schema), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, EmergencyAway, AppClock. No UI and no platform code: the apps implement its foreign traits (`AlertScheduler`, `AnalyticsSink`). `rust/uniffi-bindgen` generates the bindings. |
+| Android app | `kmp/androidApp` | Jetpack Compose UI. Gradle builds the core with cargo-ndk (arm64-v8a, x86_64), generates the Kotlin bindings (`com.backtosafety.core.ffi`) and reaches it through JNA; thin adapters in `app/core` keep the UI call sites (`Translate`, `Store`, `Analytics`, `AppClock`). |
+| iOS app | `kmp/iosApp` | SwiftUI UI. `mise run ios:rust` builds the core into an XCFramework with the Swift bindings; adapters in `Core/`. `project.yml` generates the Xcode project (`xcodegen generate`). |
 | Contracts | `spec/` | What both apps must agree on: design tokens, analytics events, testIDs, the DB schema and seed rows, logic vectors, the feature inventory, screenshot goldens and fidelity marks. |
 | Device harness | `maestro/` | Maestro flows, screen captures and comparisons, reorder gestures and upgrade tests, run against both apps. |
 | Website | `site/` | The public site and privacy policy (GitHub Pages). |
@@ -20,23 +20,27 @@ commit.
 ## Shared resources
 
 - `i18n/locales/<lang>/<namespace>.json`: every string, read by both apps (`Translations` in the
-  shared core implements the i18next subset the strings use).
+  Rust core implements the i18next subset the strings use).
 - `assets/images/logo-full.png`: the welcome logo.
 - `version.json`: the version and build numbers; the release workflows stamp them from the tag.
 
 ## Generated code
 
-- `spec/design-tokens.json` → `DesignTokens` and `spec/analytics-events.json` →
-  `AnalyticsEvent` (Gradle tasks in `kmp/buildSrc`).
+- `spec/analytics-events.json` → `AnalyticsEvent` (`rust/core/build.rs`, then through UniFFI).
+- `spec/design-tokens.json` → `DesignTokens`, per app because it is UI (`generateDesignTokens` in
+  `kmp/androidApp`, `generate-design-tokens.py` for iOS).
 
 ## Checks
 
-Fast, no device (`mise run check`, `mise run lint`, `mise run snapshots`; all in CI):
+Fast, no device (`mise run check`, `mise run lint`, `mise run snapshots`; all in CI). Cargo and
+Gradle builds run through `rust/scripts/heavy.sh`, which queues them (`rust/AGENTS.md`):
 
 - `spec/check.py`: testIDs in both apps, feature coverage, locale parity, option lists vs the
   schema.
-- `./gradlew :shared:jvmTest`: logic vectors, the store and migrations (against the committed
-  upgrade fixture), analytics parity between the apps.
+- `cargo test -p nijii-core` (`rust/core/tests`): spec/vectors, the store and migrations (against
+  the committed upgrade fixture and `spec/room-schema-v2.json`), EmergencyAway, the FFI surface.
+- `AnalyticsParityTest` (`androidApp/src/test`): both apps and the core send exactly the events
+  in `spec/analytics-events.json`.
 - ktlint and SwiftFormat (`.editorconfig`, `.swiftformat`).
 - Snapshot tests of every main screen in light, dark and large text. Android
   (`androidApp/src/test`, Robolectric + Roborazzi) runs anywhere; iOS
