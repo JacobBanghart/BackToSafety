@@ -3,7 +3,12 @@ name = "nijii-core"
 edition.workspace = true
 version.workspace = true
 
+[lib]
+# lib: the Rust tests and the host (JVM) library; cdylib: Android; staticlib: iOS XCFramework.
+crate-type = ["lib", "cdylib", "staticlib"]
+
 [dependencies]
+uniffi = { version = "0.32.2" }
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 regex = "1"
 rusqlite = { version = "0.40.2", features = ["bundled"] }
