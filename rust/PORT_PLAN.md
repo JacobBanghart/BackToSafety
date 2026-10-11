@@ -97,6 +97,101 @@ on core logic. Release tuning found along the way: the first build shipped an un
 un-LTO'd library, and dropped 32-bit ABIs, so 32-bit phones couldn't have installed it (both
 fixed in d30622f).
 
+## Android optimization pass (2026-10-11)
+
+Goal: make the Rust core competitive on Android. Same method as above (release builds with test
+seams, `maestro/build-android.sh`, `rust/scripts/measure-android.sh`: 15 cold starts per APK,
+median), alternating KMP / Rust before / Rust after, two rounds, each round on a freshly booted
+emulator (see "Measuring" below for why). "Before" is 3a17cc9, "after" is this branch.
+
+### Size, step by step (arm64 `libnijii_core.so`, stripped)
+
+| Step | Bytes | Δ |
+|---|---|---|
+| Before (opt-level s, fat LTO, strip) | 3,591,072 | |
+| Hand-written patterns instead of `regex` (phone extension, `{{placeholder}}`, DOB, height) | 2,343,960 | −1,247,112 |
+| SQLite trimmed (no FTS3/4/5, R-tree, DBSTAT, STAT4, SOUNDEX, JSON, extensions, deprecated, shared cache, trace, progress, explain, incrblob, get_table) | 1,897,608 | −446,352 |
+| More SQLite OMITs (UTF-16, authorization, `sqlite3_complete`, btree count) | 1,890,680 | −6,928 |
+| opt-level `z` instead of `s` | 1,694,064 | −196,616 |
+| chrono `now` instead of `clock`; uniffi without default features | 1,690,368 | −3,696 |
+| Final (with the startup changes below) | 1,695,168 | −1,895,904 (−53%) |
+
+Compressed (gzip -9) 1.52 MB → 0.84 MB. `cargo bloat` (host, symbols kept): `.text` 2.0 MiB → 1.1 MiB;
+regex_automata + aho_corasick + regex_syntax (520 KiB) gone, SQLite C 698 → 442 KiB, std 309 → 273 KiB,
+nijii_core itself 382 KiB (UniFFI scaffolding and the converters; unchanged).
+
+What was tried and not kept:
+
+- `opt-level` z vs s: z won on size (−197 KB raw, −24 KB compressed) and cold start shows no
+  difference at this scale, so z stays.
+- `-DSQLITE_OMIT_ANALYZE`, `_VACUUM`, `_REINDEX`, `_WINDOWFUNC`: the amalgamation doesn't compile or
+  link without them (undefined `sqlite3Analyze`, `sqlite3Vacuum`, `sqlite3Reindex`, window-function
+  symbols). The host test link caught it; note that a cdylib links with undefined symbols without
+  complaint, so only the host tests would tell.
+- `-Wl,--icf=all`: −21 KB (1.1%); not worth a linker flag.
+- std's panic backtrace code (gimli, addr2line, miniz_oxide: about 70 KB of `.text`) can only go
+  with `-Zbuild-std` (nightly).
+
+The regex replacements are held to the original regexes by `core/tests/regex_equivalence.rs`
+(every string up to length 6 over an alphabet of each pattern's edge characters, plus 20,000
+random longer ones per pattern; `regex` is a dev dependency only). The SQLite flags live in
+`rust/.cargo/config.toml` (`LIBSQLITE3_FLAGS`) and a test (`bundled_sqlite_is_trimmed_to_what_the_store_uses`)
+fails if cargo runs outside `rust/` or the flags drift. Run cargo from `rust/`.
+
+### Startup: where the time went
+
+Timestamps in a scratch build, emulator, medians of several cold starts (ms since process start
+unless noted):
+
+| Step | Cost |
+|---|---|
+| Process start to `Activity.onCreate` | ~30 |
+| `libjnidispatch` + JNA class init | ~6 |
+| `System.loadLibrary("nijii_core")` | ~1.5 to 3 |
+| UniFFI init (registering ~300 native functions with JNA, ~170 checksum calls, callback vtables) | **20 to 34** |
+| `Store.open` | 2.5 to 4.5 |
+| Reading and parsing all locale JSON (`Translations`) | 7 to 12 |
+| `Store.seed` (a write transaction on every launch, committing for the disk) | 9 to 11 |
+
+So the ~20 ms Rust deficit was UniFFI's registration on the main thread before the first screen.
+Fixes: the core starts on its own thread from `Application.onCreate` (`CoreStartup`), and the
+first screen waits for it only when it needs the store. Core ready at ~45 to 90 ms after process
+start; Compose is ready for it at ~240 ms, so the core is off the critical path. Locale JSON is
+parsed per namespace on first lookup, and `seed()` only writes when a row is missing (the second
+launch onward writes nothing). R8 now keeps only what JNA finds by name (native functions,
+structures, callbacks) instead of the whole bindings package: dex 3.41 → 3.26 MB.
+
+### Memory: what the extra PSS is
+
+`dumpsys meminfo`, Welcome screen, KMP vs Rust before the pass: native heap is the same (14.5 MB
+both: Skia, Compose, ART; Rust's own heap is small). The difference was Code +1.0 MB (the
+core's `.so` pages mapped from the APK, dex of the generated bindings) and Java heap +1.1 MB (JNA
+and UniFFI's converter and function objects). The smaller library and the narrowed R8 rules
+took 0.7 to 1.7 MB off; the rest is JNA/UniFFI machinery, which only fewer exported functions
+would shrink.
+
+### Results (same emulator, release builds with test seams)
+
+| | KMP | Rust before | Rust after | after − KMP |
+|---|---|---|---|---|
+| APK, all ABIs | 8.6 MB | 18.1 MB | 11.1 MB | +2.5 MB (was +9.5) |
+| arm64 split, as stored in the APK | 4.86 MB | 7.42 MB | 5.48 MB | +0.62 MB, +13% (was +2.56, +53%) |
+| arm64 split, entries deflated | 3.98 MB | 4.98 MB | 4.25 MB | +0.27 MB, +7% |
+| Native code, arm64 (core + JNA; KMP: Room's SQLite) | 1.29 MB | 3.78 MB | 1.88 MB | +0.59 MB |
+| dex | 3.18 MB | 3.41 MB | 3.26 MB | +0.08 MB |
+| Cold start median, round 1 | 276 ms | 298 ms | 277 ms | +1 ms |
+| Cold start median, round 2 | 294 ms | 315 ms | 295 ms | +1 ms |
+| PSS, Welcome, round 1 | 30.7 MB | 33.1 MB | 32.4 MB | +1.7 MB |
+| PSS, Welcome, round 2 | 30.8 MB | 34.7 MB | 32.5 MB | +1.7 MB |
+
+Cold start is level with KMP; the download is +0.27 MB deflated (+13% as stored, which is how the
+earlier numbers were counted; they read 4.6 / 7.1 MB with the same method but a slightly
+different accounting, the ratios agree); PSS is +1.7 MB.
+
+Measuring: the emulator (`-gpu guest`, lavapipe) grows during a session; after about 40 minutes
+one measured 31 GB resident and every start read ~600 ms. Rounds are measured on a fresh
+emulator and the box is checked (`ps -o rss`) between them.
+
 ## Incident: 2026-10-10 reboot
 
 From about 13:50, free memory sat near 0.8 GB for over three hours, according to the Gradle
