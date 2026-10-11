@@ -32,8 +32,8 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 
 | Agent | Branch | ID | Status |
 |---|---|---|---|
-| ffi-android | `rust/ffi-android` | | starting |
-| ffi-ios | `rust/ffi-ios` | | starting |
+| ffi-android | `rust/ffi-android` | `a8059c0ac75567d8e` | running |
+| ffi-ios | `rust/ffi-ios` | `af214a0b87546f6d3` | running |
 
 ## Merge log
 
