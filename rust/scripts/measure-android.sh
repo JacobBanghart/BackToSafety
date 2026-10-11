@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # measure-android.sh <apk> <label>: 15 cold starts (am start -W -S, median) and memory (PSS,
 # native heap) on the Welcome screen, on $ANDROID_SERIAL. Used for the KMP vs Rust numbers.
+set -euo pipefail
 apk="$1"; label="$2"; pkg=com.backtosafety.app; act="$pkg/.MainActivity"
 adb uninstall $pkg >/dev/null 2>&1 || true
 adb install "$apk" >/dev/null
