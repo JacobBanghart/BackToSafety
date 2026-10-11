@@ -200,6 +200,13 @@ Measuring: the emulator (`-gpu guest`, lavapipe) grows during a session; after a
 one measured 31 GB resident and every start read ~600 ms. Rounds are measured on a fresh
 emulator and the box is checked (`ps -o rss`) between them.
 
+- 2026-10-11: merged `rust/ffi-android` Android optimization pass (b309468): the arm64 core is 3.59 → 1.69
+  MB (regex replaced by patterns held to it by an equivalence test, trimmed SQLite, opt-level z),
+  and the core starts off the main thread. Cold start now matches KMP; PSS is +1.7 MB. CI is green
+  (run 38129362902), including the iOS build and snapshots. iOS size and launch weren't
+  re-measured with the new profile (the Mac was offline). The watchdog now also stops any
+  emulator over 12 GB resident.
+
 ## Incident: 2026-10-10 reboot
 
 From about 13:50, free memory sat near 0.8 GB for over three hours, according to the Gradle
