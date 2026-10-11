@@ -11,10 +11,10 @@ via UniFFI. `kmp/shared` retires. The existing gates pass without re-blessing an
 | # | Phase | Who | Status |
 |---|---|---|---|
 | 0 | Rust core ported from kmp/shared, 50 tests (vectors, store, migrations, EmergencyAway) | done | ✅ |
-| 1 | UniFFI on `nijii-core`: exported API, generated Kotlin; Android libs via cargo-ndk; Gradle wiring | agent **ffi-android** | starting |
-| 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | after 1 |
-| 3 | iOS: XCFramework + Swift bindings, built on the Mac; the Xcode project links it | agent **ffi-ios** | starting (pipeline first, adapts to phase 1's API) |
-| 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | after 3 |
+| 1 | UniFFI on `nijii-core`: exported API, generated Kotlin; Android libs via cargo-ndk; Gradle wiring | agent **ffi-android** | API ✅; Android libs and Gradle wiring in progress |
+| 2 | androidApp on the Rust core, then remove kmp/shared from Android; all Android gates green, DB carried over from a KMP install | agent **ffi-android** | in progress |
+| 3 | iOS: XCFramework + Swift bindings, built on the Mac; the Xcode project links it | agent **ffi-ios** | ✅ |
+| 4 | iosApp on the Rust core; iOS gates green | agent **ffi-ios** | in progress |
 | 5 | Delete kmp/shared, Room and KMP plugins; docs, CI workflows | orchestrator | last |
 
 At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-android` (branch
@@ -43,6 +43,15 @@ At most 2 agents run at once (load limits). Worktrees: `~/github/nijii-ffi-andro
 - 2026-10-10: the Dioxus/WebView UI was shelved by the owner; the native UIs stay. Removed
   `rust/app`, its tasks, and the app-scanning analytics test (the apps' own parity test
   covers it).
+
+- 2026-10-10: merged `rust/ffi-android` M1 (671d536): UniFFI 0.32.2 skeleton,
+  `uniffi-bindgen`, `rust:bindings`.
+- 2026-10-10: merged `rust/ffi-ios` phase 3 (6ca0f14): `ios:rust` builds the staticlibs, Swift
+  bindings (module `NijiiCore`) and an XCFramework; wired into project.yml. A simulator test
+  calls `coreVersion()`. Dropped the Dioxus CLI from mise.
+- 2026-10-10: merged `rust/ffi-android` M2 (80af3b4): full FFI API in package
+  `com.backtosafety.core.ffi`, AppClock in core, the posthog client removed (apps keep their
+  SDKs). 49 core tests pass.
 
 ## Incident: 2026-10-10 reboot
 
