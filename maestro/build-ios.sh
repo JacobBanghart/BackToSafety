@@ -7,6 +7,8 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+# The Rust core's library and Swift bindings come first: the project lists the generated file.
+(cd "$ROOT" && mise run ios:rust) >&2
 cd "$ROOT/kmp/iosApp"
 xcodegen generate --quiet >&2
 xcodebuild -project BackToSafety.xcodeproj -scheme BackToSafety -configuration Release \

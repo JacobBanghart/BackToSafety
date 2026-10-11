@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#MISE description="Build the Rust core for iOS: staticlibs (device, simulator), UniFFI Swift bindings, NijiiCore.xcframework (kmp/iosApp/RustCore)"
+# What the iOS app links in place of kmp/shared's Shared.framework. Runs on the Mac (from
+# Xcode's build phase, from maestro/build-ios.sh, or through mise run ios:remote ios:rust).
+#
+# Output, in kmp/iosApp/RustCore (ignored by git):
+#   NijiiCore.xcframework   libnijii_core.a for ios-arm64 and ios-arm64-simulator, with Headers
+#   Generated/NijiiCore.swift   the UniFFI Swift bindings, compiled into the app
+#   include/                the C header and module.modulemap (module NijiiCoreFFI)
+#
+# The Xcode project reads the slices inside the xcframework through LIBRARY_SEARCH_PATHS (see
+# project.yml), because Xcode resolves a referenced .xcframework before any build phase runs.
+#
+# Overrides (the scratch-crate check uses them): FFI_WORKSPACE (default rust), FFI_PACKAGE
+# (nijii-core), FFI_OUT (kmp/iosApp/RustCore).
+set -euo pipefail
+[ "$(uname -s)" = Darwin ] || { echo "iOS needs the Mac: mise run ios:remote ios:rust" >&2; exit 2; }
+cd "$(dirname "$0")/../.."
+root="$PWD"
+ws="${FFI_WORKSPACE:-$root/rust}"
+pkg="${FFI_PACKAGE:-nijii-core}"
+lib="lib${pkg//-/_}.a"
+out="${FFI_OUT:-$root/kmp/iosApp/RustCore}"
+# Matches deployment target in kmp/iosApp/project.yml; C code (bundled SQLite, ring) builds for it.
+export IPHONEOS_DEPLOYMENT_TARGET="${IPHONEOS_DEPLOYMENT_TARGET:-17.0}"
+# Xcode runs build phases with its own SDKROOT/toolchain variables; cargo's cc must see the host's.
+unset SDKROOT TOOLCHAINS LD_LIBRARY_PATH DYLD_LIBRARY_PATH
+
+cd "$ws"
+target_dir="${CARGO_TARGET_DIR:-$(cargo metadata --format-version 1 --no-deps | python3 -c 'import json,sys; print(json.load(sys.stdin)["target_directory"])')}"
+export CARGO_TARGET_DIR="$target_dir"
+
+# --crate-type here, so the package's own crate-type list (Android wants a cdylib) is not
+# touched by iOS.
+for t in aarch64-apple-ios aarch64-apple-ios-sim; do
+  echo "== cargo build $pkg ($t)" >&2
+  cargo rustc -p "$pkg" --lib --release --target "$t" --crate-type staticlib >&2
+done
+
+tmp="$(mktemp -d "${TMPDIR:-/tmp}/nijii-ios-rust.XXXXXX")"
+trap 'rm -rf "$tmp"' EXIT
+mkdir -p "$tmp/Generated" "$tmp/include"
+
+# Library mode: the bindings come from the metadata the macros left in the library itself.
+echo "== uniffi-bindgen (swift)" >&2
+cargo run --release --bin uniffi-bindgen -- generate --language swift \
+  --library "$target_dir/aarch64-apple-ios-sim/release/$lib" --out-dir "$tmp/gen" >&2
+cp "$tmp"/gen/*.swift "$tmp/Generated/"
+cp "$tmp"/gen/*.h "$tmp/include/"
+modulemaps=("$tmp"/gen/*.modulemap)
+[ -e "${modulemaps[0]}" ] || { echo "uniffi-bindgen wrote no .modulemap" >&2; exit 1; }
+# Clang only recognises the file as a module map under this name.
+cp "${modulemaps[0]}" "$tmp/include/module.modulemap"
+
+echo "== xcframework" >&2
+xcodebuild -create-xcframework \
+  -library "$target_dir/aarch64-apple-ios/release/$lib" -headers "$tmp/include" \
+  -library "$target_dir/aarch64-apple-ios-sim/release/$lib" -headers "$tmp/include" \
+  -output "$tmp/NijiiCore.xcframework" >&2
+
+# Only replace what changed, so an Xcode build that changed no Rust doesn't relink.
+mkdir -p "$out"
+for item in NijiiCore.xcframework Generated include; do
+  if [ -e "$out/$item" ] && diff -rq "$tmp/$item" "$out/$item" >/dev/null 2>&1; then continue; fi
+  rm -rf "${out:?}/$item"
+  mv "$tmp/$item" "$out/$item"
+done
+echo "$out"

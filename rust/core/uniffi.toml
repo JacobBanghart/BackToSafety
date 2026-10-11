@@ -1,3 +1,7 @@
 [bindings.kotlin]
 package_name = "com.backtosafety.core"
 cdylib_name = "nijii_core"
+
+[bindings.swift]
+# The generated Swift file is compiled into the app; the C module is NijiiCoreFFI (not Shared).
+module_name = "NijiiCore"
