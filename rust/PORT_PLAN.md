@@ -132,8 +132,12 @@ Guardrails since then (owner-approved; see AGENTS.md "Load limits"):
 
 - Forward to ffi-android: export `report_open_failure`, so iOS can send the data_migrated
   failure when the open itself fails.
-- The CI workflow edits (ci.yml, ios-release.yml install Rust and run `ios:rust`) haven't run;
-  they need a GitHub run, which needs a push. Ask the owner first.
+- CI: green on rust-port (run 38113217340, dispatched; the owner approved the push). The first
+  run failed: mise was rate-limited (fixed by GITHUB_TOKEN), sdkmanager wasn't on PATH, and SC2129
+  (fixed in 02ea712). The CI iOS snapshot job passes, which confirms that the 6 local snapshot
+  diffs were only the simulator OS. The release workflows haven't run (they sign and publish).
+- The DOB fix is PR #1 against main, all checks green, awaiting the owner; it's cherry-picked
+  onto rust-port.
 
 Settled:
 
