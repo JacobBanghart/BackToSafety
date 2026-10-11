@@ -394,3 +394,81 @@ name, hand, mobility) passed after installing the Rust build over it (phase 4 no
 Hygiene note from this task: `maestro/upgrade/upgrade.sh` runs `maestro test` without
 `--device`, and `fill.yaml` doesn't assert the DOB, so a lost field only fails later in
 verify.
+
+### iOS stats (ffi-ios, 2026-10-10): KMP (main f4b5d88) vs the Rust core
+
+Mac: Apple M4 Pro (14 cores, 48 GB), Xcode 26.4, iPhone 16 Pro simulator on iOS 26.4 (arm64).
+KMP = `main` f4b5d88 (`~/nijii-remote-main`; its `kmp/shared` Shared.framework, static). Rust =
+rust-port head as of 28ee328 plus this branch's iOS work. **The size-tuned `[profile.release]`
+(opt-level s, fat LTO, codegen-units 1, strip) is not committed on rust-port**; it is only a
+working-tree change in `~/github/nijii-rust`. I applied the same four settings through
+`CARGO_PROFILE_RELEASE_*` environment variables ("rust-size" below) and also measured the
+committed default release profile ("rust-default"). Neither build is signed.
+
+**1. Size** (Release, arm64 device build, `xcodebuild -sdk iphoneos ARCHS=arm64
+CODE_SIGNING_ALLOWED=NO`). Neither app has a Frameworks directory: both cores are static
+libraries linked into the one executable. "IPA" is the unsigned `.app` zipped under `Payload/`
+(`zip -y`): the real App Store IPA is signed and thinned, so read it as relative.
+
+| | KMP | Rust (size profile) | Rust (default release) |
+|---|---|---|---|
+| .app bundle (du) | 17 804 KB | 14 256 KB (-20%) | 16 912 KB (-5%) |
+| main executable | 16 614 KB | 13 066 KB (-21%) | 15 720 KB (-5%) |
+| executable __TEXT / __DATA_CONST | 6.88 MB / 0.93 MB | 5.49 MB / 0.26 MB | 7.62 MB / 0.38 MB |
+| unsigned IPA (zip) | 5 153 KB | 4 554 KB (-12%) | 5 651 KB (+10%) |
+| core static lib before linking | Shared 15 802 944 B (ar) | libnijii_core.a 10 281 864 B | 27 958 496 B |
+
+The executable also holds the SwiftUI app, PostHog and, for Rust, the 6 000-line UniFFI Swift
+file, so the core's own contribution is not isolated here (the executable delta is 3.5 MB).
+
+**2. Cold launch** (simulator, Release, no test seams, Welcome screen; first run of each
+series dropped as warm-up, 15 runs kept, median shown; two series per build, in the order
+kmp, rust, rust, kmp). Two methods, the same for both builds:
+(a) `startup_ms`: the app's own app_ready measure (process start from the kernel to the first
+frame of the first screen), printed to stderr by a scratch one-line change in both trees and
+read through `xcrun simctl launch --console --terminate-running-process`;
+(b) an XCUITest loop (`app.terminate(); app.launch()`, then wait for the Welcome button).
+
+| | KMP | Rust (size profile) |
+|---|---|---|
+| (a) startup_ms median, series B / C | 534 / 539 | 530 / 542 |
+| (a) simctl launch to first frame, wall, median | 851 / 848 ms | 851 / 844 ms |
+| (b) XCUITest `launch()` median (min-max) | 2018 ms (1982-2067) | 2009 ms (1992-2065) |
+| (b) until the Welcome button exists | 3135 ms (3069-3179) | 3123 ms (3097-3178) |
+
+No launch difference beyond noise (about 1%). The Rust `Store.open` (migration check) at
+`AppModel.init` and the UniFFI setup cost nothing visible; Kotlin/Native runtime initialization
+isn't visible either.
+
+Raw (a) startup_ms, runs 1-15:
+- KMP B: 620 569 557 553 546 542 530 537 534 533 526 527 528 532 527
+- KMP C: 580 576 584 586 573 540 546 539 537 538 533 531 534 528 524
+- Rust B: 602 565 540 526 542 541 531 530 530 527 522 531 519 521 515
+- Rust C: 596 556 580 584 590 544 541 542 537 543 538 532 531 526 525
+
+Raw (b) launch_ms: KMP 2045 2067 2039 2025 2034 2023 2018 1998 2025 1986 2009 1993 1982 2008
+2006; Rust 2057 2065 2032 2023 2003 1997 2005 2011 1997 2010 2004 2011 2009 2007 1992.
+welcome_ms: KMP 3141 3179 3149 3158 3138 3107 3140 3101 3141 3069 3135 3111 3102 3133 3107;
+Rust 3105 3178 3136 3128 3126 3125 3106 3123 3097 3123 3114 3124 3117 3108 3103.
+
+**3. Memory** (simulator, Welcome screen 6 s after launch, `footprint <pid>` on the host,
+15 launches per series, all identical): physical footprint **KMP 31 MB (peak 36 MB), Rust
+27 MB (peak 33 MB)**, about 4 MB (13%) less. `ps` RSS (counts shared simulator frameworks, so
+only indicative): KMP 233 MB, Rust 227 MB. Per-run lines are in `/tmp/l2-*.txt` on the Mac.
+`footprint` rounds to whole MB.
+
+**4. Release build time from clean outputs** (dependency downloads kept: Gradle/Konan caches,
+cargo registry; `kmp/*/build`, DerivedData and the cargo target dir removed first; seconds).
+
+| | KMP | Rust (size profile) | Rust (default) |
+|---|---|---|---|
+| core only, device slice | 48 (`:shared:linkReleaseFrameworkIosArm64`, cold daemon, no build cache) | 20.0 (`cargo rustc`, aarch64-apple-ios) | 16.2 |
+| whole `ios:rust` step | (n/a) | 80.9 (both slices + host uniffi-bindgen + xcframework) | 59.8 |
+| `xcodebuild` device Release | 84.1 (Gradle build cache warm), 85.2 (cache removed) | 46.3 | 47.4 |
+| total from clean | 85 | 127.2 (ios:rust + xcodebuild) | 107.2 |
+
+Rust is slower from clean because `ios:rust` also builds the simulator slice and the bindgen
+tool; the Xcode build phase repeats `ios:rust` but it is then a cached no-op (seconds). An
+incremental Rust change is seconds; not measured for Kotlin.
+
+Not measured: device (not simulator) launch time or memory, App Store thinned size, energy.
