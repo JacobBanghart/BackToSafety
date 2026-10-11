@@ -188,6 +188,14 @@ Cold start is level with KMP; the download is +0.27 MB deflated (+13% as stored,
 earlier numbers were counted; they read 4.6 / 7.1 MB with the same method but a slightly
 different accounting, the ratios agree); PSS is +1.7 MB.
 
+Gates after the pass: `mise run check` (50+ Rust tests incl. the equivalence and SQLite-flag tests,
+analytics parity), `mise run lint`, `mise run snapshots` (24, no RECORD) and `DEVICES=1 mise run
+android:flows` (14 flows + both reorder gestures, 1090 s) pass. Fidelity not rerun (nothing visual
+changed). iOS: the changes that reach `ios:rust` are the release profile (opt-level z), the
+dependency changes (regex, chrono, uniffi features), `rust/.cargo/config.toml` (SQLite flags;
+`ios:rust` runs cargo from `rust/`, so it applies) and the lazy translations/seed. The Mac was
+offline, so it is unbuilt there; CI's iOS job or `mise run ios:remote ios:rust` will tell.
+
 Measuring: the emulator (`-gpu guest`, lavapipe) grows during a session; after about 40 minutes
 one measured 31 GB resident and every start read ~600 ms. Rounds are measured on a fresh
 emulator and the box is checked (`ps -o rss`) between them.
