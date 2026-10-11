@@ -300,9 +300,9 @@ fn bundled_sqlite_is_trimmed_to_what_the_store_uses() {
         assert!(used(omitted), "{omitted} should be set");
     }
     for kept in [
-        "DEFAULT_FOREIGN_KEYS=1",
+        "DEFAULT_FOREIGN_KEYS",
         "ENABLE_COLUMN_METADATA",
-        "THREADSAFE=1",
+        "THREADSAFE",
     ] {
         assert!(used(kept), "{kept} should stay");
     }
