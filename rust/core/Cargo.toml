@@ -8,8 +8,8 @@ version.workspace = true
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [dependencies]
-uniffi = { version = "0.32.2" }
-chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+uniffi = { version = "0.32.2", default-features = false }
+chrono = { version = "0.4", default-features = false, features = ["std", "now"] }
 rusqlite = { version = "0.40.2", features = ["bundled"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["preserve_order"] }
