@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
-#MISE description="Fast checks, no device: spec contracts, the Rust core's tests, then the Kotlin shared core's tests (until it retires)"
+#MISE description="Fast checks, no device: spec contracts, the Rust core's tests, and the analytics parity of both apps"
 set -euo pipefail
 python3 spec/check.py
 rust/scripts/heavy.sh cargo test -p nijii-core --manifest-path rust/Cargo.toml
-cd kmp && ../rust/scripts/heavy.sh ./gradlew :shared:jvmTest --console=plain -q
-echo "core tests ok"
+# AnalyticsParityTest scans both apps' sources and the core's against spec/analytics-events.json.
+cd kmp
+trap './gradlew --stop >/dev/null 2>&1 || true' EXIT
+../rust/scripts/heavy.sh ./gradlew :androidApp:testDebugUnitTest --tests '*AnalyticsParityTest' --console=plain -q
+echo "core tests and analytics parity ok"

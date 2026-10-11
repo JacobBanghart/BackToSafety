@@ -1,4 +1,4 @@
-//! The twin of kmp/shared's DatabaseTest: the L5 contract at unit level. The Rust app must
+//! The port of the retired Kotlin DatabaseTest: the L5 contract at unit level. The Rust app must
 //! open the database the RN app left behind (spec/storage.md) with every row intact, using
 //! the committed RN fixture, spec/fixtures/upgrade/android/SQLite/nijii.db.
 
@@ -200,13 +200,13 @@ fn table_info(c: &Connection, table: &str) -> Vec<(String, String, bool, Option<
     .unwrap()
 }
 
-/// The on-disk schema is what Room v2 produces (kmp/shared/schemas/.../2.json), whether the
+/// The on-disk schema is what Room v2 produces (spec/room-schema-v2.json, the schema the KMP app exported), whether the
 /// file is new or migrated from the RN app's.
 #[test]
 fn schema_is_rooms_version_two_fresh_and_migrated() {
     let exported: Value = serde_json::from_str(
         &std::fs::read_to_string(
-            root().join("kmp/shared/schemas/com.backtosafety.core.db.AppDatabase/2.json"),
+            root().join("spec/room-schema-v2.json"),
         )
         .unwrap(),
     )
