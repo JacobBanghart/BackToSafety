@@ -32,7 +32,7 @@ fn main() {
     let mut out = String::from(
         "// Generated from spec/analytics-events.json by core/build.rs. Do not edit.\n\n\
          /// The PostHog events both apps send; [`AnalyticsEvent::wire_name`] is what dashboards see.\n\
-         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]\n\
+         #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, uniffi::Enum)]\n\
          pub enum AnalyticsEvent {\n",
     );
     for e in &events {

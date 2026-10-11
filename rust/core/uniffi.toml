@@ -1,5 +1,5 @@
 [bindings.kotlin]
-package_name = "com.backtosafety.core"
+package_name = "com.backtosafety.core.ffi"
 cdylib_name = "nijii_core"
 
 [bindings.swift]
