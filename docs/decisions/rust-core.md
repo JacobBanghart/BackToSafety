@@ -43,16 +43,17 @@ and 15 cold starts per round.
 | Clean release build | 99 s | 150 s (the Rust dependencies built cold, for 5 targets) |
 | Rebuild after a core change | 79 s | 43 s |
 
-**iOS** (iPhone 16 Pro simulator; arm64 device build; measured before the Android
-optimizations, which also apply to iOS):
+**iOS** (iPhone 16 Pro simulator; arm64 device build; `main` a8dea5e against this branch; same
+Mac, same session; after the optimization pass):
 
 | | KMP | Rust core |
 |---|---|---|
-| App bundle (installed, `.app`) | 17.8 MB | 14.3 MB (−20%) |
-| Download (zipped IPA, unsigned) | 5.15 MB | 4.55 MB (−12%) |
-| Cold launch | 535 ms | 536 ms |
+| App bundle (installed, `.app`) | 17.8 MB | 13.2 MB (−26%) |
+| Download (zipped IPA, unsigned) | 5.15 MB | 4.17 MB (−19%) |
+| Core library before linking | 15.8 MB (`Shared`) | 8.1 MB (`libnijii_core.a`) |
+| Cold launch (startup_ms, median of two rounds) | 537 / 531 ms | 523 / 525 ms |
 | Memory (footprint) | 31 MB | 27 MB (−13%) |
-| Clean build | ~85 s | 127 s (with the simulator slice and bindgen) |
+| Clean build | 81 s | 104 s (with the simulator slice and bindgen) |
 
 On Android the Kotlin core costs almost nothing, because the runtime is already there. On
 iOS, Kotlin/Native brings its own runtime and garbage collector, which a Rust static library
@@ -69,7 +70,7 @@ Getting Android to parity took four changes:
 ## Trade-offs
 
 - **For users:** about even. Android is +7% download and +1.7 MB memory, with the same start
-  time. iOS is −12% download, −20% installed and −13% memory.
+  time. iOS is −19% download, −26% installed and −13% memory.
 - **For development:**
   - Core changes rebuild faster.
   - The core is about three times the lines of the Kotlin it replaced (3,300 against 1,200),

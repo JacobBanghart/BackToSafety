@@ -611,3 +611,64 @@ tool; the Xcode build phase repeats `ios:rust` but it is then a cached no-op (se
 incremental Rust change is seconds; not measured for Kotlin.
 
 Not measured: device (not simulator) launch time or memory, App Store thinned size, energy.
+
+### iOS stats, re-measured after the size pass (2026-10-11)
+
+The first set (above) predates the Android size pass (regex crate replaced by hand-written
+patterns, SQLite trimmed in `core/.cargo/config.toml`, `opt-level = "z"`, lazy translations,
+seed that only writes when missing), all of which applies to iOS too. Re-measured in one
+session on the same Mac (Apple M4 Pro, 14 cores, 48 GB, Xcode 26.4) and the same iPhone 16 Pro
+simulator (iOS 26.4, arm64), with the same methods as before. KMP = origin/main a8dea5e
+(`~/nijii-remote-main`, includes the profile-editor fix, which does not change size); Rust =
+rust-port 796346d merged into `rust/ffi-ios` (`~/nijii-remote-ffi-ios`, the committed
+`[profile.release]` and `core/.cargo/config.toml`, no environment overrides). Both unsigned.
+
+**Size** (Release, `xcodebuild -sdk iphoneos ARCHS=arm64 CODE_SIGNING_ALLOWED=NO`; both cores
+are static libraries linked into the one executable; the "IPA" is the `.app` zipped under
+`Payload/` with `zip -y`, so read it as relative):
+
+| | KMP | Rust, before the size pass | Rust, now |
+|---|---|---|---|
+| .app bundle (du) | 17 804 KB | 14 256 KB | 13 164 KB (−26% vs KMP) |
+| main executable | 16 614 KB | 13 066 KB | 11 975 KB (−28%) |
+| executable __TEXT / __DATA_CONST | 6.88 / 0.93 MB | 5.49 / 0.26 MB | 4.55 / 0.13 MB |
+| unsigned IPA (zip) | 5 153 KB | 4 554 KB | 4 165 KB (−19%) |
+| core library before linking | `Shared` 15 802 944 B | 10 281 864 B | `libnijii_core.a` 8 084 192 B |
+
+**Cold launch.** `startup_ms` is the app's own app_ready figure (process start to first frame
+of the Welcome screen), printed to stderr by a scratch one-line change in both trees
+(not committed) and read through `xcrun simctl launch --console --terminate-running-process`.
+Per series: one warm-up launch dropped, 15 kept, median shown; series in the order KMP, Rust,
+Rust, KMP.
+
+| | KMP | Rust, before | Rust, now |
+|---|---|---|---|
+| startup_ms median, series B / C | 537 / 531 (was 534 / 539) | 530 / 542 | 523 / 525 |
+| simctl launch to first frame (wall) | 853 / 849 ms | 851 / 844 ms | 853 / 854 ms |
+
+Raw startup_ms, runs 1-15:
+- KMP B: 612 584 554 576 543 552 541 537 531 530 536 526 525 517 525
+- KMP C: 605 574 563 597 527 541 537 535 530 528 531 531 523 523 529
+- Rust B: 590 551 541 552 536 532 528 523 522 521 512 519 521 516 521
+- Rust C: 617 557 558 557 535 528 527 525 522 521 512 516 516 515 503
+
+Rust is about 2% faster in this measure now (it was level before). The simctl wall time is
+dominated by simctl itself and is the same for both.
+
+**Memory** (Welcome screen 6 s after launch, `footprint <pid>` on the host; the same 15
+launches per series): physical footprint **KMP 31 MB (peak 36 MB; one launch in four series
+read 30), Rust 27 MB (peak 32 MB, before 33)**. `ps` RSS (includes shared simulator
+frameworks, indicative only): KMP 233 MB, Rust 226 MB. `footprint` rounds to whole MB.
+
+**Clean build** (outputs removed first: KMP `kmp/*/build`, `.gradle`, DerivedData; Rust
+`ios/RustCore`, DerivedData and the cargo target dir; dependency caches kept; seconds):
+
+| | KMP | Rust, before | Rust, now |
+|---|---|---|---|
+| core step | not separated (Gradle runs inside xcodebuild) | 80.9 (`ios:rust`) | 59.1 (`ios:core`: both slices, host uniffi-bindgen, xcframework) |
+| `xcodebuild` device Release | 80.5 (includes the Gradle framework) | 46.3 | 44.4 |
+| total | 80.5 | 127.2 | 103.5 |
+
+Rust is slower from clean because `ios:core` also builds the simulator slice and the bindgen
+tool; the Xcode build phase repeats it as a cached no-op. Not measured: device launch or
+memory, App Store thinned size, energy.
