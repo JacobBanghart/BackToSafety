@@ -45,12 +45,12 @@ targets:
           - $(SRCROOT)/RustCore/Generated/DesignTokens.swift
         script: |
           set -e
-          export PATH="/opt/homebrew/bin:$HOME/.local/bin:$PATH"
+          export PATH="/opt/homebrew/bin:$HOME/.local/bin:$HOME/.local/share/mise/bin:$HOME/.local/share/mise/shims:$HOME/.cargo/bin:$PATH"
           cd "$SRCROOT/../.."
           if command -v mise >/dev/null; then
             eval "$(mise env -s bash)"
           fi
-          mise run ios:rust
+          mise-tasks/ios/rust >/dev/null
     # Version and build number come from version.json: the release workflow
     # stamps the tag's version and the run number there before building. Runs before signing.
     postBuildScripts:

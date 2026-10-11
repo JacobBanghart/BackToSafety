@@ -99,15 +99,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Setup Java (mise.toml)
+      - name: Setup Rust (mise.toml)
         uses: jdx/mise-action@v5
         with:
-          install_args: java
+          install_args: rust
 
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      # The SwiftUI app for the simulator; its first build phase builds the shared Kotlin core.
+      # The SwiftUI app for the simulator, on the Rust core (build-ios.sh runs mise run ios:rust).
       - name: Build
         run: maestro/build-ios.sh
 
