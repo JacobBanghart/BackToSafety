@@ -35,15 +35,19 @@ maestro/captures/
 maestro/gestures/ios/Gestures.xcodeproj/
 maestro/gestures/ios/build/
 
-# Gradle and Kotlin (kmp/)
-kmp/.gradle/
-kmp/.kotlin/
-kmp/build/
-kmp/*/build/
-kmp/buildSrc/.gradle/
-kmp/buildSrc/.kotlin/
-kmp/local.properties
+# Gradle and Kotlin (android/)
+android/.gradle/
+android/.kotlin/
+android/build/
+android/*/build/
+android/buildSrc/.gradle/
+android/buildSrc/.kotlin/
+android/local.properties
 
-# The Rust core for iOS, built by mise run ios:rust
-kmp/iosApp/RustCore/
-kmp/iosApp/build-tests/
+# The Rust core for iOS, built by mise run ios:core
+ios/RustCore/
+ios/build-tests/
+
+# The Rust core (builds go to CARGO_TARGET_DIR; this is the fallback)
+core/target/
+__pycache__/

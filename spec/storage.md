@@ -4,7 +4,7 @@ The Kotlin app ships under the same package and bundle ID (`com.backtosafety.app
 **over** the RN app. On first launch it must open the RN app's data as-is: no export step and no
 re-onboarding. This file is the contract. `spec/db-schema.json` pins the table shapes (generated
 from the RN app's schema before it was removed; the Rust core's migration and
-`rust/core/tests/database.rs` hold the store to it and to the committed fixture).
+`core/tests/database.rs` hold the store to it and to the committed fixture).
 
 ## Database
 

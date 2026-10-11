@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Build the Kotlin Android app (kmp/) and run it on a connected phone, or an emulator"
+#MISE description="Build the Android app (android/) and run it on a connected phone, or an emulator"
 #MISE alias="android"
 #MISE depends=["android:sdk"]
 set -euo pipefail
@@ -8,8 +8,8 @@ if ! "$adb" devices | grep -qE $'\tdevice$'; then
   echo "No phone connected; starting the emulator."
   mise run android:emulator
 fi
-cd kmp
-if ! out=$(./gradlew :androidApp:installDebug --console=plain 2>&1); then
+cd android
+if ! out=$(./gradlew :app:installDebug --console=plain 2>&1); then
   echo "$out" | tail -25
   if echo "$out" | grep -q INSTALL_FAILED_UPDATE_INCOMPATIBLE; then
     echo >&2

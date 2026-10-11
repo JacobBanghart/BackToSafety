@@ -31,7 +31,7 @@ python3 maestro/fidelity.py /tmp/captures        # vs the goldens (tier 2 ratche
 iOS runs on the Mac (`ssh jacob@10.1.0.17`, plain bash 3):
 
 ```sh
-maestro/build-ios.sh                            # the iOS app (kmp/iosApp), simulator build with test seams
+maestro/build-ios.sh                            # the iOS app (ios), simulator build with test seams
 maestro/start-simulator.sh 6 APP                # 6 "nijii-N" iPhone 17 Pro simulators, app installed
 maestro/capture-parallel-ios.sh /tmp/captures   # every state x light/dark/large-text
 python3 maestro/fidelity.py /tmp/captures --platform ios

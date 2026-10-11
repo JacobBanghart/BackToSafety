@@ -1,7 +1,7 @@
 # nijii-app (Back to Safety)
 
-Two native UIs on one Rust core: `kmp/androidApp` (Compose) and `kmp/iosApp` (SwiftUI), both on
-`rust/core` through UniFFI. See `docs/ARCHITECTURE.md`.
+Two native UIs on one Rust core: `android/app` (Compose) and `ios` (SwiftUI), both on
+`core` through UniFFI. See `docs/ARCHITECTURE.md`.
 
 `rust/AGENTS.md` has the rules for the core and the load limits for heavy builds (cargo, Gradle,
 emulators); `rust/PORT_PLAN.md` is the history of the move from Kotlin Multiplatform.
@@ -9,13 +9,13 @@ emulators); `rust/PORT_PLAN.md` is the history of the move from Kotlin Multiplat
 ## Change both apps together
 
 A user-visible change lands in the Android and the iOS app in the same commit, and logic goes
-in `rust/core` rather than in either UI. What the apps must agree on lives in `spec/`:
+in `core` rather than in either UI. What the apps must agree on lives in `spec/`:
 
 - New or renamed testIDs: `spec/testids.json`, then `python3 spec/check.py`.
 - Analytics events: `spec/analytics-events.json` (`AnalyticsEvent` is generated from it).
 - Colors, type and spacing: `spec/design-tokens.json` (`DesignTokens` is generated from it, in each app).
 - Strings: `i18n/locales/` (both apps read the same JSON).
-- Logic with fixed inputs and outputs: `spec/vectors/`, run by `rust/core/tests/vectors.rs`.
+- Logic with fixed inputs and outputs: `spec/vectors/`, run by `core/tests/vectors.rs`.
 
 ## Before pushing
 

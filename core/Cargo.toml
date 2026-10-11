@@ -1,0 +1,41 @@
+# The app's core: rules, translations, the store and emergency logic, shared by the Android and
+# iOS apps through UniFFI. This is also the workspace root (the bindings generator is a member).
+[package]
+name = "nijii-core"
+edition.workspace = true
+version.workspace = true
+
+[lib]
+# lib: the Rust tests and the host (JVM) library; cdylib: Android; staticlib: iOS XCFramework.
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[dependencies]
+uniffi = { version = "0.32.2", default-features = false }
+chrono = { version = "0.4", default-features = false, features = ["std", "now"] }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+uuid = { version = "1.28.0", features = ["v4"] }
+
+[build-dependencies]
+serde_json = "1"
+
+[dev-dependencies]
+# Only the tests: tests/regex_equivalence.rs holds the hand-written patterns to the regexes they replaced.
+regex = "1"
+
+[workspace]
+resolver = "3"
+members = ["uniffi-bindgen"]
+
+[workspace.package]
+edition = "2024"
+version = "1.4.0"
+
+# The library the apps ship: whole-program optimized and stripped (it was 5.8 MB per ABI
+# without this). Panics still unwind: UniFFI turns a panic into a Kotlin/Swift exception.
+[profile.release]
+opt-level = "z"
+lto = "fat"
+codegen-units = 1
+strip = "symbols"

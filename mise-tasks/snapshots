@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #MISE description="Android snapshot tests: every main screen rendered on the JVM vs src/test/snapshots (RECORD=1 re-records)"
 set -euo pipefail
-cd kmp
+cd android
 if [ -n "${RECORD:-}" ]; then
-  ../rust/scripts/heavy.sh ./gradlew --no-daemon :androidApp:testDebugUnitTest -Precord --console=plain -q
-  echo "recorded androidApp/src/test/snapshots"
+  ../scripts/heavy.sh ./gradlew --no-daemon :app:testDebugUnitTest -Precord --console=plain -q
+  echo "recorded android/app/src/test/snapshots"
 else
-  ../rust/scripts/heavy.sh ./gradlew --no-daemon :androidApp:testDebugUnitTest --console=plain -q || {
-    echo "differences: kmp/androidApp/build/outputs/roborazzi (RECORD=1 if deliberate)" >&2
+  ../scripts/heavy.sh ./gradlew --no-daemon :app:testDebugUnitTest --console=plain -q || {
+    echo "differences: android/app/build/outputs/roborazzi (RECORD=1 if deliberate)" >&2
     exit 1
   }
   echo "snapshots match"

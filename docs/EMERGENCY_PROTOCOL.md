@@ -2,7 +2,7 @@
 
 This document describes the 15-minute guided search protocol: the emergency screen in both apps
 (`EmergencyScreen.kt`, `EmergencyView.swift`), with the shared rules in
-`rust/core/src/emergency.rs`, held to `spec/vectors/emergency.json`.
+`core/src/emergency.rs`, held to `spec/vectors/emergency.json`.
 
 ---
 
@@ -21,7 +21,7 @@ When a vulnerable adult goes missing, the app guides the caregiver through a str
 ## 2. Protocol Duration
 
 ```rust
-pub const SEARCH_WINDOW_SECONDS: i64 = 15 * 60; // rust/core/src/emergency.rs
+pub const SEARCH_WINDOW_SECONDS: i64 = 15 * 60; // core/src/emergency.rs
 pub const WARNING_AT_SECONDS: i64 = 5 * 60;
 ```
 

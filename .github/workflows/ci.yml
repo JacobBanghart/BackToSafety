@@ -67,7 +67,7 @@ jobs:
     name: Kotlin Android app (build)
     runs-on: ubuntu-latest
     env:
-      # The Gradle build runs cargo through rust/scripts/heavy.sh's queue, meant for the shared
+      # The Gradle build runs cargo through scripts/heavy.sh's queue, meant for the shared
       # devbox; this runner is its own.
       NIJII_HEAVY: '1'
     steps:
@@ -92,25 +92,25 @@ jobs:
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> "$GITHUB_ENV"
 
       - name: Build
-        working-directory: kmp
-        run: ./gradlew :androidApp:assembleRelease --console=plain
+        working-directory: android
+        run: ./gradlew :app:assembleRelease --console=plain
 
       # Android lint, errors only: calls to APIs newer than minSdk (API 24) crash older phones.
       - name: Lint
-        working-directory: kmp
-        run: ./gradlew :androidApp:lintRelease --console=plain
+        working-directory: android
+        run: ./gradlew :app:lintRelease --console=plain
 
       # Every main screen rendered on the JVM, compared with src/test/snapshots.
       - name: Snapshot tests
-        working-directory: kmp
-        run: ./gradlew :androidApp:testDebugUnitTest --console=plain
+        working-directory: android
+        run: ./gradlew :app:testDebugUnitTest --console=plain
 
       - name: Upload snapshot differences
         if: failure()
         uses: actions/upload-artifact@v7
         with:
           name: android-snapshot-diffs
-          path: kmp/androidApp/build/outputs/roborazzi/
+          path: android/app/build/outputs/roborazzi/
 
   kotlin-ios:
     name: SwiftUI iOS app (build)
@@ -128,7 +128,7 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      # The SwiftUI app for the simulator, on the Rust core (build-ios.sh runs mise run ios:rust).
+      # The SwiftUI app for the simulator, on the Rust core (build-ios.sh runs mise run ios:core).
       - name: Build
         run: maestro/build-ios.sh
 
@@ -137,7 +137,7 @@ jobs:
       - name: Check the bundle
         run: |
           set -euo pipefail
-          APP=kmp/iosApp/build/Build/Products/Release-iphonesimulator/BackToSafety.app
+          APP=ios/build/Build/Products/Release-iphonesimulator/BackToSafety.app
           for f in Assets.car SplashScreen.storyboardc PrivacyInfo.xcprivacy locales/en/common.json logo-full.png; do
             test -e "$APP/$f" || { echo "missing $f"; exit 1; }
           done
@@ -157,7 +157,7 @@ jobs:
       # Every main screen on a fixed simulator, compared with BackToSafetyTests/__Snapshots__.
       # A missing reference is recorded and fails the run: the upload has it to commit.
       - name: Snapshot tests
-        working-directory: kmp/iosApp
+        working-directory: ios
         run: |
           set -euo pipefail
           xcodebuild -version
@@ -172,5 +172,5 @@ jobs:
         with:
           name: ios-snapshots
           path: |
-            kmp/iosApp/BackToSafetyTests/__Snapshots__/
+            ios/BackToSafetyTests/__Snapshots__/
             ${{ runner.temp }}/snapshot-diffs/

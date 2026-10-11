@@ -41,8 +41,8 @@ jobs:
           PY
           cat version.json
 
-      # The native app (kmp/iosApp): the SwiftUI project from project.yml. The Rust core and its
-      # Swift bindings come first (mise run ios:rust: the project lists a generated file), then
+      # The native app (ios): the SwiftUI project from project.yml. The Rust core and its
+      # Swift bindings come first (mise run ios:core: the project lists a generated file), then
       # its first build phase refreshes them, and a later one sets the version and build number
       # from the version.json stamped above.
       - name: Setup Rust (mise.toml)
@@ -51,10 +51,10 @@ jobs:
           install_args: rust
 
       - name: Build the Rust core
-        run: mise run ios:rust
+        run: mise run ios:core
 
       - name: Generate Xcode project
-        working-directory: kmp/iosApp
+        working-directory: ios
         run: |
           # The runner's service PATH leaves out Homebrew.
           export PATH="/opt/homebrew/bin:$PATH"
@@ -120,7 +120,7 @@ jobs:
           # Signing is set on the app target (project.yml) from RELEASE_TEAM_ID and
           # RELEASE_PROFILE_UUID, so it doesn't reach the Swift packages.
           xcodebuild archive \
-            -project kmp/iosApp/BackToSafety.xcodeproj \
+            -project ios/BackToSafety.xcodeproj \
             -scheme BackToSafety \
             -derivedDataPath "$RUNNER_TEMP/DerivedData" \
             -configuration Release \

@@ -2,9 +2,9 @@
 #MISE description="Fast checks, no device: spec contracts, the Rust core's tests, and the analytics parity of both apps"
 set -euo pipefail
 python3 spec/check.py
-# From rust/: cargo reads rust/.cargo/config.toml (the trimmed SQLite) from its working directory.
-(cd rust && ../rust/scripts/heavy.sh cargo test -p nijii-core)
+# From core/: cargo reads core/.cargo/config.toml (the trimmed SQLite) from its working directory.
+(cd core && ../scripts/heavy.sh cargo test -p nijii-core)
 # AnalyticsParityTest scans both apps' sources and the core's against spec/analytics-events.json.
-cd kmp
-../rust/scripts/heavy.sh ./gradlew --no-daemon :androidApp:testDebugUnitTest --tests '*AnalyticsParityTest' --console=plain -q
+cd android
+../scripts/heavy.sh ./gradlew --no-daemon :app:testDebugUnitTest --tests '*AnalyticsParityTest' --console=plain -q
 echo "core tests and analytics parity ok"

@@ -5,7 +5,7 @@ The apps track three versions:
 - App version (`version` in `version.json`): the public version users see in the stores.
 - Build numbers (`android.versionCode`, `ios.buildNumber` in `version.json`): monotonically
   increasing identifiers the stores require.
-- Database schema version (`DATABASE_VERSION` in `rust/core/src/store/migrations.rs`, the same `user_version` Room kept): the local data model.
+- Database schema version (`DATABASE_VERSION` in `core/src/store/migrations.rs`, the same `user_version` Room kept): the local data model.
 
 ## Rules
 
@@ -13,9 +13,9 @@ The apps track three versions:
    the tag's version and their run number (the build number) into `version.json` before
    building, so `version.json` in the repo only needs to be right for local builds.
 2. If the database structure changes:
-   - Bump `DATABASE_VERSION` and add a migration (`rust/core/src/store/migrations.rs`).
+   - Bump `DATABASE_VERSION` and add a migration (`core/src/store/migrations.rs`).
    - Update `spec/db-schema.json` and keep the upgrade fixture test passing
-     (`rust/core/tests/database.rs`, `maestro/upgrade/`).
+     (`core/tests/database.rs`, `maestro/upgrade/`).
    - Never edit a migration after it has shipped.
 
 ## Quick Release Checklist

@@ -64,8 +64,8 @@ Run the apps:
 | `mise run ios:sim [N]` | Boot N simulators with the harness's fixed status bar and contact |
 | `mise run ios:setup` | Check the Mac has Xcode, XcodeGen and a simulator runtime |
 
-To work in Xcode instead: `cd kmp/iosApp && xcodegen generate && open BackToSafety.xcodeproj`.
-Its first build phase rebuilds the Rust core (`ios:rust`), so Run always picks up Rust changes.
+To work in Xcode instead: `cd ios && xcodegen generate && open BackToSafety.xcodeproj`.
+Its first build phase rebuilds the Rust core (`ios:core`), so Run always picks up Rust changes.
 
 On devices (build the app, start fresh devices, run, shut down; `DEVICES=n` sets how many):
 
@@ -84,9 +84,9 @@ The Mac:
 ## Repository
 
 ```
-rust/core/         Rust core (UniFFI): store, migrations, protocol, readout, i18n, analytics
-kmp/androidApp/   Compose app
-kmp/iosApp/       SwiftUI app (project.yml -> Xcode project)
+core/         Rust core (UniFFI): store, migrations, protocol, readout, i18n, analytics
+android/app/   Compose app
+ios/       SwiftUI app (project.yml -> Xcode project)
 spec/             Contracts both apps meet: tokens, events, testIDs, schema, vectors, goldens
 maestro/          Device flows, screenshot fidelity, upgrade and gesture tests
 i18n/locales/     Strings for both apps

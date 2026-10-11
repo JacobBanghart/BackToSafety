@@ -4,4 +4,4 @@
 --indent 4
 --maxwidth none
 --disable wrapIfStatementBodies,wrapPropertyBodies,wrapFunctionBodies,wrapLoopBodies,wrapMultilineStatementBraces,wrapArguments,blankLinesBetweenScopes,hoistAwait,opaqueGenericParameters
---exclude kmp/iosApp/RustCore,kmp/iosApp/build,kmp/iosApp/build-tests,kmp/iosApp/build-dev
+--exclude ios/RustCore,ios/build,ios/build-tests,ios/build-dev

@@ -1,5 +1,5 @@
 [tools]
-# Temurin 17 for the Gradle build (kmp/).
+# Temurin 17 for the Gradle build (android/).
 java = "temurin-17.0.20+101"
 # Used by the .githooks/pre-commit secret scan.
 gitleaks = "8.30.1"
@@ -13,19 +13,19 @@ ktlint = "1.8.0"
 # Lints the GitHub Actions workflows (mise run lint).
 actionlint = "1.7.12"
 swiftformat = { version = "0.63.1", no_app = true, rename_exe = "swiftformat" }
-# Rust core experiment (rust/): toolchain with the Android and iOS (device, simulator) targets.
+# The Rust core (core/): toolchain with the Android and iOS (device, simulator) targets.
 rust = { version = "1.99.0", targets = "aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,i686-linux-android,aarch64-apple-ios,aarch64-apple-ios-sim" }
 cargo-binstall = "1.25.2"
 # actionlint runs shellcheck on workflow scripts when it is installed (CI runners have it).
 shellcheck = "0.11.0"
 # Size analysis of the Rust core (which crates the shipped library is made of).
 "cargo:cargo-bloat" = "0.12.1"
-# Builds the Android .so files (androidApp Gradle build).
+# Builds the Android .so files (the android/ Gradle build).
 "cargo:cargo-ndk" = "4.1.2"
 
 [env]
-# Cargo's parallel jobs for the Rust port (rust/). Builds are queued one at a time across
-# worktrees (rust/scripts/heavy.sh); override per command: CARGO_BUILD_JOBS=32 mise run rust:build
+# Cargo's parallel jobs for the Rust core (core/). Builds are queued one at a time across
+# worktrees (scripts/heavy.sh); override per command: CARGO_BUILD_JOBS=32 mise run rust:build
 CARGO_BUILD_JOBS = "{{ get_env(name='CARGO_BUILD_JOBS', default='16') }}"
 # One build directory for every rust-port worktree: dependencies compile once, and the ~7 GB
 # per worktree (52 GB across 8 on 2026-10-10) isn't written again and again.

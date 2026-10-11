@@ -62,9 +62,9 @@ def check_testids() -> None:
                             f"{sorted(contract['placeholders'][placeholder])} vs {allowed(table, column)}")
 
     kotlin = string_literals(
-        sorted((ROOT / "kmp/androidApp/src/main").rglob("*.kt")), r"\$\{[^}]*\}|\$\w+"
+        sorted((ROOT / "android/app/src/main").rglob("*.kt")), r"\$\{[^}]*\}|\$\w+"
     )
-    swift = string_literals(sorted((ROOT / "kmp/iosApp/BackToSafety").rglob("*.swift")), r"\\\((?:[^()]|\([^()]*\))*\)")
+    swift = string_literals(sorted((ROOT / "ios/BackToSafety").rglob("*.swift")), r"\\\((?:[^()]|\([^()]*\))*\)")
     # Shared headers derive <id>-back and <id>-title from the screen's ID.
     derived = {
         suffix.replace("{id}", screen)

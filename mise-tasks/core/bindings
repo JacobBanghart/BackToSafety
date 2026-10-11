@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+#MISE description="Generate the Kotlin bindings for core (UniFFI library mode) into $BINDINGS_OUT (default: $CARGO_TARGET_DIR/bindings/kotlin)"
+set -euo pipefail
+cd core
+out="${BINDINGS_OUT:-$CARGO_TARGET_DIR/bindings/kotlin}"
+../scripts/heavy.sh cargo build -p nijii-core -p uniffi-bindgen
+lib="$CARGO_TARGET_DIR/debug/libnijii_core.so"
+rm -rf "$out"
+"$CARGO_TARGET_DIR/debug/uniffi-bindgen" generate --library "$lib" --language kotlin \
+  --out-dir "$out"
+echo "Kotlin bindings in $out"

@@ -12,5 +12,5 @@ trap 'rm -rf "$tmp"' EXIT
 gh run download "$run" -n ios-snapshots -D "$tmp" || { echo "run $run has no ios-snapshots artifact (it uploads only when the snapshot step fails)" >&2; exit 2; }
 src="$(find "$tmp" -type d -name __Snapshots__ | head -1)"
 [ -n "$src" ] || { echo "no __Snapshots__ in the artifact" >&2; exit 1; }
-rsync -a "$src/" kmp/iosApp/BackToSafetyTests/__Snapshots__/
-git status --short kmp/iosApp/BackToSafetyTests/__Snapshots__
+rsync -a "$src/" ios/BackToSafetyTests/__Snapshots__/
+git status --short ios/BackToSafetyTests/__Snapshots__

@@ -106,7 +106,7 @@ Suggested smoke test list:
 
 ## Notes
 
-- The app is `kmp/androidApp`; `./gradlew :androidApp:bundleRelease` (in `kmp/`) builds the AAB.
+- The app is `android/app`; `./gradlew :app:bundleRelease` (in `android/`) builds the AAB.
 - Its Gradle config signs with the upload key from these env vars when they're set:
   - `ANDROID_KEYSTORE_FILE`
   - `ANDROID_KEYSTORE_PASSWORD`
@@ -115,4 +115,4 @@ Suggested smoke test list:
 - Without them (local and harness builds), release builds sign with the debug key so they
   install on a device or emulator. Never upload one of those.
 - CI installs the Android SDK packages it needs (`platform-tools`, `platforms;android-37.0`,
-  `build-tools;36.0.0`) and writes `kmp/local.properties` for the self-hosted runner.
+  `build-tools;36.0.0`) and writes `android/local.properties` for the self-hosted runner.

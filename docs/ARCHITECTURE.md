@@ -4,9 +4,9 @@ Back to Safety is two native UIs on one Rust core:
 
 | Part | Where | What |
 | --- | --- | --- |
-| Rust core | `rust/core` | Models, the SQLite store (rusqlite, the Room v2 schema), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, EmergencyAway, AppClock. No UI and no platform code: the apps implement its foreign traits (`AlertScheduler`, `AnalyticsSink`). `rust/uniffi-bindgen` generates the bindings. |
-| Android app | `kmp/androidApp` | Jetpack Compose UI. Gradle builds the core with cargo-ndk (arm64-v8a, x86_64), generates the Kotlin bindings (`com.backtosafety.core.ffi`) and reaches it through JNA; thin adapters in `app/core` keep the UI call sites (`Translate`, `Store`, `Analytics`, `AppClock`). |
-| iOS app | `kmp/iosApp` | SwiftUI UI. `mise run ios:rust` builds the core into an XCFramework with the Swift bindings; adapters in `Core/`. `project.yml` generates the Xcode project (`xcodegen generate`). |
+| Rust core | `core` | Models, the SQLite store (rusqlite, the Room v2 schema), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, EmergencyAway, AppClock. No UI and no platform code: the apps implement its foreign traits (`AlertScheduler`, `AnalyticsSink`). `rust/uniffi-bindgen` generates the bindings. |
+| Android app | `android/app` | Jetpack Compose UI. Gradle builds the core with cargo-ndk (arm64-v8a, x86_64), generates the Kotlin bindings (`com.backtosafety.core.ffi`) and reaches it through JNA; thin adapters in `app/core` keep the UI call sites (`Translate`, `Store`, `Analytics`, `AppClock`). |
+| iOS app | `ios` | SwiftUI UI. `mise run ios:core` builds the core into an XCFramework with the Swift bindings; adapters in `Core/`. `project.yml` generates the Xcode project (`xcodegen generate`). |
 | Contracts | `spec/` | What both apps must agree on: design tokens, analytics events, testIDs, the DB schema and seed rows, logic vectors, the feature inventory, screenshot goldens and fidelity marks. |
 | Device harness | `maestro/` | Maestro flows, screen captures and comparisons, reorder gestures and upgrade tests, run against both apps. |
 | Website | `site/` | The public site and privacy policy (GitHub Pages). |
@@ -26,25 +26,25 @@ commit.
 
 ## Generated code
 
-- `spec/analytics-events.json` → `AnalyticsEvent` (`rust/core/build.rs`, then through UniFFI).
+- `spec/analytics-events.json` → `AnalyticsEvent` (`core/build.rs`, then through UniFFI).
 - `spec/design-tokens.json` → `DesignTokens`, per app because it is UI (`generateDesignTokens` in
-  `kmp/androidApp`, `generate-design-tokens.py` for iOS).
+  `android/app`, `generate-design-tokens.py` for iOS).
 
 ## Checks
 
 Fast, no device (`mise run check`, `mise run lint`, `mise run snapshots`; all in CI). Cargo and
-Gradle builds run through `rust/scripts/heavy.sh`, which queues them (`rust/AGENTS.md`):
+Gradle builds run through `scripts/heavy.sh`, which queues them (`rust/AGENTS.md`):
 
 - `spec/check.py`: testIDs in both apps, feature coverage, locale parity, option lists vs the
   schema.
-- `cargo test -p nijii-core` (`rust/core/tests`): spec/vectors, the store and migrations (against
+- `cargo test -p nijii-core` (`core/tests`): spec/vectors, the store and migrations (against
   the committed upgrade fixture and `spec/room-schema-v2.json`), EmergencyAway, the FFI surface.
-- `AnalyticsParityTest` (`androidApp/src/test`): both apps and the core send exactly the events
+- `AnalyticsParityTest` (`android/app/src/test`): both apps and the core send exactly the events
   in `spec/analytics-events.json`.
 - ktlint and SwiftFormat (`.editorconfig`, `.swiftformat`).
 - Snapshot tests of every main screen in light, dark and large text. Android
-  (`androidApp/src/test`, Robolectric + Roborazzi) runs anywhere; iOS
-  (`iosApp/BackToSafetyTests`, swift-snapshot-testing) runs on CI's macOS runner, which is its
+  (`android/app/src/test`, Robolectric + Roborazzi) runs anywhere; iOS
+  (`ios/BackToSafetyTests`, swift-snapshot-testing) runs on CI's macOS runner, which is its
   reference environment. To re-record iOS after a deliberate change, delete the affected
   images under `__Snapshots__` and push: CI records them, fails, and uploads them as the
   `ios-snapshots` artifact; `mise run ios:snapshots` copies them in to commit.

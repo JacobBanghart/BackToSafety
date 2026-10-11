@@ -33,7 +33,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
-      # The Rust core (rust/core), which Gradle builds with cargo-ndk for arm64-v8a and x86_64.
+      # The Rust core (core), which Gradle builds with cargo-ndk for arm64-v8a and x86_64.
       - name: Setup Rust and cargo-ndk (mise.toml)
         uses: jdx/mise-action@v5
         with:
@@ -64,7 +64,7 @@ jobs:
           echo "ANDROID_NDK_HOME=$SDK_PATH/ndk/29.0.14206865" >> "$GITHUB_ENV"
 
           echo "Using Android SDK at $SDK_PATH"
-          printf 'sdk.dir=%s\n' "$SDK_PATH" > kmp/local.properties
+          printf 'sdk.dir=%s\n' "$SDK_PATH" > android/local.properties
 
       - name: Decode Android release keystore
         run: |
@@ -108,11 +108,11 @@ jobs:
           PY
           cat version.json
 
-      # The native app (kmp/androidApp). Version name and code come from the version.json stamped
+      # The native app (android/app). Version name and code come from the version.json stamped
       # above; it signs with the same upload key the RN release used.
       - name: Build signed Android App Bundle
-        run: ./gradlew :androidApp:bundleRelease --console=plain --build-cache -Dorg.gradle.parallel=true
-        working-directory: kmp
+        run: ./gradlew :app:bundleRelease --console=plain --build-cache -Dorg.gradle.parallel=true
+        working-directory: android
         env:
           POSTHOG_KEY: phc_yiHs692GvzSjuCHNUTpSGx99UrD5cnCmJD7mjD7WBoJN
           POSTHOG_HOST: https://t.backtosafety.app
@@ -127,7 +127,7 @@ jobs:
           VERSION="${{ steps.release_meta.outputs.version }}"
 
           AAB_NAME="BackToSafety-${VERSION}.aab"
-          cp kmp/androidApp/build/outputs/bundle/release/androidApp-release.aab "kmp/androidApp/build/outputs/bundle/release/${AAB_NAME}"
+          cp android/app/build/outputs/bundle/release/app-release.aab "android/app/build/outputs/bundle/release/${AAB_NAME}"
 
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "aab_name=${AAB_NAME}" >> "$GITHUB_OUTPUT"
@@ -136,7 +136,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: app-release-aab-${{ steps.aab_meta.outputs.version }}
-          path: kmp/androidApp/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
+          path: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
           if-no-files-found: error
 
       - name: Attach AAB to GitHub Release
@@ -144,4 +144,4 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.event.release.tag_name || github.ref_name }}
-          files: kmp/androidApp/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}
+          files: android/app/build/outputs/bundle/release/${{ steps.aab_meta.outputs.aab_name }}

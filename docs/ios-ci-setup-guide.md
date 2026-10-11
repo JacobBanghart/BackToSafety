@@ -146,7 +146,7 @@ and add each of these:
 
 The workflow reads your 10-character Apple Team ID from the `IOS_TEAM_ID` secret
 (**developer.apple.com → Account → Membership details**). It signs the app target only
-(`RELEASE_TEAM_ID` and `RELEASE_PROFILE_UUID` in `kmp/iosApp/project.yml`), so the Swift
+(`RELEASE_TEAM_ID` and `RELEASE_PROFILE_UUID` in `ios/project.yml`), so the Swift
 packages aren't asked for a provisioning profile.
 
 ### Install the Self-Hosted Runner on Your Mac

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+#MISE description="Rust core: its tests (spec/vectors, the store, alerts, analytics). Queued like every heavy build (scripts/heavy.sh)."
+set -euo pipefail
+cd core
+../scripts/heavy.sh cargo test -p nijii-core
