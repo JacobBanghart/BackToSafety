@@ -21,7 +21,8 @@ import java.io.File
 
 /** Calling from a device with no phone app (tablets) shows the number and reports dial_failed. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [35])
+// No NijiiApplication: it would start the core on its own thread.
+@Config(sdk = [35], application = android.app.Application::class)
 class DialTest {
     private val activity = Robolectric.buildActivity(Activity::class.java).setup().get()
     private val tCommon = File(File(System.getProperty("repoRoot")!!), "i18n/locales").let { locales ->

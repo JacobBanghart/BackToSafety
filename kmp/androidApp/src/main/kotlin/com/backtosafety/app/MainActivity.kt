@@ -5,7 +5,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
@@ -13,14 +15,12 @@ import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.backtosafety.app.core.Analytics
 import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.CoreStartup
 import com.backtosafety.app.emergency.CountdownNotifications
 import com.posthog.PersonProfiles
 import com.posthog.PostHog
 import com.posthog.android.PostHogAndroid
 import com.posthog.android.PostHogAndroidConfig
-import java.io.File
 
 class MainActivity : ComponentActivity() {
     /** Counts taps on countdown alert notifications; App opens the emergency for each. */
@@ -31,26 +31,34 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        AppClock.testSeamsEnabled = BuildConfig.TEST_SEAMS
-        setUpAnalytics()
-        handleTestSeam(intent)
+        val sink = setUpAnalytics()
+        val link = intent?.data?.toString()
         handleAlertTap(intent)
-        // Where the RN app's expo-sqlite kept nijii.db, and the KMP app after it (spec/storage.md).
-        val store = Store.open(File(filesDir, "SQLite/nijii.db").absolutePath)
-        val translations = loadTranslations()
         setContent {
-            // testTag(...) values surface as Android resource IDs, matching the RN
-            // app's testIDs, so the same Maestro flows drive both (spec/testids.json).
-            App(store, translations, Modifier.semantics { testTagsAsResourceId = true }, openEmergencyRequests)
+            // The core comes up on its own thread (CoreStartup); nothing shows until it's there,
+            // as before, when the first screen waited for the database.
+            val core by produceState<CoreStartup.Ready?>(null) {
+                val ready = CoreStartup.await()
+                AppClock.testSeamsEnabled = BuildConfig.TEST_SEAMS
+                sink?.let { Analytics.sink = it }
+                link?.let(AppClock::handleLink)
+                value = ready
+            }
+            core?.let {
+                // testTag(...) values surface as Android resource IDs, matching the RN
+                // app's testIDs, so the same Maestro flows drive both (spec/testids.json).
+                App(it.store, it.translations, Modifier.semantics { testTagsAsResourceId = true }, openEmergencyRequests)
+            }
         }
     }
 
     /**
      * utils/posthog.ts: the same PostHog options as the RN app. Without a key (dev and test
-     * builds) nothing is set up and every event goes nowhere.
+     * builds) nothing is set up and every event goes nowhere. Returns the sink the core reports
+     * to, which is installed once the core is up.
      */
-    private fun setUpAnalytics() {
-        if (BuildConfig.POSTHOG_KEY.isEmpty()) return
+    private fun setUpAnalytics(): ((String, Map<String, Any?>) -> Unit)? {
+        if (BuildConfig.POSTHOG_KEY.isEmpty()) return null
         val config = PostHogAndroidConfig(BuildConfig.POSTHOG_KEY, BuildConfig.POSTHOG_HOST).apply {
             captureApplicationLifecycleEvents = true
             captureScreenViews = false // screens are reported by route, as the RN app does
@@ -66,7 +74,7 @@ class MainActivity : ComponentActivity() {
             errorTrackingConfig.autoCapture = true
         }
         PostHogAndroid.setup(applicationContext, config)
-        Analytics.sink = { name, properties ->
+        return { name, properties ->
             @Suppress("UNCHECKED_CAST")
             val props = properties.filterValues { it != null } as Map<String, Any>
             if (name == Analytics.SCREEN) {
@@ -92,13 +100,4 @@ class MainActivity : ComponentActivity() {
     private fun handleTestSeam(intent: Intent?) {
         AppClock.handleLink(intent?.data?.toString() ?: return)
     }
-
-    /** The RN app's i18n/locales JSON, synced into assets/locales at build time. */
-    private fun loadTranslations(): Translations = Translations.fromJson(
-        assets.list("locales")!!.associateWith { locale ->
-            assets.list("locales/$locale")!!.associate { file ->
-                file.removeSuffix(".json") to assets.open("locales/$locale/$file").bufferedReader().readText()
-            }
-        },
-    )
 }
