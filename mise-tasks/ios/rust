@@ -5,8 +5,8 @@
 #
 # Output, in kmp/iosApp/RustCore (ignored by git):
 #   NijiiCore.xcframework   libnijii_core.a for ios-arm64 and ios-arm64-simulator, with Headers
-#   Generated/nijii_core.swift   the UniFFI Swift bindings, compiled into the app
-#   include/                the C header and module.modulemap (module nijii_coreFFI)
+#   Generated/NijiiCore.swift   the UniFFI Swift bindings, compiled into the app
+#   include/                the C header and module.modulemap (module NijiiCoreFFI)
 #
 # The Xcode project reads the slices inside the xcframework through LIBRARY_SEARCH_PATHS (see
 # project.yml), because Xcode resolves a referenced .xcframework before any build phase runs.

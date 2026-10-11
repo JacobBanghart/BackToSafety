@@ -13,6 +13,8 @@ if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$host" true 2>/dev/null; then
   exit 3
 fi
 root="$(git rev-parse --show-toplevel)"
-rsync -a --delete --exclude .git --filter=':- .gitignore' "$root/" "$host:$dir/"
+# The Rust core's iOS build (ios:rust) lives in an ignored directory the .gitignore filter doesn't
+# protect from --delete, so protect it explicitly.
+rsync -a --delete --exclude .git --filter='P /kmp/iosApp/RustCore/' --filter=':- .gitignore' "$root/" "$host:$dir/"
 # A login shell, so Homebrew and mise are on PATH.
 ssh -t -o BatchMode=yes "$host" "zsh -lic 'cd ~/$dir && mise trust -q . && mise run $(printf '%q ' "$@")'"

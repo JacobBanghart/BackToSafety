@@ -43,3 +43,7 @@ kmp/*/build/
 kmp/buildSrc/.gradle/
 kmp/buildSrc/.kotlin/
 kmp/local.properties
+
+# The Rust core for iOS, built by mise run ios:rust
+kmp/iosApp/RustCore/
+kmp/iosApp/build-tests/
