@@ -108,12 +108,13 @@
   "alerts": {
     "warning": {
       "title": "Under 5 Minutes Left",
-      "body": "Keep searching. If they're not found when the timer ends, call {{emergencyNumber}}."
+      "body": "Keep searching. If they're not found when the timer ends, call {{emergencyNumber}}.",
+      "channel": "Countdown warning"
     },
     "expired": {
       "title": "Time to Call {{emergencyNumber}}",
-      "body": "The 15-minute search is up. Call {{emergencyNumber}} now and request a Silver Alert."
-    },
-    "channel": "Emergency countdown"
+      "body": "The 15-minute search is up. Call {{emergencyNumber}} now and request a Silver Alert.",
+      "channel": "Countdown ended"
+    }
   }
 }
