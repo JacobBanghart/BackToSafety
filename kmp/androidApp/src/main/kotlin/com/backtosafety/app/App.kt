@@ -109,6 +109,12 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(to: Int): Exi
 /** i18n/index.ts: languages released to users (Spanish awaits a native review). */
 private val SHIPPED_LANGUAGES = listOf("en")
 
+/** i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships. */
+internal suspend fun Store.savedLanguage(): String = when (runCatchingCancellable { setting(Store.LANGUAGE_PREFERENCE) }.getOrNull()) {
+    "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
+    else -> "en"
+}
+
 /**
  * The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). The
  * database and the rest of [services] outlive this composition (BackToSafetyApp).
@@ -117,7 +123,6 @@ private val SHIPPED_LANGUAGES = listOf("en")
 fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<Int>) {
     val store = services.store
     val translations = services.translations
-    val notifications = services.notifications
     val away = services.away
     var onboarded by remember { mutableStateOf<Boolean?>(null) }
     var themePreference by remember { mutableStateOf("system") }
@@ -129,12 +134,12 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
     LaunchedEffect(Unit) {
         // A failed read (the database didn't open, BackToSafetyApp) shows the defaults, as on iOS.
         themePreference = runCatchingCancellable { store.setting(Store.THEME_PREFERENCE) }.getOrNull() ?: "system"
-        // i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships.
-        language = when (runCatchingCancellable { store.setting(Store.LANGUAGE_PREFERENCE) }.getOrNull()) {
-            "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
-            else -> "en"
-        }
+        language = store.savedLanguage()
+        app.language = language
         onboarded = runCatchingCancellable { store.isOnboarded() }.getOrDefault(false)
+        // An emergency under way (left running when the app was closed, or the phone
+        // restarted) shows its countdown again.
+        runCatchingCancellable { store.activeEmergency() }.getOrNull()?.let { services.countdown.sync(it.startedAt) }
     }
     // The alerts scheduled while away are translated in the language showing now.
     SideEffect { app.language = language }
@@ -167,7 +172,6 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
             AppReady.report {
                 store.readinessProperties() + mapOf(
                     "notifications_enabled" to CountdownNotifications.enabled(context),
-                    "exact_alarms" to notifications.canScheduleExact(),
                 )
             }
         }
@@ -237,6 +241,7 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
                     emergency, common, store, away, services.scope,
                     onLeave = { if (!nav.popBackStack()) nav.navigate("home") },
                     onViewReadout = { nav.navigate("readout") },
+                    onRunning = services.countdown::sync,
                 )
             }
             composable("settings") {
@@ -256,6 +261,7 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
                     onBack = { nav.popBackStack() },
                     onDeleted = {
                         services.scope.launch { away.ended() }
+                        services.countdown.sync(null)
                         nav.navigate("welcome") { popUpTo(0) }
                     },
                 )

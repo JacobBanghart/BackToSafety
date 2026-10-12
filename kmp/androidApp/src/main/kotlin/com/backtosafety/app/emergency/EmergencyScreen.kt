@@ -131,12 +131,14 @@ fun EmergencyScreen(
     appScope: CoroutineScope,
     onLeave: () -> Unit,
     onViewReadout: () -> Unit,
+    /** The emergency's start (ISO) once it's loaded or started, null once it ends: the countdown outside the app follows it. */
+    onRunning: (startedAt: String?) -> Unit = {},
 ) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
-    val recorder = remember(store) { EmergencyRecorder(store) }
+    val recorder = remember(store) { EmergencyRecorder(store, onRunning) }
     val emergencyNumber = tCommon("emergencyNumber")
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography

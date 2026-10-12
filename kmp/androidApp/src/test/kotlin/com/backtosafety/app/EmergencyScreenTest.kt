@@ -11,7 +11,9 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.room.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.emergency.CountdownService
 import com.backtosafety.app.emergency.EmergencyScreen
+import com.backtosafety.app.emergency.OngoingCountdown
 import com.backtosafety.core.ActiveEmergency
 import com.backtosafety.core.AlertScheduler
 import com.backtosafety.core.AppClock
@@ -37,6 +39,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import java.io.File
 import kotlin.coroutines.CoroutineContext
@@ -122,15 +125,29 @@ class EmergencyScreenTest {
         db.close()
     }
 
-    /** Shows the screen on the emergency that [saved] says is under way. */
-    private fun showScreen(saved: ActiveEmergency) {
-        runBlocking { store.saveActiveEmergency(saved) }
+    /** The countdown outside the app, which the screen starts and stops. */
+    private val countdown by lazy { OngoingCountdown(ApplicationProvider.getApplicationContext(), { t("emergency") }, { "911" }) }
+
+    /** Shows the screen on the emergency that [saved] says is under way, or on a new one. */
+    private fun showScreen(saved: ActiveEmergency?) {
+        saved?.let { runBlocking { store.saveActiveEmergency(it) } }
         gate.hold()
         compose.setContent {
-            if (!left) EmergencyScreen(t("emergency"), t("common"), store, EmergencyAway(store, NoScheduler), appScope, { left = true }, {})
+            if (!left) {
+                EmergencyScreen(
+                    t("emergency"), t("common"), store, EmergencyAway(store, NoScheduler), appScope, { left = true }, {},
+                    onRunning = countdown::sync,
+                )
+            }
         }
         settle()
     }
+
+    /** What the screen asked of the countdown's service, in order: the start time, or null to stop. */
+    private fun countdownCommands(): List<Long?> = generateSequence { shadowOf(compose.activity.application).nextStartedService }
+        .filter { it.component?.className == CountdownService::class.java.name }
+        .map { if (it.action == CountdownService.ACTION_STOP) null else it.getLongExtra(CountdownService.EXTRA_STARTED_AT, -1) }
+        .toList()
 
     /** Lets the screen and the database run, one query at a time, until neither has more to do. */
     private fun settle() {
@@ -200,6 +217,30 @@ class EmergencyScreenTest {
         val incident = read { store.incidents() }.single()
         assertNotNull("The end time was never recorded", incident.endedAt)
         assertNull(read { store.activeEmergency() })
+    }
+
+    @Test
+    fun aNewEmergencyShowsItsCountdownAndFoundEndsIt() {
+        showScreen(null)
+        tap("emergency-found")
+        assertEquals(listOf(now, null), countdownCommands())
+    }
+
+    @Test
+    fun aResumedEmergencyShowsItsCountdownAndEndingItEndsThat() {
+        showScreen(ActiveEmergency(startedAt, "", emptyList(), incidentId = runBlocking { store.createIncident(startedAt) }))
+        tap("emergency-back", scroll = false)
+        tap("emergency-modal-leave-end", scroll = false)
+        assertEquals(listOf(now - 60_000L, null), countdownCommands())
+    }
+
+    @Test
+    fun leavingTheEmergencyRunningKeepsItsCountdown() {
+        showScreen(ActiveEmergency(startedAt, "", emptyList(), incidentId = runBlocking { store.createIncident(startedAt) }))
+        tap("emergency-back", scroll = false)
+        tap("emergency-modal-leave-leave", scroll = false)
+        assertTrue(left)
+        assertEquals(listOf<Long?>(now - 60_000L), countdownCommands())
     }
 
     @Test

@@ -12,12 +12,18 @@
   - [ ] Marketing URL
   - [ ] Screenshots
   - [ ] Promo text
+- [ ] Play Console, Policy > App content > Foreground service permissions: declare the
+  `specialUse` service (the emergency countdown, `CountdownService`) with the explanation in
+  `AndroidManifest.xml`'s `PROPERTY_SPECIAL_USE_FGS_SUBTYPE`, and a video of it: start an
+  emergency, lock the phone, the countdown on the lock screen, the 5-minute warning.
 
 ## High-Value Technical Checks
 
 - [ ] Run release-build smoke tests on physical iOS and Android devices:
   - [ ] Onboarding flow
   - [ ] Emergency flow
+  - [ ] Android: the countdown notification on the lock screen; the warning and the expiry on
+    time with the screen off for 10+ minutes; a restart mid-emergency brings both back
   - [ ] SMS open/send handoff
   - [ ] Contacts import and permissions
   - [ ] Camera/photo permissions

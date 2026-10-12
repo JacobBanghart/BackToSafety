@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.SystemClock
 import android.util.Log
 import com.backtosafety.app.emergency.CountdownNotifications
+import com.backtosafety.app.emergency.OngoingCountdown
 import com.backtosafety.app.ui.PhotoFiles
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
@@ -26,6 +27,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
@@ -43,6 +46,8 @@ class AppServices(
     val translations: Translations,
     val notifications: CountdownNotifications,
     val away: EmergencyAway,
+    /** The emergency's countdown as an ongoing notification, while one runs. */
+    val countdown: OngoingCountdown,
     /** Work that must outlive the screen that starts it, such as scheduling alerts as the app is left. */
     val scope: CoroutineScope,
 )
@@ -84,13 +89,22 @@ class BackToSafetyApp : Application() {
         val store = Store(openAppDatabase(path, databaseBuilder(this, path)))
         store.photoCleaner = { keeping -> PhotoFiles.clean(filesDir, cacheDir, keeping) }
         val translations = loadTranslations()
-        val notifications = CountdownNotifications(
-            this,
-            emergencyT = { translations.translator(language, "emergency") },
-            emergencyNumber = { translations.translator(language, "common")("emergencyNumber") },
-        )
+        val emergencyT = { translations.translator(language, "emergency") }
+        val emergencyNumber = { translations.translator(language, "common")("emergencyNumber") }
+        val notifications = CountdownNotifications(this, emergencyT, emergencyNumber)
         migrate(store, DatabaseOpen.migratingFrom)
-        return AppServices(store, translations, notifications, EmergencyAway(store, notifications), scope)
+        return AppServices(
+            store, translations, notifications, EmergencyAway(store, notifications), OngoingCountdown(this, emergencyT, emergencyNumber), scope,
+        )
+    }
+
+    /**
+     * Runs [block] on the main thread once [services] is open, opening it if no activity has
+     * (a receiver woke the process).
+     */
+    fun withServices(block: suspend (AppServices) -> Unit) {
+        start()
+        scope.launch { block(services.filterNotNull().first()) }
     }
 
     /**

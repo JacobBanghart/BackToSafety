@@ -14,8 +14,11 @@ import kotlinx.coroutines.sync.withLock
  * [end] is called the emergency is never saved again, whatever the screen still has queued.
  * The incident id lives here: the row an emergency without one gets (see [record]) is
  * remembered for the later writes, not made twice.
+ *
+ * It also says when the emergency runs, to [onRunning]: its start once begun, null once ended
+ * (Android's ongoing countdown, OngoingCountdown, follows that).
  */
-internal class EmergencyRecorder(private val store: Store) {
+internal class EmergencyRecorder(private val store: Store, private val onRunning: (startedAt: String?) -> Unit = {}) {
     private val lock = Mutex()
 
     @Volatile
@@ -25,6 +28,7 @@ internal class EmergencyRecorder(private val store: Store) {
     /** Takes up the emergency the screen loaded or started, and its incident row if it has one. */
     fun begin(emergency: ActiveEmergency) {
         incidentId = emergency.incidentId
+        onRunning(emergency.startedAt)
     }
 
     /** Saves [emergency] as the active emergency (with the incident id held here), unless it has ended. */
@@ -60,5 +64,6 @@ internal class EmergencyRecorder(private val store: Store) {
         // Before waiting for the lock, so saves queued behind this one see it.
         ended = true
         lock.withLock { store.clearActiveEmergency() }
+        onRunning(null)
     }
 }
