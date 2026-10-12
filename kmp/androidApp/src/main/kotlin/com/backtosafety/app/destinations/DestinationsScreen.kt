@@ -68,6 +68,7 @@ import com.backtosafety.app.ui.hairline
 import com.backtosafety.app.ui.listCard
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
@@ -179,7 +180,7 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
         val notes = (if (form.category == "other") notesWithOtherLabel(form.otherCategoryLabel, form.notes) else form.notes).ifEmpty { null }
         saving = true
         scope.launch {
-            runCatching {
+            runCatchingCancellable {
                 val entity = DestinationEntity(
                     id = editing?.id ?: 0, name = form.name, address = form.address.ifEmpty { null },
                     category = form.category, riskLevel = form.riskLevel, reason = form.reason.ifEmpty { null },
@@ -203,7 +204,7 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
         cancel = t("deleteModal.cancel"),
         confirm = t("deleteModal.confirm") to {
             scope.launch {
-                runCatching { store.deleteDestination(d.id) }
+                runCatchingCancellable { store.deleteDestination(d.id) }
                     .onSuccess {
                         Analytics.track(AnalyticsEvent.DESTINATION_DELETED, mapOf("category" to d.category, "risk_level" to d.riskLevel))
                         reload()
@@ -281,7 +282,7 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
                             onReorder = { ordered ->
                                 places = ordered.mapIndexed { i, d -> d.copy(sortOrder = i) }
                                 scope.launch {
-                                    runCatching { store.reorderDestinations(ordered) }.onFailure { e ->
+                                    runCatchingCancellable { store.reorderDestinations(ordered) }.onFailure { e ->
                                         reportSaveFailed("destinations", "reorder", e)
                                         alert(false, t("errors.reorderFailed"))
                                     }
