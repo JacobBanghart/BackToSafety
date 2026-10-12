@@ -13,7 +13,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: [fill in time]. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
       },
       {
         "args": [
@@ -98,7 +98,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Age approximately 85. Search started: [fill in time]. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Age approximately 85. Last seen: [fill in time]. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
       },
       {
         "args": [
@@ -111,7 +111,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: [fill in time]. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
       },
       {
         "args": [
@@ -124,7 +124,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: [fill in time]. Last known location: [fill in location]. Additional context: Allergies: Penicillin. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. Additional context: Allergies: Penicillin. Please advise about issuing a local Silver/Purple Alert."
       },
       {
         "args": [
@@ -137,7 +137,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: [fill in time]. Last known location: [fill in location]. Photo available. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. Photo available. Please advise about issuing a local Silver/Purple Alert."
       }
     ],
     "buildCopyBlock": [

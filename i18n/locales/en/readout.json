@@ -109,7 +109,7 @@
     "name": "Name: {{name}}.",
     "age": "Age approximately {{age}}.",
     "lastSeenTime": "Search started: {{time}}.",
-    "lastSeenUnknown": "Search started: [fill in time].",
+    "lastSeenUnknown": "Last seen: [fill in time].",
     "locationUnknown": "Last known location: [fill in location].",
     "appearance": "Appearance: {{desc}}.",
     "additionalContext": "Additional context: {{desc}}.",

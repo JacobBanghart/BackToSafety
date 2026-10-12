@@ -17,7 +17,7 @@ name: The info sheet shows the 911 script and copies it
     id: readout-script-toggle
 - assertVisible:
     id: readout-script-text
-    text: "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: \\[fill in time\\]. Last known location: \\[fill in location\\]. Please advise about issuing a local Silver/Purple Alert."
+    text: "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: \\[fill in time\\]. Last known location: \\[fill in location\\]. Please advise about issuing a local Silver/Purple Alert."
 - assertVisible:
     id: readout-script-missing
     text: 'Add for stronger script: search start time, appearance details, important details.'
