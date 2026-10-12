@@ -14,7 +14,7 @@
       "collapsed": "Tap to expand",
       "missingDetails": "Add for stronger script: {{details}}.",
       "missing": {
-        "lastSeenTime": "search start time",
+        "lastSeenTime": "last seen time",
         "appearanceDetails": "appearance details",
         "importantDetails": "important details"
       }

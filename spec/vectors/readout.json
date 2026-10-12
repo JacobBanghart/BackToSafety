@@ -264,7 +264,7 @@
           }
         ],
         "expected": [
-          "search start time",
+          "last seen time",
           "appearance details",
           "important details"
         ]
@@ -317,7 +317,7 @@
           }
         ],
         "expected": [
-          "hora de inicio de la búsqueda",
+          "hora en que se vio por última vez",
           "datos importantes"
         ]
       }

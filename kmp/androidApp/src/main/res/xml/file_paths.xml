@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The camera writes into the cache; PhotoScreen then copies the shot into filesDir. -->
+<!-- The camera and the cropper write into the cache; the cropped photo is then copied into filesDir. -->
 <paths>
     <cache-path name="camera" path="." />
 </paths>

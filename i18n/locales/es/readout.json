@@ -14,7 +14,7 @@
       "collapsed": "Toca para ampliar",
       "missingDetails": "Agrega para un guion más completo: {{details}}.",
       "missing": {
-        "lastSeenTime": "hora de inicio de la búsqueda",
+        "lastSeenTime": "hora en que se vio por última vez",
         "appearanceDetails": "detalles de apariencia",
         "importantDetails": "datos importantes"
       }

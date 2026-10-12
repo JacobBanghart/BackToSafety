@@ -54,7 +54,10 @@ fun rememberPhotoPicker(onPhoto: (String) -> Unit): PhotoPicker {
                 outputRequestWidth = MAX_PHOTO_PX
                 outputRequestHeight = MAX_PHOTO_PX
                 outputRequestSizeOptions = CropImageView.RequestSizeOptions.RESIZE_INSIDE
-                customOutputUri = Uri.fromFile(PhotoFiles.cropped(context.cacheDir, System.currentTimeMillis()))
+                // A content:// URI: the cropper refuses file:// output (a SecurityException).
+                customOutputUri = FileProvider.getUriForFile(
+                    context, "${context.packageName}.files", PhotoFiles.cropped(context.cacheDir, System.currentTimeMillis()),
+                )
             },
         ),
     )
