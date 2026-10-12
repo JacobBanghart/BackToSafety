@@ -112,6 +112,7 @@ struct ContactsView: View {
     private func save() {
         if form.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return showError(validation: true, t("errors.nameRequired")) }
         if form.phone.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return showError(validation: true, t("errors.phoneRequired")) }
+        if !PhoneKt.isUsablePhone(phone: form.phone) { return showError(validation: true, t("errors.phoneInvalid")) }
         saving = true
         let f = form, edit = editing
         Task {

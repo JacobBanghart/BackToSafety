@@ -201,6 +201,8 @@ struct ContactStepView: View {
     @State private var name = ""
     @State private var phone = ""
     @State private var relationship = ""
+    @State private var savedId: Int64?
+    @State private var saving = false
     @State private var error = ""
 
     var body: some View {
@@ -243,18 +245,26 @@ struct ContactStepView: View {
             }
             // Looks disabled until both fields are filled, but a tap explains what's missing.
             PrimaryButton(label: t("contact.continue"), testID: "onboarding-contact-continue", dimmed: missing) {
+                if saving { return }
                 if missing { error = t("contact.required"); return }
+                if !PhoneKt.isUsablePhone(phone: phone) { error = t("contact.phoneInvalid"); return }
+                saving = true
                 Task {
+                    defer { saving = false }
                     do {
                         let rel = relationship.trimmingCharacters(in: .whitespaces)
-                        _ = try await model.store.addContact(
-                            contact: ContactEntity(
-                                id: 0, name: name.trimmingCharacters(in: .whitespaces), phone: phone.trimmingCharacters(in: .whitespaces),
-                                relationship: rel.isEmpty ? nil : rel, role: "primary_caregiver", address: nil,
-                                notifyOnEmergency: true, shareMedicalInfo: true, notes: nil, sortOrder: 0, createdAt: nil, updatedAt: nil
-                            ),
-                            sortOrder: nil
+                        let contact = ContactEntity(
+                            id: savedId ?? 0, name: name.trimmingCharacters(in: .whitespaces), phone: phone.trimmingCharacters(in: .whitespaces),
+                            relationship: rel.isEmpty ? nil : rel, role: "primary_caregiver", address: nil,
+                            notifyOnEmergency: true, shareMedicalInfo: true, notes: nil, sortOrder: 0, createdAt: nil, updatedAt: nil
                         )
+                        // Back from the next screen and Continue again edits this contact
+                        // rather than adding a second one.
+                        if savedId != nil {
+                            try await model.store.updateContact(c: contact)
+                        } else {
+                            savedId = try await model.store.addContact(contact: contact, sortOrder: nil).int64Value
+                        }
                         try await model.store.completeStep(step: "emergency_contact")
                         trackStep(true, "emergency_contact")
                         model.path.append(.complete)

@@ -90,6 +90,15 @@ fun dialString(phone: String): String {
     return if (extension != null) "$dialable,$extension" else dialable
 }
 
+/**
+ * Whether [phone] can be saved as a contact's number: its number (an extension doesn't count)
+ * has at least three digits. A "+", a few punctuation marks or a lone digit would be saved and
+ * then dropped from the emergency text, and nothing could dial it. Three is the shortest real
+ * number, an emergency or service code such as 911 or 112, so the rule stays out of the way of
+ * numbers from anywhere; the as-you-type format already does the rest of the shaping.
+ */
+fun isUsablePhone(phone: String): Boolean = normalizeSmsRecipient(phone).count { it in '0'..'9' } >= 3
+
 fun normalizeSmsRecipient(phone: String): String {
     // A text goes to the number, not the extension (which would otherwise fold into it).
     val trimmed = splitExtension(phone).first.trim()

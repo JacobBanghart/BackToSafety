@@ -12,6 +12,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +37,7 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.formatPhoneInput
 import com.backtosafety.core.invoke
+import com.backtosafety.core.isUsablePhone
 import kotlinx.coroutines.launch
 
 /** Port of app/onboarding/contact.tsx. */
@@ -46,9 +48,12 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
     val scope = rememberCoroutineScope()
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var relationship by remember { mutableStateOf("") }
+    // Saveable, so coming back from the next screen shows what was entered and the contact it saved.
+    var name by rememberSaveable { mutableStateOf("") }
+    var phone by rememberSaveable { mutableStateOf("") }
+    var relationship by rememberSaveable { mutableStateOf("") }
+    var savedId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf("") }
     val input = rnTextStyle(16f, 20f)
 
@@ -67,25 +72,33 @@ fun ContactScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 modifier = Modifier,
                 textStyle = rnTextStyle(18f, 24f, fontWeight = 600),
                 onClick = {
+                    if (saving) return@PrimaryButton
                     if (name.isBlank() || phone.isBlank()) {
                         error = t("contact.required")
                         return@PrimaryButton
                     }
+                    if (!isUsablePhone(phone)) {
+                        error = t("contact.phoneInvalid")
+                        return@PrimaryButton
+                    }
+                    saving = true
                     scope.launch {
                         runCatchingCancellable {
-                            store.addContact(
-                                ContactEntity(
-                                    name = name.trim(), phone = phone.trim(),
-                                    relationship = relationship.trim().ifEmpty { null },
-                                    role = "primary_caregiver", notifyOnEmergency = true, shareMedicalInfo = true,
-                                ),
+                            val contact = ContactEntity(
+                                id = savedId ?: 0, name = name.trim(), phone = phone.trim(),
+                                relationship = relationship.trim().ifEmpty { null },
+                                role = "primary_caregiver", notifyOnEmergency = true, shareMedicalInfo = true,
                             )
+                            // Back from the next screen and Continue again edits this contact
+                            // rather than adding a second one.
+                            if (savedId != null) store.updateContact(contact) else savedId = store.addContact(contact)
                             store.completeStep("emergency_contact")
                             trackStep(true, "emergency_contact")
                         }.onSuccess { onContinue() }.onFailure { e ->
                             reportSaveFailed("onboarding_contact", "save", e)
                             error = tCommon("saveFailed")
                         }
+                        saving = false
                     }
                 },
                 dimmed = name.isBlank() || phone.isBlank(),

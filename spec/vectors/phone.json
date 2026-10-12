@@ -510,6 +510,104 @@
         ],
         "expected": ""
       }
+    ],
+    "isUsablePhone": [
+      {
+        "args": [
+          "(555) 123-4567"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "+1 (555) 123-4567"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "+44 20 7946 0958"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "911"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "+112"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "555-123-4567 x12"
+        ],
+        "expected": true
+      },
+      {
+        "args": [
+          "+"
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          ""
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "   "
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "abc"
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "+1"
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "55"
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "(5"
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "+1 "
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "x12"
+        ],
+        "expected": false
+      },
+      {
+        "args": [
+          "12 ext 345"
+        ],
+        "expected": false
+      }
     ]
   }
 }

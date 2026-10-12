@@ -102,7 +102,8 @@
     },
     "skip": "Skip for now",
     "continue": "Continue",
-    "required": "Name and phone number are required"
+    "required": "Name and phone number are required",
+    "phoneInvalid": "Enter a phone number with at least 3 digits"
   },
   "complete": {
     "icon": "✓",

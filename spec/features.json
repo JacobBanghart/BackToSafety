@@ -60,7 +60,8 @@
       "description": "First emergency contact (name, phone, relationship); skippable.",
       "coverage": {
         "vectors": [
-          "phone.json#formatPhoneInput"
+          "phone.json#formatPhoneInput",
+          "phone.json#isUsablePhone"
         ],
         "flows": [
           "maestro/flows/onboarding.yaml"
@@ -458,7 +459,8 @@
       "coverage": {
         "vectors": [
           "phone.json#formatPhoneInput",
-          "phone.json#formatPhoneNumber"
+          "phone.json#formatPhoneNumber",
+          "phone.json#isUsablePhone"
         ],
         "flows": [
           "maestro/flows/contacts.yaml"
