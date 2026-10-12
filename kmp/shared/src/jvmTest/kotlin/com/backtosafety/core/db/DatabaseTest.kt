@@ -123,4 +123,15 @@ class DatabaseTest {
         }
         assertEquals(2L, userVersion)
     }
+
+    @Test
+    fun unreadableFileOpensAndFailsOnFirstUse() = runBlocking {
+        // Opening doesn't throw and reports nothing to migrate, so the app can start and meet
+        // the failure at its first query like any other (data_migrated is for a known old schema).
+        val file = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).also { it.writeText("not a database".repeat(100)) }
+        val db = openAppDatabase(file.absolutePath, databaseBuilder(file.absolutePath))
+        assertEquals(null, DatabaseOpen.migratingFrom)
+        assertTrue(runCatching { db.profile().get() }.isFailure, "the first query fails")
+        db.close()
+    }
 }
