@@ -376,6 +376,27 @@
           "error": "unknown"
         }
       }
+    ],
+    "emergency911CalledProperties": [
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:03:20.900Z", 2],
+        "expected": { "seconds_elapsed": 200, "checked_count": 2 }
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T15:20:00.000Z", 5],
+        "expected": { "seconds_elapsed": 1200, "checked_count": 5 }
+      },
+      {
+        "args": ["2026-10-06T15:00:00.000Z", "2026-10-06T14:59:00.000Z", 0],
+        "expected": { "seconds_elapsed": 0, "checked_count": 0 }
+      }
+    ],
+    "contactsAlerted": [
+      { "args": ["sent"], "expected": true },
+      { "args": ["handed_off"], "expected": true },
+      { "args": ["cancelled"], "expected": false },
+      { "args": ["failed"], "expected": false },
+      { "args": ["unavailable"], "expected": false }
     ]
   }
 }

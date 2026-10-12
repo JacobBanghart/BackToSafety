@@ -171,7 +171,7 @@
     },
     {
       "id": "emergency.alerts-away",
-      "description": "Off the emergency screen (another screen, or the app in the background) the 5-minute warning and the expiry arrive as notifications, in the app's language; tapping one opens the emergency. Notification permission is asked once, on home.",
+      "description": "Off the emergency screen (another screen, or the app in the background) the 5-minute warning and the expiry arrive as notifications, in the app's language; tapping one opens the emergency. Notification permission is asked once, on home. If notifications are off, the Leave modal says the alerts won't come and links to the system notification settings.",
       "coverage": {
         "vectors": [
           "alerts.json#alertDueAt",
@@ -179,7 +179,7 @@
         ],
         "flows": []
       },
-      "flowExempt": "Notifications are system UI and test builds don't ask for the permission. Covered by EmergencyAwayTest (shared rules), CountdownNotificationsTest (Android, Robolectric) and CountdownNotificationsTests (iOS, XCTest)."
+      "flowExempt": "Notifications are system UI and test builds don't ask for the permission. Covered by EmergencyAwayTest (shared rules), CountdownNotificationsTest and EmergencyScreenTest (Android, Robolectric) and CountdownNotificationsTests (iOS, XCTest)."
     },
     {
       "id": "emergency.ongoing-countdown",
@@ -251,14 +251,16 @@
     },
     {
       "id": "emergency.call-911",
-      "description": "Call button dials the emergency number and marks the step.",
+      "description": "Call button dials the emergency number and, once the phone app opened, marks the step and records the call; a device that can't call records nothing.",
       "coverage": {
-        "vectors": [],
+        "vectors": [
+          "alerts.json#emergency911CalledProperties"
+        ],
         "flows": [
           "maestro/flows/emergency-outcomes.yaml"
         ]
       },
-      "notes": "F-15, F-17."
+      "notes": "F-15, F-17. EmergencyScreenTest covers a device with no phone app."
     },
     {
       "id": "calls.unavailable",
@@ -277,6 +279,7 @@
       "coverage": {
         "vectors": [
           "emergency.json#buildAlertSms",
+          "alerts.json#contactsAlerted",
           "phone.json#normalizeUniqueSmsRecipients",
           "phone.json#normalizeSmsRecipient"
         ],

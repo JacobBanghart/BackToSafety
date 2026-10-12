@@ -1,5 +1,11 @@
 package com.backtosafety.app
 
+import android.app.NotificationManager
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.ResolveInfo
+import android.net.Uri
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -9,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.room.Room
+import androidx.room.useWriterConnection
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.emergency.CountdownService
@@ -16,6 +23,7 @@ import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.emergency.OngoingCountdown
 import com.backtosafety.core.ActiveEmergency
 import com.backtosafety.core.AlertScheduler
+import com.backtosafety.core.Analytics
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.EmergencyAway
 import com.backtosafety.core.ScheduledAlert
@@ -31,6 +39,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -105,8 +114,12 @@ class EmergencyScreenTest {
 
     private fun t(namespace: String): Translate = translations.translator("en", namespace)
 
+    /** What the screen reported, in order. */
+    private val tracked = mutableListOf<Pair<String, Map<String, Any?>>>()
+
     @Before
     fun setUp() {
+        Analytics.sink = { name, properties -> tracked += name to properties }
         AppClock.testSeamsEnabled = true
         AppClock.freeze(now)
         db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
@@ -121,6 +134,7 @@ class EmergencyScreenTest {
 
     @After
     fun tearDown() {
+        Analytics.sink = { _, _ -> }
         appScope.cancel()
         db.close()
     }
@@ -252,5 +266,127 @@ class EmergencyScreenTest {
         settle()
         assertTrue("Back left the finished emergency's screen up", left)
         assertNull(read { store.activeEmergency() })
+    }
+
+    /** A phone app that handles dialing 911, as a phone has. */
+    private fun addDialer() {
+        shadowOf(compose.activity.packageManager).addResolveInfoForIntent(
+            Intent(Intent.ACTION_DIAL, Uri.parse("tel:911")),
+            ResolveInfo().apply { activityInfo = ActivityInfo().apply { packageName = "dialer"; name = "Dialer" } },
+        )
+    }
+
+    private fun events(name: String) = tracked.filter { it.first == name }.map { it.second }
+
+    @Test
+    fun callingNineOneOneRecordsTheCallOnceTheDialerOpened() {
+        addDialer()
+        val id = runBlocking { store.createIncident(startedAt) }
+        showScreen(ActiveEmergency(startedAt, "", listOf("home_search"), incidentId = id))
+        tap("emergency-call-911")
+        assertEquals(Intent.ACTION_DIAL, shadowOf(compose.activity).nextStartedActivity.action)
+        assertEquals(listOf(mapOf<String, Any?>("seconds_elapsed" to 60L, "checked_count" to 1)), events("emergency_911_called"))
+        assertEquals(listOf("home_search", "call_911"), read { store.activeEmergency() }!!.checkedSteps)
+        assertEquals("911_called", read { store.incidents() }.single().outcome)
+        assertTrue(events("dial_failed").isEmpty())
+    }
+
+    @Test
+    fun theTimeSinceTheStartKeepsCountingPastTheSearchWindow() {
+        addDialer()
+        val late = Instant.fromEpochMilliseconds(now - 20 * 60_000L).toString()
+        showScreen(ActiveEmergency(late, "", emptyList(), incidentId = runBlocking { store.createIncident(late) }))
+        tap("emergency-call-911")
+        assertEquals(listOf(mapOf<String, Any?>("seconds_elapsed" to 1200L, "checked_count" to 0)), events("emergency_911_called"))
+    }
+
+    @Test
+    fun noPhoneAppMeansNoCallWasMade() {
+        // A tablet: nothing handles the dialer, so the number is shown and dial_failed reported.
+        shadowOf(compose.activity.application).checkActivities(true)
+        val id = runBlocking { store.createIncident(startedAt) }
+        showScreen(ActiveEmergency(startedAt, "", emptyList(), incidentId = id))
+        tap("emergency-call-911")
+        assertEquals(1, events("dial_failed").size)
+        assertTrue("No call was made, yet 911 was reported called", events("emergency_911_called").isEmpty())
+        assertTrue("The call step was ticked for a call that wasn't made", read { store.activeEmergency() }!!.checkedSteps.isEmpty())
+        assertEquals("ongoing", read { store.incidents() }.single().outcome)
+        assertTrue(events("emergency_step_completed").isEmpty())
+    }
+
+    /** The settings table gone, so reading the saved emergency fails; [fixSettings] brings it back. */
+    private fun breakSettings() = renameSettings("settings", "settings_away")
+
+    private fun fixSettings() {
+        gate.release() // queries go straight through, as in [read]
+        renameSettings("settings_away", "settings")
+    }
+
+    private fun renameSettings(from: String, to: String) = runBlocking {
+        db.useWriterConnection { it.usePrepared("ALTER TABLE $from RENAME TO $to") { statement -> statement.step() } }
+    }
+
+    @Test
+    fun aFailedReadOfTheSavedEmergencyDoesNotStartANewOne() {
+        val id = runBlocking { store.createIncident(startedAt) }
+        runBlocking { store.saveActiveEmergency(ActiveEmergency(startedAt, "", listOf("home_search"), incidentId = id)) }
+        breakSettings()
+        showScreen(null)
+        compose.onNodeWithTag("emergency-load-failed").assertExists()
+        compose.onNodeWithTag("emergency-timer").assertDoesNotExist()
+        assertEquals(1, events("save_failed").size)
+        assertEquals("emergency", events("save_failed").single()["screen"])
+        assertEquals("load", events("save_failed").single()["action"])
+        assertTrue("A failed read started an emergency", events("emergency_started").isEmpty())
+        assertTrue(countdownCommands().isEmpty())
+
+        // Retry, with the store back: the running emergency, not a new one.
+        fixSettings()
+        tap("emergency-load-retry", scroll = false)
+        compose.onNodeWithTag("emergency-timer").assertExists()
+        compose.onNodeWithTag("emergency-load-failed").assertDoesNotExist()
+        val saved = read { store.activeEmergency() }!!
+        assertEquals(startedAt, saved.startedAt)
+        assertEquals(id, saved.incidentId)
+        assertEquals(listOf("home_search"), saved.checkedSteps)
+        assertEquals(1, read { store.incidents() }.size)
+        assertTrue(events("emergency_started").isEmpty())
+        assertEquals(listOf<Long?>(now - 60_000L), countdownCommands())
+    }
+
+    @Test
+    fun theLoadFailedScreenCanBeLeft() {
+        breakSettings()
+        showScreen(null)
+        tap("emergency-back", scroll = false)
+        assertTrue(left)
+    }
+
+    private fun notifications(enabled: Boolean) =
+        shadowOf(compose.activity.getSystemService(NotificationManager::class.java)).setNotificationsEnabled(enabled)
+
+    @Test
+    fun leavingWarnsThatAlertsWontComeWhenNotificationsAreOff() {
+        notifications(false)
+        showScreen(ActiveEmergency(startedAt, "", emptyList(), incidentId = runBlocking { store.createIncident(startedAt) }))
+        tap("emergency-back", scroll = false)
+        compose.onNodeWithTag("emergency-modal-leave-notifications-off").assertExists()
+        tap("emergency-modal-leave-notifications-settings", scroll = false)
+        val intent = shadowOf(compose.activity).nextStartedActivity
+        assertEquals(Settings.ACTION_APP_NOTIFICATION_SETTINGS, intent.action)
+        assertEquals(compose.activity.packageName, intent.getStringExtra(Settings.EXTRA_APP_PACKAGE))
+        // The modal stays: the choice to stay, leave or end is still the user's.
+        compose.onNodeWithTag("emergency-modal-leave-stay").assertExists()
+    }
+
+    @Test
+    fun leavingSaysNothingOfNotificationsWhenTheyAreOn() {
+        notifications(true)
+        showScreen(ActiveEmergency(startedAt, "", emptyList(), incidentId = runBlocking { store.createIncident(startedAt) }))
+        tap("emergency-back", scroll = false)
+        compose.onNodeWithTag("emergency-modal-leave-stay").assertExists()
+        compose.onNodeWithTag("emergency-modal-leave-notifications-off").assertDoesNotExist()
+        compose.onNodeWithTag("emergency-modal-leave-notifications-settings").assertDoesNotExist()
+        assertFalse(left)
     }
 }

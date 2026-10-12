@@ -5,16 +5,17 @@ import UIKit
 /// extension becomes a pause and its digits) and URLComponents percent-encodes the result, so
 /// a `#` doesn't start the URL's fragment. A device that can't place calls (an iPad without an
 /// iPhone to relay through) says so, with the number to call from a phone, and reports
-/// dial_failed (as the Android app does).
+/// dial_failed (as the Android app does). `onOpened` runs once the phone app has opened, and
+/// not otherwise: what the caller records as a call made waits for it.
 @MainActor
-func dial(_ number: String, target: DialTarget, screen: String, tCommon: Translate) {
+func dial(_ number: String, target: DialTarget, screen: String, tCommon: Translate, onOpened: @escaping @MainActor () -> Void = {}) {
     var components = URLComponents()
     components.scheme = "tel"
     components.path = PhoneKt.dialString(phone: number)
     guard let url = components.url else { return }
     UIApplication.shared.open(url) { opened in
-        guard !opened else { return }
         Task { @MainActor in
+            guard !opened else { return onOpened() }
             Analytics.shared.track(event: .dialFailed, properties: EmergencyAlertsKt.dialFailedProperties(target: target, screen: screen))
             presentAlert(title: tCommon("callUnavailable.title"),
                          message: tCommon("callUnavailable.message", ["number": PhoneKt.formatPhoneNumber(phone: number)]),

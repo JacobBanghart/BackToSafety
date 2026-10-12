@@ -7,6 +7,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -70,14 +71,17 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.dial
 import com.backtosafety.app.ui.localeTime
 import com.backtosafety.app.ui.negativeTopMargin
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ActiveEmergency
@@ -90,7 +94,6 @@ import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.DialTarget
 import com.backtosafety.core.EmergencyAway
 import com.backtosafety.core.Profile
-import com.backtosafety.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.core.SmsResult
 import com.backtosafety.core.Translate
 import com.backtosafety.core.buildAlertSms
@@ -98,12 +101,13 @@ import com.backtosafety.core.buildInitialSteps
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.DestinationEntity
 import com.backtosafety.core.directionHint
+import com.backtosafety.core.emergency911CalledProperties
 import com.backtosafety.core.emergencyEndedProperties
 import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.normalizeUniqueSmsRecipients
 import com.backtosafety.core.secondsRemaining
-import com.backtosafety.core.smsResultProperties
+import com.backtosafety.core.trackSmsResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -152,15 +156,34 @@ fun EmergencyScreen(
     var destinations by remember { mutableStateOf<List<DestinationEntity>>(emptyList()) }
     var modal by remember { mutableStateOf<Modal?>(null) }
 
+    // Reading the saved emergency failed (not: there is none), so none was started or shown.
+    var loadFailed by remember { mutableStateOf(false) }
+    var loadAttempt by remember { mutableIntStateOf(0) }
+
+    // Whether the countdown alerts can be delivered while away: the Leave modal says when not.
+    // Not in test builds, which never ask for the permission (App.kt), so their screens match the goldens.
+    var notificationsOff by remember { mutableStateOf(false) }
+    fun checkNotifications() {
+        notificationsOff = !BuildConfig.TEST_SEAMS && !CountdownNotifications.enabled(context)
+    }
+
     // Found or End emergency was chosen: the emergency is over and the screen is only on its
     // way out, so nothing on it does anything any more (the recorder, too, saves no more).
     var finished by remember { mutableStateOf(false) }
 
     // Load or start the emergency (spec/storage.md: active_emergency, incidents).
-    LaunchedEffect(Unit) {
-        profile = store.profile()
-        destinations = store.destinations()
-        val saved = store.activeEmergency()
+    LaunchedEffect(loadAttempt) {
+        loadFailed = false
+        // The profile and places only add to the screen: the emergency goes on without them.
+        profile = runCatchingCancellable { store.profile() }.getOrNull()
+        destinations = runCatchingCancellable { store.destinations() }.getOrDefault(emptyList())
+        // A failed read is not "no emergency": starting one would replace the running emergency
+        // (its start, its incident, its countdown). Say so and offer to try again instead.
+        val saved = runCatchingCancellable { store.activeEmergency() }.getOrElse { e ->
+            reportSaveFailed("emergency", "load", e)
+            loadFailed = true
+            return@LaunchedEffect
+        }
         state = if (saved != null) {
             recorder.begin(saved)
             wearing = saved.wearing
@@ -168,11 +191,12 @@ fun EmergencyScreen(
             saved
         } else {
             val startedAt = Instant.fromEpochMilliseconds(AppClock.nowMs()).toString()
-            val incidentId = runCatching { store.createIncident(startedAt) }.getOrNull()
+            val incidentId = runCatchingCancellable { store.createIncident(startedAt) }.getOrNull()
             Analytics.track(AnalyticsEvent.EMERGENCY_STARTED)
             ActiveEmergency(startedAt, "", emptyList(), incidentId).also {
                 recorder.begin(it)
-                recorder.save(it)
+                // Not saved is no reason to leave the emergency unstarted: the next change saves again.
+                runCatchingCancellable { recorder.save(it) }
                 vibrate(context, CountdownAlert.WARNING)
             }
         }
@@ -182,7 +206,11 @@ fun EmergencyScreen(
     // an emergency that has ended (Found or End emergency) however late this runs.
     LaunchedEffect(wearing, steps, state) {
         val current = state ?: return@LaunchedEffect
-        recorder.save(current.copy(wearing = wearing, checkedSteps = steps.filter { it.checked }.map { it.id }))
+        runCatchingCancellable { recorder.save(current.copy(wearing = wearing, checkedSteps = steps.filter { it.checked }.map { it.id })) }
+    }
+
+    LaunchedEffect(modal) {
+        if (modal == Modal.LEAVE) checkNotifications()
     }
 
     // Showing and not showing (another screen on top, or the app in the background): off the
@@ -192,14 +220,16 @@ fun EmergencyScreen(
         var showing = false
         fun left() {
             showing = false
-            appScope.launch { away.left(AppClock.nowMs()) }
+            // The bookkeeping can't fail the app: if the store is failing, the screen says so (load).
+            appScope.launch { runCatchingCancellable { away.left(AppClock.nowMs()) } }
         }
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> {
                     showing = true
+                    checkNotifications()
                     appScope.launch {
-                        when (away.shown(AppClock.nowMs())) {
+                        when (runCatchingCancellable { away.shown(AppClock.nowMs()) }.getOrNull()) {
                             CountdownAlert.WARNING -> Modal.CATCH_UP_WARNING
                             CountdownAlert.EXPIRED -> Modal.CATCH_UP_EXPIRED
                             null -> null
@@ -242,8 +272,12 @@ fun EmergencyScreen(
 
     val current = state
     if (current == null) {
-        Box(Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
-            Text(t("loading"), color = colors.text)
+        if (loadFailed) {
+            LoadFailed(t, onRetry = { loadAttempt++ }, onBack = onLeave)
+        } else {
+            Box(Modifier.fillMaxSize().background(colors.background), contentAlignment = Alignment.Center) {
+                Text(t("loading"), color = colors.text)
+            }
         }
         return
     }
@@ -320,12 +354,15 @@ fun EmergencyScreen(
                     onCall = {
                         if (finished) return@ActionButtons
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
-                        Analytics.track(AnalyticsEvent.EMERGENCY_911_CALLED,
-                            mapOf("seconds_elapsed" to SEARCH_WINDOW_SECONDS - secondsLeft, "checked_count" to steps.count { it.checked }),
+                        // Only a call that was placed counts: a device with no phone app (a tablet)
+                        // shows the number to call and records nothing as called.
+                        if (!dial(context, emergencyNumber, DialTarget.EMERGENCY, "emergency", tCommon)) return@ActionButtons
+                        Analytics.track(
+                            AnalyticsEvent.EMERGENCY_911_CALLED,
+                            emergency911CalledProperties(Instant.parse(current.startedAt).toEpochMilliseconds(), AppClock.nowMs(), steps.count { it.checked }),
                         )
                         // Calling always marks the step done; a second call must not un-check it (F-17).
                         if (steps.none { it.id == "call_911" && it.checked }) toggle("call_911")
-                        dial(context, emergencyNumber, DialTarget.EMERGENCY, "emergency", tCommon)
                         appScope.launch { record(outcome = "911_called") }
                     },
                     onReadout = {
@@ -345,13 +382,10 @@ fun EmergencyScreen(
                                 .putExtra("sms_body", message)
                             // The messaging app doesn't say whether the text went: handed off is all we know.
                             runCatching { context.startActivity(intent) }
-                                .onSuccess {
-                                    Analytics.track(AnalyticsEvent.EMERGENCY_CONTACTS_ALERTED, mapOf("recipient_count" to recipients.size))
-                                    Analytics.track(AnalyticsEvent.EMERGENCY_SMS_RESULT, smsResultProperties(SmsResult.HANDED_OFF, recipients.size))
-                                }
+                                .onSuccess { trackSmsResult(SmsResult.HANDED_OFF, recipients.size) }
                                 .onFailure { e ->
                                     val result = if (e is ActivityNotFoundException) SmsResult.UNAVAILABLE else SmsResult.FAILED
-                                    Analytics.track(AnalyticsEvent.EMERGENCY_SMS_RESULT, smsResultProperties(result, recipients.size))
+                                    trackSmsResult(result, recipients.size)
                                     modal = Modal.SMS_ERROR
                                 }
                         }
@@ -372,7 +406,7 @@ fun EmergencyScreen(
                 if (m == Modal.FOUND) onLeave()
             }
             EmergencyModal(
-                m, t, tCommon,
+                m, t, tCommon, notificationsOff,
                 onDismiss = {
                     modal = null
                     if (m == Modal.FOUND) onLeave()
@@ -382,6 +416,7 @@ fun EmergencyScreen(
                     modal = null
                     onLeave()
                 },
+                onNotificationSettings = { openNotificationSettings(context) },
                 onEnd = {
                     finished = true
                     Analytics.track(AnalyticsEvent.EMERGENCY_CANCELLED, endedProperties())
@@ -396,6 +431,18 @@ fun EmergencyScreen(
             )
         }
     }
+}
+
+/** The system page where this app's notifications are turned on: the app's own page before Android 8, which has no finer one. */
+internal fun notificationSettingsIntent(context: Context): Intent =
+    if (Build.VERSION.SDK_INT >= 26) {
+        Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+    } else {
+        Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null))
+    }
+
+private fun openNotificationSettings(context: Context) {
+    runCatching { context.startActivity(notificationSettingsIntent(context)) }
 }
 
 /** The countdown alerts' vibration, on every Android the app supports (API 24 up). */
@@ -676,8 +723,8 @@ private fun TipsCard(t: Translate, profile: Profile?) {
 
 @Composable
 private fun EmergencyModal(
-    modal: Modal, t: Translate, tCommon: Translate,
-    onDismiss: () -> Unit, onLeave: () -> Unit, onEnd: () -> Unit,
+    modal: Modal, t: Translate, tCommon: Translate, notificationsOff: Boolean,
+    onDismiss: () -> Unit, onLeave: () -> Unit, onNotificationSettings: () -> Unit, onEnd: () -> Unit,
 ) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
@@ -724,6 +771,18 @@ private fun EmergencyModal(
                 Modal.LEAVE -> {
                     title("modal.leave.title")
                     message("modal.leave.message")
+                    if (notificationsOff) {
+                        // The message promises the timer goes on; with notifications off its alerts won't come.
+                        Text(
+                            t("modal.leave.notificationsOff"), style = rnTextStyle(16f, 22f), color = Color(DesignTokens.Semantic.error),
+                            textAlign = TextAlign.Center, modifier = Modifier.testTag("emergency-modal-leave-notifications-off"),
+                        )
+                        Text(
+                            tCommon("openSettings"), style = buttonText.copy(textDecoration = TextDecoration.Underline), color = colors.tint,
+                            modifier = Modifier.testTag("emergency-modal-leave-notifications-settings")
+                                .heightIn(min = 48.udp).clickable(onClick = onNotificationSettings).padding(vertical = space.md.udp),
+                        )
+                    }
                     // RN row items stretch to the tallest one (the bordered button).
                     Row(Modifier.fillMaxWidth().padding(top = space.xs.udp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                         Box(
@@ -758,6 +817,33 @@ private fun EmergencyModal(
                     fullButton(tCommon("ok"), "emergency-modal-info-ok", colors.primary, onDismiss)
                 }
             }
+        }
+    }
+}
+
+/** Reading the saved emergency failed: said so, with Retry, and a way out. */
+@Composable
+private fun LoadFailed(t: Translate, onRetry: () -> Unit, onBack: () -> Unit) {
+    val colors = LocalAppColors.current
+    val space = DesignTokens.Spacing
+    val type = DesignTokens.Typography
+    Column(
+        Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
+    ) {
+        ScreenHeader(t("screenTitle"), "emergency", onBack = onBack)
+        Column(
+            Modifier.weight(1f).fillMaxWidth().padding(space.xl.udp).testTag("emergency-load-failed"),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(space.md.udp, Alignment.CenterVertically),
+        ) {
+            Text(t("loadFailed.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
+            Text(t("loadFailed.message"), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
+            Box(
+                Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-load-retry")
+                    .clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primary)
+                    .clickable(onClick = onRetry).padding(vertical = space.md.udp, horizontal = space.lg.udp),
+                contentAlignment = Alignment.Center,
+            ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary)) }
         }
     }
 }

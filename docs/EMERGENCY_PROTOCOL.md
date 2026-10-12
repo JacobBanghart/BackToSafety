@@ -127,9 +127,8 @@ When the caregiver reaches the `familiar_places` step, saved destinations are su
 ### 911 call
 
 - One-tap button opens the dialer with `tel:911`.
-- Marks the `call_911` step complete.
-- Records an incident with outcome `911_called`.
-- Heavy haptic feedback confirms the action.
+- Once the dialer has opened (on iOS, once the system's open result says so), it marks the `call_911` step complete, records an incident with outcome `911_called` and sends `emergency_911_called`. On a device that can't place calls (a tablet) it shows the number to call and records none of that.
+- Heavy haptic feedback confirms the tap.
 
 ### Alert emergency contacts (SMS)
 
