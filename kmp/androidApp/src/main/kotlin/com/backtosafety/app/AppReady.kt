@@ -2,6 +2,7 @@ package com.backtosafety.app
 
 import android.os.Process
 import android.os.SystemClock
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 
@@ -17,7 +18,7 @@ object AppReady {
         if (reported) return
         reported = true
         val startupMs = SystemClock.uptimeMillis() - Process.getStartUptimeMillis()
-        val properties = runCatching { readiness() }.getOrDefault(emptyMap())
+        val properties = runCatchingCancellable { readiness() }.getOrDefault(emptyMap())
         Analytics.track(AnalyticsEvent.APP_READY, mapOf("startup_ms" to startupMs) + properties)
     }
 }

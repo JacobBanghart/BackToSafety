@@ -74,6 +74,7 @@ import com.backtosafety.app.ui.listCard
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
@@ -154,7 +155,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         if (form.phone.isBlank()) return alert(true, t("errors.phoneRequired"))
         saving = true
         scope.launch {
-            runCatching {
+            runCatchingCancellable {
                 val entity = ContactEntity(
                     id = editing?.id ?: 0, name = form.name, phone = form.phone,
                     relationship = form.relationship.ifEmpty { null }, role = form.role,
@@ -179,7 +180,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         cancel = t("deleteModal.cancel"),
         confirm = t("deleteModal.confirm") to {
             scope.launch {
-                runCatching { store.deleteContact(contact.id) }
+                runCatchingCancellable { store.deleteContact(contact.id) }
                     .onSuccess {
                         Analytics.track(AnalyticsEvent.CONTACT_DELETED)
                         reload()
@@ -278,7 +279,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                         onReorder = { ordered ->
                             contacts = ordered.mapIndexed { i, c -> c.copy(sortOrder = i) }
                             scope.launch {
-                                runCatching { store.reorderContacts(ordered) }.onFailure { e ->
+                                runCatchingCancellable { store.reorderContacts(ordered) }.onFailure { e ->
                                     reportSaveFailed("contacts", "reorder", e)
                                     alert(false, t("errors.reorderFailed"))
                                 }

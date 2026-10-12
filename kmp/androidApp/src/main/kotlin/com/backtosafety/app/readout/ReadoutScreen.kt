@@ -77,7 +77,6 @@ import com.backtosafety.core.formatPhoneNumber
 import com.backtosafety.core.invoke
 import com.backtosafety.core.missingScriptDetails
 import com.backtosafety.core.needsVehicleCheck
-import com.backtosafety.core.stripPhoneFormatting
 import com.backtosafety.core.vehicleCheckKind
 import kotlinx.coroutines.delay
 import kotlinx.datetime.TimeZone
@@ -277,7 +276,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                             t("sections.devices.medicAlertHotline"), hotline,
                             Modifier.testTag("readout-medicalert-hotline").clickable {
                                 Analytics.track(AnalyticsEvent.READOUT_MEDICALERT_HOTLINE_CALLED)
-                                dial(stripPhoneFormatting(hotline), DialTarget.MEDICALERT)
+                                dial(hotline, DialTarget.MEDICALERT)
                             },
                         )
                     }

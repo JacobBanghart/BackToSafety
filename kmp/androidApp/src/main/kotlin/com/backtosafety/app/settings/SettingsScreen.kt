@@ -49,6 +49,7 @@ import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnLineHeight
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.rnTextStyleNatural
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.Analytics
@@ -86,7 +87,7 @@ fun SettingsScreen(
     var deleting by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         Analytics.screen("settings")
-        deviceId = runCatching { store.deviceId() }.getOrNull()
+        deviceId = runCatchingCancellable { store.deviceId() }.getOrNull()
     }
 
     fun onVersionTap() {
@@ -113,7 +114,7 @@ fun SettingsScreen(
             .setPositiveButton(t("deleteAccountModal.confirm")) { _, _ ->
                 deleting = true
                 scope.launch {
-                    runCatching { store.clearAllData() }
+                    runCatchingCancellable { store.clearAllData() }
                         .onSuccess {
                             Analytics.track(AnalyticsEvent.SETTINGS_ACCOUNT_DELETED)
                             onDeleted()

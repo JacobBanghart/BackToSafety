@@ -21,6 +21,7 @@ import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
@@ -50,7 +51,7 @@ fun NameScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Uni
                 textStyle = type.bodyLarge.style().copy(fontWeight = FontWeight.SemiBold),
                 onClick = {
                     scope.launch {
-                        runCatching {
+                        runCatchingCancellable {
                             store.saveProfile { it.copy(name = name.trim(), nickname = nickname.trim().ifEmpty { null }) }
                             store.completeStep("profile_name")
                             trackStep(true, "profile_name")

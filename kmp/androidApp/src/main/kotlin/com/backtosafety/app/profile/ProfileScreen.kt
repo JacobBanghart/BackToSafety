@@ -58,6 +58,7 @@ import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
@@ -157,7 +158,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         saving = true
         scope.launch {
             fun v(field: String) = x[field].trim().ifEmpty { null }
-            runCatching {
+            runCatchingCancellable {
                 store.saveProfile {
                     it.copy(
                         name = v("name")!!, nickname = v("nickname"), dateOfBirth = v("dateOfBirth"),

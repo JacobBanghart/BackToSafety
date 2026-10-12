@@ -2,6 +2,7 @@ package com.backtosafety.app
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import com.backtosafety.app.ui.dial
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.DialTarget
@@ -9,6 +10,7 @@ import com.backtosafety.core.Translations
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -19,7 +21,10 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowAlertDialog
 import java.io.File
 
-/** Calling from a device with no phone app (tablets) shows the number and reports dial_failed. */
+/**
+ * Calling opens the dialer at the number, extension included (a raw `#` would start the URI's
+ * fragment); on a device with no phone app (tablets) it shows the number and reports dial_failed.
+ */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class DialTest {
@@ -45,12 +50,26 @@ class DialTest {
     @Test
     fun aPhoneOpensTheDialer() {
         shadowOf(activity.packageManager).addResolveInfoForIntent(
-            Intent(Intent.ACTION_DIAL, android.net.Uri.parse("tel:911")),
+            Intent(Intent.ACTION_DIAL, Uri.parse("tel:911")),
             android.content.pm.ResolveInfo().apply { activityInfo = android.content.pm.ActivityInfo().apply { packageName = "dialer"; name = "Dialer" } },
         )
         assertTrue(dial(activity, "911", DialTarget.EMERGENCY, "emergency", tCommon))
         assertEquals(Intent.ACTION_DIAL, shadowOf(activity).nextStartedActivity.action)
         assertTrue(tracked.isEmpty())
+    }
+
+    @Test
+    fun anExtensionDialsAsAPauseAndItsDigits() {
+        val dialed = Uri.fromParts("tel", "+15551234567,12", null)
+        shadowOf(activity.packageManager).addResolveInfoForIntent(
+            Intent(Intent.ACTION_DIAL, dialed),
+            android.content.pm.ResolveInfo().apply { activityInfo = android.content.pm.ActivityInfo().apply { packageName = "dialer"; name = "Dialer" } },
+        )
+        assertTrue(dial(activity, "+1 (555) 123-4567 #12", DialTarget.CONTACT, "contacts", tCommon))
+        val data = shadowOf(activity).nextStartedActivity.data!!
+        assertEquals("+15551234567,12", data.schemeSpecificPart)
+        assertNull(data.fragment)
+        assertEquals(dialed, data)
     }
 
     @Test
