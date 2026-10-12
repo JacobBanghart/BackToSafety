@@ -1,7 +1,5 @@
 package com.backtosafety.app.home
 
-import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +37,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -52,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
@@ -134,9 +132,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "profile", "source" to "home"))
                 navigate("profile")
             }) {
-                val bitmap = remember(p?.photoUri) {
-                    p?.photoUri?.let { BitmapFactory.decodeFile(Uri.parse(it).path)?.asImageBitmap() }
-                }
+                val bitmap = rememberPhoto(p?.photoUri, 56)
                 if (bitmap != null) {
                     Image(bitmap, null, Modifier.size(56.udp).clip(CircleShape).testTag("home-photo"), contentScale = ContentScale.Crop)
                 } else {

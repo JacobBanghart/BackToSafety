@@ -117,6 +117,7 @@ fun SettingsScreen(
                     runCatchingCancellable { store.clearAllData() }
                         .onSuccess {
                             Analytics.track(AnalyticsEvent.SETTINGS_ACCOUNT_DELETED)
+                            Analytics.reset() // the deleted device ID is no longer who this is
                             onDeleted()
                         }
                         .onFailure { e ->

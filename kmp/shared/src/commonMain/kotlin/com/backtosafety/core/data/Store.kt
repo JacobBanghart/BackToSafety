@@ -29,6 +29,19 @@ import kotlin.uuid.Uuid
 class Store(private val db: AppDatabase) {
 
     /**
+     * Removes the photo files the profile no longer points at: every saved profile photo except
+     * the one at the URI given (none, if null), and the camera and cropper temp files. The
+     * platform supplies it (the files are its own); it runs after the write that made them
+     * stale, so a failed write never costs the photo the profile still shows, and a failure of
+     * its own never fails the write.
+     */
+    var photoCleaner: (keeping: String?) -> Unit = {}
+
+    private fun cleanPhotos(keeping: String?) {
+        runCatching { photoCleaner(keeping) }
+    }
+
+    /**
      * Runs [block] in one immediate transaction on the writer connection: the DAO calls inside
      * share it, a failure rolls them all back, and the write lock taken at the start makes a
      * read-modify-write inside it exclusive.
@@ -59,11 +72,15 @@ class Store(private val db: AppDatabase) {
     @Throws(Exception::class)
     suspend fun saveProfile(change: (ProfileEntity) -> ProfileEntity) {
         val now = sqliteNow()
-        inTransaction {
+        val (before, after) = inTransaction {
             val current = db.profile().get() ?: ProfileEntity(name = "", createdAt = now)
             // updated_at as the RN update sets it; created_at kept (Room would otherwise write NULL).
-            db.profile().save(change(current).copy(createdAt = current.createdAt ?: now, updatedAt = now))
+            val saved = change(current).copy(createdAt = current.createdAt ?: now, updatedAt = now)
+            db.profile().save(saved)
+            current.photoUri to saved.photoUri
         }
+        // The photo changed: the previous file (and any pick that was never saved) is unused now.
+        if (before != after) cleanPhotos(after)
     }
 
     /**
@@ -198,17 +215,25 @@ class Store(private val db: AppDatabase) {
      * Settings > Delete Account (database/storage.native.ts clearAllData): empties every
      * table, then re-creates the onboarding steps so the app starts onboarding again. All of it
      * or none: half-way, the profile could be gone while onboarding still counted as complete.
+     * Then the photo files go ([photoCleaner]) and the cached device ID is dropped.
      */
     @Throws(Exception::class)
-    suspend fun clearAllData() = inTransaction {
-        db.profile().deleteAll()
-        db.contacts().deleteAll()
-        db.destinations().deleteAll()
-        db.incidents().deleteAll()
-        db.safetyChecks().deleteAll()
-        db.settings().deleteAll()
-        db.onboarding().deleteAll()
-        db.onboarding().insertMissing(ONBOARDING_STEPS.map { OnboardingStepEntity(step = it) })
+    suspend fun clearAllData() {
+        inTransaction {
+            db.profile().deleteAll()
+            db.contacts().deleteAll()
+            db.destinations().deleteAll()
+            db.incidents().deleteAll()
+            db.safetyChecks().deleteAll()
+            db.settings().deleteAll()
+            db.onboarding().deleteAll()
+            db.onboarding().insertMissing(ONBOARDING_STEPS.map { OnboardingStepEntity(step = it) })
+        }
+        // The device ID row is gone with the settings: forget the cached copy too, or this
+        // process would keep handing out the deleted identity.
+        cachedDeviceId = null
+        // And the person's photos, which are files outside the database.
+        cleanPhotos(null)
     }
 
     private var cachedDeviceId: String? = null

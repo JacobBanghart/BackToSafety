@@ -125,6 +125,80 @@ class StoreTest {
     }
 
     @Test
+    fun deleteAccountForgetsTheDeviceIdAndRemovesThePhotos() = runBlocking {
+        val store = freshStore()
+        val cleaned = mutableListOf<String?>()
+        store.photoCleaner = { cleaned += it }
+        store.seed()
+        val before = store.deviceId()
+        store.saveProfile { it.copy(name = "Margaret Smith", photoUri = "file:///files/profile_photo_1.jpg") }
+        cleaned.clear()
+
+        store.clearAllData()
+        assertEquals(listOf<String?>(null), cleaned)
+        assertTrue(before != store.deviceId(), "the cached ID outlived the settings row it came from")
+    }
+
+    @Test
+    fun deleteAccountFailingHalfWayKeepsThePhotos() = runBlocking {
+        val db = freshDb()
+        val store = Store(db)
+        val cleaned = mutableListOf<String?>()
+        store.photoCleaner = { cleaned += it }
+        store.seed()
+        store.putSetting(Store.THEME_PREFERENCE, "dark")
+        db.failOn("DELETE", "settings")
+
+        assertFailsWith<Exception> { store.clearAllData() }
+        assertTrue(cleaned.isEmpty())
+    }
+
+    @Test
+    fun savingANewPhotoCleansUpOnlyWhenThePhotoChanged() = runBlocking {
+        val store = freshStore()
+        val cleaned = mutableListOf<String?>()
+        store.photoCleaner = { cleaned += it }
+        store.seed()
+
+        store.saveProfile { it.copy(name = "Margaret Smith") }
+        assertTrue(cleaned.isEmpty(), "a save that leaves the photo alone has nothing to clean")
+        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_1.jpg"))
+        store.updateProfile(mapOf("nickname" to "Peggy"))
+        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_2.jpg"))
+        store.updateProfile(mapOf("photoUri" to null))
+        assertEquals(
+            listOf<String?>("file:///files/profile_photo_1.jpg", "file:///files/profile_photo_2.jpg", null),
+            cleaned,
+        )
+    }
+
+    @Test
+    fun aFailedProfileSaveKeepsThePreviousPhoto() = runBlocking {
+        val db = freshDb()
+        val store = Store(db)
+        val cleaned = mutableListOf<String?>()
+        store.photoCleaner = { cleaned += it }
+        store.seed()
+        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_1.jpg"))
+        cleaned.clear()
+        db.failOn("INSERT", "profile")
+
+        assertFailsWith<Exception> { store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_2.jpg")) }
+        assertTrue(cleaned.isEmpty())
+        assertEquals("file:///files/profile_photo_1.jpg", store.profile()?.photoUri)
+    }
+
+    @Test
+    fun aCleanerThatThrowsDoesNotFailTheWrite() = runBlocking {
+        val store = freshStore()
+        store.photoCleaner = { error("disk gone") }
+        store.seed()
+        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_1.jpg"))
+        store.clearAllData()
+        assertEquals(null, store.profile())
+    }
+
+    @Test
     fun readinessCountsWhatIsStored() = runBlocking {
         val store = freshStore()
         assertEquals(

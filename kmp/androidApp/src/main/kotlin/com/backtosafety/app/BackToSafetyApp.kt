@@ -4,6 +4,7 @@ import android.app.Application
 import android.os.SystemClock
 import android.util.Log
 import com.backtosafety.app.emergency.CountdownNotifications
+import com.backtosafety.app.ui.PhotoFiles
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
@@ -81,6 +82,7 @@ class BackToSafetyApp : Application() {
     private suspend fun open(): AppServices {
         val path = databasePath(this)
         val store = Store(openAppDatabase(path, databaseBuilder(this, path)))
+        store.photoCleaner = { keeping -> PhotoFiles.clean(filesDir, cacheDir, keeping) }
         val translations = loadTranslations()
         val notifications = CountdownNotifications(
             this,
@@ -120,6 +122,7 @@ class BackToSafetyApp : Application() {
             } else PostHog.capture(name, properties = props)
         }
         Analytics.flusher = { PostHog.flush() }
+        Analytics.resetter = { PostHog.reset() }
     }
 
     /** The RN app's i18n/locales JSON, synced into assets/locales at build time. */
