@@ -33,7 +33,7 @@ struct NameView: View {
                 Task {
                     do {
                         let nick = nickname.trimmingCharacters(in: .whitespaces)
-                        try await model.store.updateProfile(values: ["name": name.trimmingCharacters(in: .whitespaces), "nickname": nick.isEmpty ? nil : nick])
+                        try await model.store.updateProfile(values: [.fullName: name.trimmingCharacters(in: .whitespaces), .nickname: nick.isEmpty ? nil : nick])
                         try await model.store.completeStep(step: "profile_name")
                         trackStep(true, "profile_name")
                         model.path.append(.photo)
@@ -103,7 +103,7 @@ struct PhotoView: View {
                           enabled: photoUri != nil && !saving) {
                 saving = true
                 Task {
-                    _ = try? await model.store.updateProfile(values: ["photoUri": photoUri])
+                    _ = try? await model.store.updateProfile(values: [.photoUri: photoUri])
                     _ = try? await model.store.completeStep(step: "profile_photo")
                     trackStep(true, "profile_photo")
                     saving = false
@@ -180,7 +180,7 @@ struct AppearanceView: View {
                 Task {
                     func v(_ s: String) -> String? { let x = s.trimmingCharacters(in: .whitespaces); return x.isEmpty ? nil : x }
                     _ = try? await model.store.updateProfile(values: [
-                        "height": v(height), "weight": v(weight), "hairColor": v(hair), "eyeColor": v(eyes), "identifyingMarks": v(marks),
+                        .height: v(height), .weight: v(weight), .hairColor: v(hair), .eyeColor: v(eyes), .identifyingMarks: v(marks),
                     ])
                     _ = try? await model.store.completeStep(step: "profile_appearance")
                     trackStep(true, "profile_appearance")

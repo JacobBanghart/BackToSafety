@@ -68,14 +68,12 @@ import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.MOBILITY_OPTIONS
 import com.backtosafety.core.MOBILITY_OPTION_KEYS
+import com.backtosafety.core.PROFILE_TEXT_FIELDS
+import com.backtosafety.core.ProfileField
+import com.backtosafety.core.ProfileKeyboard
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.formatDob
-import com.backtosafety.core.formatDobInput
-import com.backtosafety.core.formatHeightInput
-import com.backtosafety.core.formatMedicAlertIdInput
-import com.backtosafety.core.formatPhoneInput
-import com.backtosafety.core.formatWeightInput
 import com.backtosafety.core.invoke
 import com.backtosafety.core.parseDob
 import kotlinx.coroutines.launch
@@ -85,22 +83,14 @@ private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
 private val white = Color(DesignTokens.Light.textOnPrimary)
 
-/** Every text field on the screen, by its RN form key (testID profile-field-<key>). */
-private val TEXT_FIELDS = listOf(
-    "name", "nickname", "dateOfBirth", "photoUri", "height", "weight", "hairColor", "eyeColor", "identifyingMarks",
-    "medicalConditions", "medications", "allergies", "cognitiveStatus",
-    "communicationPreference", "escalationSigns", "deescalationTechniques", "approachGuidance", "likes",
-    "dislikesTriggers", "safeWord", "locativeDeviceInfo", "idBracelets", "medicAlertId", "medicAlertHotline",
-)
-
 private data class ProfileForm(
-    val text: Map<String, String> = TEXT_FIELDS.associateWith { "" },
+    val text: Map<ProfileField, String> = PROFILE_TEXT_FIELDS.associateWith { "" },
     val dominantHand: String = "unknown",
     val mobility: List<String> = emptyList(),
     val mobilityOther: String = "",
 ) {
-    operator fun get(field: String) = text[field].orEmpty()
-    fun with(field: String, value: String) = copy(text = text + (field to value))
+    operator fun get(field: ProfileField) = text[field].orEmpty()
+    fun with(field: ProfileField, value: String) = copy(text = text + (field to value))
 
     /** utils: the selected options, with "Other" replaced by its text. */
     val resolvedMobility: String
@@ -124,17 +114,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         val tokens = p?.mobilityLevel.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }
         val known = tokens.filter { it in MOBILITY_OPTIONS }
         val custom = tokens.filter { it !in MOBILITY_OPTIONS }
-        val values = mapOf(
-            "name" to p?.name, "nickname" to p?.nickname, "dateOfBirth" to p?.dateOfBirth, "photoUri" to p?.photoUri,
-            "height" to p?.height, "weight" to p?.weight, "hairColor" to p?.hairColor, "eyeColor" to p?.eyeColor,
-            "identifyingMarks" to p?.identifyingMarks, "medicalConditions" to p?.medicalConditions,
-            "medications" to p?.medications, "allergies" to p?.allergies, "cognitiveStatus" to p?.cognitiveStatus,
-            "communicationPreference" to p?.communicationPreference, "escalationSigns" to p?.escalationSigns,
-            "deescalationTechniques" to p?.deescalationTechniques, "approachGuidance" to p?.approachGuidance,
-            "likes" to p?.likes, "dislikesTriggers" to p?.dislikesTriggers, "safeWord" to p?.safeWord,
-            "locativeDeviceInfo" to p?.locativeDeviceInfo, "idBracelets" to p?.idBracelets,
-            "medicAlertId" to p?.medicAlertId, "medicAlertHotline" to p?.medicAlertHotline,
-        ).mapValues { it.value.orEmpty() }
+        val values = PROFILE_TEXT_FIELDS.associateWith { field -> p?.get(field).orEmpty() }
         val loaded = ProfileForm(
             text = values,
             dominantHand = p?.dominantHand?.ifEmpty { null } ?: "unknown",
@@ -154,29 +134,26 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     fun save() {
         val x = form ?: return
         // name is NOT NULL: an empty one is refused rather than failing silently (F-38).
-        if (x["name"].isBlank()) return showAlert(context, tCommon("required"), t("errors.nameRequired"))
+        if (x[ProfileField.FULL_NAME].isBlank()) return showAlert(context, tCommon("required"), t("errors.nameRequired"))
         saving = true
         scope.launch {
-            fun v(field: String) = x[field].trim().ifEmpty { null }
+            fun v(field: ProfileField) = x[field].trim().ifEmpty { null }
             runCatchingCancellable {
-                store.saveProfile {
-                    it.copy(
-                        name = v("name")!!, nickname = v("nickname"), dateOfBirth = v("dateOfBirth"),
-                        photoUri = x["photoUri"].ifEmpty { null }, height = v("height"), weight = v("weight"),
-                        hairColor = v("hairColor"), eyeColor = v("eyeColor"), identifyingMarks = v("identifyingMarks"),
-                        medicalConditions = v("medicalConditions"), medications = v("medications"), allergies = v("allergies"),
-                        cognitiveStatus = v("cognitiveStatus"), dominantHand = x.dominantHand,
-                        mobilityLevel = x.resolvedMobility.ifEmpty { null },
-                        communicationPreference = v("communicationPreference"), escalationSigns = v("escalationSigns"),
-                        deescalationTechniques = v("deescalationTechniques"), approachGuidance = v("approachGuidance"),
-                        likes = v("likes"), dislikesTriggers = v("dislikesTriggers"), safeWord = v("safeWord"),
-                        locativeDeviceInfo = v("locativeDeviceInfo"), idBracelets = v("idBracelets"),
-                        medicAlertId = v("medicAlertId"), medicAlertHotline = v("medicAlertHotline"),
-                    )
+                // A null clears the field, so every field on the screen is in the map.
+                val values = buildMap<ProfileField, String?> {
+                    for (field in PROFILE_TEXT_FIELDS) put(field, v(field))
+                    // The photo's path isn't trimmed.
+                    put(ProfileField.PHOTO_URI, x[ProfileField.PHOTO_URI].ifEmpty { null })
+                    put(ProfileField.DOMINANT_HAND, x.dominantHand)
+                    put(ProfileField.MOBILITY_LEVEL, x.resolvedMobility.ifEmpty { null })
                 }
+                store.updateProfile(values)
             }.onSuccess {
                 Analytics.track(AnalyticsEvent.PROFILE_SAVED,
-                    mapOf("has_photo" to x["photoUri"].isNotEmpty(), "has_medical" to x["medicalConditions"].isNotEmpty(), "has_medications" to x["medications"].isNotEmpty()),
+                    mapOf(
+                        "has_photo" to x[ProfileField.PHOTO_URI].isNotEmpty(), "has_medical" to x[ProfileField.MEDICAL_CONDITIONS].isNotEmpty(),
+                        "has_medications" to x[ProfileField.MEDICATIONS].isNotEmpty(),
+                    ),
                 )
                 initial = x
                 onSaved()
@@ -204,7 +181,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         onDiscard = {}, onLeave = onBack,
     )
 
-    val picker = rememberPhotoPicker { uri -> form = form?.with("photoUri", uri) }
+    val picker = rememberPhotoPicker { uri -> form = form?.with(ProfileField.PHOTO_URI, uri) }
 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
@@ -219,47 +196,41 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         if (f == null) return@Column
         // Reads the form at call time, never `f`: fields keep the callback from the composition
         // they were drawn in, so an edit built on that snapshot reverted every edit since.
-        fun update(field: String, value: String) {
+        fun update(field: ProfileField, value: String) {
             form = form?.with(field, value)
         }
         val toggle: (String) -> Unit = { expanded = if (expanded == it) null else it }
         Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
             PhotoSection(
-                t, f["photoUri"],
+                t, f[ProfileField.PHOTO_URI],
                 onCamera = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_TAKEN); picker.fromCamera() },
                 onLibrary = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_CHOSEN); picker.fromLibrary() },
             )
 
             Section("personal", t("sections.personal"), "person.fill", expanded, toggle) {
-                Field(t("fields.name"), "name", f, ::update, t("fields.namePlaceholder"), capitalization = KeyboardCapitalization.Words)
-                Field(t("fields.nickname"), "nickname", f, ::update, t("fields.nicknamePlaceholder"), capitalization = KeyboardCapitalization.Words)
-                DateOfBirth(t("fields.dateOfBirth"), f["dateOfBirth"], { update("dateOfBirth", it) })
+                Field(t, ProfileField.FULL_NAME, f, ::update)
+                Field(t, ProfileField.NICKNAME, f, ::update)
+                DateOfBirth(t("fields.dateOfBirth"), f[ProfileField.DATE_OF_BIRTH], { update(ProfileField.DATE_OF_BIRTH, it) })
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     Box(Modifier.weight(1f)) {
-                        Field(t("fields.height"), "height", f, ::update, t("fields.heightPlaceholder"), keyboardType = KeyboardType.Number)
+                        Field(t, ProfileField.HEIGHT, f, ::update)
                     }
                     Box(Modifier.weight(1f)) {
-                        Field(t("fields.weight"), "weight", f, ::update, t("fields.weightPlaceholder"), keyboardType = KeyboardType.Number)
+                        Field(t, ProfileField.WEIGHT, f, ::update)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                    Box(Modifier.weight(1f)) { Field(t("fields.hairColor"), "hairColor", f, ::update, t("fields.hairColorPlaceholder")) }
-                    Box(Modifier.weight(1f)) { Field(t("fields.eyeColor"), "eyeColor", f, ::update, t("fields.eyeColorPlaceholder")) }
+                    Box(Modifier.weight(1f)) { Field(t, ProfileField.HAIR_COLOR, f, ::update) }
+                    Box(Modifier.weight(1f)) { Field(t, ProfileField.EYE_COLOR, f, ::update) }
                 }
-                Field(
-                    t("fields.identifyingMarks"), "identifyingMarks", f, ::update, t("fields.identifyingMarksPlaceholder"),
-                    multiline = true, hint = t("fields.identifyingMarksHint"),
-                )
+                Field(t, ProfileField.IDENTIFYING_MARKS, f, ::update)
             }
 
             Section("medical", t("sections.medical"), "cross.fill", expanded, toggle) {
-                Field(t("fields.medicalConditions"), "medicalConditions", f, ::update, t("fields.medicalConditionsPlaceholder"), multiline = true)
-                Field(t("fields.medications"), "medications", f, ::update, t("fields.medicationsPlaceholder"), multiline = true)
-                Field(t("fields.allergies"), "allergies", f, ::update, t("fields.allergiesPlaceholder"), multiline = true)
-                Field(
-                    t("fields.cognitiveStatus"), "cognitiveStatus", f, ::update, t("fields.cognitiveStatusPlaceholder"),
-                    multiline = true, hint = t("fields.cognitiveStatusHint"),
-                )
+                Field(t, ProfileField.MEDICAL_CONDITIONS, f, ::update)
+                Field(t, ProfileField.MEDICATIONS, f, ::update)
+                Field(t, ProfileField.ALLERGIES, f, ::update)
+                Field(t, ProfileField.COGNITIVE_STATUS, f, ::update)
                 Group(t("fields.dominantHand"), t("fields.dominantHandHint")) {
                     Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         for (hand in listOf("left", "right", "unknown")) {
@@ -316,36 +287,24 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             }
 
             Section("communication", t("sections.communication"), "bubble.left.fill", expanded, toggle) {
-                Field(t("fields.communicationPreference"), "communicationPreference", f, ::update, t("fields.communicationPreferencePlaceholder"), multiline = true)
-                Field(t("fields.escalationSigns"), "escalationSigns", f, ::update, t("fields.escalationSignsPlaceholder"), multiline = true, hint = t("fields.escalationSignsHint"))
-                Field(t("fields.deescalationTechniques"), "deescalationTechniques", f, ::update, t("fields.deescalationTechniquesPlaceholder"), multiline = true, hint = t("fields.deescalationTechniquesHint"))
-                Field(t("fields.approachGuidance"), "approachGuidance", f, ::update, t("fields.approachGuidancePlaceholder"), multiline = true)
-                Field(t("fields.likes"), "likes", f, ::update, t("fields.likesPlaceholder"), multiline = true, hint = t("fields.likesHint"))
-                Field(t("fields.dislikesTriggers"), "dislikesTriggers", f, ::update, t("fields.dislikesTriggersPlaceholder"), multiline = true, hint = t("fields.dislikesTriggersHint"))
-                Field(t("fields.safeWord"), "safeWord", f, ::update, t("fields.safeWordPlaceholder"), hint = t("fields.safeWordHint"))
+                Field(t, ProfileField.COMMUNICATION_PREFERENCE, f, ::update)
+                Field(t, ProfileField.ESCALATION_SIGNS, f, ::update)
+                Field(t, ProfileField.DEESCALATION_TECHNIQUES, f, ::update)
+                Field(t, ProfileField.APPROACH_GUIDANCE, f, ::update)
+                Field(t, ProfileField.LIKES, f, ::update)
+                Field(t, ProfileField.DISLIKES_TRIGGERS, f, ::update)
+                Field(t, ProfileField.SAFE_WORD, f, ::update)
             }
 
             Section("devices", t("sections.devices"), "location.fill", expanded, toggle) {
-                Field(t("fields.locativeDeviceInfo"), "locativeDeviceInfo", f, ::update, t("fields.locativeDeviceInfoPlaceholder"), multiline = true, hint = t("fields.locativeDeviceInfoHint"))
-                Field(t("fields.idBracelets"), "idBracelets", f, ::update, t("fields.idBraceletsPlaceholder"), multiline = true, hint = t("fields.idBraceletsHint"))
-                Field(t("fields.medicAlertId"), "medicAlertId", f, ::update, t("fields.medicAlertIdPlaceholder"))
-                Field(
-                    t("fields.medicAlertHotline"), "medicAlertHotline", f, ::update, t("fields.medicAlertHotlinePlaceholder"),
-                    keyboardType = KeyboardType.Phone, hint = t("fields.medicAlertHotlineHint"),
-                )
+                Field(t, ProfileField.LOCATIVE_DEVICE_INFO, f, ::update)
+                Field(t, ProfileField.ID_BRACELETS, f, ::update)
+                Field(t, ProfileField.MEDIC_ALERT_ID, f, ::update)
+                Field(t, ProfileField.MEDIC_ALERT_HOTLINE, f, ::update)
             }
             Box(Modifier.height(40.udp))
         }
     }
-}
-
-/** What each field's input does to typed text (profile.tsx formatFieldInput). */
-private fun formatField(field: String, value: String) = when (field) {
-    "height" -> formatHeightInput(value)
-    "weight" -> formatWeightInput(value)
-    "medicAlertId" -> formatMedicAlertIdInput(value)
-    "medicAlertHotline" -> formatPhoneInput(value)
-    else -> value
 }
 
 @Composable
@@ -424,17 +383,18 @@ private fun Group(label: String, hint: String? = null, content: @Composable Colu
 }
 
 @Composable
-private fun Field(
-    label: String, field: String, form: ProfileForm, onChange: (String, String) -> Unit, placeholder: String,
-    multiline: Boolean = false, hint: String? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
-) {
+private fun Field(t: Translate, field: ProfileField, form: ProfileForm, onChange: (ProfileField, String) -> Unit) {
     val colors = LocalAppColors.current
-    Group(label, hint) {
+    Group(t("fields.${field.key}"), if (field.hasHint) t("fields.${field.key}Hint") else null) {
         RnTextField(
-            form[field], { onChange(field, formatField(field, it)) }, "profile-field-$field",
-            placeholder = placeholder, multiline = multiline, keyboardType = keyboardType, capitalization = capitalization,
+            form[field], { onChange(field, field.formatInput(it)) }, "profile-field-${field.key}",
+            placeholder = t("fields.${field.key}Placeholder"), multiline = field.multiline,
+            keyboardType = when (field.keyboard) {
+                ProfileKeyboard.TEXT -> KeyboardType.Text
+                ProfileKeyboard.NUMBER -> KeyboardType.Number
+                ProfileKeyboard.PHONE -> KeyboardType.Phone
+            },
+            capitalization = if (field.capitalizeWords) KeyboardCapitalization.Words else KeyboardCapitalization.Sentences,
             background = colors.card, border = colors.border,
         )
     }
@@ -456,7 +416,7 @@ private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RnTextField(
-                value, { onChange(formatDobInput(it)) }, "profile-field-dateOfBirth",
+                value, { onChange(ProfileField.DATE_OF_BIRTH.formatInput(it)) }, "profile-field-dateOfBirth",
                 placeholder = "MM/DD/YYYY", keyboardType = KeyboardType.Number, maxLength = 10,
                 background = Color.Transparent, border = Color.Transparent, bare = true,
                 modifier = Modifier.weight(1f),

@@ -26,10 +26,9 @@ import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
-import com.backtosafety.core.formatHeightInput
-import com.backtosafety.core.formatWeightInput
 import com.backtosafety.core.invoke
 import kotlinx.coroutines.launch
 
@@ -60,15 +59,15 @@ fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue:
                 textStyle = rnTextStyle(18f, 24f, fontWeight = 600),
                 onClick = {
                     scope.launch {
-                        store.saveProfile {
-                            it.copy(
-                                height = height.trim().ifEmpty { null },
-                                weight = weight.trim().ifEmpty { null },
-                                hairColor = hair.trim().ifEmpty { null },
-                                eyeColor = eyes.trim().ifEmpty { null },
-                                identifyingMarks = marks.trim().ifEmpty { null },
-                            )
-                        }
+                        store.updateProfile(
+                            mapOf(
+                                ProfileField.HEIGHT to height.trim().ifEmpty { null },
+                                ProfileField.WEIGHT to weight.trim().ifEmpty { null },
+                                ProfileField.HAIR_COLOR to hair.trim().ifEmpty { null },
+                                ProfileField.EYE_COLOR to eyes.trim().ifEmpty { null },
+                                ProfileField.IDENTIFYING_MARKS to marks.trim().ifEmpty { null },
+                            ),
+                        )
                         store.completeStep("profile_appearance")
                         trackStep(true, "profile_appearance")
                         onContinue()
@@ -86,11 +85,11 @@ fun AppearanceScreen(t: Translate, store: Store, onBack: () -> Unit, onContinue:
         Column(verticalArrangement = Arrangement.spacedBy(20.udp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                 Field(t("appearance.heightLabel"), Modifier.weight(1f)) {
-                    AppInput(height, { height = formatHeightInput(it) }, t("appearance.heightPlaceholder"),
+                    AppInput(height, { height = ProfileField.HEIGHT.formatInput(it) }, t("appearance.heightPlaceholder"),
                         "onboarding-appearance-height", input, keyboardType = KeyboardType.Number)
                 }
                 Field(t("appearance.weightLabel"), Modifier.weight(1f)) {
-                    AppInput(weight, { weight = formatWeightInput(it) }, t("appearance.weightPlaceholder"),
+                    AppInput(weight, { weight = ProfileField.WEIGHT.formatInput(it) }, t("appearance.weightPlaceholder"),
                         "onboarding-appearance-weight", input, keyboardType = KeyboardType.Number)
                 }
             }

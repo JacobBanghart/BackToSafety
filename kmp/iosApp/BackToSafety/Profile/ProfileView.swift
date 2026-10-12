@@ -3,22 +3,15 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// Every text field on the screen, by its RN form key (testID profile-field-<key>).
-private let textFields = [
-    "name", "nickname", "dateOfBirth", "photoUri", "height", "weight", "hairColor", "eyeColor", "identifyingMarks",
-    "medicalConditions", "medications", "allergies", "cognitiveStatus",
-    "communicationPreference", "escalationSigns", "deescalationTechniques", "approachGuidance", "likes",
-    "dislikesTriggers", "safeWord", "locativeDeviceInfo", "idBracelets", "medicAlertId", "medicAlertHotline",
-]
 private let white = Color(argb: Light.textOnPrimary)
 
 private struct ProfileForm: Equatable {
-    var text: [String: String] = Dictionary(uniqueKeysWithValues: textFields.map { ($0, "") })
+    var text: [ProfileField: String] = Dictionary(uniqueKeysWithValues: ProfileFieldKt.PROFILE_TEXT_FIELDS.map { ($0, "") })
     var dominantHand = "unknown"
     var mobility: [String] = []
     var mobilityOther = ""
 
-    subscript(field: String) -> String {
+    subscript(field: ProfileField) -> String {
         get { text[field] ?? "" }
         set { text[field] = newValue }
     }
@@ -30,20 +23,17 @@ private struct ProfileForm: Equatable {
     }
 
     /// What would be saved (RN compares the form plus resolved mobility).
-    var snapshot: [String] { textFields.map { self[$0] } + [dominantHand, resolvedMobility] }
+    var snapshot: [String] { ProfileFieldKt.PROFILE_TEXT_FIELDS.map { self[$0] } + [dominantHand, resolvedMobility] }
 }
 
 /// A mobility option's testID suffix: "Uses cane" -> "uses-cane".
 private func slug(_ option: String) -> String { option.lowercased().replacingOccurrences(of: " ", with: "-") }
 
-/// What each field's input does to typed text (profile.tsx formatFieldInput).
-private func formatField(_ field: String, _ value: String) -> String {
-    switch field {
-    case "height": FormattersKt.formatHeightInput(value: value)
-    case "weight": FormattersKt.formatWeightInput(value: value)
-    case "medicAlertId": FormattersKt.formatMedicAlertIdInput(value: value)
-    case "medicAlertHotline": PhoneKt.formatPhoneInput(value: value)
-    default: value
+private extension ProfileKeyboard {
+    var ui: UIKeyboardType {
+        if self == ProfileKeyboard.number { return .numberPad }
+        if self == ProfileKeyboard.phone { return .phonePad }
+        return .default
     }
 }
 
@@ -86,7 +76,7 @@ struct ProfileView: View {
         .task { await load() }
         .appAlert($alert)
         .sheet(item: $picker) { source in
-            ImagePicker(source: source.uiSource) { form?["photoUri"] = $0 }.ignoresSafeArea()
+            ImagePicker(source: source.uiSource) { form?[.photoUri] = $0 }.ignoresSafeArea()
         }
         .overlay { if datePicking { dateModal.transition(.opacity) } }
         .animation(.easeInOut(duration: 0.2), value: datePicking)
@@ -99,18 +89,7 @@ struct ProfileView: View {
         let known = tokens.filter { options.contains($0) }
         let custom = tokens.filter { !options.contains($0) }
         var loaded = ProfileForm()
-        let values: [String: String?] = [
-            "name": p?.name, "nickname": p?.nickname, "dateOfBirth": p?.dateOfBirth, "photoUri": p?.photoUri,
-            "height": p?.height, "weight": p?.weight, "hairColor": p?.hairColor, "eyeColor": p?.eyeColor,
-            "identifyingMarks": p?.identifyingMarks, "medicalConditions": p?.medicalConditions,
-            "medications": p?.medications, "allergies": p?.allergies, "cognitiveStatus": p?.cognitiveStatus,
-            "communicationPreference": p?.communicationPreference, "escalationSigns": p?.escalationSigns,
-            "deescalationTechniques": p?.deescalationTechniques, "approachGuidance": p?.approachGuidance,
-            "likes": p?.likes, "dislikesTriggers": p?.dislikesTriggers, "safeWord": p?.safeWord,
-            "locativeDeviceInfo": p?.locativeDeviceInfo, "idBracelets": p?.idBracelets,
-            "medicAlertId": p?.medicAlertId, "medicAlertHotline": p?.medicAlertHotline,
-        ]
-        for (k, v) in values { loaded[k] = v ?? "" }
+        for field in ProfileFieldKt.PROFILE_TEXT_FIELDS { loaded[field] = p?.get(field: field) ?? "" }
         loaded.dominantHand = (p?.dominantHand ?? "").isEmpty ? "unknown" : p!.dominantHand!
         loaded.mobility = custom.isEmpty ? known : known + ["Other"]
         loaded.mobilityOther = custom.joined(separator: ", ")
@@ -121,27 +100,27 @@ struct ProfileView: View {
     private func save() {
         guard let x = form else { return }
         // name is NOT NULL: an empty one is refused rather than failing silently (F-38).
-        if x["name"].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if x[.fullName].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             alert = AppAlert(title: tCommon("required"), message: t("errors.nameRequired"))
             return
         }
         saving = true
         Task {
-            func v(_ field: String) -> String? {
+            func v(_ field: ProfileField) -> String? {
                 let s = x[field].trimmingCharacters(in: .whitespacesAndNewlines)
                 return s.isEmpty ? nil : s
             }
             // A nil must stay in the map (as NSNull, which Kotlin reads as null) so the field clears.
-            var values: [String: Any] = [:]
-            for field in textFields where field != "photoUri" { values[field] = v(field) as Any }
-            values["photoUri"] = (x["photoUri"].isEmpty ? nil : x["photoUri"]) as Any
-            values["dominantHand"] = x.dominantHand
-            values["mobilityLevel"] = (x.resolvedMobility.isEmpty ? nil : x.resolvedMobility) as Any
+            var values: [ProfileField: Any] = [:]
+            for field in ProfileFieldKt.PROFILE_TEXT_FIELDS where field != .photoUri { values[field] = v(field) as Any }
+            values[.photoUri] = (x[.photoUri].isEmpty ? nil : x[.photoUri]) as Any
+            values[.dominantHand] = x.dominantHand
+            values[.mobilityLevel] = (x.resolvedMobility.isEmpty ? nil : x.resolvedMobility) as Any
             do {
                 try await model.store.updateProfile(values: values)
                 Analytics.shared.track(event: .profileSaved, properties: [
-                    "has_photo": !x["photoUri"].isEmpty, "has_medical": !x["medicalConditions"].isEmpty,
-                    "has_medications": !x["medications"].isEmpty,
+                    "has_photo": !x[.photoUri].isEmpty, "has_medical": !x[.medicalConditions].isEmpty,
+                    "has_medications": !x[.medications].isEmpty,
                 ])
                 initial = x
                 saving = false
@@ -173,7 +152,7 @@ struct ProfileView: View {
         }
     }
 
-    private func binding(_ field: String) -> Binding<String> {
+    private func binding(_ field: ProfileField) -> Binding<String> {
         Binding(get: { form?[field] ?? "" }, set: { form?[field] = $0 })
     }
 
@@ -181,30 +160,28 @@ struct ProfileView: View {
         let f = form!
         return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                photoSection(f["photoUri"])
+                photoSection(f[.photoUri])
 
                 section("personal", t("sections.personal"), "person.fill") {
-                    field(t("fields.name"), "name", t("fields.namePlaceholder"), capitalization: .words)
-                    field(t("fields.nickname"), "nickname", t("fields.nicknamePlaceholder"), capitalization: .words)
+                    field(.fullName)
+                    field(.nickname)
                     dateOfBirth(t("fields.dateOfBirth"))
                     HStack(alignment: .top, spacing: Space.md) {
-                        field(t("fields.height"), "height", t("fields.heightPlaceholder"), keyboard: .numberPad)
-                        field(t("fields.weight"), "weight", t("fields.weightPlaceholder"), keyboard: .numberPad)
+                        field(.height)
+                        field(.weight)
                     }
                     HStack(alignment: .top, spacing: Space.md) {
-                        field(t("fields.hairColor"), "hairColor", t("fields.hairColorPlaceholder"))
-                        field(t("fields.eyeColor"), "eyeColor", t("fields.eyeColorPlaceholder"))
+                        field(.hairColor)
+                        field(.eyeColor)
                     }
-                    field(t("fields.identifyingMarks"), "identifyingMarks", t("fields.identifyingMarksPlaceholder"),
-                          multiline: true, hint: t("fields.identifyingMarksHint"))
+                    field(.identifyingMarks)
                 }
 
                 section("medical", t("sections.medical"), "cross.fill") {
-                    field(t("fields.medicalConditions"), "medicalConditions", t("fields.medicalConditionsPlaceholder"), multiline: true)
-                    field(t("fields.medications"), "medications", t("fields.medicationsPlaceholder"), multiline: true)
-                    field(t("fields.allergies"), "allergies", t("fields.allergiesPlaceholder"), multiline: true)
-                    field(t("fields.cognitiveStatus"), "cognitiveStatus", t("fields.cognitiveStatusPlaceholder"),
-                          multiline: true, hint: t("fields.cognitiveStatusHint"))
+                    field(.medicalConditions)
+                    field(.medications)
+                    field(.allergies)
+                    field(.cognitiveStatus)
                     group(t("fields.dominantHand"), t("fields.dominantHandHint")) {
                         HStack(spacing: Space.sm) {
                             ForEach(["left", "right", "unknown"], id: \.self) { hand in
@@ -254,21 +231,20 @@ struct ProfileView: View {
                 }
 
                 section("communication", t("sections.communication"), "bubble.left.fill") {
-                    field(t("fields.communicationPreference"), "communicationPreference", t("fields.communicationPreferencePlaceholder"), multiline: true)
-                    field(t("fields.escalationSigns"), "escalationSigns", t("fields.escalationSignsPlaceholder"), multiline: true, hint: t("fields.escalationSignsHint"))
-                    field(t("fields.deescalationTechniques"), "deescalationTechniques", t("fields.deescalationTechniquesPlaceholder"), multiline: true, hint: t("fields.deescalationTechniquesHint"))
-                    field(t("fields.approachGuidance"), "approachGuidance", t("fields.approachGuidancePlaceholder"), multiline: true)
-                    field(t("fields.likes"), "likes", t("fields.likesPlaceholder"), multiline: true, hint: t("fields.likesHint"))
-                    field(t("fields.dislikesTriggers"), "dislikesTriggers", t("fields.dislikesTriggersPlaceholder"), multiline: true, hint: t("fields.dislikesTriggersHint"))
-                    field(t("fields.safeWord"), "safeWord", t("fields.safeWordPlaceholder"), hint: t("fields.safeWordHint"))
+                    field(.communicationPreference)
+                    field(.escalationSigns)
+                    field(.deescalationTechniques)
+                    field(.approachGuidance)
+                    field(.likes)
+                    field(.dislikesTriggers)
+                    field(.safeWord)
                 }
 
                 section("devices", t("sections.devices"), "location.fill") {
-                    field(t("fields.locativeDeviceInfo"), "locativeDeviceInfo", t("fields.locativeDeviceInfoPlaceholder"), multiline: true, hint: t("fields.locativeDeviceInfoHint"))
-                    field(t("fields.idBracelets"), "idBracelets", t("fields.idBraceletsPlaceholder"), multiline: true, hint: t("fields.idBraceletsHint"))
-                    field(t("fields.medicAlertId"), "medicAlertId", t("fields.medicAlertIdPlaceholder"))
-                    field(t("fields.medicAlertHotline"), "medicAlertHotline", t("fields.medicAlertHotlinePlaceholder"),
-                          hint: t("fields.medicAlertHotlineHint"), keyboard: .phonePad)
+                    field(.locativeDeviceInfo)
+                    field(.idBracelets)
+                    field(.medicAlertId)
+                    field(.medicAlertHotline)
                 }
                 Color.clear.frame(height: 40)
             }
@@ -366,11 +342,11 @@ struct ProfileView: View {
         .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
     }
 
-    private func field(_ label: String, _ key: String, _ placeholder: String, multiline: Bool = false, hint: String? = nil,
-                       keyboard: UIKeyboardType = .default, capitalization: UITextAutocapitalizationType = .sentences) -> some View {
-        group(label, hint) {
-            input(binding(key), "profile-field-\(key)", placeholder, multiline: multiline, keyboard: keyboard,
-                  capitalization: capitalization, format: { formatField(key, $0) })
+    private func field(_ field: ProfileField) -> some View {
+        group(t("fields.\(field.key)"), field.hasHint ? t("fields.\(field.key)Hint") : nil) {
+            input(binding(field), "profile-field-\(field.key)", t("fields.\(field.key)Placeholder"), multiline: field.multiline,
+                  keyboard: field.keyboard.ui, capitalization: field.capitalizeWords ? .words : .sentences,
+                  format: { field.formatInput(value: $0) })
         }
     }
 
@@ -380,14 +356,14 @@ struct ProfileView: View {
         group(label) {
             HStack(spacing: 0) {
                 RNTextInput(
-                    text: binding("dateOfBirth"), placeholder: "MM/DD/YYYY", testID: "profile-field-dateOfBirth",
+                    text: binding(.dateOfBirth), placeholder: "MM/DD/YYYY", testID: "profile-field-dateOfBirth",
                     font: .systemFont(ofSize: 16 * rnFontMultiplier(dynamicType)), textColor: UIColor(colors.text),
                     placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint), insets: .zero,
-                    keyboard: .numberPad, maxLength: 10, format: { FormattersKt.formatDobInput(value: $0) }
+                    keyboard: .numberPad, maxLength: 10, format: { ProfileField.dateOfBirth.formatInput(value: $0) }
                 )
                 .frame(height: 44)
                 Button {
-                    pendingDob = AgeKt.parseDob(value: form?["dateOfBirth"] ?? "").map(toDate) ?? toDate(Kotlinx_datetimeLocalDate(year: 1940, month: 1, day: 1))
+                    pendingDob = AgeKt.parseDob(value: form?[.dateOfBirth] ?? "").map(toDate) ?? toDate(Kotlinx_datetimeLocalDate(year: 1940, month: 1, day: 1))
                     datePicking = true
                 } label: {
                     SFIcon("calendar", 18, colors.textSecondary).frame(minWidth: 44 - Space.sm, minHeight: 44).padding(.leading, Space.sm).contentShape(Rectangle())
@@ -429,7 +405,7 @@ struct ProfileView: View {
                     .accessibilityIdentifier("profile-date-cancel")
                     Button {
                         let c = gregorian.dateComponents([.year, .month, .day], from: pendingDob)
-                        form?["dateOfBirth"] = AgeKt.formatDob(date: Kotlinx_datetimeLocalDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
+                        form?[.dateOfBirth] = AgeKt.formatDob(date: Kotlinx_datetimeLocalDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
                         datePicking = false
                     } label: {
                         RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: white)

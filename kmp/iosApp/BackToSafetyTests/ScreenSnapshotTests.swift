@@ -20,8 +20,8 @@ final class ScreenSnapshotTests: XCTestCase {
         let store = DatabaseBuilder_iosKt.openStoreAt(path: path)
         try await store.seed()
         try await store.updateProfile(values: [
-            "name": "Margaret Smith", "nickname": "Maggie", "dateOfBirth": "03/15/1940",
-            "height": "5'6\"", "medicalConditions": "Moderate Alzheimer's", "dominantHand": "left",
+            .fullName: "Margaret Smith", .nickname: "Maggie", .dateOfBirth: "03/15/1940",
+            .height: "5'6\"", .medicalConditions: "Moderate Alzheimer's", .dominantHand: "left",
         ])
         _ = try await store.addContact(
             contact: ContactEntity(
