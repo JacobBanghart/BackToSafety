@@ -47,9 +47,7 @@ struct ReadoutView: View {
 
     private func sheet(_ p: Profile) -> some View {
         let lastSeen = lastSeenMs.map(localeDateTime)
-        let today = Calendar.current.dateComponents([.year, .month, .day], from: Date(timeIntervalSince1970: Double(AppClock.shared.nowMs()) / 1000))
-        let input = ReadoutInput(profile: p, lastSeenTime: lastSeen,
-                                 today: Kotlinx_datetimeLocalDate(year: Int32(today.year!), month: Int32(today.month!), day: Int32(today.day!)))
+        let input = ReadoutInput(profile: p, lastSeenTime: lastSeen, today: AppClock.shared.today())
         let script = ReadoutKt.buildScript(input: input, t: t.lookup)
         let missing = ReadoutKt.missingScriptDetails(input: input, t: t.lookup)
         let hand = p.dominantHand.flatMap { $0.isEmpty || $0 == "unknown" ? nil : $0 }
