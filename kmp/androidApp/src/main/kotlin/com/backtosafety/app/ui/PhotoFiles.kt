@@ -1,5 +1,6 @@
 package com.backtosafety.app.ui
 
+import com.backtosafety.core.photoFileName
 import java.io.File
 
 /**
@@ -24,7 +25,7 @@ object PhotoFiles {
      * and the next call takes it.
      */
     fun clean(filesDir: File, cacheDir: File, keeping: String? = null) {
-        val keep = keeping?.substringAfterLast('/')
+        val keep = keeping?.let(::photoFileName)
         filesDir.listFiles { f -> f.name.startsWith(PHOTO_PREFIX) && f.name != keep }?.forEach { it.delete() }
         deleteTemps(cacheDir)
     }

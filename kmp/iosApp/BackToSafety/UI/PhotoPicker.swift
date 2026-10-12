@@ -1,4 +1,5 @@
 import ImageIO
+import Shared
 import SwiftUI
 import UIKit
 
@@ -80,11 +81,13 @@ private let photoCache = NSCache<NSString, UIImage>()
 /// A saved photo (file:// URI), decoded no larger than `maxPixel` on its longer side (a huge
 /// file in a header or list would otherwise be decoded in full each time it draws), and kept for
 /// the next draw. The container path can change across installs, so it's re-resolved under
-/// Documents by file name, as utils/photoPath.ts does.
+/// Documents by file name (the shared `photoFileName`).
 func loadPhoto(_ uri: String?, maxPixel: Int = 600) -> UIImage? {
     guard let uri, let url = URL(string: uri) else { return nil }
     return downsampledImage(atPath: url.path, maxPixel: maxPixel)
-        ?? downsampledImage(atPath: documentsDirectory.appendingPathComponent(url.lastPathComponent).path, maxPixel: maxPixel)
+        ?? PhotoPathKt.photoFileName(uri: uri).flatMap {
+            downsampledImage(atPath: documentsDirectory.appendingPathComponent($0).path, maxPixel: maxPixel)
+        }
 }
 
 private func downsampledImage(atPath path: String, maxPixel: Int) -> UIImage? {
@@ -128,7 +131,7 @@ func excludePhotosFromBackup() {
 /// `keeping` (none, if nil). Delete Account passes nil. Best effort.
 func cleanPhotos(keeping: String?) {
     photoCache.removeAllObjects()
-    let keep = keeping.flatMap { URL(string: $0)?.lastPathComponent }
+    let keep = keeping.flatMap { PhotoPathKt.photoFileName(uri: $0) }
     let names = (try? FileManager.default.contentsOfDirectory(atPath: documentsDirectory.path)) ?? []
     for name in names where name.hasPrefix(photoFilePrefix) && name != keep {
         try? FileManager.default.removeItem(at: documentsDirectory.appendingPathComponent(name))
