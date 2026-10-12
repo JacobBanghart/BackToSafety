@@ -79,7 +79,6 @@ import com.backtosafety.core.missingScriptDetails
 import com.backtosafety.core.needsVehicleCheck
 import com.backtosafety.core.vehicleCheckKind
 import kotlinx.coroutines.delay
-import kotlin.time.Instant
 
 private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
@@ -104,7 +103,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     LaunchedEffect(Unit) {
         contacts = store.emergencyContacts()
         // "Search started" (lastSeen*) is when the active emergency started (context/ProfileContext.tsx).
-        lastSeenMs = store.activeEmergency()?.let { Instant.parse(it.startedAt).toEpochMilliseconds() }
+        lastSeenMs = store.activeEmergency()?.startedAtMs
         profile = store.profile()
     }
     LaunchedEffect(copied) {

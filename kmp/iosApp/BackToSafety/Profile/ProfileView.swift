@@ -74,7 +74,7 @@ struct ProfileView: View {
         .toolbar(.hidden, for: .navigationBar)
         .backGuard(unsaved && !saving)
         .task { await load() }
-        .appAlert($alert)
+        .appAlert($alert, ok: tCommon("ok"))
         .sheet(item: $picker) { source in
             ImagePicker(source: source.uiSource) { form?[.photoUri] = $0 }.ignoresSafeArea()
         }
@@ -139,7 +139,7 @@ struct ProfileView: View {
             return
         }
         alert = AppAlert(title: t("unsavedChanges.title"), message: t("unsavedChanges.message"),
-                         cancel: t("unsavedChanges.cancelLabel", ["defaultValue": "Keep Editing"]),
+                         cancel: tCommon("keepEditing"),
                          confirm: t("unsavedChanges.confirmLabel"), destructive: true) { model.path.removeLast() }
     }
 

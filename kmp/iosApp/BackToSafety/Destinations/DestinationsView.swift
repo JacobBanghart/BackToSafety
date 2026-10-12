@@ -88,7 +88,7 @@ struct DestinationsView: View {
             personName = try? await model.store.profile()?.name
             await reload()
         }
-        .appAlert($alert)
+        .appAlert($alert, ok: tCommon("ok"))
     }
 
     private func reload() async {

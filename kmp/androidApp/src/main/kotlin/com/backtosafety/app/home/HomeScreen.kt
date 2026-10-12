@@ -59,6 +59,7 @@ import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.EMERGENCY_STEP_COUNT
 import com.backtosafety.core.Profile
 import com.backtosafety.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.core.Translate
@@ -67,11 +68,10 @@ import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.secondsRemaining
 import kotlinx.coroutines.delay
-import kotlin.time.Instant
 
-private val EMERGENCY_IDLE_BG = Color(0xFFEF4444)
-private val EMERGENCY_ACTIVE_BG = Color(0xFFB91C1C)
-private val EMERGENCY_SWEEP = Color(0xFFEF4444)
+private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.error)
+private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
+private val EMERGENCY_SWEEP = Color(DesignTokens.Semantic.error)
 
 /** Port of app/index.tsx. */
 @Composable
@@ -93,7 +93,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
     }
     // Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     LaunchedEffect(emergency) {
-        val started = emergency?.let { Instant.parse(it.startedAt).toEpochMilliseconds() } ?: return@LaunchedEffect
+        val started = emergency?.startedAtMs ?: return@LaunchedEffect
         while (true) {
             secondsLeft = secondsRemaining(started, AppClock.nowMs())
             delay(1000)
@@ -156,7 +156,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 t("emergencyButton.timerExpiredSubtitle")
             else -> t("emergencyButton.activeTitle") to t(
                 "emergencyButton.remaining",
-                mapOf("time" to formatCountdown(secondsLeft), "checked" to active.checkedSteps.size, "total" to 11),
+                mapOf("time" to formatCountdown(secondsLeft), "checked" to active.checkedSteps.size, "total" to EMERGENCY_STEP_COUNT),
             )
         }
         Box(

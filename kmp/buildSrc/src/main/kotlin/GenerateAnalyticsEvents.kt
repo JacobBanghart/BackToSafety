@@ -7,9 +7,9 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 /**
- * spec/analytics-events.json (the RN app's AnalyticsEventName, pinned by
- * spec/analytics-events.test.ts) -> AnalyticsEvent.kt. The Kotlin apps can only send an
- * event the spec lists, under exactly its name: dashboards key on these.
+ * spec/analytics-events.json -> AnalyticsEvent.kt. The apps can only send an event the spec
+ * lists, under exactly its name (AnalyticsParityTest checks both apps send them all):
+ * dashboards key on these.
  */
 abstract class GenerateAnalyticsEvents : DefaultTask() {
     @get:InputFile abstract val spec: RegularFileProperty

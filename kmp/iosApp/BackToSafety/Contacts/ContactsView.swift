@@ -84,7 +84,7 @@ struct ContactsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .backGuard(unsaved && !saving)
         .task { await reload() }
-        .appAlert($alert)
+        .appAlert($alert, ok: tCommon("ok"))
     }
 
     private func reload() async {

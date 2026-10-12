@@ -33,6 +33,10 @@ private val STEP_IDS = listOf(
     "home_search", "outside_immediate", "neighbors", "radius_search", "high_risk",
     "familiar_places", "call_911", "silver_alert", "share_info", "coordinate", "document",
 )
+
+/** How many steps the checklist has. */
+val EMERGENCY_STEP_COUNT = STEP_IDS.size
+
 private val URGENT_STEPS = setOf("high_risk", "call_911")
 
 fun buildInitialSteps(t: Translate, emergencyNumber: String): List<ChecklistStep> {
@@ -97,7 +101,10 @@ data class ActiveEmergency(
     val checkedSteps: List<String>,
     /** The incidents row for this emergency; absent for emergencies started before it existed. */
     val incidentId: Long? = null,
-)
+) {
+    /** [startedAt] as epoch ms; null if it isn't an ISO-8601 time ([parseActiveEmergency] never returns such a record). */
+    val startedAtMs: Long? get() = runCatching { Instant.parse(startedAt).toEpochMilliseconds() }.getOrNull()
+}
 
 /** Parses the stored record. Null when nothing is active or the value can't be read. */
 fun parseActiveEmergency(raw: String?): ActiveEmergency? {

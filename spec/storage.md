@@ -1,20 +1,20 @@
 # Persisted data contract (L5)
 
-The Kotlin app ships under the same package and bundle ID (`com.backtosafety.app`) and installs
-**over** the RN app. On first launch it must open the RN app's data as-is: no export step and no
-re-onboarding. This file is the contract. `spec/db-schema.json` pins the table shapes (generated
-from the RN app's schema before it was removed; Room's migration and `DatabaseTest` hold the
-Kotlin store to it and to the committed fixture).
+The apps ship under the same package and bundle ID (`com.backtosafety.app`) as the React Native
+app they replaced (removed 2026-10-09) and installed **over** it: they opened its data as-is,
+with no export step and no re-onboarding. This file is the contract for that data.
+`spec/db-schema.json` pins the table shapes (generated from the RN app's schema; Room's
+migration and `DatabaseTest` hold the shared store to it and to the committed fixture).
 
 ## Database
 
 |                         |                                                                                                                                               |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| File                    | `nijii.db`, opened by `expo-sqlite`                                                                                                           |
+| File                    | `nijii.db`, opened by Room (bundled SQLite)                                                                                                   |
 | Android path            | `<filesDir>/SQLite/nijii.db` (`/data/data/com.backtosafety.app/files/SQLite/nijii.db`)                                                        |
 | iOS path                | `<Documents>/SQLite/nijii.db`                                                                                                                 |
-| Schema version          | `MAX(version)` in `schema_version`; currently `1`                                                                                             |
-| Migrations              | Run in order, each in its own transaction, then `INSERT OR REPLACE INTO schema_version`. Never edit a shipped migration; add the next number. |
+| Schema version          | `PRAGMA user_version` (Room); currently `2` (`DATABASE_VERSION`). The RN app (version 1) kept it in a `schema_version` table instead and left `user_version` 0 |
+| Migrations              | Room migrations, run in order (`MIGRATION_1_2` rebuilds the RN tables in Room's shape). Never edit a shipped migration; add the next number.  |
 | Seeding on every launch | 12 `safety_checks` rows and 6 `onboarding` rows, all `INSERT OR IGNORE`                                                                       |
 
 Conventions: booleans are `INTEGER` 0/1. `created_at`/`updated_at` default to SQLite's
@@ -33,7 +33,7 @@ constraints (see `db-schema.json`), and the UI options must stay inside them
   - `photo_uri`: an **absolute** `file://` URI to `<Documents>/profile_photo_<epochMs>.jpg`.
     On iOS the container path changes across app updates, so readers resolve it
     by file name inside the current documents directory (`photoFileName`, `spec/vectors/photo.json`),
-    falling back to the stored path. The RN app does this on read (F-21).
+    falling back to the stored path. Both apps do this on read (F-21).
     Only the file the profile points at is kept: saving a different photo, and Delete Account,
     remove the other `profile_photo_*` files (and, on Android, the camera's and cropper's temp
     files in the cache).

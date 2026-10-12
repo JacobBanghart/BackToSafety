@@ -149,17 +149,18 @@ struct AppAlert: Identifiable {
     let title: String
     var message: String?
     var cancel: String?
-    var confirm = "OK"
+    /// Nil is the common "OK", which `appAlert` supplies.
+    var confirm: String?
     var destructive = false
     var action: () -> Void = {}
 }
 
 extension View {
-    func appAlert(_ alert: Binding<AppAlert?>) -> some View {
+    func appAlert(_ alert: Binding<AppAlert?>, ok: String) -> some View {
         self.alert(alert.wrappedValue?.title ?? "", isPresented: Binding(get: { alert.wrappedValue != nil }, set: { if !$0 { alert.wrappedValue = nil } }),
                    presenting: alert.wrappedValue) { a in
             if let cancel = a.cancel { Button(cancel, role: .cancel) {} }
-            Button(a.confirm, role: a.destructive ? .destructive : nil, action: a.action)
+            Button(a.confirm ?? ok, role: a.destructive ? .destructive : nil, action: a.action)
         } message: { a in
             if let message = a.message { Text(message) }
         }

@@ -166,13 +166,13 @@ fun Toggle(on: Boolean) {
     }
 }
 
-/** RN's Alert.alert on Android: the platform dialog. Buttons are (label, action). */
+/** RN's Alert.alert on Android: the platform dialog. Buttons are (label, action); an alert with nothing to confirm passes `tCommon("ok") to {}`. */
 fun showAlert(
     context: Context,
     title: String,
     message: String? = null,
     cancel: String? = null,
-    confirm: Pair<String, () -> Unit> = "OK" to {},
+    confirm: Pair<String, () -> Unit>,
 ) {
     AlertDialog.Builder(context).setTitle(title).apply { if (message != null) setMessage(message) }
         .apply { if (cancel != null) setNegativeButton(cancel, null) }
