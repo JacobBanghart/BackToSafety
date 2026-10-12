@@ -136,6 +136,7 @@ fun EmergencyScreen(
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
+    val recorder = remember(store) { EmergencyRecorder(store) }
     val emergencyNumber = tCommon("emergencyNumber")
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
@@ -149,12 +150,17 @@ fun EmergencyScreen(
     var destinations by remember { mutableStateOf<List<DestinationEntity>>(emptyList()) }
     var modal by remember { mutableStateOf<Modal?>(null) }
 
+    // Found or End emergency was chosen: the emergency is over and the screen is only on its
+    // way out, so nothing on it does anything any more (the recorder, too, saves no more).
+    var finished by remember { mutableStateOf(false) }
+
     // Load or start the emergency (spec/storage.md: active_emergency, incidents).
     LaunchedEffect(Unit) {
         profile = store.profile()
         destinations = store.destinations()
         val saved = store.activeEmergency()
         state = if (saved != null) {
+            recorder.begin(saved)
             wearing = saved.wearing
             steps = steps.map { it.copy(checked = it.id in saved.checkedSteps) }
             saved
@@ -163,16 +169,18 @@ fun EmergencyScreen(
             val incidentId = runCatching { store.createIncident(startedAt) }.getOrNull()
             Analytics.track(AnalyticsEvent.EMERGENCY_STARTED)
             ActiveEmergency(startedAt, "", emptyList(), incidentId).also {
-                store.saveActiveEmergency(it)
+                recorder.begin(it)
+                recorder.save(it)
                 vibrate(context, CountdownAlert.WARNING)
             }
         }
     }
 
-    // Persist wearing and checked steps as they change.
+    // Persist wearing and checked steps as they change. Through the recorder, which won't save
+    // an emergency that has ended (Found or End emergency) however late this runs.
     LaunchedEffect(wearing, steps, state) {
         val current = state ?: return@LaunchedEffect
-        store.saveActiveEmergency(current.copy(wearing = wearing, checkedSteps = steps.filter { it.checked }.map { it.id }))
+        recorder.save(current.copy(wearing = wearing, checkedSteps = steps.filter { it.checked }.map { it.id }))
     }
 
     // Showing and not showing (another screen on top, or the app in the background): off the
@@ -241,21 +249,20 @@ fun EmergencyScreen(
     val checked = steps.count { it.checked }
     val checkedIds = { steps.filter { it.checked }.map { it.id } }
 
-    fun record(outcome: String? = null, ended: Boolean = false) = scope.launch {
-        runCatching {
-            val id = store.recordIncident(
-                current.incidentId, current.startedAt, checkedIds(), wearing, outcome,
-                if (ended) Instant.fromEpochMilliseconds(AppClock.nowMs()).toString() else null,
-            )
-            if (current.incidentId == null) state = current.copy(incidentId = id)
-        }
-    }
+    // Callers run this in appScope, not the screen's scope: Found and End emergency leave the
+    // screen, and a write cut off by that would leave the incident without its end (ended_at
+    // NULL for good). The ones that leave also wait for it before they do.
+    suspend fun record(outcome: String? = null, ended: Boolean = false) = recorder.record(
+        current.startedAt, checkedIds(), wearing, outcome,
+        if (ended) Instant.fromEpochMilliseconds(AppClock.nowMs()).toString() else null,
+    )
 
     fun endedProperties() = emergencyEndedProperties(
         Instant.parse(current.startedAt).toEpochMilliseconds(), AppClock.nowMs(), steps.count { it.checked },
     )
 
     fun toggle(id: String) {
+        if (finished) return
         if (steps.none { it.id == id && it.checked }) Analytics.track(AnalyticsEvent.EMERGENCY_STEP_COMPLETED, mapOf("step" to id))
         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
         steps = steps.map { if (it.id == id) it.copy(checked = !it.checked) else it }
@@ -298,14 +305,18 @@ fun EmergencyScreen(
                 ActionButtons(
                     t, emergencyNumber, expired,
                     onFound = {
-                        scope.launch {
-                            store.clearActiveEmergency()
-                            Analytics.track(AnalyticsEvent.EMERGENCY_COMPLETED, endedProperties())
-                            record(outcome = "found", ended = true)
-                            modal = Modal.FOUND
+                        if (!finished) {
+                            finished = true
+                            appScope.launch {
+                                recorder.end()
+                                Analytics.track(AnalyticsEvent.EMERGENCY_COMPLETED, endedProperties())
+                                record(outcome = "found", ended = true)
+                                modal = Modal.FOUND
+                            }
                         }
                     },
                     onCall = {
+                        if (finished) return@ActionButtons
                         haptics.performHapticFeedback(HapticFeedbackType.LongPress)
                         Analytics.track(AnalyticsEvent.EMERGENCY_911_CALLED,
                             mapOf("seconds_elapsed" to SEARCH_WINDOW_SECONDS - secondsLeft, "checked_count" to steps.count { it.checked }),
@@ -313,14 +324,14 @@ fun EmergencyScreen(
                         // Calling always marks the step done; a second call must not un-check it (F-17).
                         if (steps.none { it.id == "call_911" && it.checked }) toggle("call_911")
                         dial(context, emergencyNumber, DialTarget.EMERGENCY, "emergency", tCommon)
-                        record(outcome = "911_called")
+                        appScope.launch { record(outcome = "911_called") }
                     },
                     onReadout = {
                         Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "readout", "source" to "emergency"))
                         onViewReadout()
                     },
                     onAlert = {
-                        scope.launch {
+                        if (!finished) scope.launch {
                             val recipients = normalizeUniqueSmsRecipients(store.emergencyContacts().map { it.phone })
                             if (recipients.isEmpty()) {
                                 modal = Modal.NO_CONTACTS
@@ -352,8 +363,12 @@ fun EmergencyScreen(
         }
 
         modal?.let { m ->
-            // Back closes the modal (RN Modal's onRequestClose), whichever one it is.
-            BackHandler { modal = null }
+            // Back closes the modal (RN Modal's onRequestClose), whichever one it is; but the
+            // emergency's over once Found is shown, so there, as with OK, it leaves the screen.
+            BackHandler {
+                modal = null
+                if (m == Modal.FOUND) onLeave()
+            }
             EmergencyModal(
                 m, t, tCommon,
                 onDismiss = {
@@ -366,11 +381,13 @@ fun EmergencyScreen(
                     onLeave()
                 },
                 onEnd = {
+                    finished = true
                     Analytics.track(AnalyticsEvent.EMERGENCY_CANCELLED, endedProperties())
                     modal = null
-                    scope.launch {
+                    // Ended without an outcome: stamp the end time, keep the outcome as it was.
+                    appScope.launch {
                         record(ended = true)
-                        store.clearActiveEmergency()
+                        recorder.end()
                         onLeave()
                     }
                 },
@@ -382,10 +399,7 @@ fun EmergencyScreen(
 /** The countdown alerts' vibration, on every Android the app supports (API 24 up). */
 private fun vibrate(context: Context, alert: CountdownAlert) {
     val vibrator = context.getSystemService(Vibrator::class.java) ?: return
-    val pattern = when (alert) {
-        CountdownAlert.WARNING -> longArrayOf(0, 30, 80, 30)
-        CountdownAlert.EXPIRED -> longArrayOf(0, 500, 200, 500)
-    }
+    val pattern = CountdownNotifications.vibrationPattern(alert)
     when {
         Build.VERSION.SDK_INT >= 29 && alert == CountdownAlert.WARNING ->
             vibrator.vibrate(VibrationEffect.createPredefined(VibrationEffect.EFFECT_DOUBLE_CLICK))
