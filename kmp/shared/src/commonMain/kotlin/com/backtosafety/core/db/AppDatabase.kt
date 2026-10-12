@@ -49,10 +49,11 @@ object DatabaseOpen {
 
 /**
  * Opens the database at [path], first adopting a database the RN app left there. Each
- * platform supplies a builder for the right file location.
+ * platform supplies a builder for the right file location. A file that can't be read at all
+ * isn't adopted and doesn't stop the open: the app starts, and its first query reports it.
  */
 fun openAppDatabase(path: String, builder: RoomDatabase.Builder<AppDatabase>): AppDatabase {
-    val onDisk = adoptRnDatabase(path)
+    val onDisk = runCatching { adoptRnDatabase(path) }.getOrNull()
     DatabaseOpen.migratingFrom = onDisk?.takeIf { it in 1 until DATABASE_VERSION }
     return builder
         .setDriver(BundledSQLiteDriver())

@@ -8,6 +8,11 @@ object Analytics {
     /** Receives (event wire name, properties); screens arrive as "\$screen" with the RN route path. */
     var sink: (name: String, properties: Map<String, Any?>) -> Unit = { _, _ -> }
 
+    /** Sends what the sink has queued now, not at its next batch; the platform supplies it too. */
+    var flusher: () -> Unit = {}
+
+    fun flush() = flusher()
+
     fun track(event: AnalyticsEvent, properties: Map<String, Any?> = emptyMap()) = sink(event.wireName, properties)
 
     /**
