@@ -4,7 +4,7 @@
 
 - [README.md](../README.md): project overview, setup and commands
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the shared Kotlin core, the Compose and SwiftUI apps, contracts and harness
-- [PARITY_PLAN.md](../PARITY_PLAN.md): how the native apps were held to the React Native app they replaced
+- [PARITY_PLAN.md](./PARITY_PLAN.md): how the native apps were held to the React Native app they replaced
 - [maestro/README.md](../maestro/README.md): device flows, screenshot fidelity, upgrade tests
 
 ## Product
