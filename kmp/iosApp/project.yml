@@ -58,6 +58,15 @@ targets:
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" -c "Set :CFBundleVersion $build" "$plist"
     dependencies:
       - package: PostHog
+    # Time Sensitive Notifications: the countdown alerts are .timeSensitive, which Focus and
+    # Sleep let through. The App ID and the App Store provisioning profile (the
+    # IOS_PROVISIONING_PROFILE_BASE64 secret) need the capability too, or the Release archive
+    # fails to sign. Generated beside project.yml, not in the sources; unsigned simulator
+    # builds (CODE_SIGNING_ALLOWED=NO) just embed it.
+    entitlements:
+      path: BackToSafety.entitlements
+      properties:
+        com.apple.developer.usernotifications.time-sensitive: true
     info:
       path: BackToSafety/Info.plist
       properties:
