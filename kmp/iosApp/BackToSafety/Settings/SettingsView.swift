@@ -109,7 +109,7 @@ struct SettingsView: View {
                 Button(t("deleteAccountModal.cancel"), role: .cancel) {}
                 Button(t("deleteAccountModal.confirm"), role: .destructive, action: deleteAccount)
             } else {
-                Button("OK") {}
+                Button(tCommon("ok")) {}
             }
         } message: { kind in
             Text(alertMessage(kind))

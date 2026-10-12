@@ -148,7 +148,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         initialForm = ContactForm()
     }
     fun alert(validation: Boolean, message: String) =
-        showAlert(context, tCommon(if (validation) "required" else "error"), message)
+        showAlert(context, tCommon(if (validation) "required" else "error"), message, confirm = tCommon("ok") to {})
 
     fun save() {
         if (form.name.isBlank()) return alert(true, t("errors.nameRequired"))

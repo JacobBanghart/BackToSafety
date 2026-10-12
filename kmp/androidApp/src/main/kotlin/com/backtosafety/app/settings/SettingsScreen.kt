@@ -1,6 +1,5 @@
 package com.backtosafety.app.settings
 
-import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import androidx.compose.foundation.background
@@ -50,6 +49,7 @@ import com.backtosafety.app.ui.rnLineHeight
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.rnTextStyleNatural
 import com.backtosafety.app.ui.runCatchingCancellable
+import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.Analytics
@@ -99,19 +99,17 @@ fun SettingsScreen(
             if (tapCount >= TAPS_TO_UNLOCK && !devMode) {
                 devMode = true
                 Analytics.track(AnalyticsEvent.SETTINGS_DEV_MODE_UNLOCKED)
-                AlertDialog.Builder(context).setTitle(t("devModeAlert.title")).setMessage(t("devModeAlert.message"))
-                    .setPositiveButton("OK", null).show()
+                showAlert(context, t("devModeAlert.title"), t("devModeAlert.message"), confirm = tCommon("ok") to {})
             }
         }
         lastTap = now
     }
 
     fun deleteAccount() {
-        AlertDialog.Builder(context)
-            .setTitle(t("deleteAccountModal.title"))
-            .setMessage(t("deleteAccountModal.message"))
-            .setNegativeButton(t("deleteAccountModal.cancel"), null)
-            .setPositiveButton(t("deleteAccountModal.confirm")) { _, _ ->
+        showAlert(
+            context, t("deleteAccountModal.title"), t("deleteAccountModal.message"),
+            cancel = t("deleteAccountModal.cancel"),
+            confirm = t("deleteAccountModal.confirm") to {
                 deleting = true
                 scope.launch {
                     runCatchingCancellable { store.clearAllData() }
@@ -122,13 +120,12 @@ fun SettingsScreen(
                         }
                         .onFailure { e ->
                             reportSaveFailed("settings", "delete_account", e)
-                            AlertDialog.Builder(context).setTitle(tCommon("error")).setMessage(t("deleteAccountError"))
-                                .setPositiveButton("OK", null).show()
+                            showAlert(context, tCommon("error"), t("deleteAccountError"), confirm = tCommon("ok") to {})
                         }
                     deleting = false
                 }
-            }
-            .show()
+            },
+        )
     }
 
     Column(
@@ -203,8 +200,7 @@ fun SettingsScreen(
                 ) {
                     deviceId?.let {
                         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(null, it))
-                        AlertDialog.Builder(context).setTitle(tCommon("copied")).setMessage(t("deviceIdCopied"))
-                            .setPositiveButton("OK", null).show()
+                        showAlert(context, tCommon("copied"), t("deviceIdCopied"), confirm = tCommon("ok") to {})
                     }
                 }
             }

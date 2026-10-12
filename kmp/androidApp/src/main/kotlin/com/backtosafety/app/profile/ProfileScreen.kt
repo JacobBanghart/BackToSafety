@@ -134,7 +134,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     fun save() {
         val x = form ?: return
         // name is NOT NULL: an empty one is refused rather than failing silently (F-38).
-        if (x[ProfileField.FULL_NAME].isBlank()) return showAlert(context, tCommon("required"), t("errors.nameRequired"))
+        if (x[ProfileField.FULL_NAME].isBlank()) return showAlert(context, tCommon("required"), t("errors.nameRequired"), confirm = tCommon("ok") to {})
         saving = true
         scope.launch {
             fun v(field: ProfileField) = x[field].trim().ifEmpty { null }
@@ -159,7 +159,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 onSaved()
             }.onFailure { e ->
                 reportSaveFailed("profile", "save", e)
-                showAlert(context, tCommon("error"), tCommon("saveFailed"))
+                showAlert(context, tCommon("error"), tCommon("saveFailed"), confirm = tCommon("ok") to {})
             }
             saving = false
         }
@@ -169,7 +169,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         if (!unsaved || saving) return onBack()
         showAlert(
             context, t("unsavedChanges.title"), t("unsavedChanges.message"),
-            cancel = t("unsavedChanges.cancelLabel", mapOf("defaultValue" to "Keep Editing")),
+            cancel = tCommon("keepEditing"),
             confirm = t("unsavedChanges.confirmLabel") to onBack,
         )
     }
@@ -177,7 +177,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     UnsavedChangesGuard(
         enabled = unsaved && !saving,
         title = t("unsavedChanges.title"), message = t("unsavedChanges.message"),
-        keepEditing = "Keep Editing", discard = t("unsavedChanges.confirmLabel"),
+        keepEditing = tCommon("keepEditing"), discard = t("unsavedChanges.confirmLabel"),
         onDiscard = {}, onLeave = onBack,
     )
 
