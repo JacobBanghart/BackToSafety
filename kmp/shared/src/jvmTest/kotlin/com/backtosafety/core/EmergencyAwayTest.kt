@@ -181,6 +181,54 @@ class EmergencyAwayTest {
     }
 
     @Test
+    fun aRestartSchedulesWhatIsToComeAndPostsWhatCameDue() = runBlocking {
+        startEmergency()
+        away.left(at(2))
+        // Off from minute 9 to 11: the warning came due, the expiry is still to come.
+        assertEquals(CountdownAlert.WARNING, away.restarted(at(11)))
+        assertEquals(listOf(ScheduledAlert(CountdownAlert.EXPIRED, at(15))), scheduler.scheduled)
+        // Back on the screen, it's caught up there too, from the same time away.
+        assertEquals(CountdownAlert.WARNING, away.shown(at(12)))
+    }
+
+    @Test
+    fun aRestartPastExpiryPostsTheExpiry() = runBlocking {
+        startEmergency()
+        away.left(at(2))
+        assertEquals(CountdownAlert.EXPIRED, away.restarted(at(30)))
+        assertEquals(emptyList(), scheduler.scheduled)
+    }
+
+    @Test
+    fun aRestartBeforeAnythingCameDuePostsNothing() = runBlocking {
+        startEmergency()
+        away.left(at(2))
+        assertEquals(null, away.restarted(at(4)))
+        assertEquals(
+            listOf(ScheduledAlert(CountdownAlert.WARNING, at(10, 1)), ScheduledAlert(CountdownAlert.EXPIRED, at(15))),
+            scheduler.scheduled,
+        )
+        assertTrue(tracked.isEmpty(), "a restart reports nothing; the return does")
+    }
+
+    @Test
+    fun aRestartWithTheScreenShowingCountsFromTheStart() = runBlocking {
+        startEmergency()
+        // The screen was showing (no time away) when the phone went off.
+        away.shown(at(1))
+        assertEquals(CountdownAlert.EXPIRED, away.restarted(at(20)))
+        assertEquals(CountdownAlert.EXPIRED, away.shown(at(21)), "and the return catches it up too")
+        assertEquals(1260L, tracked.last { it.first == "emergency_resumed" }.second["away_s"])
+    }
+
+    @Test
+    fun aRestartWithoutAnEmergencyDoesNothing() = runBlocking {
+        assertEquals(null, away.restarted(at(20)))
+        assertEquals(emptyList(), scheduler.scheduled)
+        assertEquals(null, store.setting(Store.EMERGENCY_AWAY_FROM))
+    }
+
+    @Test
     fun notificationPermissionIsAskedOnce() = runBlocking {
         assertTrue(away.shouldAskForNotifications())
         away.notificationsAnswered(granted = false)

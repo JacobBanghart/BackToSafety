@@ -116,5 +116,12 @@
       "body": "Terminaron los 15 minutos de búsqueda. Llama al {{emergencyNumber}} ahora y pide una Alerta Plateada.",
       "channel": "Fin de la cuenta regresiva"
     }
+  },
+  "ongoing": {
+    "channel": "Emergencia en curso",
+    "title": "Emergencia en curso",
+    "body": "Sigue buscando. Si no aparece cuando termine el temporizador, llama al {{emergencyNumber}}.",
+    "expiredTitle": "Hora de llamar al {{emergencyNumber}}",
+    "expiredBody": "Terminaron los 15 minutos de búsqueda. Llama al {{emergencyNumber}} ahora y pide una Alerta Plateada."
   }
 }

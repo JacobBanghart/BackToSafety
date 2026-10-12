@@ -182,6 +182,18 @@
       "flowExempt": "Notifications are system UI and test builds don't ask for the permission. Covered by EmergencyAwayTest (shared rules), CountdownNotificationsTest (Android, Robolectric) and CountdownNotificationsTests (iOS, XCTest)."
     },
     {
+      "id": "emergency.ongoing-countdown",
+      "description": "Android: while an emergency runs, an ongoing silent notification (a foreground service) counts down to the expiry, on the lock screen too, then says to call 911; tapping it opens the emergency. It keeps the warning and expiry alerts on time in Doze. After the phone restarts mid-emergency, the alert that came due is posted, the rest are scheduled again and the countdown shows again.",
+      "coverage": {
+        "vectors": [
+          "alerts.json#alertsToSchedule",
+          "alerts.json#catchUpAlert"
+        ],
+        "flows": []
+      },
+      "flowExempt": "Notifications are system UI, test builds don't ask for the permission, and a flow can't restart the phone. Covered by CountdownServiceTest, CountdownNotificationsTest, BootReceiverTest and EmergencyScreenTest (Android, Robolectric) and EmergencyAwayTest (shared restart rule)."
+    },
+    {
       "id": "emergency.catch-up",
       "description": "Back on the emergency screen, an alert that came due while away shows once (the expiry over the warning).",
       "coverage": {

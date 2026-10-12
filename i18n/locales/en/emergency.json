@@ -116,5 +116,12 @@
       "body": "The 15-minute search is up. Call {{emergencyNumber}} now and request a Silver Alert.",
       "channel": "Countdown ended"
     }
+  },
+  "ongoing": {
+    "channel": "Emergency in progress",
+    "title": "Emergency In Progress",
+    "body": "Keep searching. If they're not found when the timer ends, call {{emergencyNumber}}.",
+    "expiredTitle": "Time to Call {{emergencyNumber}}",
+    "expiredBody": "The 15-minute search is up. Call {{emergencyNumber}} now and request a Silver Alert."
   }
 }

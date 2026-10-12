@@ -4,9 +4,14 @@
     <!-- Countdown alerts (app/emergency.tsx). The RN app declares the same. -->
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Countdown alerts while the app isn't showing the emergency (CountdownNotifications):
-         notifications (asked for once, on home), on time if the user allows exact alarms. -->
+         notifications (asked for once, on home), on time by a timer under a wake lock while the
+         countdown's foreground service runs (CountdownService), and picked up after a restart
+         (BootReceiver). No exact-alarm permission: the alarms are only the backstop. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- No contacts permission: import uses the system's phone picker, which grants a one-time
          read of the row the user picks (ContactsScreen). -->
     <application
@@ -49,6 +54,26 @@
         <receiver
             android:name=".emergency.CountdownAlertReceiver"
             android:exported="false" />
+        <!-- The emergency's countdown, for as long as it runs. specialUse: no other type fits
+             (shortService stops at 3 minutes); the Play Console declaration repeats the
+             explanation below. -->
+        <service
+            android:name=".emergency.CountdownService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Emergency search countdown: a caregiver whose loved one has wandered off starts a 15-minute search, after which they must call 911. While it runs, the service shows the countdown on the lock screen and delivers its 5-minute warning and its call-911 alert on time. It runs only until the user marks the person found or ends the emergency." />
+        </service>
+        <!-- An emergency under way when the phone restarted (BOOT_COMPLETED comes from the system,
+             which reaches a receiver that isn't exported). -->
+        <receiver
+            android:name=".emergency.BootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"

@@ -112,7 +112,7 @@ Crashes and uncaught exceptions arrive as PostHog `$exception` events (error tra
 
 | Event | Properties | Description |
 | --- | --- | --- |
-| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS); readiness: `has_profile`, `has_photo`, `has_medical`, `profile_fields_filled`, `contacts_count`, `alert_contacts_count`, `places_count`, `notifications_enabled`, `exact_alarms` (Android) | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. The readiness properties say how prepared the app is before anyone needs it. |
+| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS); readiness: `has_profile`, `has_photo`, `has_medical`, `profile_fields_filled`, `contacts_count`, `alert_contacts_count`, `places_count`, `notifications_enabled` | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. The readiness properties say how prepared the app is before anyone needs it. (Android sent `exact_alarms` too until its countdown alerts stopped depending on the exact-alarm permission.) |
 | `data_migrated` | `from_version`, `to_version`, `ok: boolean`, `duration_ms`; when ok `has_profile`, `contacts_count`, `places_count`, `incidents_count`; when not, `error` | The first launch after updating from the RN app converted its database. |
 | `notifications_permission` | `granted: boolean` | The answer to the one-time notification permission prompt (on home after onboarding; Android 13 and up, and iOS). Sent by the shared core. |
 
