@@ -4,7 +4,6 @@ import android.Manifest
 import android.graphics.Path
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
-import android.os.SystemClock
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.PathInterpolator
 import androidx.activity.compose.LocalActivity
@@ -25,12 +24,12 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
@@ -60,13 +59,8 @@ import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
-import com.backtosafety.core.EmergencyAway
-import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
-import com.backtosafety.core.db.DatabaseOpen
-import com.backtosafety.core.db.dataMigrationFailedProperties
 import com.backtosafety.core.invoke
-import com.posthog.PostHog
 import kotlinx.coroutines.launch
 
 /** Each route's path in the RN app (expo-router), which analytics reports screens as. */
@@ -114,49 +108,35 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(to: Int): Exi
 /** i18n/index.ts: languages released to users (Spanish awaits a native review). */
 private val SHIPPED_LANGUAGES = listOf("en")
 
-/** The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). */
+/**
+ * The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). The
+ * database and the rest of [services] outlive this composition (BackToSafetyApp).
+ */
 @Composable
-fun App(store: Store, translations: Translations, modifier: Modifier, openEmergencyRequests: State<Int>) {
+fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<Int>) {
+    val store = services.store
+    val translations = services.translations
+    val notifications = services.notifications
+    val away = services.away
     var onboarded by remember { mutableStateOf<Boolean?>(null) }
     var themePreference by remember { mutableStateOf("system") }
-    var language by remember { mutableStateOf("en") }
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val currentLanguage by rememberUpdatedState(language)
-    val notifications = remember {
-        CountdownNotifications(
-            context.applicationContext,
-            emergencyT = { translations.translator(currentLanguage, "emergency") },
-            emergencyNumber = { translations.translator(currentLanguage, "common")("emergencyNumber") },
-        )
-    }
-    val away = remember(store) { EmergencyAway(store, notifications) }
+    val app = context.applicationContext as BackToSafetyApp
+    // Starts as the language the process last showed (a recreated activity) until the saved one is read.
+    var language by remember { mutableStateOf(app.language) }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        // The first query migrates a database the RN app left (data_migrated).
-        val migratingFrom = DatabaseOpen.migratingFrom
-        val migrationStart = SystemClock.elapsedRealtime()
-        val seeded = runCatching { store.seed() }
-        if (migratingFrom != null) {
-            val durationMs = SystemClock.elapsedRealtime() - migrationStart
-            Analytics.track(
-                AnalyticsEvent.DATA_MIGRATED,
-                seeded.fold(
-                    { store.dataMigratedProperties(migratingFrom, durationMs) },
-                    { dataMigrationFailedProperties(migratingFrom, durationMs, it::class.simpleName) },
-                ),
-            )
-        }
-        seeded.getOrThrow()
-        // The device is the analytics identity (as on iOS).
-        runCatching { store.deviceId() }.onSuccess { if (BuildConfig.POSTHOG_KEY.isNotEmpty()) PostHog.identify(it) }
-        themePreference = store.setting(Store.THEME_PREFERENCE) ?: "system"
+        // A failed read (the database didn't open, BackToSafetyApp) shows the defaults, as on iOS.
+        themePreference = runCatching { store.setting(Store.THEME_PREFERENCE) }.getOrNull() ?: "system"
         // i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships.
-        language = when (store.setting(Store.LANGUAGE_PREFERENCE)) {
+        language = when (runCatching { store.setting(Store.LANGUAGE_PREFERENCE) }.getOrNull()) {
             "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
             else -> "en"
         }
-        onboarded = store.isOnboarded()
+        onboarded = runCatching { store.isOnboarded() }.getOrDefault(false)
     }
+    // The alerts scheduled while away are translated in the language showing now.
+    SideEffect { app.language = language }
     val dark = when (themePreference) {
         "dark" -> true
         "light" -> false
@@ -249,7 +229,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier, openEmerge
             composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) } }
             composable("emergency") {
                 EmergencyScreen(
-                    emergency, common, store, away, scope,
+                    emergency, common, store, away, services.scope,
                     onLeave = { if (!nav.popBackStack()) nav.navigate("home") },
                     onViewReadout = { nav.navigate("readout") },
                 )
@@ -270,7 +250,7 @@ fun App(store: Store, translations: Translations, modifier: Modifier, openEmerge
                     },
                     onBack = { nav.popBackStack() },
                     onDeleted = {
-                        scope.launch { away.ended() }
+                        services.scope.launch { away.ended() }
                         nav.navigate("welcome") { popUpTo(0) }
                     },
                 )
