@@ -45,6 +45,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
      * The emergency screen stopped showing at [nowMs]. If an emergency is running, notes when
      * the time away began (unless already away) and schedules the alerts still to come.
      */
+    @Throws(Exception::class)
     suspend fun left(nowMs: Long) {
         lock.withLock {
             val started = store.activeEmergency()?.startedAtMs() ?: return
@@ -59,6 +60,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
      * The emergency screen is showing at [nowMs]: cancels the scheduled alerts, reports the
      * time away (emergency_resumed) and returns the alert to catch up on, if one came due.
      */
+    @Throws(Exception::class)
     suspend fun shown(nowMs: Long): CountdownAlert? = lock.withLock {
         scheduler.cancelAll()
         lastTickMs = nowMs
@@ -72,6 +74,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
     }
 
     /** The emergency ended (found, ended, or the account deleted): nothing more to deliver. */
+    @Throws(Exception::class)
     suspend fun ended() {
         lock.withLock {
             scheduler.cancelAll()
@@ -81,9 +84,11 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
     }
 
     /** Whether to ask for notification permission: once, after onboarding. */
+    @Throws(Exception::class)
     suspend fun shouldAskForNotifications(): Boolean = store.setting(Store.NOTIFICATIONS_PROMPTED).isNullOrEmpty()
 
     /** The answer to the notification permission prompt (notifications_permission). */
+    @Throws(Exception::class)
     suspend fun notificationsAnswered(granted: Boolean) {
         store.putSetting(Store.NOTIFICATIONS_PROMPTED, "1")
         Analytics.track(AnalyticsEvent.NOTIFICATIONS_PERMISSION, mapOf("granted" to granted))

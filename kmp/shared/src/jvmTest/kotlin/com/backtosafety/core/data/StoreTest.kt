@@ -1,10 +1,15 @@
 package com.backtosafety.core.data
 
+import androidx.room.useWriterConnection
+import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DATABASE_NAME
 import com.backtosafety.core.db.DestinationEntity
 import com.backtosafety.core.db.databaseBuilder
 import com.backtosafety.core.db.openAppDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
@@ -14,16 +19,25 @@ import java.io.File
 import java.nio.file.Files
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class StoreTest {
     private val root = File(System.getProperty("repoRoot") ?: error("repoRoot system property not set"))
 
-    private fun freshStore(): Store {
+    private fun freshDb(): AppDatabase {
         val path = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).absolutePath
-        return Store(openAppDatabase(path, databaseBuilder(path)))
+        return openAppDatabase(path, databaseBuilder(path))
     }
+
+    private fun freshStore() = Store(freshDb())
+
+    private suspend fun AppDatabase.exec(sql: String) = useWriterConnection { it.usePrepared(sql) { statement -> statement.step() } }
+
+    /** Makes the database refuse [event] on [table] (when [condition] holds), as a full disk would. */
+    private suspend fun AppDatabase.failOn(event: String, table: String, condition: String = "1") =
+        exec("CREATE TRIGGER refuse BEFORE $event ON $table WHEN $condition BEGIN SELECT RAISE(ABORT, 'refused'); END")
 
     @Test
     fun seedsTheSameRowsAsTheRnApp() {
@@ -186,5 +200,82 @@ class StoreTest {
         assertEquals("Margaret Smith", profile.name)
         assertEquals(null, profile.nickname)
         assertEquals("5'6\"", profile.height)
+    }
+
+    @Test
+    fun deleteAccountFailingHalfWayChangesNothing() = runBlocking {
+        val db = freshDb()
+        val store = Store(db)
+        store.seed()
+        Store.ONBOARDING_STEPS.forEach { store.completeStep(it) }
+        store.saveProfile { it.copy(name = "Margaret Smith") }
+        store.addContact(ContactEntity(name = "John Smith", phone = "5551234567"))
+        store.putSetting(Store.THEME_PREFERENCE, "dark")
+        // The profile, contacts and the rest are deleted before the settings are.
+        db.failOn("DELETE", "settings")
+
+        assertFailsWith<Exception> { store.clearAllData() }
+        assertEquals("Margaret Smith", store.profile()?.name)
+        assertEquals(listOf("John Smith"), store.contacts().map { it.name })
+        assertEquals("dark", store.setting(Store.THEME_PREFERENCE))
+        assertTrue(store.isOnboarded())
+    }
+
+    @Test
+    fun clearingTheEmergencyFailingHalfWayKeepsBothSettings() = runBlocking {
+        val db = freshDb()
+        val store = Store(db)
+        store.saveActiveEmergency(com.backtosafety.core.ActiveEmergency("2026-10-06T16:00:00.000Z", "", emptyList()))
+        store.putSetting(Store.EMERGENCY_AWAY_FROM, "1000")
+        db.failOn("INSERT", "settings", "NEW.key = '${Store.EMERGENCY_AWAY_FROM}'")
+
+        assertFailsWith<Exception> { store.clearActiveEmergency() }
+        assertTrue(store.activeEmergency() != null)
+        assertEquals("1000", store.setting(Store.EMERGENCY_AWAY_FROM))
+    }
+
+    @Test
+    fun reorderFailingHalfWayKeepsTheOldOrder() = runBlocking {
+        val db = freshDb()
+        val store = Store(db)
+        listOf("Ana", "Bo", "Cy").forEach { store.addContact(ContactEntity(name = it, phone = "1")) }
+        listOf("Park", "Church", "Shop").forEach { store.addDestination(DestinationEntity(name = it)) }
+        // Reversed, the first row moves to 0 and the last to 2: the move to 2 is refused.
+        db.failOn("UPDATE", "contacts", "NEW.sort_order = 2")
+        assertFailsWith<Exception> { store.reorderContacts(store.contacts().reversed()) }
+        assertEquals(listOf("Ana" to 0, "Bo" to 1, "Cy" to 2), store.contacts().map { it.name to it.sortOrder })
+
+        db.exec("DROP TRIGGER refuse")
+        db.failOn("UPDATE", "destinations", "NEW.sort_order = 2")
+        assertFailsWith<Exception> { store.reorderDestinations(store.destinations().reversed()) }
+        assertEquals(listOf("Park" to 0, "Church" to 1, "Shop" to 2), store.destinations().map { it.name to it.sortOrder })
+    }
+
+    @Test
+    fun concurrentAddsGetDistinctSortOrders() = runBlocking {
+        val store = freshStore()
+        (0 until 25).map { i ->
+            async(Dispatchers.Default) {
+                store.addContact(ContactEntity(name = "Contact $i", phone = "1"))
+                store.addDestination(DestinationEntity(name = "Place $i"))
+            }
+        }.awaitAll()
+        assertEquals((0 until 25).toList(), store.contacts().map { it.sortOrder }.sorted())
+        assertEquals((0 until 25).toList(), store.destinations().map { it.sortOrder }.sorted())
+    }
+
+    @Test
+    fun concurrentProfileSavesKeepEachOthersFields() = runBlocking {
+        val store = freshStore()
+        val fields = listOf("nickname", "height", "weight", "hairColor", "eyeColor", "likes", "allergies", "safeWord")
+        fields.map { field -> async(Dispatchers.Default) { store.updateProfile(mapOf(field to "set")) } }.awaitAll()
+        val profile = store.profile()!!
+        assertEquals(
+            listOf("set", "set", "set", "set", "set", "set", "set", "set"),
+            listOf(
+                profile.nickname, profile.height, profile.weight, profile.hairColor, profile.eyeColor,
+                profile.likes, profile.allergies, profile.safeWord,
+            ),
+        )
     }
 }
