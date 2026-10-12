@@ -56,6 +56,7 @@ import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
@@ -127,13 +128,13 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
     val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
         // A failed read (the database didn't open, BackToSafetyApp) shows the defaults, as on iOS.
-        themePreference = runCatching { store.setting(Store.THEME_PREFERENCE) }.getOrNull() ?: "system"
+        themePreference = runCatchingCancellable { store.setting(Store.THEME_PREFERENCE) }.getOrNull() ?: "system"
         // i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships.
-        language = when (runCatching { store.setting(Store.LANGUAGE_PREFERENCE) }.getOrNull()) {
+        language = when (runCatchingCancellable { store.setting(Store.LANGUAGE_PREFERENCE) }.getOrNull()) {
             "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
             else -> "en"
         }
-        onboarded = runCatching { store.isOnboarded() }.getOrDefault(false)
+        onboarded = runCatchingCancellable { store.isOnboarded() }.getOrDefault(false)
     }
     // The alerts scheduled while away are translated in the language showing now.
     SideEffect { app.language = language }
@@ -191,10 +192,13 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
             if (route != "home" || BuildConfig.TEST_SEAMS || Build.VERSION.SDK_INT < 33) return@LaunchedEffect
             if (away.shouldAskForNotifications()) askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        // A tapped countdown alert opens the emergency, if it's still running.
+        // A tapped countdown alert opens the emergency, if it's still running: the screen already
+        // on the stack (under the readout, say), never a second one, which would start a new
+        // emergency when revealed after this one ends.
         LaunchedEffect(openEmergencyRequests.value) {
             if (openEmergencyRequests.value == 0 || !start) return@LaunchedEffect
-            if (store.activeEmergency() != null && route != "emergency") nav.navigate("emergency")
+            if (runCatchingCancellable { store.activeEmergency() }.getOrNull() == null) return@LaunchedEffect
+            if (!nav.popBackStack("emergency", inclusive = false)) nav.navigate("emergency") { launchSingleTop = true }
         }
         NavHost(
             nav,
@@ -226,7 +230,8 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
             composable("complete") {
                 CompleteScreen(onboarding, store) { nav.navigate("home") { popUpTo(0) } }
             }
-            composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) } }
+            // Single top: a double tap during the transition opens one screen, not two.
+            composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) { launchSingleTop = true } } }
             composable("emergency") {
                 EmergencyScreen(
                     emergency, common, store, away, services.scope,

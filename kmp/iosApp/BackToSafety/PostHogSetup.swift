@@ -18,9 +18,9 @@ func setUpAnalytics() {
     config.flushIntervalSeconds = 10
     config.maxBatchSize = 100
     config.maxQueueSize = 1000
-    config.sessionReplay = true
-    config.sessionReplayConfig.maskAllTextInputs = true
-    config.sessionReplayConfig.maskAllImages = true
+    // Off: the screens show medical details, the safe word and contacts' numbers as plain
+    // text, which masking inputs and images wouldn't hide (docs/privacy-policy.md).
+    config.sessionReplay = false
     // Crashes and uncaught exceptions as $exception events, as on Android.
     config.errorTrackingConfig.autoCapture = true
     PostHogSDK.shared.setup(config)
@@ -34,6 +34,7 @@ func setUpAnalytics() {
             PostHogSDK.shared.capture(name, properties: properties)
         }
     }
+    Analytics.shared.flusher = { PostHogSDK.shared.flush() }
 }
 
 private var analyticsEnabled = false

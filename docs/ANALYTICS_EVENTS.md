@@ -10,9 +10,10 @@ contract, `spec/analytics-events.json`: the shared core generates `AnalyticsEven
 
 - The key and host come from `POSTHOG_KEY` and `POSTHOG_HOST` at build time (the release
   workflows set them). Without a key, PostHog isn't set up and no events are sent.
-- Session replay is on, with text inputs and images masked.
+- Session replay is off: screens show medical details and contacts' numbers as plain text,
+  which masking inputs and images wouldn't hide.
 - The app's stable device ID (the `device_id` setting) is the PostHog identity (`identify`).
-- Android: `MainActivity.setUpAnalytics`. iOS: `PostHogSetup.swift`.
+- Android: `BackToSafetyApp.setUpAnalytics`. iOS: `PostHogSetup.swift`.
 
 ---
 

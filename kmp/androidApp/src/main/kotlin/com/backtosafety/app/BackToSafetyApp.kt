@@ -106,9 +106,9 @@ class BackToSafetyApp : Application() {
             flushIntervalSeconds = 10
             maxBatchSize = 100
             maxQueueSize = 1000
-            sessionReplay = true
-            sessionReplayConfig.maskAllTextInputs = true
-            sessionReplayConfig.maskAllImages = true
+            // Off: the screens show medical details, the safe word and contacts' numbers as
+            // plain text, which masking inputs and images wouldn't hide (docs/privacy-policy.md).
+            sessionReplay = false
             errorTrackingConfig.autoCapture = true
         }
         PostHogAndroid.setup(applicationContext, config)

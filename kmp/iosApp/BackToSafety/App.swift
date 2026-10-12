@@ -54,6 +54,8 @@ final class AppModel: ObservableObject {
                 (try? await store.dataMigratedProperties(fromVersion: migratingFrom, durationMs: durationMs)) ?? [:]
             }
             Analytics.shared.track(event: .dataMigrated, properties: properties)
+            // Sent now: a queued failure wouldn't survive a crash that follows it.
+            if seedError != nil { Analytics.shared.flush() }
         }
         // The device is the analytics identity (as on Android).
         if let deviceId = try? await store.deviceId() { identifyAnalytics(deviceId) }
