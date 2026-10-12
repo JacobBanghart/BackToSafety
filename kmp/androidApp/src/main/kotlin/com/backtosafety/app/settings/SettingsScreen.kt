@@ -57,11 +57,11 @@ import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
+import com.backtosafety.core.db.DATABASE_VERSION
 import com.backtosafety.core.invoke
 import kotlinx.coroutines.launch
 
 private const val TAPS_TO_UNLOCK = 7
-private const val SCHEMA_VERSION = 2
 
 /** Port of app/settings.tsx. */
 @Composable
@@ -196,7 +196,7 @@ fun SettingsScreen(
                 )
                 ListItem(t("sections.about.platform"), "android")
                 ListItem(t("sections.about.theme"), if (colors.isDark) "dark" else "light")
-                if (devMode) ListItem(t("sections.about.dbSchema"), SCHEMA_VERSION.toString())
+                if (devMode) ListItem(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
                 ListItem(
                     t("sections.about.deviceId"), deviceId ?: "—", testID = "settings-device-id",
                     ruleColor = Color.Transparent,

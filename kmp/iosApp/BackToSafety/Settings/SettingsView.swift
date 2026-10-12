@@ -3,7 +3,6 @@ import SwiftUI
 import UIKit
 
 private let tapsToUnlock = 7
-private let schemaVersion = 2
 
 /// Port of app/settings.tsx.
 struct SettingsView: View {
@@ -87,7 +86,7 @@ struct SettingsView: View {
                                  testID: "settings-version", onPress: onVersionTap)
                         ListItem(label: t("sections.about.platform"), value: "ios")
                         ListItem(label: t("sections.about.theme"), value: colors.isDark ? "dark" : "light")
-                        if devMode { ListItem(label: t("sections.about.dbSchema"), value: String(schemaVersion)) }
+                        if devMode { ListItem(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
                         ListItem(label: t("sections.about.deviceId"), value: deviceId ?? "—", testID: "settings-device-id",
                                  ruleColor: .clear) {
                             guard let deviceId else { return }

@@ -33,6 +33,10 @@ private val STEP_IDS = listOf(
     "home_search", "outside_immediate", "neighbors", "radius_search", "high_risk",
     "familiar_places", "call_911", "silver_alert", "share_info", "coordinate", "document",
 )
+
+/** How many steps the checklist has. */
+val EMERGENCY_STEP_COUNT = STEP_IDS.size
+
 private val URGENT_STEPS = setOf("high_risk", "call_911")
 
 fun buildInitialSteps(t: Translate, emergencyNumber: String): List<ChecklistStep> {

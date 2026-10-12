@@ -41,6 +41,7 @@
       "success": "#22c55e",
       "warning": "#f59e0b",
       "error": "#ef4444",
+      "errorDark": "#b91c1c",
       "info": "#3b82f6"
     }
   },
