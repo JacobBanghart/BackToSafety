@@ -24,7 +24,8 @@ interface AlertScheduler {
  *
  * Both apps drive this from the screen's lifecycle and do nothing but deliver what it decides,
  * so they can't drift apart. The time away starts at the last tick, not at leaving: an alert
- * due between that tick and leaving is caught up instead of lost.
+ * due between that tick and leaving is caught up instead of lost. Once the countdown has
+ * expired the ticks stop mattering, and it starts at leaving.
  */
 class EmergencyAway(private val store: Store, private val scheduler: AlertScheduler) {
     private val lock = Mutex()
@@ -45,11 +46,16 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
      * The emergency screen stopped showing at [nowMs]. If an emergency is running, notes when
      * the time away began (unless already away) and schedules the alerts still to come.
      */
+    @Throws(Exception::class)
     suspend fun left(nowMs: Long) {
         lock.withLock {
             val started = store.activeEmergency()?.startedAtMs() ?: return
             if (store.setting(Store.EMERGENCY_AWAY_FROM).isNullOrEmpty()) {
-                store.putSetting(Store.EMERGENCY_AWAY_FROM, (lastTickMs ?: nowMs).toString())
+                // The apps stop ticking at expiry, so a tick from then or later says nothing about
+                // when the screen was left: the expiry alert was already shown in-app, and nothing
+                // is left to catch up.
+                val tickBeforeExpiry = lastTickMs?.takeIf { it < alertDueAtMs(CountdownAlert.EXPIRED, started) }
+                store.putSetting(Store.EMERGENCY_AWAY_FROM, (tickBeforeExpiry ?: nowMs).toString())
             }
             scheduler.schedule(alertsToSchedule(started, nowMs))
         }
@@ -59,6 +65,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
      * The emergency screen is showing at [nowMs]: cancels the scheduled alerts, reports the
      * time away (emergency_resumed) and returns the alert to catch up on, if one came due.
      */
+    @Throws(Exception::class)
     suspend fun shown(nowMs: Long): CountdownAlert? = lock.withLock {
         scheduler.cancelAll()
         lastTickMs = nowMs
@@ -72,6 +79,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
     }
 
     /** The emergency ended (found, ended, or the account deleted): nothing more to deliver. */
+    @Throws(Exception::class)
     suspend fun ended() {
         lock.withLock {
             scheduler.cancelAll()
@@ -81,9 +89,11 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
     }
 
     /** Whether to ask for notification permission: once, after onboarding. */
+    @Throws(Exception::class)
     suspend fun shouldAskForNotifications(): Boolean = store.setting(Store.NOTIFICATIONS_PROMPTED).isNullOrEmpty()
 
     /** The answer to the notification permission prompt (notifications_permission). */
+    @Throws(Exception::class)
     suspend fun notificationsAnswered(granted: Boolean) {
         store.putSetting(Store.NOTIFICATIONS_PROMPTED, "1")
         Analytics.track(AnalyticsEvent.NOTIFICATIONS_PERMISSION, mapOf("granted" to granted))

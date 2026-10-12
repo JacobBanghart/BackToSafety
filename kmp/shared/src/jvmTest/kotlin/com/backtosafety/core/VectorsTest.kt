@@ -162,7 +162,7 @@ class VectorsTest {
                     put("startedAt", e.startedAt)
                     put("wearing", e.wearing)
                     put("checkedSteps", json(e.checkedSteps))
-                    put("isActive", e.isActive)
+                    put("isActive", true) // a record that parses is active
                     e.incidentId?.let { put("incidentId", it) }
                 }
             } ?: JsonNull

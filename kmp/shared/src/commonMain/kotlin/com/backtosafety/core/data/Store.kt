@@ -1,5 +1,7 @@
 package com.backtosafety.core.data
 
+import androidx.room.immediateTransaction
+import androidx.room.useWriterConnection
 import com.backtosafety.core.ActiveEmergency
 import com.backtosafety.core.Profile
 import com.backtosafety.core.db.AppDatabase
@@ -19,36 +21,56 @@ import kotlin.uuid.Uuid
 /**
  * The app's data, with the RN app's semantics (spec/storage.md): what's seeded on every
  * launch, how a partial profile save merges, and what counts as onboarded.
+ *
+ * Every public suspend function is @Throws, so a failure reaches Swift as an error it can catch
+ * instead of ending the app (ThrowsGuardTest). Writes of several steps run in one transaction
+ * ([inTransaction]): they all happen or none does, and two of them never interleave.
  */
 class Store(private val db: AppDatabase) {
 
+    /**
+     * Runs [block] in one immediate transaction on the writer connection: the DAO calls inside
+     * share it, a failure rolls them all back, and the write lock taken at the start makes a
+     * read-modify-write inside it exclusive.
+     */
+    private suspend fun <R> inTransaction(block: suspend () -> R): R =
+        db.useWriterConnection { it.immediateTransaction { block() } }
+
     /** Rows the RN app inserts on every launch (spec/seed.json), if missing. */
+    @Throws(Exception::class)
     suspend fun seed() {
         db.onboarding().insertMissing(ONBOARDING_STEPS.map { OnboardingStepEntity(step = it) })
         db.safetyChecks().insertMissing(SAFETY_CHECKS.map { (category, key) -> SafetyCheckEntity(category = category, itemKey = key) })
     }
 
+    @Throws(Exception::class)
     suspend fun isOnboarded(): Boolean = db.onboarding().isComplete()
 
+    @Throws(Exception::class)
     suspend fun completeStep(step: String) = db.onboarding().complete(step)
 
+    @Throws(Exception::class)
     suspend fun profile(): Profile? = db.profile().get()?.toProfile()
 
     /**
      * Saves a profile change. Like the RN app, the first save creates the single profile
      * row and later saves update it.
      */
+    @Throws(Exception::class)
     suspend fun saveProfile(change: (ProfileEntity) -> ProfileEntity) {
         val now = sqliteNow()
-        val current = db.profile().get() ?: ProfileEntity(name = "", createdAt = now)
-        // updated_at as the RN update sets it; created_at kept (Room would otherwise write NULL).
-        db.profile().save(change(current).copy(createdAt = current.createdAt ?: now, updatedAt = now))
+        inTransaction {
+            val current = db.profile().get() ?: ProfileEntity(name = "", createdAt = now)
+            // updated_at as the RN update sets it; created_at kept (Room would otherwise write NULL).
+            db.profile().save(change(current).copy(createdAt = current.createdAt ?: now, updatedAt = now))
+        }
     }
 
     /**
      * A partial profile save by field name (the Profile property names), as the RN screens
      * save: given fields are set (null clears), the rest kept. The SwiftUI app saves this way.
      */
+    @Throws(Exception::class)
     suspend fun updateProfile(values: Map<String, String?>) = saveProfile { profile ->
         values.entries.fold(profile) { p, (field, value) -> p.with(field, value) }
     }
@@ -57,67 +79,91 @@ class Store(private val db: AppDatabase) {
      * Adds a contact at [sortOrder], or after the last one (database/contacts.native.ts).
      * Room would write created_at as NULL over the column default, so it's stamped here.
      */
+    @Throws(Exception::class)
     suspend fun addContact(contact: ContactEntity, sortOrder: Int? = null): Long {
         val now = sqliteNow()
-        return db.contacts().insert(
-            contact.copy(
-                sortOrder = sortOrder ?: ((db.contacts().maxSortOrder() ?: -1) + 1),
-                createdAt = contact.createdAt ?: now, updatedAt = contact.updatedAt ?: now,
-            ),
-        )
+        return inTransaction {
+            db.contacts().insert(
+                contact.copy(
+                    sortOrder = sortOrder ?: ((db.contacts().maxSortOrder() ?: -1) + 1),
+                    createdAt = contact.createdAt ?: now, updatedAt = contact.updatedAt ?: now,
+                ),
+            )
+        }
     }
 
     /** Saves the edit form: every field, so a cleared one is cleared (F-35). */
+    @Throws(Exception::class)
     suspend fun updateContact(c: ContactEntity) = db.contacts().update(
         c.id, c.name, c.phone, c.relationship, c.role, c.address, c.notifyOnEmergency, c.shareMedicalInfo, c.notes,
     )
 
+    @Throws(Exception::class)
     suspend fun deleteContact(id: Long) = db.contacts().delete(id)
 
     /** After a drag: each contact's sort order becomes its index, written only where it changed. */
-    suspend fun reorderContacts(ordered: List<ContactEntity>) = ordered.forEachIndexed { index, c ->
-        if (c.sortOrder != index) db.contacts().setSortOrder(c.id, index)
+    @Throws(Exception::class)
+    suspend fun reorderContacts(ordered: List<ContactEntity>) = inTransaction {
+        ordered.forEachIndexed { index, c ->
+            if (c.sortOrder != index) db.contacts().setSortOrder(c.id, index)
+        }
     }
 
+    @Throws(Exception::class)
     suspend fun addDestination(d: DestinationEntity, sortOrder: Int? = null): Long {
         val now = sqliteNow()
-        return db.destinations().insert(
-            d.copy(
-                sortOrder = sortOrder ?: ((db.destinations().maxSortOrder() ?: -1) + 1),
-                createdAt = d.createdAt ?: now, updatedAt = d.updatedAt ?: now,
-            ),
-        )
+        return inTransaction {
+            db.destinations().insert(
+                d.copy(
+                    sortOrder = sortOrder ?: ((db.destinations().maxSortOrder() ?: -1) + 1),
+                    createdAt = d.createdAt ?: now, updatedAt = d.updatedAt ?: now,
+                ),
+            )
+        }
     }
 
+    @Throws(Exception::class)
     suspend fun updateDestination(d: DestinationEntity) = db.destinations().update(
         d.id, d.name, d.address, d.category, d.reason, d.distanceFromHome, d.riskLevel, d.notes,
     )
 
+    @Throws(Exception::class)
     suspend fun deleteDestination(id: Long) = db.destinations().delete(id)
 
-    suspend fun reorderDestinations(ordered: List<DestinationEntity>) = ordered.forEachIndexed { index, d ->
-        if (d.sortOrder != index) db.destinations().setSortOrder(d.id, index)
+    @Throws(Exception::class)
+    suspend fun reorderDestinations(ordered: List<DestinationEntity>) = inTransaction {
+        ordered.forEachIndexed { index, d ->
+            if (d.sortOrder != index) db.destinations().setSortOrder(d.id, index)
+        }
     }
 
+    @Throws(Exception::class)
     suspend fun contacts() = db.contacts().all()
 
     /** Contacts the emergency alert texts (notify_on_emergency = 1). */
+    @Throws(Exception::class)
     suspend fun emergencyContacts() = db.contacts().emergency()
 
+    @Throws(Exception::class)
     suspend fun destinations() = db.destinations().all()
 
+    @Throws(Exception::class)
     suspend fun activeEmergency(): ActiveEmergency? = parseActiveEmergency(setting(ACTIVE_EMERGENCY))
 
+    @Throws(Exception::class)
     suspend fun saveActiveEmergency(e: ActiveEmergency) = putSetting(ACTIVE_EMERGENCY, serializeActiveEmergency(e))
 
     /** Ends the emergency: stored as an empty string, not deleted (spec/storage.md). */
-    suspend fun clearActiveEmergency() {
+    @Throws(Exception::class)
+    suspend fun clearActiveEmergency() = inTransaction {
         putSetting(ACTIVE_EMERGENCY, "")
         putSetting(EMERGENCY_AWAY_FROM, "")
     }
 
+    @Throws(Exception::class)
     suspend fun incidents() = db.incidents().all()
 
+    @Throws(Exception::class)
     suspend fun createIncident(startedAt: String): Long =
         db.incidents().insert(IncidentEntity(startedAt = startedAt, outcome = "ongoing", createdAt = sqliteNow()))
 
@@ -126,6 +172,7 @@ class Store(private val db: AppDatabase) {
      * and always the checked steps and clothing. A missing row is created first, for an
      * emergency started before incidents were recorded.
      */
+    @Throws(Exception::class)
     suspend fun recordIncident(
         incidentId: Long?,
         startedAt: String,
@@ -149,9 +196,11 @@ class Store(private val db: AppDatabase) {
 
     /**
      * Settings > Delete Account (database/storage.native.ts clearAllData): empties every
-     * table, then re-creates the onboarding steps so the app starts onboarding again.
+     * table, then re-creates the onboarding steps so the app starts onboarding again. All of it
+     * or none: half-way, the profile could be gone while onboarding still counted as complete.
      */
-    suspend fun clearAllData() {
+    @Throws(Exception::class)
+    suspend fun clearAllData() = inTransaction {
         db.profile().deleteAll()
         db.contacts().deleteAll()
         db.destinations().deleteAll()
@@ -168,6 +217,7 @@ class Store(private val db: AppDatabase) {
      * data_migrated's properties, after the first query migrated the database from
      * [fromVersion] in [durationMs]: what came through, so a migration that lost data shows.
      */
+    @Throws(Exception::class)
     suspend fun dataMigratedProperties(fromVersion: Int, durationMs: Long): Map<String, Any?> {
         val contacts = contacts()
         return mapOf(
@@ -183,6 +233,7 @@ class Store(private val db: AppDatabase) {
     }
 
     /** app_ready's readiness properties (readinessProperties) from what's stored. */
+    @Throws(Exception::class)
     suspend fun readinessProperties(): Map<String, Any?> {
         val contacts = contacts()
         return com.backtosafety.core.readinessProperties(
@@ -192,13 +243,16 @@ class Store(private val db: AppDatabase) {
 
     /** The anonymous per-install ID (utils/device-id.ts): a random UUID, stored on first use. */
     @OptIn(ExperimentalUuidApi::class)
+    @Throws(Exception::class)
     suspend fun deviceId(): String = cachedDeviceId ?: (
         setting(DEVICE_ID)?.takeIf { it.isNotEmpty() }
             ?: Uuid.random().toString().also { putSetting(DEVICE_ID, it) }
         ).also { cachedDeviceId = it }
 
+    @Throws(Exception::class)
     suspend fun setting(key: String): String? = db.settings().get(key)
 
+    @Throws(Exception::class)
     suspend fun putSetting(key: String, value: String) =
         db.settings().put(com.backtosafety.core.db.SettingEntity(key = key, value = value))
 

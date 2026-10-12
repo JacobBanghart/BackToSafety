@@ -115,6 +115,33 @@ class EmergencyAwayTest {
     }
 
     @Test
+    fun timeAwayAfterExpiryStartsAtLeaving() = runBlocking {
+        startEmergency()
+        // The countdown expired at minute 15 and the apps stopped ticking; the screen stayed
+        // open until minute 45, then the app went to the background for ten seconds.
+        away.inAppAlerts(1, 0, at(15))
+        away.left(at(45))
+        assertEquals(emptyList(), scheduler.scheduled, "nothing is left to schedule")
+        assertEquals(null, away.shown(at(45, 10)), "the expiry alert was already shown in-app")
+        assertEquals(
+            listOf("emergency_resumed" to mapOf<String, Any?>("away_s" to 10L, "catch_up" to null)),
+            tracked.filter { it.first == "emergency_resumed" },
+        )
+    }
+
+    @Test
+    fun timeAwayAfterReturningPastExpiryStartsAtLeaving() = runBlocking {
+        startEmergency()
+        // Away across the expiry, back (caught up), and away again: the second time away
+        // starts at leaving, not at the return that last set the tick.
+        away.left(at(5))
+        assertEquals(CountdownAlert.EXPIRED, away.shown(at(20)))
+        away.left(at(50))
+        assertEquals(null, away.shown(at(50, 10)))
+        assertEquals(10L, tracked.last { it.first == "emergency_resumed" }.second["away_s"])
+    }
+
+    @Test
     fun leavingTwiceKeepsTheFirstTimeAway() = runBlocking {
         startEmergency()
         away.left(at(5)) // to the info sheet
