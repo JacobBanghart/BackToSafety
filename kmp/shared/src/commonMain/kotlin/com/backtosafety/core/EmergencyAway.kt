@@ -3,7 +3,6 @@ package com.backtosafety.core
 import com.backtosafety.core.data.Store
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.time.Instant
 
 /**
  * Puts countdown alerts on the phone as local notifications. Each app has one: on Android a
@@ -50,7 +49,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
     @Throws(Exception::class)
     suspend fun left(nowMs: Long) {
         lock.withLock {
-            val started = store.activeEmergency()?.startedAtMs() ?: return
+            val started = store.activeEmergency()?.startedAtMs ?: return
             if (store.setting(Store.EMERGENCY_AWAY_FROM).isNullOrEmpty()) {
                 // The apps stop ticking at expiry, so a tick from then or later says nothing about
                 // when the screen was left: the expiry alert was already shown in-app, and nothing
@@ -72,7 +71,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
         lastTickMs = nowMs
         val awayFrom = store.setting(Store.EMERGENCY_AWAY_FROM)?.toLongOrNull()
         if (awayFrom != null) store.putSetting(Store.EMERGENCY_AWAY_FROM, "")
-        val started = store.activeEmergency()?.startedAtMs()
+        val started = store.activeEmergency()?.startedAtMs
         if (awayFrom == null || started == null) return@withLock null
         val alert = catchUpAlert(started, awayFrom, nowMs)
         Analytics.track(AnalyticsEvent.EMERGENCY_RESUMED, emergencyResumedProperties(awayFrom, nowMs, alert))
@@ -91,7 +90,7 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
      */
     @Throws(Exception::class)
     suspend fun restarted(nowMs: Long): CountdownAlert? = lock.withLock {
-        val started = store.activeEmergency()?.startedAtMs() ?: return@withLock null
+        val started = store.activeEmergency()?.startedAtMs ?: return@withLock null
         val awayFrom = store.setting(Store.EMERGENCY_AWAY_FROM)?.toLongOrNull()
             ?: started.also { store.putSetting(Store.EMERGENCY_AWAY_FROM, it.toString()) }
         scheduler.schedule(alertsToSchedule(started, nowMs))
@@ -118,6 +117,4 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
         store.putSetting(Store.NOTIFICATIONS_PROMPTED, "1")
         Analytics.track(AnalyticsEvent.NOTIFICATIONS_PERMISSION, mapOf("granted" to granted))
     }
-
-    private fun ActiveEmergency.startedAtMs(): Long? = runCatching { Instant.parse(startedAt).toEpochMilliseconds() }.getOrNull()
 }

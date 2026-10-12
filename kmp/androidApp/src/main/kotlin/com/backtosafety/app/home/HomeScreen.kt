@@ -68,7 +68,6 @@ import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.secondsRemaining
 import kotlinx.coroutines.delay
-import kotlin.time.Instant
 
 private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.error)
 private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
@@ -94,7 +93,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
     }
     // Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     LaunchedEffect(emergency) {
-        val started = emergency?.let { Instant.parse(it.startedAt).toEpochMilliseconds() } ?: return@LaunchedEffect
+        val started = emergency?.startedAtMs ?: return@LaunchedEffect
         while (true) {
             secondsLeft = secondsRemaining(started, AppClock.nowMs())
             delay(1000)

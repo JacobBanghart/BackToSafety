@@ -59,8 +59,8 @@ struct HomeView: View {
 
     /// Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     private func updateCountdown() {
-        guard let started = emergency.flatMap({ parseISO($0.startedAt) }) else { return }
-        secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
+        guard let started = emergency?.startedAtMs?.int64Value else { return }
+        secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started, nowMs: AppClock.shared.nowMs())
     }
 
     private func header(_ hasProfile: Bool) -> some View {
