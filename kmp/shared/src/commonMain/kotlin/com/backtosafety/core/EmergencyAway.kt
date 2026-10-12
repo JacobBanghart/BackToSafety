@@ -6,8 +6,9 @@ import kotlinx.coroutines.sync.withLock
 import kotlin.time.Instant
 
 /**
- * Puts countdown alerts on the phone as local notifications. Each app has one: AlarmManager
- * on Android, UNUserNotificationCenter on iOS.
+ * Puts countdown alerts on the phone as local notifications. Each app has one: on Android a
+ * timer under the emergency's foreground service, with alarms as the backstop; on iOS,
+ * UNUserNotificationCenter.
  */
 interface AlertScheduler {
     /** Replaces whatever is scheduled with [alerts]. */
@@ -76,6 +77,25 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
         val alert = catchUpAlert(started, awayFrom, nowMs)
         Analytics.track(AnalyticsEvent.EMERGENCY_RESUMED, emergencyResumedProperties(awayFrom, nowMs, alert))
         alert?.also { Analytics.track(AnalyticsEvent.COUNTDOWN_ALERT, countdownAlertProperties(it, AlertDelivery.CATCH_UP)) }
+    }
+
+    /**
+     * The phone restarted at [nowMs] (Android's boot receiver): the scheduled alerts and the
+     * notifications already shown went with it, and the screen isn't showing. Schedules the
+     * alerts still to come, as [left] does, and returns the one to post now: the most serious
+     * that came due while away, as [shown] would catch it up (it still will, on returning).
+     *
+     * Without a time away the screen was showing when the phone went off, at a moment nobody
+     * noted, so the time away counts from the emergency's start: an alert given twice beats a
+     * call-911 alert that never came.
+     */
+    @Throws(Exception::class)
+    suspend fun restarted(nowMs: Long): CountdownAlert? = lock.withLock {
+        val started = store.activeEmergency()?.startedAtMs() ?: return@withLock null
+        val awayFrom = store.setting(Store.EMERGENCY_AWAY_FROM)?.toLongOrNull()
+            ?: started.also { store.putSetting(Store.EMERGENCY_AWAY_FROM, it.toString()) }
+        scheduler.schedule(alertsToSchedule(started, nowMs))
+        catchUpAlert(started, awayFrom, nowMs)
     }
 
     /** The emergency ended (found, ended, or the account deleted): nothing more to deliver. */
