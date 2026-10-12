@@ -1,11 +1,10 @@
 package com.backtosafety.app.contacts
 
-import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.ContactsContract
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -87,6 +86,7 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.formatPhoneInput
 import com.backtosafety.core.invoke
+import com.backtosafety.core.isUsablePhone
 import com.backtosafety.core.normalizeSmsRecipient
 import kotlinx.coroutines.launch
 
@@ -153,6 +153,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
     fun save() {
         if (form.name.isBlank()) return alert(true, t("errors.nameRequired"))
         if (form.phone.isBlank()) return alert(true, t("errors.phoneRequired"))
+        if (!isUsablePhone(form.phone)) return alert(true, t("errors.phoneInvalid"))
         saving = true
         scope.launch {
             runCatchingCancellable {
@@ -199,11 +200,12 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         )
     }
 
-    // expo-contacts: a picked contact's name and first phone number.
+    // The system's phone picker (a contact and which of its numbers). It hands back a URI this app
+    // may read once, so the app needs no contacts permission and never sees the rest of the address book.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         importing = false
-        val id = result.data?.data?.lastPathSegment ?: return@rememberLauncherForActivityResult
-        val (name, phone) = runCatching { readContact(context, id) }.getOrElse {
+        val picked = result.data?.data ?: return@rememberLauncherForActivityResult
+        val (name, phone) = runCatching { readContact(context, picked) }.getOrElse {
             return@rememberLauncherForActivityResult alert(false, t("errors.importFailed"))
         }
         when {
@@ -217,22 +219,14 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
             }
         }
     }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
-        if (grants[Manifest.permission.READ_CONTACTS] == true) {
-            picker.launch(Intent(Intent.ACTION_PICK).setType(ContactsContract.Contacts.CONTENT_TYPE))
-        } else {
-            importing = false
-            showAlert(
-                context, t("permission.title"), t("permission.message"), cancel = tCommon("notNow"),
-                confirm = tCommon("openSettings") to {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
-                },
-            )
-        }
-    }
     fun import() {
         importing = true
-        permission.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS))
+        try {
+            picker.launch(Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI))
+        } catch (_: ActivityNotFoundException) {
+            importing = false
+            alert(false, t("errors.importFailed"))
+        }
     }
 
     UnsavedChangesGuard(
@@ -312,21 +306,12 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
 /** The key two numbers share when they're the same contact (contacts.tsx toPhoneKey). */
 private fun phoneKey(phone: String) = normalizeSmsRecipient(phone).removePrefix("+")
 
-/** A picked contact's display name and first non-empty phone number. */
-private fun readContact(context: Context, id: String): Pair<String, String> {
-    val resolver = context.contentResolver
-    val name = resolver.query(
-        Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id),
-        arrayOf(ContactsContract.Contacts.DISPLAY_NAME), null, null, null,
-    )?.use { if (it.moveToFirst()) it.getString(0).orEmpty().trim() else "" }.orEmpty()
-    val phone = resolver.query(
-        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-        arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
-        "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?", arrayOf(id), null,
-    )?.use { c ->
-        generateSequence { if (c.moveToNext()) c.getString(0)?.trim().orEmpty() else null }.firstOrNull { it.isNotEmpty() }
-    }.orEmpty()
-    return name to phone
+/** The display name and number of the phone row the user [picked] (the one row the picker let us read). */
+private fun readContact(context: Context, picked: Uri): Pair<String, String> {
+    val columns = arrayOf(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER)
+    return context.contentResolver.query(picked, columns, null, null, null)
+        ?.use { if (it.moveToFirst()) it.getString(0).orEmpty().trim() to it.getString(1).orEmpty().trim() else null }
+        ?: ("" to "")
 }
 
 @Composable

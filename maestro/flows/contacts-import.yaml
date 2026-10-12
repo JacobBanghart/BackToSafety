@@ -11,11 +11,6 @@ name: Importing a contact from the address book fills the form
     id: home-contacts
 - tapOn:
     id: contacts-empty-import
-- runFlow:
-    when:
-      visible: Allow
-    commands:
-      - tapOn: Allow
 - tapOn: Rosa Diaz
 - assertVisible:
     id: contacts-form-name

@@ -51,6 +51,7 @@
     "saveFailed": "No se pudo guardar el contacto. Por favor, inténtalo de nuevo.",
     "nameRequired": "El nombre es obligatorio.",
     "phoneRequired": "El número de teléfono es obligatorio.",
+    "phoneInvalid": "Introduce un número de teléfono con al menos 3 dígitos.",
     "noPhoneToImport": "Ese contacto no tiene un número de teléfono para importar.",
     "noNameToImport": "Ese contacto no tiene un nombre para importar.",
     "duplicatePhone": "Este número ya está en tus contactos de emergencia.",

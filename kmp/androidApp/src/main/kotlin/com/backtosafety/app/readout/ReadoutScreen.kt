@@ -79,8 +79,6 @@ import com.backtosafety.core.missingScriptDetails
 import com.backtosafety.core.needsVehicleCheck
 import com.backtosafety.core.vehicleCheckKind
 import kotlinx.coroutines.delay
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import kotlin.time.Instant
 
 private val space = DesignTokens.Spacing
@@ -125,7 +123,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     val input = ReadoutInput(
         profile = p,
         lastSeenTime = lastSeen,
-        today = Instant.fromEpochMilliseconds(AppClock.nowMs()).toLocalDateTime(TimeZone.currentSystemDefault()).date,
+        today = AppClock.today(),
     )
     val script = buildScript(input, t)
     val missing = missingScriptDetails(input, t)

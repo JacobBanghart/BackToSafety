@@ -51,6 +51,7 @@
     "saveFailed": "Failed to save contact. Please try again.",
     "nameRequired": "Name is required.",
     "phoneRequired": "Phone number is required.",
+    "phoneInvalid": "Enter a phone number with at least 3 digits.",
     "noPhoneToImport": "That contact has no phone number to import.",
     "noNameToImport": "That contact has no name to import.",
     "duplicatePhone": "This phone number is already in your emergency contacts.",

@@ -3,6 +3,7 @@ package com.backtosafety.core.db
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.SQLiteStatement
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import androidx.sqlite.execSQL
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.parseActiveEmergency
 import kotlinx.coroutines.runBlocking
@@ -122,6 +123,53 @@ class DatabaseTest {
             c.prepare("PRAGMA user_version").use { it.step(); it.getLong(0) }
         }
         assertEquals(2L, userVersion)
+    }
+
+    private fun userVersion(path: String): Long = BundledSQLiteDriver().open(path).use { c ->
+        c.prepare("PRAGMA user_version").use { it.step(); it.getLong(0) }
+    }
+
+    @Test
+    fun halfCreatedRnDatabaseIsStartedAfresh() = runBlocking {
+        // Only schema_version made it to disk: no profile or contacts tables, so migrating would
+        // fail "no such table" on every launch. Nothing in the file is worth keeping.
+        for (versionRow in listOf(false, true)) {
+            val path = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).absolutePath
+            BundledSQLiteDriver().open(path).use { c ->
+                c.execSQL("CREATE TABLE schema_version (version INTEGER PRIMARY KEY, migrated_at TEXT DEFAULT CURRENT_TIMESTAMP)")
+                if (versionRow) c.execSQL("INSERT INTO schema_version (version) VALUES (1)")
+            }
+            val db = openAppDatabase(path, databaseBuilder(path))
+            assertEquals(null, DatabaseOpen.migratingFrom, "nothing to migrate (version row: $versionRow)")
+            db.profile().save(ProfileEntity(name = "Ana"))
+            assertEquals("Ana", db.profile().get()?.name)
+            db.close()
+            assertEquals(2L, userVersion(path))
+        }
+    }
+
+    @Test
+    fun rnDatabaseWithoutItsVersionRowStillMigrates() = runBlocking {
+        // The tables are the user's data; a missing version row mustn't make the app drop them.
+        val path = rnFixtureCopy()
+        BundledSQLiteDriver().open(path).use { it.execSQL("DELETE FROM schema_version") }
+        val db = openAppDatabase(path, databaseBuilder(path))
+        assertEquals(1, DatabaseOpen.migratingFrom)
+        assertEquals("Margaret Smith", db.profile().get()?.name)
+        db.close()
+    }
+
+    @Test
+    fun partialRnDatabaseKeepsItsRows() {
+        // Some tables but not all (which the RN app's single transaction rules out): left alone.
+        val path = File(Files.createTempDirectory("nijii").toFile(), DATABASE_NAME).absolutePath
+        BundledSQLiteDriver().open(path).use { c ->
+            c.execSQL("CREATE TABLE schema_version (version INTEGER PRIMARY KEY)")
+            c.execSQL("CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT, phone TEXT)")
+            c.execSQL("INSERT INTO contacts (name, phone) VALUES ('Jo', '555')")
+        }
+        assertEquals(0, adoptRnDatabase(path))
+        assertEquals(1, rows(path, "contacts").size)
     }
 
     @Test

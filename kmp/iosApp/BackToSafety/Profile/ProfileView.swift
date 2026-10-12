@@ -404,7 +404,7 @@ struct ProfileView: View {
     }
 
     private func toDate(_ d: Kotlinx_datetimeLocalDate) -> Date {
-        Calendar.current.date(from: DateComponents(year: Int(d.year), month: Int(d.month.ordinal) + 1, day: Int(d.day))) ?? Date()
+        gregorian.date(from: DateComponents(year: Int(d.year), month: Int(d.month.ordinal) + 1, day: Int(d.day))) ?? Date()
     }
 
     private var dateModal: some View {
@@ -415,6 +415,7 @@ struct ProfileView: View {
                 DatePicker("", selection: $pendingDob, in: ...Date(), displayedComponents: .date)
                     .datePickerStyle(.wheel)
                     .labelsHidden()
+                    .environment(\.calendar, gregorian)
                     .frame(maxWidth: .infinity)
                 HStack(spacing: Space.sm) {
                     Spacer()
@@ -427,7 +428,7 @@ struct ProfileView: View {
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("profile-date-cancel")
                     Button {
-                        let c = Calendar.current.dateComponents([.year, .month, .day], from: pendingDob)
+                        let c = gregorian.dateComponents([.year, .month, .day], from: pendingDob)
                         form?["dateOfBirth"] = AgeKt.formatDob(date: Kotlinx_datetimeLocalDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
                         datePicking = false
                     } label: {

@@ -93,6 +93,7 @@ class VectorsTest {
         "formatPhoneNumber" to { a -> json(formatPhoneNumber(a.str(0))) },
         "formatPhoneInput" to { a -> json(formatPhoneInput(a.str(0))) },
         "stripPhoneFormatting" to { a -> json(stripPhoneFormatting(a.str(0))) },
+        "isUsablePhone" to { a -> JsonPrimitive(isUsablePhone(a.str(0))) },
         "dialString" to { a -> json(dialString(a.str(0))) },
         "normalizeSmsRecipient" to { a -> json(normalizeSmsRecipient(a.str(0))) },
         "normalizeUniqueSmsRecipients" to { a ->

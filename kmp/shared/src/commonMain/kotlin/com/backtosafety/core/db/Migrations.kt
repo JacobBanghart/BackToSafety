@@ -59,19 +59,36 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
  * schema_version table). Room would treat 0 as a brand-new database, so mark it as
  * version 1 and let MIGRATION_1_2 bring it to Room's shape. Returns the schema version now on
  * disk (1 for an RN database), or null when there's no file yet.
+ *
+ * What makes a file the RN app's is its tables, since those are what MIGRATION_1_2 copies, not
+ * the schema_version row. The RN app created schema_version and every table in one transaction,
+ * so a half-created file shouldn't exist, but if one does (schema_version and none of the data
+ * tables) there's nothing in it to keep and nothing to migrate: schema_version is dropped, which
+ * leaves an empty file that Room creates afresh instead of failing "no such table" on every
+ * launch. A file with only some of the tables is left alone, so no rows are ever dropped.
  */
 fun adoptRnDatabase(path: String): Int? {
     val connection = runCatching { BundledSQLiteDriver().open(path, SQLITE_OPEN_READWRITE) }.getOrNull() ?: return null
     return connection.use { db ->
+        fun has(table: String) = db.prepare(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = ?",
+        ).use { it.bindText(1, table); it.step(); it.getLong(0) > 0 }
+
         val userVersion = db.prepare("PRAGMA user_version").use { it.step(); it.getLong(0) }
-        val isRnDatabase = db.prepare(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'schema_version'",
-        ).use { it.step(); it.getLong(0) > 0 }
-        if (userVersion == 0L && isRnDatabase) {
-            db.execSQL("PRAGMA user_version = 1")
-            1
-        } else {
-            userVersion.toInt()
+        if (userVersion != 0L || !has("schema_version")) return@use userVersion.toInt()
+        val present = RN_TABLES.count(::has)
+        when (present) {
+            RN_TABLES.size -> {
+                db.execSQL("PRAGMA user_version = 1")
+                1
+            }
+            0 -> {
+                db.execSQL("DROP TABLE `schema_version`")
+                0
+            }
+            else -> 0
         }
     }
 }
+
+private val RN_TABLES = listOf("profile", "contacts", "destinations", "incidents", "safety_checks", "settings", "onboarding")
