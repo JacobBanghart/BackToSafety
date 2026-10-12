@@ -35,6 +35,7 @@ func setUpAnalytics() {
         }
     }
     Analytics.shared.flusher = { PostHogSDK.shared.flush() }
+    Analytics.shared.resetter = { PostHogSDK.shared.reset() }
 }
 
 private var analyticsEnabled = false

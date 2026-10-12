@@ -33,6 +33,7 @@ final class AppModel: ObservableObject {
 
     init(store: Store = DatabaseBuilder_iosKt.openStore()) {
         self.store = store
+        store.photoCleaner = { cleanPhotos(keeping: $0) }
     }
 
     func t(_ namespace: String, in language: String? = nil) -> Translate {

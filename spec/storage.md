@@ -34,6 +34,9 @@ constraints (see `db-schema.json`), and the UI options must stay inside them
     On iOS the container path changes across app updates, so readers resolve it
     by file name inside the current documents directory (`photoFileName`, `spec/vectors/photo.json`),
     falling back to the stored path. The RN app does this on read (F-21).
+    Only the file the profile points at is kept: saving a different photo, and Delete Account,
+    remove the other `profile_photo_*` files (and, on Android, the camera's and cropper's temp
+    files in the cache).
 - **`onboarding`**: steps `welcome`, `profile_name`, `profile_photo`, `profile_appearance`,
   `emergency_contact`, `complete`. The user counts as onboarded when no row has
   `completed = 0 AND skipped = 0`.

@@ -169,6 +169,7 @@ struct SettingsView: View {
             do {
                 try await model.store.clearAllData()
                 Analytics.shared.track(event: .settingsAccountDeleted, properties: [:])
+                Analytics.shared.reset() // the deleted device ID is no longer who this is
                 _ = try? await model.away.ended()
                 model.onboarded = false
                 model.path = []
