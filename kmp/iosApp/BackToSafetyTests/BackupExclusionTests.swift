@@ -9,8 +9,11 @@ final class BackupExclusionTests: XCTestCase {
         FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
 
+    /// Read afresh: a URL caches resource values, so one read before the change would answer again.
     private func isExcluded(_ url: URL) -> Bool? {
-        try? url.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup
+        var fresh = URL(fileURLWithPath: url.path)
+        fresh.removeAllCachedResourceValues()
+        return try? fresh.resourceValues(forKeys: [.isExcludedFromBackupKey]).isExcludedFromBackup
     }
 
     private func setExcluded(_ excluded: Bool, _ url: URL) throws {
