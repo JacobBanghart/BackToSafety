@@ -4,6 +4,7 @@ import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
 import com.backtosafety.core.ActiveEmergency
 import com.backtosafety.core.Profile
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DestinationEntity
@@ -13,6 +14,7 @@ import com.backtosafety.core.db.ProfileEntity
 import com.backtosafety.core.db.SafetyCheckEntity
 import com.backtosafety.core.parseActiveEmergency
 import com.backtosafety.core.serializeActiveEmergency
+import com.backtosafety.core.with
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.uuid.ExperimentalUuidApi
@@ -84,11 +86,11 @@ class Store(private val db: AppDatabase) {
     }
 
     /**
-     * A partial profile save by field name (the Profile property names), as the RN screens
-     * save: given fields are set (null clears), the rest kept. The SwiftUI app saves this way.
+     * A partial profile save, as the RN screens save: given fields are set (null clears), the
+     * rest kept. Both apps save this way.
      */
     @Throws(Exception::class)
-    suspend fun updateProfile(values: Map<String, String?>) = saveProfile { profile ->
+    suspend fun updateProfile(values: Map<ProfileField, String?>) = saveProfile { profile ->
         values.entries.fold(profile) { p, (field, value) -> p.with(field, value) }
     }
 
@@ -327,33 +329,3 @@ internal fun ProfileEntity.toProfile() = Profile(
 /** SQLite's CURRENT_TIMESTAMP: UTC, "YYYY-MM-DD HH:MM:SS". */
 internal fun sqliteNow(): String =
     kotlin.time.Clock.System.now().toString().substring(0, 19).replace('T', ' ')
-
-private fun ProfileEntity.with(field: String, value: String?): ProfileEntity = when (field) {
-    "name" -> copy(name = value ?: "")
-    "nickname" -> copy(nickname = value)
-    "dateOfBirth" -> copy(dateOfBirth = value)
-    "photoUri" -> copy(photoUri = value)
-    "height" -> copy(height = value)
-    "weight" -> copy(weight = value)
-    "hairColor" -> copy(hairColor = value)
-    "eyeColor" -> copy(eyeColor = value)
-    "identifyingMarks" -> copy(identifyingMarks = value)
-    "medicalConditions" -> copy(medicalConditions = value)
-    "medications" -> copy(medications = value)
-    "allergies" -> copy(allergies = value)
-    "cognitiveStatus" -> copy(cognitiveStatus = value)
-    "dominantHand" -> copy(dominantHand = value)
-    "mobilityLevel" -> copy(mobilityLevel = value)
-    "communicationPreference" -> copy(communicationPreference = value)
-    "escalationSigns" -> copy(escalationSigns = value)
-    "deescalationTechniques" -> copy(deescalationTechniques = value)
-    "approachGuidance" -> copy(approachGuidance = value)
-    "likes" -> copy(likes = value)
-    "dislikesTriggers" -> copy(dislikesTriggers = value)
-    "safeWord" -> copy(safeWord = value)
-    "locativeDeviceInfo" -> copy(locativeDeviceInfo = value)
-    "idBracelets" -> copy(idBracelets = value)
-    "medicAlertId" -> copy(medicAlertId = value)
-    "medicAlertHotline" -> copy(medicAlertHotline = value)
-    else -> error("unknown profile field: $field")
-}

@@ -51,6 +51,7 @@ import com.backtosafety.app.ui.udp
 import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.invoke
@@ -84,7 +85,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                 onClick = {
                     saving = true
                     scope.launch {
-                        store.saveProfile { it.copy(photoUri = photoUri) }
+                        store.updateProfile(mapOf(ProfileField.PHOTO_URI to photoUri))
                         store.completeStep("profile_photo")
                         trackStep(true, "profile_photo")
                         saving = false

@@ -26,6 +26,7 @@ import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.invoke
@@ -52,7 +53,7 @@ fun NameScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Uni
                 onClick = {
                     scope.launch {
                         runCatchingCancellable {
-                            store.saveProfile { it.copy(name = name.trim(), nickname = nickname.trim().ifEmpty { null }) }
+                            store.updateProfile(mapOf(ProfileField.FULL_NAME to name.trim(), ProfileField.NICKNAME to nickname.trim().ifEmpty { null }))
                             store.completeStep("profile_name")
                             trackStep(true, "profile_name")
                         }.onSuccess { onContinue() }.onFailure { e ->

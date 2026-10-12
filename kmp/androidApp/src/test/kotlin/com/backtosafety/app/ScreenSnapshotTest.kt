@@ -21,6 +21,7 @@ import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.core.AlertScheduler
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.EmergencyAway
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.ScheduledAlert
 import com.backtosafety.core.Translate
 import com.backtosafety.core.Translations
@@ -104,8 +105,8 @@ class ScreenSnapshotTest(private val mode: String) {
             store.seed()
             store.updateProfile(
                 mapOf(
-                    "name" to "Margaret Smith", "nickname" to "Maggie", "dateOfBirth" to "03/15/1940",
-                    "height" to "5'6\"", "medicalConditions" to "Moderate Alzheimer's", "dominantHand" to "left",
+                    ProfileField.FULL_NAME to "Margaret Smith", ProfileField.NICKNAME to "Maggie", ProfileField.DATE_OF_BIRTH to "03/15/1940",
+                    ProfileField.HEIGHT to "5'6\"", ProfileField.MEDICAL_CONDITIONS to "Moderate Alzheimer's", ProfileField.DOMINANT_HAND to "left",
                 ),
             )
             store.addContact(ContactEntity(name = "John Smith", phone = "(555) 123-4567", role = "primary_caregiver"))

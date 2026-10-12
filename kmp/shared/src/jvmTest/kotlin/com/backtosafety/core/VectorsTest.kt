@@ -1,5 +1,7 @@
 package com.backtosafety.core
 
+import com.backtosafety.core.data.toProfile
+import com.backtosafety.core.db.ProfileEntity
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -42,22 +44,9 @@ class VectorsTest {
     private fun json(value: Int?): JsonElement = if (value == null) JsonNull else JsonPrimitive(value)
     private fun json(values: List<String>): JsonElement = JsonArray(values.map(::JsonPrimitive))
 
-    private fun profile(o: JsonObject): Profile {
-        fun f(name: String) = o[name]?.str()
-        return Profile(
-            name = f("name")!!, nickname = f("nickname"), dateOfBirth = f("dateOfBirth"),
-            photoUri = f("photoUri"), height = f("height"), weight = f("weight"),
-            hairColor = f("hairColor"), eyeColor = f("eyeColor"), identifyingMarks = f("identifyingMarks"),
-            medicalConditions = f("medicalConditions"), medications = f("medications"),
-            allergies = f("allergies"), cognitiveStatus = f("cognitiveStatus"),
-            dominantHand = f("dominantHand"), mobilityLevel = f("mobilityLevel"),
-            communicationPreference = f("communicationPreference"), escalationSigns = f("escalationSigns"),
-            deescalationTechniques = f("deescalationTechniques"), approachGuidance = f("approachGuidance"),
-            likes = f("likes"), dislikesTriggers = f("dislikesTriggers"), safeWord = f("safeWord"),
-            locativeDeviceInfo = f("locativeDeviceInfo"), idBracelets = f("idBracelets"),
-            medicAlertId = f("medicAlertId"), medicAlertHotline = f("medicAlertHotline"),
-        )
-    }
+    /** The vector's profile: its keys are the [ProfileField] keys. */
+    private fun profile(o: JsonObject): Profile =
+        ProfileField.entries.fold(ProfileEntity(name = "")) { e, field -> e.with(field, o[field.key]?.str()) }.toProfile()
 
     private fun readoutInput(o: JsonObject) = ReadoutInput(
         profile = profile(o["profile"]!!.jsonObject),

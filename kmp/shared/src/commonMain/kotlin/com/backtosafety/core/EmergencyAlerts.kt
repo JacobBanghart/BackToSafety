@@ -57,14 +57,11 @@ fun emergencyEndedProperties(startedAtMs: Long, nowMs: Long, checkedCount: Int):
  * [contactsAlerted] counts contacts with notify-on-emergency on.
  */
 fun readinessProperties(profile: Profile?, contacts: Int, contactsAlerted: Int, places: Int): Map<String, Any?> {
-    val fields = profile?.let {
-        listOf(
-            it.nickname, it.dateOfBirth, it.photoUri, it.height, it.weight, it.hairColor, it.eyeColor,
-            it.identifyingMarks, it.medicalConditions, it.medications, it.allergies, it.cognitiveStatus,
-            it.dominantHand?.takeIf { hand -> hand != "unknown" }, it.mobilityLevel, it.communicationPreference,
-            it.escalationSigns, it.deescalationTechniques, it.approachGuidance, it.likes, it.dislikesTriggers,
-            it.safeWord, it.locativeDeviceInfo, it.idBracelets, it.medicAlertId, it.medicAlertHotline,
-        ).count { value -> !value.isNullOrBlank() }
+    // The name is required, so it says nothing about how much is filled in; "unknown" is the hand's unset value.
+    val fields = profile?.let { p ->
+        ProfileField.entries.count { field ->
+            field != ProfileField.FULL_NAME && !(field == ProfileField.DOMINANT_HAND && p[field] == "unknown") && !p[field].isNullOrBlank()
+        }
     } ?: 0
     return mapOf(
         "has_profile" to (profile != null),

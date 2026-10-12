@@ -1,6 +1,7 @@
 package com.backtosafety.core.data
 
 import androidx.room.useWriterConnection
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DATABASE_NAME
@@ -162,10 +163,10 @@ class StoreTest {
 
         store.saveProfile { it.copy(name = "Margaret Smith") }
         assertTrue(cleaned.isEmpty(), "a save that leaves the photo alone has nothing to clean")
-        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_1.jpg"))
-        store.updateProfile(mapOf("nickname" to "Peggy"))
-        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_2.jpg"))
-        store.updateProfile(mapOf("photoUri" to null))
+        store.updateProfile(mapOf(ProfileField.PHOTO_URI to "file:///files/profile_photo_1.jpg"))
+        store.updateProfile(mapOf(ProfileField.NICKNAME to "Peggy"))
+        store.updateProfile(mapOf(ProfileField.PHOTO_URI to "file:///files/profile_photo_2.jpg"))
+        store.updateProfile(mapOf(ProfileField.PHOTO_URI to null))
         assertEquals(
             listOf<String?>("file:///files/profile_photo_1.jpg", "file:///files/profile_photo_2.jpg", null),
             cleaned,
@@ -179,11 +180,11 @@ class StoreTest {
         val cleaned = mutableListOf<String?>()
         store.photoCleaner = { cleaned += it }
         store.seed()
-        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_1.jpg"))
+        store.updateProfile(mapOf(ProfileField.PHOTO_URI to "file:///files/profile_photo_1.jpg"))
         cleaned.clear()
         db.failOn("INSERT", "profile")
 
-        assertFailsWith<Exception> { store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_2.jpg")) }
+        assertFailsWith<Exception> { store.updateProfile(mapOf(ProfileField.PHOTO_URI to "file:///files/profile_photo_2.jpg")) }
         assertTrue(cleaned.isEmpty())
         assertEquals("file:///files/profile_photo_1.jpg", store.profile()?.photoUri)
     }
@@ -193,7 +194,7 @@ class StoreTest {
         val store = freshStore()
         store.photoCleaner = { error("disk gone") }
         store.seed()
-        store.updateProfile(mapOf("photoUri" to "file:///files/profile_photo_1.jpg"))
+        store.updateProfile(mapOf(ProfileField.PHOTO_URI to "file:///files/profile_photo_1.jpg"))
         store.clearAllData()
         assertEquals(null, store.profile())
     }
@@ -268,8 +269,8 @@ class StoreTest {
     @Test
     fun updateProfileSetsGivenFieldsAndKeepsTheRest() = runBlocking {
         val store = freshStore()
-        store.updateProfile(mapOf("name" to "Margaret Smith", "nickname" to "Maggie"))
-        store.updateProfile(mapOf("height" to "5'6\"", "nickname" to null))
+        store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margaret Smith", ProfileField.NICKNAME to "Maggie"))
+        store.updateProfile(mapOf(ProfileField.HEIGHT to "5'6\"", ProfileField.NICKNAME to null))
         val profile = store.profile()!!
         assertEquals("Margaret Smith", profile.name)
         assertEquals(null, profile.nickname)
@@ -341,7 +342,10 @@ class StoreTest {
     @Test
     fun concurrentProfileSavesKeepEachOthersFields() = runBlocking {
         val store = freshStore()
-        val fields = listOf("nickname", "height", "weight", "hairColor", "eyeColor", "likes", "allergies", "safeWord")
+        val fields = listOf(
+            ProfileField.NICKNAME, ProfileField.HEIGHT, ProfileField.WEIGHT, ProfileField.HAIR_COLOR,
+            ProfileField.EYE_COLOR, ProfileField.LIKES, ProfileField.ALLERGIES, ProfileField.SAFE_WORD,
+        )
         fields.map { field -> async(Dispatchers.Default) { store.updateProfile(mapOf(field to "set")) } }.awaitAll()
         val profile = store.profile()!!
         assertEquals(
