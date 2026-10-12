@@ -1,8 +1,6 @@
 package com.backtosafety.app.onboarding
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -31,7 +29,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +42,7 @@ import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.SkipButton
 import com.backtosafety.app.ui.TrackStepViewed
+import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
@@ -101,9 +99,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
         Text(t("photo.subtitle"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xl.udp))
 
         Box(Modifier.fillMaxWidth().padding(bottom = space.xl.udp), contentAlignment = Alignment.Center) {
-            val bitmap = remember(photoUri) {
-                photoUri?.let { BitmapFactory.decodeFile(Uri.parse(it).path)?.asImageBitmap() }
-            }
+            val bitmap = rememberPhoto(photoUri, 200)
             if (bitmap != null) {
                 Image(bitmap, null, Modifier.size(200.udp).clip(CircleShape), contentScale = ContentScale.Crop)
             } else {
