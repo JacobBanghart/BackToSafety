@@ -8,7 +8,7 @@ import kotlinx.datetime.LocalDate
 
 class ReadoutInput(
     val profile: Profile,
-    /** Last-seen time, formatted for display. */
+    /** When the search started (the emergency's start), formatted for display. Named for the old "last seen" label. */
     val lastSeenTime: String? = null,
     /** For the age line; screens pass the current date. */
     val today: LocalDate,

@@ -393,7 +393,7 @@
             "wearing": "Blue jacket, gray pants"
           }
         ],
-        "expected": "URGENT: Margaret Smith is missing. Last seen 3:15:00 PM. Wearing: Blue jacket, gray pants. Please help search or call if you see them."
+        "expected": "URGENT: Margaret Smith is missing. Search started at 3:15:00 PM. Wearing: Blue jacket, gray pants. Please help search or call if you see them."
       },
       {
         "args": [
@@ -404,7 +404,7 @@
             "wearing": ""
           }
         ],
-        "expected": "URGENT: Margaret Smith is missing. Last seen 3:15:00 PM. Please help search or call if you see them."
+        "expected": "URGENT: Margaret Smith is missing. Search started at 3:15:00 PM. Please help search or call if you see them."
       },
       {
         "args": [
@@ -414,7 +414,7 @@
             "wearing": ""
           }
         ],
-        "expected": "URGENT: Our loved one is missing. Last seen 3:15:00 PM. Please help search or call if you see them."
+        "expected": "URGENT: Our loved one is missing. Search started at 3:15:00 PM. Please help search or call if you see them."
       },
       {
         "args": [
@@ -425,7 +425,7 @@
             "wearing": "Chaqueta azul"
           }
         ],
-        "expected": "URGENTE: Margaret Smith está desaparecido/a. Visto/a por última vez: 15:15:00. Lleva puesto: Chaqueta azul. Por favor ayuda a buscar o llama si lo/la ves."
+        "expected": "URGENTE: Margaret Smith está desaparecido/a. Búsqueda iniciada: 15:15:00. Lleva puesto: Chaqueta azul. Por favor ayuda a buscar o llama si lo/la ves."
       }
     ],
     "directionHint": [

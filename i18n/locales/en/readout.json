@@ -14,7 +14,7 @@
       "collapsed": "Tap to expand",
       "missingDetails": "Add for stronger script: {{details}}.",
       "missing": {
-        "lastSeenTime": "last seen time",
+        "lastSeenTime": "search start time",
         "appearanceDetails": "appearance details",
         "importantDetails": "important details"
       }
@@ -40,7 +40,7 @@
       "handRight": "Right"
     },
     "location": {
-      "title": "Last Seen",
+      "title": "Search Started",
       "time": "Time"
     },
     "medical": {
@@ -91,7 +91,7 @@
     "likes": "Likes/Soothers: {{value}}",
     "approach": "How to Approach: {{value}}",
     "safeWord": "Family Safe Word: {{value}}",
-    "lastSeen": "Last seen: {{time}}",
+    "lastSeen": "Search started: {{time}}",
     "coordinates": "Coordinates: {{coords}}",
     "locator": "Personal Locator: {{value}}",
     "idBracelet": "ID Bracelet: {{value}}",
@@ -108,8 +108,8 @@
     "opening": "I'm reporting a missing vulnerable adult who may be disoriented or at risk.",
     "name": "Name: {{name}}.",
     "age": "Age approximately {{age}}.",
-    "lastSeenTime": "Last seen: {{time}}.",
-    "lastSeenUnknown": "Last seen: [fill in time].",
+    "lastSeenTime": "Search started: {{time}}.",
+    "lastSeenUnknown": "Search started: [fill in time].",
     "locationUnknown": "Last known location: [fill in location].",
     "appearance": "Appearance: {{desc}}.",
     "additionalContext": "Additional context: {{desc}}.",

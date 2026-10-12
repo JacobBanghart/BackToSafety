@@ -103,7 +103,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
 
     LaunchedEffect(Unit) {
         contacts = store.emergencyContacts()
-        // Last seen is when the active emergency started (context/ProfileContext.tsx).
+        // "Search started" (lastSeen*) is when the active emergency started (context/ProfileContext.tsx).
         lastSeenMs = store.activeEmergency()?.let { Instant.parse(it.startedAt).toEpochMilliseconds() }
         profile = store.profile()
     }

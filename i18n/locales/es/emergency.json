@@ -81,7 +81,7 @@
     "title": "Cuando la encuentres",
     "body": "• Acércate de frente\n• Habla despacio, con frases cortas\n• Dale tiempo para responder\n• Ofrécete a caminar a su lado\n• No discutas ni la corrijas"
   },
-  "smsMessage": "URGENTE: {{name}} está desaparecido/a. Visto/a por última vez: {{time}}. {{wearing}}Por favor ayuda a buscar o llama si lo/la ves.",
+  "smsMessage": "URGENTE: {{name}} está desaparecido/a. Búsqueda iniciada: {{time}}. {{wearing}}Por favor ayuda a buscar o llama si lo/la ves.",
   "smsWearing": "Lleva puesto: {{wearing}}. ",
   "modal": {
     "found": {

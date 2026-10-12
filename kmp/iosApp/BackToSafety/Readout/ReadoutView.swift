@@ -39,7 +39,7 @@ struct ReadoutView: View {
         .toolbar(.hidden, for: .navigationBar)
         .task {
             contacts = (try? await model.store.emergencyContacts()) ?? []
-            // Last seen is when the active emergency started (context/ProfileContext.tsx).
+            // "Search started" (lastSeen*) is when the active emergency started (context/ProfileContext.tsx).
             lastSeenMs = (try? await model.store.activeEmergency()).flatMap { parseISO($0.startedAt)?.epochMs }
             profile = try? await model.store.profile()
         }
