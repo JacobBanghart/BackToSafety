@@ -97,9 +97,7 @@ data class ActiveEmergency(
     val checkedSteps: List<String>,
     /** The incidents row for this emergency; absent for emergencies started before it existed. */
     val incidentId: Long? = null,
-) {
-    val isActive: Boolean get() = true
-}
+)
 
 /** Parses the stored record. Null when nothing is active or the value can't be read. */
 fun parseActiveEmergency(raw: String?): ActiveEmergency? {

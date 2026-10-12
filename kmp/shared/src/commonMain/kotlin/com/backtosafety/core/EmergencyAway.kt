@@ -24,7 +24,8 @@ interface AlertScheduler {
  *
  * Both apps drive this from the screen's lifecycle and do nothing but deliver what it decides,
  * so they can't drift apart. The time away starts at the last tick, not at leaving: an alert
- * due between that tick and leaving is caught up instead of lost.
+ * due between that tick and leaving is caught up instead of lost. Once the countdown has
+ * expired the ticks stop mattering, and it starts at leaving.
  */
 class EmergencyAway(private val store: Store, private val scheduler: AlertScheduler) {
     private val lock = Mutex()
@@ -50,7 +51,11 @@ class EmergencyAway(private val store: Store, private val scheduler: AlertSchedu
         lock.withLock {
             val started = store.activeEmergency()?.startedAtMs() ?: return
             if (store.setting(Store.EMERGENCY_AWAY_FROM).isNullOrEmpty()) {
-                store.putSetting(Store.EMERGENCY_AWAY_FROM, (lastTickMs ?: nowMs).toString())
+                // The apps stop ticking at expiry, so a tick from then or later says nothing about
+                // when the screen was left: the expiry alert was already shown in-app, and nothing
+                // is left to catch up.
+                val tickBeforeExpiry = lastTickMs?.takeIf { it < alertDueAtMs(CountdownAlert.EXPIRED, started) }
+                store.putSetting(Store.EMERGENCY_AWAY_FROM, (tickBeforeExpiry ?: nowMs).toString())
             }
             scheduler.schedule(alertsToSchedule(started, nowMs))
         }
