@@ -7,9 +7,8 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
 /**
- * spec/design-tokens.json (pinned to the RN app's constants/ by spec/design-tokens.test.ts)
- * -> DesignTokens.kt, so the Kotlin UIs use exactly the RN app's colors, spacing, radii
- * and type scale.
+ * spec/design-tokens.json -> DesignTokens.kt, so both UIs use exactly the spec's colors,
+ * spacing, radii and type scale.
  */
 abstract class GenerateDesignTokens : DefaultTask() {
     @get:InputFile abstract val spec: RegularFileProperty
