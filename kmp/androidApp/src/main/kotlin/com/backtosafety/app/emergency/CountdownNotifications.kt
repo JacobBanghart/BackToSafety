@@ -43,7 +43,7 @@ class CountdownNotifications(private val context: Context, private val emergency
                 .putExtra(EXTRA_ALERT, alert.key)
                 .putExtra(EXTRA_TITLE, t("alerts.${alert.key}.title", number))
                 .putExtra(EXTRA_BODY, t("alerts.${alert.key}.body", number))
-                .putExtra(EXTRA_CHANNEL, t("alerts.channel"))
+                .putExtra(EXTRA_CHANNEL, t("alerts.${alert.key}.channel"))
             val pending = PendingIntent.getBroadcast(context, alert.ordinal, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
             // On the app's clock, which test builds can move, as a delay from now: an elapsed-time
             // alarm, which changing the phone's time doesn't move either.
@@ -76,8 +76,19 @@ class CountdownNotifications(private val context: Context, private val emergency
 
         /** MainActivity opens the emergency screen for an intent with this extra (a tapped alert). */
         const val EXTRA_OPEN_EMERGENCY = "open_emergency"
-        const val CHANNEL_ID = "emergency_countdown"
         const val NOTIFICATION_ID_BASE = 100
+
+        /**
+         * One channel per alert kind: from Android 8 the channel, not the notification, decides
+         * how a notification vibrates, so each alert's pattern is set on its own channel.
+         */
+        fun channelId(alert: CountdownAlert) = "emergency_countdown_${alert.key}"
+
+        /** The alert's vibration: a short double tap for the warning, long pulses once time is up. */
+        fun vibrationPattern(alert: CountdownAlert): LongArray = when (alert) {
+            CountdownAlert.WARNING -> longArrayOf(0, 30, 80, 30)
+            CountdownAlert.EXPIRED -> longArrayOf(0, 500, 200, 500)
+        }
 
         /** Whether the app may post notifications (asked for since Android 13). */
         fun enabled(context: Context): Boolean = NotificationManagerCompat.from(context).areNotificationsEnabled()
@@ -96,24 +107,25 @@ class CountdownAlertReceiver : BroadcastReceiver() {
         val manager = context.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) {
             val channel = NotificationChannel(
-                CountdownNotifications.CHANNEL_ID,
+                CountdownNotifications.channelId(alert),
                 intent.getStringExtra(CountdownNotifications.EXTRA_CHANNEL) ?: "Emergency countdown",
                 NotificationManager.IMPORTANCE_HIGH,
-            ).apply { enableVibration(true) }
+            ).apply { vibrationPattern = CountdownNotifications.vibrationPattern(alert) }
             manager.createNotificationChannel(channel)
         }
         val open = Intent(context, MainActivity::class.java)
             .putExtra(CountdownNotifications.EXTRA_OPEN_EMERGENCY, true)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         val content = PendingIntent.getActivity(context, alert.ordinal, open, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val notification = NotificationCompat.Builder(context, CountdownNotifications.CHANNEL_ID)
+        val notification = NotificationCompat.Builder(context, CountdownNotifications.channelId(alert))
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(intent.getStringExtra(CountdownNotifications.EXTRA_TITLE))
             .setContentText(intent.getStringExtra(CountdownNotifications.EXTRA_BODY))
             .setStyle(NotificationCompat.BigTextStyle().bigText(intent.getStringExtra(CountdownNotifications.EXTRA_BODY)))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
-            .setVibrate(if (alert == CountdownAlert.EXPIRED) longArrayOf(0, 500, 200, 500) else longArrayOf(0, 30, 80, 30))
+            // Before Android 8 there are no channels: the notification sets the vibration itself.
+            .setVibrate(CountdownNotifications.vibrationPattern(alert))
             .setContentIntent(content)
             .setAutoCancel(true)
             .build()

@@ -13,6 +13,7 @@ import com.backtosafety.core.AppClock
 import com.backtosafety.core.CountdownAlert
 import com.backtosafety.core.ScheduledAlert
 import com.backtosafety.core.Translations
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -45,7 +46,8 @@ class CountdownNotificationsTest {
     private var language = "en"
     private val notifications = CountdownNotifications(context, { translations.translator(language, "emergency") }, { "911" })
     private val alarms = shadowOf(context.getSystemService(AlarmManager::class.java))
-    private val notificationManager = shadowOf(context.getSystemService(NotificationManager::class.java))
+    private val manager = context.getSystemService(NotificationManager::class.java)
+    private val notificationManager = shadowOf(manager)
 
     /** The app clock at 2026-10-06 16:00 UTC; the alerts for an emergency started then. */
     private val now = 1_791_302_400_000L
@@ -112,10 +114,37 @@ class CountdownNotificationsTest {
         val posted = notificationManager.allNotifications.single()
         assertEquals("Hora de llamar al 911", posted.extras.getString("android.title"))
         assertTrue(posted.extras.getString("android.text")!!.startsWith("Terminaron los 15 minutos"))
-        assertEquals(CountdownNotifications.CHANNEL_ID, posted.channelId)
+        assertEquals(CountdownNotifications.channelId(CountdownAlert.EXPIRED), posted.channelId)
         val open = shadowOf(posted.contentIntent).savedIntent
         assertEquals(MainActivity::class.java.name, open.component?.className)
         assertTrue(open.getBooleanExtra(CountdownNotifications.EXTRA_OPEN_EMERGENCY, false))
+    }
+
+    @Test
+    fun eachAlertHasItsOwnChannelWithItsVibration() {
+        shadowOf(context).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        notifications.schedule(listOf(warning, expired))
+        scheduled().forEach { fire(it) }
+        // From Android 8 the channel decides the vibration, so the patterns live on the channels.
+        val channels = CountdownAlert.entries.associateWith { manager.getNotificationChannel(CountdownNotifications.channelId(it))!! }
+        assertEquals(2, channels.values.map { it.id }.toSet().size)
+        assertArrayEquals(longArrayOf(0, 30, 80, 30), channels.getValue(CountdownAlert.WARNING).vibrationPattern)
+        assertArrayEquals(longArrayOf(0, 500, 200, 500), channels.getValue(CountdownAlert.EXPIRED).vibrationPattern)
+        assertTrue(channels.values.all { it.shouldVibrate() })
+        assertEquals(
+            channels.values.map { it.id }.toSet(),
+            notificationManager.allNotifications.map { it.channelId }.toSet(),
+        )
+    }
+
+    @Test
+    fun channelNamesAreTranslated() {
+        shadowOf(context).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        language = "es"
+        notifications.schedule(listOf(warning, expired))
+        scheduled().forEach { fire(it) }
+        assertEquals("Aviso de la cuenta regresiva", manager.getNotificationChannel(CountdownNotifications.channelId(CountdownAlert.WARNING))!!.name)
+        assertEquals("Fin de la cuenta regresiva", manager.getNotificationChannel(CountdownNotifications.channelId(CountdownAlert.EXPIRED))!!.name)
     }
 
     @Test
