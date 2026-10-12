@@ -32,7 +32,10 @@ struct ImagePicker: UIViewControllerRepresentable {
             let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
             if let data = image?.fitting(maxSide: maxPhotoSide).jpegData(compressionQuality: 0.8) {
                 let file = documentsDirectory.appendingPathComponent("\(photoFilePrefix)\(Int64(Date().timeIntervalSince1970 * 1000)).jpg")
-                if (try? data.write(to: file)) != nil { parent.onPhoto(file.absoluteString) }
+                if (try? data.write(to: file)) != nil {
+                    excludeFromBackup(file)
+                    parent.onPhoto(file.absoluteString)
+                }
             }
             parent.dismiss()
         }
@@ -101,6 +104,24 @@ private func downsampledImage(atPath path: String, maxPixel: Int) -> UIImage? {
     let image = UIImage(cgImage: thumbnail)
     photoCache.setObject(image, forKey: key)
     return image
+}
+
+/// Keeps `url` out of iCloud and computer backups, as Android's backup rules leave the photos
+/// out. Best effort.
+private func excludeFromBackup(_ url: URL) {
+    var url = url
+    var values = URLResourceValues()
+    values.isExcludedFromBackup = true
+    try? url.setResourceValues(values)
+}
+
+/// At launch: excludes the profile photos already in Documents (the RN app's were backed up),
+/// so they leave the backups on upgrade. Best effort.
+func excludePhotosFromBackup() {
+    let names = (try? FileManager.default.contentsOfDirectory(atPath: documentsDirectory.path)) ?? []
+    for name in names where name.hasPrefix(photoFilePrefix) {
+        excludeFromBackup(documentsDirectory.appendingPathComponent(name))
+    }
 }
 
 /// Store.photoCleaner: deletes every saved profile photo from Documents except the one at

@@ -59,6 +59,16 @@ final class CountdownNotificationsTests: XCTestCase {
         XCTAssertEqual(center.pending.map(\.content.title), ["Under 5 Minutes Left", "Time to Call 911"])
     }
 
+    /// Time-sensitive, so Focus and Sleep don't hold the alerts back.
+    func testBothAlertsAreTimeSensitive() {
+        notifications.schedule(alerts: [
+            ScheduledAlert(alert: .warning, fireAtMs: start + 601_000),
+            ScheduledAlert(alert: .expired, fireAtMs: start + 900_000),
+        ])
+        XCTAssertEqual(center.pending.count, 2)
+        XCTAssertEqual(center.pending.map(\.content.interruptionLevel), [.timeSensitive, .timeSensitive])
+    }
+
     func testTheTextIsInTheAppsLanguage() {
         language = "es"
         notifications.schedule(alerts: [ScheduledAlert(alert: .expired, fireAtMs: start + 900_000)])

@@ -3,7 +3,8 @@ import UserNotifications
 
 /// The countdown alerts as local notifications while the emergency screen isn't showing
 /// (shared EmergencyAway decides when). The text is translated when scheduled, in the app's
-/// language then. Tapping one opens the emergency ([NotificationDelegate]).
+/// language then. They are time-sensitive, so Focus and Sleep don't silence them (the
+/// entitlement is in project.yml). Tapping one opens the emergency ([NotificationDelegate]).
 final class CountdownNotifications: NSObject, AlertScheduler {
     static let identifiers = [CountdownAlert.warning, CountdownAlert.expired].map { "countdown-\($0.key)" }
 
@@ -31,6 +32,7 @@ final class CountdownNotifications: NSObject, AlertScheduler {
             content.title = t("alerts.\(key).title", number)
             content.body = t("alerts.\(key).body", number)
             content.sound = .default
+            content.interruptionLevel = .timeSensitive
             // On the app's clock, which test builds can move, as a delay from now.
             let seconds = max(1, Double(scheduled.fireAtMs - AppClock.shared.nowMs()) / 1000)
             let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)

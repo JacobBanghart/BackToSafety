@@ -81,7 +81,7 @@
     "title": "When you find them",
     "body": "• Approach from the front\n• Speak slowly, with short sentences\n• Give them time to respond\n• Offer to walk with them\n• Don't argue or correct"
   },
-  "smsMessage": "URGENT: {{name}} is missing. Last seen {{time}}. {{wearing}}Please help search or call if you see them.",
+  "smsMessage": "URGENT: {{name}} is missing. Search started at {{time}}. {{wearing}}Please help search or call if you see them.",
   "smsWearing": "Wearing: {{wearing}}. ",
   "modal": {
     "found": {
