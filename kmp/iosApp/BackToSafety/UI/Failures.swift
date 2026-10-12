@@ -1,12 +1,17 @@
 import Shared
 import UIKit
 
-/// Opens the phone app at `number`. A device that can't place calls (an iPad without an
+/// Opens the phone app at `number`, a stored phone number: `dialString` reduces it (an
+/// extension becomes a pause and its digits) and URLComponents percent-encodes the result, so
+/// a `#` doesn't start the URL's fragment. A device that can't place calls (an iPad without an
 /// iPhone to relay through) says so, with the number to call from a phone, and reports
 /// dial_failed (as the Android app does).
 @MainActor
 func dial(_ number: String, target: DialTarget, screen: String, tCommon: Translate) {
-    guard let url = URL(string: "tel:\(number)") else { return }
+    var components = URLComponents()
+    components.scheme = "tel"
+    components.path = PhoneKt.dialString(phone: number)
+    guard let url = components.url else { return }
     UIApplication.shared.open(url) { opened in
         guard !opened else { return }
         Task { @MainActor in

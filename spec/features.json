@@ -499,7 +499,9 @@
       "id": "contacts.call",
       "description": "Call a contact.",
       "coverage": {
-        "vectors": [],
+        "vectors": [
+          "phone.json#dialString"
+        ],
         "flows": [
           "maestro/flows/alerts-and-calls.yaml"
         ]

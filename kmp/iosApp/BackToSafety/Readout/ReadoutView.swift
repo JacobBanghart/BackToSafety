@@ -262,7 +262,7 @@ struct ReadoutView: View {
                 if let hotline {
                     Button {
                         Analytics.shared.track(event: .readoutMedicalertHotlineCalled, properties: [:])
-                        dial(PhoneKt.stripPhoneFormatting(phone: hotline), .medicalert)
+                        dial(hotline, .medicalert)
                     } label: { infoRow(t("sections.devices.medicAlertHotline"), hotline).contentShape(Rectangle()) }
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("readout-medicalert-hotline")

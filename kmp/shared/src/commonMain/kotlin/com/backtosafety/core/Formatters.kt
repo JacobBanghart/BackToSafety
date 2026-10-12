@@ -3,7 +3,8 @@ package com.backtosafety.core
 // As-you-type formatters for profile fields. Port of utils/formatters.ts;
 // held to spec/vectors/formatters.json.
 
-private val NON_DIGIT = Regex("""\D""")
+/** Everything but 0-9; shared with Phone.kt. */
+internal val NON_DIGIT = Regex("""\D""")
 private val NON_ALNUM = Regex("""[^a-zA-Z0-9]""")
 private val HEIGHT_WITHOUT_CLOSING_QUOTE = Regex("""^\d'\d{1,2}$""")
 

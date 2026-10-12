@@ -1,17 +1,21 @@
 package com.backtosafety.core
 
-// Phone display formatting, as-you-type formatting and SMS recipient normalization.
-// Port of utils/phone.ts; held to spec/vectors/phone.json.
+// Phone display formatting, as-you-type formatting, dialing and SMS recipient normalization.
+// Port of utils/phone.ts (dialString is new); held to spec/vectors/phone.json.
 
-private val NON_DIGIT = Regex("""\D""")
-private val EXTENSION = Regex("""\s*(?:ext\.?|x|#)\s*(\d+)\s*$""", RegexOption.IGNORE_CASE)
+private val EXTENSION = Regex("""\s*(?:extension|ext\.?|x|#)\s*(\d+)\s*$""", RegexOption.IGNORE_CASE)
+
+/** [phone] split into the number and its trailing extension ("ext. 9", "x9", "#9"), if it has one. */
+private fun splitExtension(phone: String): Pair<String, String?> {
+    val ext = EXTENSION.find(phone)
+    if (ext == null || ext.range.first == 0) return phone to null
+    return phone.substring(0, ext.range.first) to ext.groupValues[1]
+}
 
 fun formatPhoneNumber(phone: String): String {
     // Keep an extension readable instead of folding it into the number (F-4).
-    val ext = EXTENSION.find(phone)
-    if (ext != null && ext.range.first > 0) {
-        return "${formatPhoneNumber(phone.substring(0, ext.range.first))} ext. ${ext.groupValues[1]}"
-    }
+    val (number, extension) = splitExtension(phone)
+    if (extension != null) return "${formatPhoneNumber(number)} ext. $extension"
 
     val digits = phone.replace(NON_DIGIT, "")
 
@@ -64,8 +68,31 @@ fun formatPhoneInput(value: String): String {
 
 fun stripPhoneFormatting(phone: String): String = phone.replace(NON_DIGIT, "")
 
+/**
+ * What to hand the system dialer for a stored [phone]: its digits, a leading `+`, and `*` / `#`
+ * only where the number starts with one (a service code such as `*67`; anywhere else they're
+ * noise). An extension ("ext. 12", "extension 12", "x12", "#12") becomes a `,` pause then its
+ * digits, so `555-123-4567 #12` dials `5551234567,12`. Both the Android dialer and iOS's honor
+ * `,` (a two-second pause) in a `tel:` number and tone out the digits after it once the call
+ * connects; `;` (wait for the user to confirm) isn't uniformly supported, and a raw `#` would
+ * start the URI's fragment. Callers still have to percent-encode the result into the `tel:` URI
+ * (`Uri.fromParts` on Android, URLComponents on iOS), since it can hold `#`, `*` and `+`.
+ * Returns "" for a number with no digits.
+ */
+fun dialString(phone: String): String {
+    val (number, extension) = splitExtension(phone)
+    val trimmed = number.trim()
+    val serviceCode = trimmed.startsWith("*") || trimmed.startsWith("#")
+    val dialable = trimmed.filterIndexed { i, c ->
+        c in '0'..'9' || (c == '+' && i == 0) || (serviceCode && (c == '*' || c == '#'))
+    }
+    if (dialable.none { it in '0'..'9' }) return ""
+    return if (extension != null) "$dialable,$extension" else dialable
+}
+
 fun normalizeSmsRecipient(phone: String): String {
-    val trimmed = phone.trim()
+    // A text goes to the number, not the extension (which would otherwise fold into it).
+    val trimmed = splitExtension(phone).first.trim()
     if (trimmed.isEmpty()) return ""
     val digits = trimmed.replace(NON_DIGIT, "")
     if (digits.isEmpty()) return ""
