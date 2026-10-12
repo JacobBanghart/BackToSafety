@@ -1,6 +1,11 @@
 {
   "screenTitle": "Búsqueda de emergencia",
   "loading": "Cargando estado de la emergencia...",
+  "loadFailed": {
+    "title": "No se pudo cargar la emergencia",
+    "message": "No se pudo leer la emergencia guardada, así que no se inició una nueva. Inténtalo de nuevo.",
+    "retry": "Reintentar"
+  },
   "timer": {
     "labelActive": "Tiempo restante",
     "labelExpired": "HORA DE LLAMAR AL {{emergencyNumber}}",
@@ -91,6 +96,7 @@
     "leave": {
       "title": "¿Salir de la búsqueda de emergencia?",
       "message": "El temporizador seguirá corriendo en segundo plano. Puedes volver para continuar.",
+      "notificationsOff": "Las notificaciones están desactivadas, así que no recibirás el aviso de los 5 minutos ni la alerta de fin del tiempo mientras estés fuera.",
       "stay": "Quedarme",
       "leave": "Salir",
       "end": "Terminar emergencia"

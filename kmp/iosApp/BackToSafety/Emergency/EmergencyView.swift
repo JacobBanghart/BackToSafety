@@ -2,6 +2,7 @@ import AudioToolbox
 import MessageUI
 import Shared
 import SwiftUI
+import UserNotifications
 
 private enum EmergencyModal: Identifiable {
     case found, leave, noContacts, smsError
@@ -33,6 +34,10 @@ struct EmergencyView: View {
     @State private var destinations: [DestinationEntity] = []
     @State private var modal: EmergencyModal?
     @State private var sms: SmsDraft?
+    /// Reading the saved emergency failed (not: there is none), so none was started or shown.
+    @State private var loadFailed = false
+    /// Notifications are turned off for the app: the Leave modal says its alerts won't come.
+    @State private var notificationsDenied = false
     @State private var visible = false
     @Environment(\.scenePhase) private var scenePhase
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -45,6 +50,7 @@ struct EmergencyView: View {
             .background(colors.background.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .task { await load() }
+            .task(id: modal) { if modal == .leave { await checkNotifications() } }
             .onReceive(tick) { _ in tickCountdown() }
             // Showing and not showing (another screen on top, or the app in the background):
             // off the screen the countdown alerts are notifications; back on it, one that came
@@ -65,15 +71,12 @@ struct EmergencyView: View {
             .onChange(of: checked) { persist() }
             .sheet(item: $sms) { draft in
                 MessageComposer(draft: draft) { result in
-                    if result == .sent { Analytics.shared.track(event: .emergencyContactsAlerted, properties: ["recipient_count": draft.recipients.count]) }
                     let outcome: SmsResult = switch result {
                     case .sent: .sent
                     case .cancelled: .cancelled
                     default: .failed
                     }
-                    Analytics.shared.track(event: .emergencySmsResult, properties: EmergencyAlertsKt.smsResultProperties(
-                        result: outcome, recipients: Int32(draft.recipients.count)
-                    ))
+                    EmergencyAlertsKt.trackSmsResult(result: outcome, recipients: Int32(draft.recipients.count))
                 }
                 .ignoresSafeArea()
             }
@@ -81,8 +84,12 @@ struct EmergencyView: View {
 
     @ViewBuilder private var content: some View {
         if state == nil {
-            RNText(t("loading"), TextSpec(size: 16, lineHeight: 24), color: colors.text)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if loadFailed {
+                loadFailedView
+            } else {
+                RNText(t("loading"), TextSpec(size: 16, lineHeight: 24), color: colors.text)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
         } else {
             VStack(spacing: 0) {
                 ScreenHeader(title: t("screenTitle"), testID: "emergency", onBack: { modal = .leave },
@@ -118,9 +125,21 @@ struct EmergencyView: View {
     /// Load or start the emergency (spec/storage.md: active_emergency, incidents).
     private func load() async {
         steps = EmergencyKt.buildInitialSteps(t: t.lookup, emergencyNumber: emergencyNumber)
+        loadFailed = false
+        // The profile and places only add to the screen: the emergency goes on without them.
         profile = try? await model.store.profile()
         destinations = (try? await model.store.destinations()) ?? []
-        if let saved = try? await model.store.activeEmergency() {
+        // A failed read is not "no emergency": starting one would replace the running emergency
+        // (its start, its incident, its countdown). Say so and offer to try again instead.
+        let saved: ActiveEmergency?
+        do {
+            saved = try await model.store.activeEmergency()
+        } catch {
+            reportSaveFailed(screen: "emergency", action: "load", error: error)
+            loadFailed = true
+            return
+        }
+        if let saved {
             wearing = saved.wearing
             checked = Set(saved.checkedSteps)
             state = saved
@@ -163,6 +182,7 @@ struct EmergencyView: View {
     /// Back on the screen: the countdown picks up from now (what came due while away is the
     /// catch-up's, not the tick's), and an alert that came due shows.
     private func shown() {
+        Task { await checkNotifications() }
         if let started = state.flatMap({ parseISO($0.startedAt) }) {
             secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started.epochMs, nowMs: AppClock.shared.nowMs())
         }
@@ -171,6 +191,10 @@ struct EmergencyView: View {
             buzz(alert)
             modal = alert == .warning ? .catchUpWarning : .catchUpExpired
         }
+    }
+
+    private func checkNotifications() async {
+        notificationsDenied = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus == .denied
     }
 
     private func away() {
@@ -229,13 +253,17 @@ struct EmergencyView: View {
 
     private func call911() {
         UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-        Analytics.shared.track(event: .emergency911Called, properties: [
-            "seconds_elapsed": EmergencyKt.SEARCH_WINDOW_SECONDS - secondsLeft, "checked_count": checked.count,
-        ])
-        // Calling always marks the step done; a second call must not un-check it (F-17).
-        if !checked.contains("call_911") { toggle("call_911") }
-        dial(emergencyNumber, target: .emergency, screen: "emergency", tCommon: tCommon)
-        record(outcome: "911_called")
+        // Only a call that was placed counts: the phone app opening (the system asks first, and a
+        // device that can't call shows the number instead) is what records it, not the tap.
+        dial(emergencyNumber, target: .emergency, screen: "emergency", tCommon: tCommon) {
+            let started = state.flatMap { parseISO($0.startedAt) }?.epochMs ?? AppClock.shared.nowMs()
+            Analytics.shared.track(event: .emergency911Called, properties: EmergencyAlertsKt.emergency911CalledProperties(
+                startedAtMs: started, nowMs: AppClock.shared.nowMs(), checkedCount: Int32(checked.count)
+            ))
+            // Calling always marks the step done; a second call must not un-check it (F-17).
+            if !checked.contains("call_911") { toggle("call_911") }
+            record(outcome: "911_called")
+        }
     }
 
     private func alertContacts() {
@@ -256,6 +284,30 @@ struct EmergencyView: View {
     }
 
     // MARK: - Pieces
+
+    /// Reading the saved emergency failed: said so, with Retry, and a way out.
+    private var loadFailedView: some View {
+        VStack(spacing: 0) {
+            ScreenHeader(title: t("screenTitle"), testID: "emergency", onBack: { leave() })
+            VStack(spacing: Space.md) {
+                RNText(t("loadFailed.title"), Typography.title.spec, color: colors.text, align: .center)
+                RNText(t("loadFailed.message"), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
+                Button { Task { await load() } } label: {
+                    RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary))
+                        .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
+                        .padding(.vertical, Space.md).padding(.horizontal, Space.lg)
+                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primary))
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.pressable)
+                .accessibilityIdentifier("emergency-load-retry")
+            }
+            .padding(Space.xl)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .accessibilityElement(children: .contain)
+            .accessibilityIdentifier("emergency-load-failed")
+        }
+    }
 
     private var timerCard: some View {
         let expired = secondsLeft == 0
@@ -488,6 +540,22 @@ struct EmergencyView: View {
                 case .leave:
                     title("modal.leave.title")
                     message("modal.leave.message")
+                    if notificationsDenied {
+                        // The message promises the timer goes on; with notifications off its alerts won't come.
+                        RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: Color(argb: Semantic.error), align: .center)
+                            .accessibilityIdentifier("emergency-modal-leave-notifications-off")
+                        Button {
+                            if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
+                        } label: {
+                            RNText(tCommon("openSettings"), Typography.bodyBold.spec, color: colors.tint)
+                                .underline()
+                                .frame(minHeight: 48 - 2 * Space.md)
+                                .padding(.vertical, Space.md)
+                                .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.pressable)
+                        .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
+                    }
                     HStack(spacing: Space.md) {
                         button(t("modal.leave.stay"), "emergency-modal-leave-stay", .clear, colors.text, outline: true) { modal = nil }
                         button(t("modal.leave.leave"), "emergency-modal-leave-leave", colors.primary, white, rowItem: true) {

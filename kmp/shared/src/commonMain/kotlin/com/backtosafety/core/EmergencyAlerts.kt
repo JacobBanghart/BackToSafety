@@ -53,6 +53,14 @@ fun emergencyEndedProperties(startedAtMs: Long, nowMs: Long, checkedCount: Int):
     mapOf("checked_count" to checkedCount, "duration_s" to ((nowMs - startedAtMs) / 1000L).coerceAtLeast(0))
 
 /**
+ * emergency_911_called's properties: the dialer opened [nowMs], [startedAtMs] into the emergency.
+ * `seconds_elapsed` is the real time since the start, so it goes past the 15-minute window
+ * (the countdown stops at zero; this doesn't).
+ */
+fun emergency911CalledProperties(startedAtMs: Long, nowMs: Long, checkedCount: Int): Map<String, Any?> =
+    mapOf("seconds_elapsed" to ((nowMs - startedAtMs) / 1000L).coerceAtLeast(0), "checked_count" to checkedCount)
+
+/**
  * How ready the info sheet is, sent with app_ready: what's filled in before anyone needs it.
  * [contactsAlerted] counts contacts with notify-on-emergency on.
  */
@@ -87,9 +95,26 @@ enum class SmsResult(val key: String) {
     HANDED_OFF("handed_off"),
 }
 
+/**
+ * Whether the alert text may have reached the contacts: what emergency_contacts_alerted means.
+ * True when the composer sent it (iOS) or the messaging app has it (Android, which doesn't say
+ * more); false when the user cancelled, it failed, or the device can't text. Both apps decide
+ * by this, so the event counts the same on each.
+ */
+fun contactsAlerted(result: SmsResult): Boolean = result == SmsResult.SENT || result == SmsResult.HANDED_OFF
+
 /** emergency_sms_result's properties. */
 fun smsResultProperties(result: SmsResult, recipients: Int): Map<String, Any?> =
     mapOf("result" to result.key, "recipient_count" to recipients)
+
+/**
+ * Reports what became of the alert text: emergency_contacts_alerted if it [contactsAlerted],
+ * then emergency_sms_result with the result itself (which says more than the first does).
+ */
+fun trackSmsResult(result: SmsResult, recipients: Int) {
+    if (contactsAlerted(result)) Analytics.track(AnalyticsEvent.EMERGENCY_CONTACTS_ALERTED, mapOf("recipient_count" to recipients))
+    Analytics.track(AnalyticsEvent.EMERGENCY_SMS_RESULT, smsResultProperties(result, recipients))
+}
 
 /** Which number a dial was for (dial_failed). */
 enum class DialTarget(val key: String) { EMERGENCY("emergency"), CONTACT("contact"), MEDICALERT("medicalert") }

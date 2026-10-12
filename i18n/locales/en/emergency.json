@@ -1,6 +1,11 @@
 {
   "screenTitle": "Emergency Search",
   "loading": "Loading emergency state...",
+  "loadFailed": {
+    "title": "Couldn't Load the Emergency",
+    "message": "The saved emergency couldn't be read, so a new one wasn't started. Try again.",
+    "retry": "Retry"
+  },
   "timer": {
     "labelActive": "Time remaining",
     "labelExpired": "TIME TO CALL {{emergencyNumber}}",
@@ -91,6 +96,7 @@
     "leave": {
       "title": "Leave Emergency Search?",
       "message": "The timer will continue in the background. You can return to resume.",
+      "notificationsOff": "Notifications are off, so the 5-minute warning and the time-up alert won't reach you while you're away.",
       "stay": "Stay",
       "leave": "Leave",
       "end": "End Emergency"

@@ -71,7 +71,10 @@ final class AppModel: ObservableObject {
     /// A tapped countdown alert: opens the emergency, if it's still running.
     func openEmergency() {
         Task {
-            guard (try? await store.activeEmergency()) != nil, path.last != .emergency else { return }
+            // A failed read still opens the screen: it says so, with Retry, which is better than a tap that does nothing.
+            let running: Bool
+            do { running = try await store.activeEmergency() != nil } catch { running = true }
+            guard running, path.last != .emergency else { return }
             path = [.emergency]
         }
     }

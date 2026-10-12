@@ -201,7 +201,9 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
         // emergency when revealed after this one ends.
         LaunchedEffect(openEmergencyRequests.value) {
             if (openEmergencyRequests.value == 0 || !start) return@LaunchedEffect
-            if (runCatchingCancellable { store.activeEmergency() }.getOrNull() == null) return@LaunchedEffect
+            // A failed read still opens the screen: it says so, with Retry, which is better than a tap that does nothing.
+            val running = runCatchingCancellable { store.activeEmergency() }
+            if (running.isSuccess && running.getOrNull() == null) return@LaunchedEffect
             if (!nav.popBackStack("emergency", inclusive = false)) nav.navigate("emergency") { launchSingleTop = true }
         }
         NavHost(

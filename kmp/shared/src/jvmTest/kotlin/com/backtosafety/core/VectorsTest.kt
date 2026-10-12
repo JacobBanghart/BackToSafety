@@ -138,6 +138,8 @@ class VectorsTest {
         },
         "emergencyResumedProperties" to { a -> json(emergencyResumedProperties(ms(a.str(0)), ms(a.str(1)), a[2].str()?.let(::alert))) },
         "emergencyEndedProperties" to { a -> json(emergencyEndedProperties(ms(a.str(0)), ms(a.str(1)), a[2].jsonPrimitive.int)) },
+        "emergency911CalledProperties" to { a -> json(emergency911CalledProperties(ms(a.str(0)), ms(a.str(1)), a[2].jsonPrimitive.int)) },
+        "contactsAlerted" to { a -> JsonPrimitive(contactsAlerted(SmsResult.entries.single { it.key == a.str(0) })) },
         "readinessProperties" to { a ->
             val p = (a[0] as? JsonObject)?.let(::profile)
             json(readinessProperties(p, a[1].jsonPrimitive.int, a[2].jsonPrimitive.int, a[3].jsonPrimitive.int))

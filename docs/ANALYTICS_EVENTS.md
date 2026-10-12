@@ -44,8 +44,8 @@ strings, numbers, booleans or null.
 | `emergency_step_completed`   | `step: string`                                     | A protocol step was checked off       |
 | `emergency_completed`        | `checked_count: number`, `duration_s: number`      | User marked "Found — Safe"            |
 | `emergency_cancelled`        | `checked_count: number`, `duration_s: number`      | User cancelled the protocol           |
-| `emergency_911_called`       | `seconds_elapsed: number`, `checked_count: number` | User tapped Call 911 during protocol  |
-| `emergency_contacts_alerted` | `recipient_count: number`                          | User sent SMS alerts                  |
+| `emergency_911_called`       | `seconds_elapsed: number`, `checked_count: number` | The phone app opened to call 911 from the protocol. Not sent when the device can't call (`dial_failed` is). `seconds_elapsed` is the real time since the emergency started, so it passes 900 once the countdown has run out. `checked_count` is the steps done before the call's own. |
+| `emergency_contacts_alerted` | `recipient_count: number`                          | The alert text may have reached the contacts: the iOS composer sent it, or the Android messaging app has it (it doesn't report back). The same as `emergency_sms_result` being `sent` or `handed_off`; not sent for `cancelled`, `failed` or `unavailable`. |
 | `emergency_leave`            | —                                                  | User left the emergency screen        |
 | `emergency_sms_result`       | `result: string`, `recipient_count: number`        | What became of the alert text: `sent`, `cancelled` or `failed` (iOS composer), `handed_off` to the messaging app (Android, which doesn't report back), `unavailable` (the device can't text) |
 | `countdown_alert`            | `kind: string`, `delivery: string`                 | The 5-minute `warning` or the `expired` alert reached the user: `in_app` on the emergency screen, or `catch_up` on returning to it after it came due. (Notifications while away aren't reported; the catch-up shows they were needed.) Sent by the shared core. |
@@ -95,7 +95,7 @@ strings, numbers, booleans or null.
 | Event         | Properties                                          | Description |
 | ------------- | --------------------------------------------------- | ----------- |
 | `dial_failed` | `target: string`, `screen: string`                  | The device couldn't place a call (no phone app: tablets, iPads) and showed the number instead. `target`: `emergency`, `contact` or `medicalert`. |
-| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error. `error` is the error's type name, never its message. |
+| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error; also reading the saved emergency (`screen` `emergency`, `action` `load`), which the emergency screen reports with Retry instead of starting a new emergency. `error` is the error's type name, never its message. |
 
 Crashes and uncaught exceptions arrive as PostHog `$exception` events (error tracking autocapture, both apps).
 
