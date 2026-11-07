@@ -9,6 +9,10 @@
       "title": "Apariencia",
       "description": "Elige tu tema de color preferido."
     },
+    "alerts": {
+      "title": "Alertas a tiempo",
+      "description": "Durante una búsqueda, la app te avisa cuando quedan 5 minutos y cuando es hora de llamar al {{emergencyNumber}}. Android puede retrasar esas alertas a menos que permitas alarmas y recordatorios para esta app."
+    },
     "deleteAccount": {
       "title": "Eliminar cuenta",
       "description": "Elimina permanentemente todos los datos almacenados en este dispositivo, incluyendo el perfil, contactos e historial de incidentes. Esta acción no se puede deshacer.",

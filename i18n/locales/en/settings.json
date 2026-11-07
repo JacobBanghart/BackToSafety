@@ -9,6 +9,10 @@
       "title": "Appearance",
       "description": "Choose your preferred color theme."
     },
+    "alerts": {
+      "title": "Alerts on Time",
+      "description": "During a search, the app warns you when 5 minutes are left and when it's time to call {{emergencyNumber}}. Android can delay those alerts unless you allow alarms and reminders for this app."
+    },
     "deleteAccount": {
       "title": "Delete Account",
       "description": "Permanently delete all data stored on this device, including the profile, contacts, and incident history. This cannot be undone.",
