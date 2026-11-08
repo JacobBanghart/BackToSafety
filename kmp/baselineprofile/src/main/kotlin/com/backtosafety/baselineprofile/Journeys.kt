@@ -129,11 +129,15 @@ fun MacrobenchmarkScope.openContacts() {
 
 /** Scrolls the contacts list to the bottom and back, as a caregiver looking for someone would. */
 fun MacrobenchmarkScope.scrollContacts() {
-    val list = checkNotNull(device.scrollable()) { "the contacts list doesn't scroll" }
+    // Found again for each fling: Compose can replace the node, which leaves a held one stale.
+    fun fling(direction: Direction) {
+        val list = device.wait(Until.findObject(By.scrollable(true)), TIMEOUT_MS)
+        checkNotNull(list) { "the contacts list doesn't scroll" }.setGestureMargin(device.displayWidth / 5)
+        list.fling(direction)
+        device.waitForIdle()
+    }
     repeat(2) {
-        list.fling(Direction.DOWN)
-        device.waitForIdle()
-        list.fling(Direction.UP)
-        device.waitForIdle()
+        fling(Direction.DOWN)
+        fling(Direction.UP)
     }
 }

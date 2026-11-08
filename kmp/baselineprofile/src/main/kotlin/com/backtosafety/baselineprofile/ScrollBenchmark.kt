@@ -3,7 +3,6 @@ package com.backtosafety.baselineprofile
 import androidx.benchmark.macro.BaselineProfileMode
 import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.FrameTimingMetric
-import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Before
@@ -33,10 +32,11 @@ class ScrollBenchmark {
         packageName = PACKAGE_NAME,
         metrics = listOf(FrameTimingMetric()),
         compilationMode = compilationMode,
-        // Each iteration starts a fresh process, so the first scroll is measured every time.
-        startupMode = StartupMode.COLD,
+        // No startupMode: COLD would kill the app between setupBlock and the scroll. Each
+        // iteration starts a fresh process itself, so the first scroll is measured every time.
         iterations = 10,
         setupBlock = {
+            killProcess()
             pressHome()
             startActivityAndWait()
             device.waitForHome()
