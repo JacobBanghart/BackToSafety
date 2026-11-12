@@ -6,6 +6,7 @@
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the shared Kotlin core, the Compose and SwiftUI apps, contracts and harness
 - [PARITY_PLAN.md](./PARITY_PLAN.md): how the native apps were held to the React Native app they replaced
 - [maestro/README.md](../maestro/README.md): device flows, screenshot fidelity, upgrade tests
+- [baseline-profile.md](./baseline-profile.md): the Android Baseline Profile, regenerating and measuring it
 
 ## Product
 

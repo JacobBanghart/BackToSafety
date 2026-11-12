@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.baselineprofile)
 }
 
 // Assets shared with the iOS app: locale JSON and images, so both apps show the same text and art.
@@ -84,6 +85,14 @@ android {
     }
 }
 
+// The Baseline Profile and the startup profile come from :baselineprofile on a device
+// (docs/baseline-profile.md) and are committed, so builds don't need one.
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    // R8 puts the startup profile's classes first in the primary dex, so a cold start reads less.
+    dexLayoutOptimization = true
+}
+
 dependencies {
     implementation(project(":shared"))
     implementation(platform(libs.compose.bom))
@@ -96,6 +105,8 @@ dependencies {
     implementation(libs.android.image.cropper)
     implementation(libs.posthog.android)
     implementation(libs.core.splashscreen)
+    implementation(libs.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 
     testImplementation(libs.junit)
     testImplementation(libs.robolectric)

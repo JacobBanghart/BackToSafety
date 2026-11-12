@@ -6,6 +6,7 @@ Back to Safety is two native apps on one shared Kotlin core:
 | --- | --- | --- |
 | Shared core | `kmp/shared` | Kotlin Multiplatform: models, the SQLite store (Room, bundled SQLite), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, design tokens. Built for Android, the JVM (tests) and iOS (a static framework, `Shared`, which the iOS project's first build phase builds). |
 | Android app | `kmp/androidApp` | Jetpack Compose UI on the shared core. |
+| Baseline Profile | `kmp/baselineprofile` | Generates the Android app's Baseline Profile and startup profile on a device, and benchmarks cold start and scrolling with and without them (`docs/baseline-profile.md`). |
 | iOS app | `kmp/iosApp` | SwiftUI UI on the shared core. `project.yml` generates the Xcode project (`xcodegen generate`). |
 | Contracts | `spec/` | What both apps must agree on: design tokens, analytics events, testIDs, the DB schema and seed rows, logic vectors, the feature inventory, screenshot goldens and fidelity marks. |
 | Device harness | `maestro/` | Maestro flows, screen captures and comparisons, reorder gestures and upgrade tests, run against both apps. |
