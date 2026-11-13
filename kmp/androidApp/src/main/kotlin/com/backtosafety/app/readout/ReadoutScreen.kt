@@ -55,7 +55,6 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -98,6 +97,11 @@ private val type = DesignTokens.Typography
 // Fills (white on top). Text and icons on the page use the theme's success/warning/error,
 // which are darker in light mode and lighter in dark mode so small labels stay legible.
 private val warning = Color(DesignTokens.Semantic.warning)
+
+// The script's blank chips and the "Add for stronger script" callout are one amber family: the
+// callout a light wash, a blank a step stronger so it holds up as a chip inside a line of text.
+private const val CALLOUT_FILL_ALPHA = 0.12f
+private const val BLANK_FILL_ALPHA = 0.24f
 private val success = Color(DesignTokens.Semantic.success)
 private val emergencyRed = Color(DesignTokens.Semantic.errorDark)
 private val white = Color(DesignTokens.Light.textOnPrimary)
@@ -195,19 +199,16 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 if (expanded) {
                     Text(t("sections.script.hint"), style = type.caption.style(), color = colors.textSecondary, modifier = hint)
                     // What is read to the dispatcher: large, comfortable reading size.
-                    // Blanks (the location, an unknown time) are highlighted gaps the caller fills
-                    // in aloud, not bracketed text to read out to the dispatcher. TalkBack and
+                    // Blanks (the location, an unknown time) are gaps the caller fills in aloud.
+                    // Each is a filled chip, said by its shape and its brackets rather than by
+                    // colour: bold ink "[fill in location]" on the amber of the "Add for stronger
+                    // script" callout below (orange underlined text read as a link). TalkBack and
                     // the copy get the plain script, its blanks in brackets (as on iOS).
-                    // A blank is marked so it can't be read past: bold amber text, underlined, on an
-                    // amber tint (a pale tint alone was easy to miss, and read as olive in dark mode).
-                    val blank = SpanStyle(
-                        color = colors.warning, background = colors.warning.copy(alpha = 0.14f),
-                        fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline,
-                    )
+                    val blank = SpanStyle(color = colors.text, background = colors.warning.copy(alpha = BLANK_FILL_ALPHA), fontWeight = FontWeight.Bold)
                     Text(
                         buildAnnotatedString {
                             for (part in scriptParts) {
-                                if (part.blank) withStyle(blank) { append("\u00a0${part.text}\u00a0") } else append(part.text)
+                                if (part.blank) withStyle(blank) { append("\u00a0[${part.text}]\u00a0") } else append(part.text)
                             }
                         },
                         style = type.bodyLarge.style(), color = colors.text,
@@ -219,7 +220,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                         val calloutShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                         Row(
                             Modifier.padding(top = space.md.udp).fillMaxWidth().clip(calloutShape)
-                                .background(colors.warning.copy(alpha = 0.12f)).rnBorder(1.udp, colors.warning.copy(alpha = 0.5f), calloutShape)
+                                .background(colors.warning.copy(alpha = CALLOUT_FILL_ALPHA)).rnBorder(1.udp, colors.warning.copy(alpha = 0.5f), calloutShape)
                                 .padding(space.md.udp),
                             horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
                         ) {
@@ -523,18 +524,21 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
             Text(c.name, style = type.bodyBold.style(), color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
             val role = c.relationship?.ifEmpty { null }
                 ?: c.role?.let { t("roles.$it", mapOf("ns" to "contacts", "defaultValue" to it)) } ?: ""
-            Text(role, style = type.caption.style(), color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            // Two lines, so the larger call button doesn't cut the role short at large text.
+            Text(role, style = type.caption.style(), color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
+        // Calling the family is a key action under stress, so it is a full-size button (56dp,
+        // 18sp bold, a 20dp phone icon) like the body's primary buttons, not a small chip.
         val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
         Row(
-            Modifier.testTag("readout-contact-$index-call").heightIn(min = 48.udp).clip(shape)
+            Modifier.testTag("readout-contact-$index-call").heightIn(min = 56.udp).clip(shape)
                 .clickable(role = Role.Button, onClick = onCall).background(success)
-                .padding(horizontal = space.md.udp, vertical = space.sm.udp),
-            horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
+                .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+            horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon("phone.fill", 14f, white)
-            Text(formatPhoneNumber(c.phone), style = type.bodyBold.style(), color = white)
+            Icon("phone.fill", 20f, white)
+            Text(formatPhoneNumber(c.phone), style = type.bodyLarge.style(fontWeight = 700), color = white)
         }
     }
 }

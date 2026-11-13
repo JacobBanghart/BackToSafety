@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,6 +53,7 @@ import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rnBorder
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ActiveEmergency
@@ -61,11 +63,14 @@ import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.EMERGENCY_STEP_COUNT
 import com.backtosafety.core.Profile
+import com.backtosafety.core.ReadinessCheck
+import com.backtosafety.core.ReadinessItem
 import com.backtosafety.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
+import com.backtosafety.core.readinessChecklist
 import com.backtosafety.core.secondsRemaining
 import kotlinx.coroutines.delay
 
@@ -87,14 +92,20 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
     var profile by remember { mutableStateOf<Profile?>(null) }
     var contactCount by remember { mutableIntStateOf(0) }
     var emergency by remember { mutableStateOf<ActiveEmergency?>(null) }
+
+    // Null until read, and stays null if the read fails: then the readiness card isn't shown,
+    // rather than telling the user to add places they already have.
+    var placeCount by remember { mutableStateOf<Int?>(null) }
     var secondsLeft by remember { mutableIntStateOf(0) }
 
     // Reloaded every time home is shown (useFocusEffect).
     LaunchedEffect(Unit) {
         Analytics.screen("home")
+        // The active emergency first: nothing optional delays the Start/Resume button's state.
+        emergency = store.activeEmergency()
         profile = store.profile()
         contactCount = store.contacts().size
-        emergency = store.activeEmergency()
+        placeCount = runCatchingCancellable { store.destinations().size }.getOrNull()
     }
     // Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     LaunchedEffect(emergency) {
@@ -195,7 +206,8 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                     }
                     Column(Modifier.weight(1f)) {
                         Text(title, style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), modifier = Modifier.padding(bottom = 2.udp))
-                        Text(subtitle, style = type.caption.style(fontWeight = 500), color = Color(DesignTokens.Light.textOnPrimary))
+                        // 14sp at least: older eyes read it in sun, white on red.
+                        Text(subtitle, style = type.label.style(fontWeight = 500, letterSpacing = 0f), color = Color(DesignTokens.Light.textOnPrimary))
                     }
                 }
                 Icon("chevron.right", 20f, Color.White.copy(alpha = 0.7f))
@@ -223,6 +235,26 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             EmergencyInfoCard(t, p!!) {
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "readout", "source" to "home"))
                 navigate("readout")
+            }
+        }
+
+        placeCount?.let { places ->
+            // Each line reports what its home shortcut reports (avatar, Contacts tile, Places tile).
+            ReadinessCard(t, readinessChecklist(p, contactCount, places)) { item ->
+                when (item) {
+                    ReadinessItem.PHOTO, ReadinessItem.DESCRIPTION -> {
+                        Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "profile", "source" to "home"))
+                        navigate("profile")
+                    }
+                    ReadinessItem.CONTACTS -> {
+                        Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "contacts", "source" to "home"))
+                        navigate("contacts")
+                    }
+                    ReadinessItem.PLACES -> {
+                        Analytics.track(AnalyticsEvent.DESTINATION_ADD_TAPPED, mapOf("source" to "home"))
+                        navigate("destinations")
+                    }
+                }
             }
         }
 
@@ -266,7 +298,7 @@ private fun QuickAction(icon: String, title: String, subtitle: String, testTag: 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterVertically),
     ) {
-        Box(Modifier.padding(bottom = space.xs.udp).size(44.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
+        Box(Modifier.padding(bottom = space.xs.udp).size(44.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
             Icon(icon, 22f, colors.primaryText)
         }
         Text(title, style = DesignTokens.Typography.bodyBold.style(), color = colors.text)
@@ -296,7 +328,7 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
         // The title stays on one line at large text; "911 Script" is the second line, in the
         // accent colour, and the chevron says the whole card opens it.
         Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(44.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(44.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
                 Icon("doc.text.fill", 22f, colors.primaryText)
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
@@ -327,6 +359,63 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
                         Text(value, style = type.body.style(), color = colors.text, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     }
                 }
+            }
+        }
+    }
+}
+
+/**
+ * "Ready for an emergency": what's filled in for the script and the search, each line opening
+ * the screen that fills it in. Done is said by the icon and by the word, not by colour alone;
+ * a missing line carries an "Add" action in the accent colour.
+ */
+@Composable
+private fun ReadinessCard(t: Translate, checks: List<ReadinessCheck>, onOpen: (ReadinessItem) -> Unit) {
+    val colors = LocalAppColors.current
+    val type = DesignTokens.Typography
+    val space = DesignTokens.Spacing
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = space.lg.udp)
+            .clip(shape)
+            .background(colors.card)
+            .rnBorder(1.udp, colors.border, shape)
+            .padding(vertical = space.sm.udp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().semantics(mergeDescendants = true) { heading() }
+                .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(t("readiness.title"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
+            Text(
+                t("readiness.summary", mapOf("done" to checks.count { it.done }, "total" to checks.size)),
+                style = type.label.style(fontWeight = 500, letterSpacing = 0f), color = colors.textSecondary,
+                modifier = Modifier.padding(start = space.sm.udp),
+            )
+        }
+        for (check in checks) {
+            val label = t("readiness.items.${check.item.key}")
+            val state = t(if (check.done) "readiness.done" else "readiness.add")
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.udp)
+                    .clearAndSetSemantics { contentDescription = "$label, $state"; role = Role.Button }
+                    .clickable { onOpen(check.item) }
+                    .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+                horizontalArrangement = Arrangement.spacedBy(space.md.udp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(if (check.done) "checkmark.circle.fill" else "circle", 22f, if (check.done) colors.success else colors.icon)
+                Text(label, style = type.body.style(), color = colors.text, modifier = Modifier.weight(1f))
+                Text(
+                    state, style = type.label.style(letterSpacing = 0f),
+                    color = if (check.done) colors.textSecondary else colors.primaryText,
+                )
+                Icon("chevron.right", 16f, if (check.done) colors.textSecondary else colors.primaryText)
             }
         }
     }

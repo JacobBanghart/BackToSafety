@@ -662,7 +662,6 @@ private fun Checklist(
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
-    val p = DesignTokens.Primary
     val n = DesignTokens.Neutral
     val error = Color(DesignTokens.Semantic.error)
     Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
@@ -679,11 +678,11 @@ private fun Checklist(
                     .testTag("emergency-step-${step.id}")
                     .clip(shape)
                     .clickable { onToggle(step.id) }
-                    .background(if (step.checked) (if (colors.isDark) colors.primaryLight else Color(p.c50)) else colors.card)
-                    .rnBorder(
-                        if (urgentOpen) 2.udp else 1.udp,
-                        if (urgentOpen) error else if (step.checked) Color(p.c300) else colors.border, shape,
-                    )
+                    // A done step steps back: the quiet surface tone, the plain border and secondary
+                    // text, so the steps still to do are the loudest cards (a purple done card
+                    // outshone them in dark mode). The green check says it is done.
+                    .background(if (step.checked) colors.surface else colors.card)
+                    .rnBorder(if (urgentOpen) 2.udp else 1.udp, if (urgentOpen) error else colors.border, shape)
                     .padding(space.md.udp),
                 horizontalArrangement = Arrangement.spacedBy(space.md.udp),
             ) {
@@ -694,7 +693,7 @@ private fun Checklist(
                         .clip(CircleShape)
                         .background(
                             when {
-                                step.checked -> Color(p.c600)
+                                step.checked -> Color(DesignTokens.Semantic.success)
                                 step.urgent -> error.copy(alpha = 0x18 / 255f)
                                 else -> Color(if (colors.isDark) n.c700 else n.c200)
                             },
@@ -717,9 +716,9 @@ private fun Checklist(
                         Text(
                             step.title,
                             style = type.bodyBold.style().copy(textDecoration = if (step.checked) TextDecoration.LineThrough else null),
-                            color = colors.text,
-                            // Done reads as done (struck through, on the tinted card) yet stays legible.
-                            modifier = Modifier.weight(1f).alpha(if (step.checked) 0.7f else 1f),
+                            // Done reads as done (struck through, secondary ink) yet stays legible.
+                            color = if (step.checked) colors.textSecondary else colors.text,
+                            modifier = Modifier.weight(1f),
                         )
                         if (urgentOpen) {
                             Box(Modifier.clip(RoundedCornerShape(DesignTokens.Radius.sm.dp)).background(error).padding(horizontal = space.sm.udp, vertical = space.xxs.udp)) {

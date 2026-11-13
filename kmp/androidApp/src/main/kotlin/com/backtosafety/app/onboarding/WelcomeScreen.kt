@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.TrackStepViewed
+import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
@@ -68,7 +69,6 @@ fun WelcomeScreen(
 ) {
     TrackStepViewed("welcome")
     val colors = LocalAppColors.current
-    val featureBg = if (colors.isDark) Color.White.copy(alpha = 0.08f) else Color(DesignTokens.Neutral.c100)
     val optionBg = if (colors.isDark) Color.White.copy(alpha = 0.1f) else Color(DesignTokens.Neutral.c100)
     val scroll = rememberScrollState()
     val type = DesignTokens.Typography
@@ -109,13 +109,16 @@ fun WelcomeScreen(
                     Row(
                         Modifier
                             .fillMaxWidth()
+                            // A card like the app's others (card fill, 1dp border): grey on grey
+                            // made the feature text look disabled.
                             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                            .background(featureBg)
+                            .background(colors.card)
+                            .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
                             .padding(space.lg.udp),
                         horizontalArrangement = Arrangement.spacedBy(16.udp),
                     ) {
                         Box(
-                            Modifier.size(44.udp).clip(CircleShape).background(colors.primaryLight),
+                            Modifier.size(44.udp).clip(CircleShape).background(colors.iconContainer),
                             contentAlignment = Alignment.Center,
                         ) { Icon(icon, 22f, colors.primaryText) }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
@@ -173,7 +176,9 @@ fun WelcomeScreen(
         // pinned over the content it still made the cards above it look cut off, and the layout
         // already ends the first screen on whole blocks.
         Box(Modifier.fillMaxWidth().height(1.udp).background(colors.border))
-        Column(Modifier.padding(space.lg.udp), verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
+        // The privacy line sits a full lg under the button, so it reads as its own promise rather
+        // than as the button's caption.
+        Column(Modifier.padding(space.lg.udp), verticalArrangement = Arrangement.spacedBy(space.lg.udp)) {
             Box(
                 Modifier
                     .fillMaxWidth()

@@ -36,6 +36,12 @@ class AppColors(val isDark: Boolean) {
     val primary = Color(if (isDark) DesignTokens.Dark.primary else DesignTokens.Light.primary)
     val primaryLight = Color(if (isDark) DesignTokens.Dark.primaryLight else DesignTokens.Light.primaryLight)
 
+    /**
+     * The round or square tile behind an accent icon on a card. In dark mode it is a step lighter
+     * than primaryLight, so the disc separates from the card (primaryText on it is 4.8:1).
+     */
+    val iconContainer = Color(if (isDark) DesignTokens.Dark.iconContainer else DesignTokens.Light.iconContainer)
+
     /** The primary color for text and icons on the background (primary itself is a fill). */
     val primaryText = Color(if (isDark) DesignTokens.Dark.primaryText else DesignTokens.Light.primaryText)
 

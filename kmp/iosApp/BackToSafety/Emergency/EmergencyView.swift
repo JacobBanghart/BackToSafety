@@ -478,7 +478,7 @@ struct EmergencyView: View {
                 Button { toggle(step.id) } label: {
                     HStack(alignment: .top, spacing: Space.md) {
                         ZStack {
-                            Circle().fill(isChecked ? Color(argb: Primary.c600)
+                            Circle().fill(isChecked ? Color(argb: Semantic.success)
                                 : step.urgent ? error.opacity(0x18 / 255.0)
                                 : Color(argb: colors.isDark ? Neutral.c700 : Neutral.c200))
                             if urgentOpen { Circle().strokeBorder(error, lineWidth: 1.5) }
@@ -493,10 +493,9 @@ struct EmergencyView: View {
                         .padding(.top, 2)
                         VStack(alignment: .leading, spacing: Space.xs) {
                             HStack(spacing: Space.sm) {
-                                RNText(step.title, Typography.bodyBold.spec, color: colors.text)
+                                // Done reads as done (struck through, secondary ink) yet stays legible.
+                                RNText(step.title, Typography.bodyBold.spec, color: isChecked ? colors.textSecondary : colors.text)
                                     .strikethrough(isChecked)
-                                    // Done reads as done (struck through, on the tinted card) yet stays legible.
-                                    .opacity(isChecked ? 0.7 : 1)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 if urgentOpen {
                                     RNText(t("checklist.priority"), Typography.small.spec.weight(700).spacing(0.5), color: Color(argb: Light.textOnPrimary))
@@ -524,9 +523,12 @@ struct EmergencyView: View {
                         }
                     }
                     .padding(Space.md + border)
-                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? (colors.isDark ? colors.primaryLight : Color(argb: Primary.c50)) : colors.card))
+                    // A done step steps back: the quiet surface tone, the plain border and secondary
+                    // text, so the steps still to do are the loudest cards (a purple done card
+                    // outshone them in dark mode). The green check says it is done.
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? colors.surface : colors.card))
                     .overlay(RoundedRectangle(cornerRadius: Radius.lg)
-                        .strokeBorder(urgentOpen ? error : isChecked ? Color(argb: Primary.c300) : colors.border, lineWidth: border))
+                        .strokeBorder(urgentOpen ? error : colors.border, lineWidth: border))
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("emergency-step-\(step.id)")

@@ -379,7 +379,7 @@ private fun Section(
             horizontalArrangement = Arrangement.spacedBy(space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(36.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(36.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
                 Icon(icon, 16f, colors.primaryText)
             }
             Text(title, style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))

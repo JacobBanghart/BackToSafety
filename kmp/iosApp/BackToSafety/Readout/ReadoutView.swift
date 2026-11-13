@@ -2,6 +2,11 @@ import Shared
 import SwiftUI
 import UIKit
 
+// The script's blank chips and the "Add for stronger script" callout are one amber family: the
+// callout a light wash, a blank a step stronger so it holds up as a chip inside a line of text.
+private let calloutFillOpacity = 0.12
+private let blankFillOpacity = 0.24
+
 /// The clock time as the locale says it, without seconds ("9:00 AM", "9:00"): for speech.
 func localeClock(_ ms: Int64) -> String {
     let f = DateFormatter()
@@ -99,11 +104,13 @@ struct ReadoutView: View {
                         RNText(t("sections.script.hint"), Typography.caption.spec, color: colors.textSecondary)
                             .padding(.top, Space.xxs).padding(.bottom, Space.xs)
                         // What is read to the dispatcher: large, comfortable reading size.
-                        // Blanks (the location, an unknown time) are highlighted gaps the caller fills
-                        // in aloud, not bracketed text to read out to the dispatcher. VoiceOver and
+                        // Blanks (the location, an unknown time) are gaps the caller fills in aloud.
+                        // Each is a filled chip, said by its shape and its brackets rather than by
+                        // colour: bold ink "[fill in location]" on the amber of the "Add for stronger
+                        // script" callout below (orange underlined text read as a link). VoiceOver and
                         // the copy get the plain script, its blanks in brackets (as on Android).
                         RNText(runs: parts, accessibilityText: script, Typography.bodyLarge.spec, color: colors.text,
-                               highlight: colors.warning.opacity(0.14), mark: colors.warning)
+                               highlight: colors.warning.opacity(blankFillOpacity), mark: colors.text)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
@@ -117,7 +124,7 @@ struct ReadoutView: View {
                                     .rnID("readout-script-missing", label: note)
                             }
                             .padding(Space.md)
-                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.warning.opacity(0.12)))
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.warning.opacity(calloutFillOpacity)))
                             .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.warning.opacity(0.5), lineWidth: 1))
                             .padding(.top, Space.md)
                         }
@@ -341,20 +348,23 @@ struct ReadoutView: View {
             HStack(spacing: Space.md) {
                 VStack(alignment: .leading, spacing: 2) {
                     RNText(c.name, Typography.bodyBold.spec, color: colors.text, lines: 1)
-                    RNText(role, Typography.caption.spec, color: colors.textSecondary, lines: 1)
+                    // Two lines, so the larger call button doesn't cut the role short at large text.
+                    RNText(role, Typography.caption.spec, color: colors.textSecondary, lines: 2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button {
                     Analytics.shared.track(event: .readoutContactCalled, properties: [:])
                     dial(c.phone, .contact)
                 } label: {
-                    HStack(spacing: Space.xs) {
-                        SFIcon("phone.fill", 14, white)
-                        RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyBold.spec, color: white)
+                    // Calling the family is a key action under stress, so it is a full-size button
+                    // (56pt, 18pt bold, a 20pt phone icon) like the body's primary buttons, not a chip.
+                    HStack(spacing: Space.sm) {
+                        SFIcon("phone.fill", 20, white)
+                        RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyLarge.spec.weight(700), color: white)
                     }
                     .fixedSize()
-                    .padding(.horizontal, Space.md).padding(.vertical, Space.sm)
-                    .frame(minHeight: 48)
+                    .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+                    .frame(minHeight: 56)
                     .background(RoundedRectangle(cornerRadius: Radius.lg).fill(success))
                 }
                 .buttonStyle(.pressable)

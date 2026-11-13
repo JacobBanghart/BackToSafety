@@ -31,10 +31,10 @@ import com.backtosafety.core.DesignTokens
 // Pieces the contacts and places screens share (their RN styles are identical).
 
 /**
- * The header's action (Add / Update / Save / Saving...): the form's main action as Material's
- * tonal button in the app bar, a tinted container (primaryLight) with the accent label. Bare
- * text was too easy to miss and a solid fill crowded the bar. The container is 40dp inside a
- * 48dp target; while it can't be pressed (Saving...) it's the surface tone with secondary text.
+ * The header's action (Add / Update / Save / Saving...): the screen's main action, so it is a
+ * filled primary button in the same rounded rectangle as the body's primary buttons (a tonal
+ * one read as too weak). The container is 40dp inside a 48dp target and ends at the 16dp
+ * margin; while it can't be pressed (Saving...) it takes PrimaryButton's dimmed look.
  */
 @Composable
 fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
@@ -46,11 +46,11 @@ fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: (
     ) {
         Box(
             Modifier.heightIn(min = 40.udp).widthIn(min = 72.udp).clip(shape)
-                .background(if (enabled) colors.primaryLight else colors.surface)
+                .background(if (enabled) colors.primary else colors.primaryLight)
                 .padding(horizontal = DesignTokens.Spacing.lg.udp, vertical = DesignTokens.Spacing.sm.udp),
             contentAlignment = Alignment.Center,
         ) {
-            Text(label, style = DesignTokens.Typography.bodyBold.style(), color = if (enabled) colors.primaryText else colors.textSecondary, maxLines = 1)
+            Text(label, style = DesignTokens.Typography.bodyBold.style(), color = if (enabled) colors.textOnPrimary else colors.primaryText, maxLines = 1)
         }
     }
 }

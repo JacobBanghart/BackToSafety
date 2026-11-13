@@ -26,17 +26,23 @@ import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
 
 /** The label column of a [DetailRow], wide enough for "Device ID" in en and es at 130%. */
-private const val DETAIL_LABEL_WIDTH = 112
+private const val DETAIL_LABEL_WIDTH = 120
+
+/** How strongly a [AppCard] with `danger` is washed with the error colour (its border is 0.5). */
+const val DANGER_FILL_ALPHA = 0.08f
 
 /** components/AppCard.tsx: card background, 1dp border, radius lg, padding lg, margin below md. */
 @Composable
-fun AppCard(modifier: Modifier = Modifier, surface: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
+fun AppCard(modifier: Modifier = Modifier, surface: Boolean = false, danger: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Column(
         modifier.padding(bottom = DesignTokens.Spacing.md.udp).fillMaxWidth().clip(shape)
             .background(if (surface) colors.surface else colors.card)
-            .rnBorder(1.udp, colors.border, shape).padding(DesignTokens.Spacing.lg.udp),
+            // A danger card (Delete Account) is washed and edged in the error colour, so it is
+            // marked as destructive by the whole card, not only by its icon.
+            .then(if (danger) Modifier.background(colors.error.copy(alpha = DANGER_FILL_ALPHA)) else Modifier)
+            .rnBorder(1.udp, if (danger) colors.error.copy(alpha = 0.5f) else colors.border, shape).padding(DesignTokens.Spacing.lg.udp),
         content = content,
     )
 }
@@ -91,8 +97,8 @@ fun ListItem(
 }
 
 /**
- * A support detail (platform, theme, device ID): label and value on one line in caption type,
- * with no rule, so it reads as secondary to the card rows above it. The labels are a fixed-width
+ * A support detail (platform, theme, device ID): label and value on one line at 14sp (caption
+ * size was too small to read), with no rule, so it reads as secondary to the card rows above it. The labels are a fixed-width
  * column and each value starts right after it, so a value reads with its label (right-aligned
  * values sat far from them across the screen). Like [ListItem] it carries
  * testID on the row and <testID>-value on the value; with an [action] it is a 48dp button
@@ -107,18 +113,18 @@ fun DetailRow(
     onPress: (() -> Unit)? = null,
 ) {
     val colors = LocalAppColors.current
-    val caption = DesignTokens.Typography.caption
+    val type = DesignTokens.Typography.label
     Row(
         Modifier.fillMaxWidth()
             .then(if (testID != null) Modifier.testTag(testID) else Modifier)
-            .heightIn(min = if (onPress != null) 48.udp else 32.udp)
+            .heightIn(min = if (onPress != null) 48.udp else 40.udp)
             .then(if (onPress != null) Modifier.clickable(onClickLabel = action?.second, role = Role.Button, onClick = onPress) else Modifier),
         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = caption.style(), color = colors.textSecondary, modifier = Modifier.widthIn(min = DETAIL_LABEL_WIDTH.udp))
+        Text(label, style = type.style(fontWeight = 500, letterSpacing = 0f), color = colors.textSecondary, modifier = Modifier.widthIn(min = DETAIL_LABEL_WIDTH.udp))
         Text(
-            value, style = caption.style(fontWeight = 600), color = colors.text,
+            value, style = type.style(letterSpacing = 0f), color = colors.text,
             maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f).then(if (testID != null) Modifier.testTag("$testID-value") else Modifier),
         )

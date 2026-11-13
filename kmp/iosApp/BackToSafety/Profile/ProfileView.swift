@@ -294,7 +294,7 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { expanded = expanded == key ? nil : key } label: {
                 HStack(spacing: Space.md) {
-                    SFIcon(icon, 16, colors.primary).frame(width: 36, height: 36).background(Circle().fill(colors.primaryLight))
+                    SFIcon(icon, 16, colors.primaryText).frame(width: 36, height: 36).background(Circle().fill(colors.iconContainer))
                     RNText(title, Typography.bodyBold.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
                     SFIcon(expanded == key ? "chevron.up" : "chevron.down", 16, colors.textSecondary)
                 }

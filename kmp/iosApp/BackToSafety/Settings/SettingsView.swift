@@ -90,8 +90,10 @@ struct SettingsView: View {
                     // block: deleting everything is rare and final, so it shouldn't read as prominently
                     // as a routine option. A rule with space either side sets it apart from the support
                     // details, so it doesn't read as one of them. Its confirmation alert is unchanged.
+                    // The card is washed and edged in red and the button has a 1.5 red outline, so the
+                    // warning is carried by more than a faint outline and icon.
                     Rectangle().fill(colors.border).frame(height: 1).padding(.vertical, Space.sm)
-                    AppCard {
+                    AppCard(danger: true) {
                         sectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
                         description(t("sections.deleteAccount.description"))
                         Button { alert = .confirmDelete } label: {
@@ -102,7 +104,8 @@ struct SettingsView: View {
                             }
                             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                             .padding(.vertical, Space.md).padding(.horizontal, 20)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1))
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1.5))
                             .contentShape(Rectangle())
                             .opacity(deleting ? 0.6 : 1)
                         }

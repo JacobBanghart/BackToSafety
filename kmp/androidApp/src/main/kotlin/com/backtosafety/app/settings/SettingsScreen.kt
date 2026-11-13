@@ -213,15 +213,17 @@ fun SettingsScreen(
             // block: deleting everything is rare and final, so it shouldn't read as prominently
             // as a routine option. A rule with space either side sets it apart from the support
             // details, so it doesn't read as one of them. Its confirmation dialog is unchanged.
+            // The card is washed and edged in red and the button has a 1.5 red outline, so the
+            // warning is carried by more than a faint outline and icon.
             Box(Modifier.padding(vertical = space.sm.udp).fillMaxWidth().height(1.udp).background(colors.border))
-            AppCard {
+            AppCard(danger = true) {
                 SectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
                 Description(t("sections.deleteAccount.description"))
                 val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("settings-delete-account").alpha(if (deleting) 0.6f else 1f)
                         .clip(shape).clickable(enabled = !deleting, role = Role.Button, onClick = ::deleteAccount)
-                        .rnBorder(1.udp, colors.error, shape).padding(vertical = space.md.udp, horizontal = 20.udp),
+                        .background(colors.card).rnBorder(1.5.dp, colors.error, shape).padding(vertical = space.md.udp, horizontal = 20.udp),
                     horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

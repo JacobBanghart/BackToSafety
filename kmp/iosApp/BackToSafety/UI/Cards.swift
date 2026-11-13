@@ -1,9 +1,15 @@
 import Shared
 import SwiftUI
 
+/// How strongly an `AppCard` with `danger` is washed with the error colour (its border is 0.5).
+let dangerFillOpacity = 0.08
+
 /// components/AppCard.tsx: card background, 1pt border, radius lg, padding lg, margin below md.
 struct AppCard<Content: View>: View {
     var surface = false
+    /// A danger card (Delete Account) is washed and edged in the error colour, so it is marked
+    /// as destructive by the whole card, not only by its icon.
+    var danger = false
     @ViewBuilder let content: () -> Content
     @Environment(\.appColors) private var colors
 
@@ -11,14 +17,18 @@ struct AppCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 0, content: content)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(Space.lg + 1)
-            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(surface ? colors.surface : colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+            .background(
+                RoundedRectangle(cornerRadius: Radius.lg).fill(surface ? colors.surface : colors.card)
+                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).fill(danger ? colors.error.opacity(dangerFillOpacity) : .clear))
+            )
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg)
+                .strokeBorder(danger ? colors.error.opacity(0.5) : colors.border, lineWidth: 1))
             .padding(.bottom, Space.md)
     }
 }
 
-/// A support detail (platform, theme, device ID): label and value on one line in caption type,
-/// with no rule, so it reads as secondary to the card rows above it. Like `ListItem` it carries
+/// A support detail (platform, theme, device ID): label and value on one line at 14pt (caption
+/// size was too small to read), with no rule, so it reads as secondary to the card rows above it. Like `ListItem` it carries
 /// testID on the row and <testID>-value on the value; with an `action` it is a 48pt button
 /// announced by that action, its icon at the end.
 struct DetailRow: View {
@@ -36,7 +46,7 @@ struct DetailRow: View {
                 .accessibilityIdentifier(testID ?? "")
                 .accessibilityHint(action?.label ?? "")
         } else {
-            row.frame(minHeight: 32)
+            row.frame(minHeight: 40)
         }
     }
 
@@ -44,9 +54,9 @@ struct DetailRow: View {
         HStack(spacing: Space.sm) {
             // The labels are a fixed-width column and each value starts right after it, so a value
             // reads with its label (right-aligned values sat far from them across the screen).
-            RNText(label, Typography.caption.spec, color: colors.textSecondary)
-                .frame(minWidth: 112, alignment: .leading)
-            RNText(value, Typography.caption.spec.weight(600), color: colors.text, lines: 1)
+            RNText(label, Typography.label.spec.weight(500).spacing(0), color: colors.textSecondary)
+                .frame(minWidth: 120, alignment: .leading)
+            RNText(value, Typography.label.spec.spacing(0), color: colors.text, lines: 1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier(testID.map { "\($0)-value" } ?? "")
             if let action { SFIcon(action.icon, 18, colors.primaryText) }

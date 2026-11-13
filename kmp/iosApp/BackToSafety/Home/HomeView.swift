@@ -19,6 +19,9 @@ struct HomeView: View {
     @State private var profile: Profile?
     @State private var contactCount = 0
     @State private var emergency: ActiveEmergency?
+    /// Nil until read, and stays nil if the read fails: then the readiness card isn't shown,
+    /// rather than telling the user to add places they already have.
+    @State private var placeCount: Int?
     @State private var secondsLeft: Int32 = 0
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -43,6 +46,9 @@ struct HomeView: View {
                 }
                 .padding(.bottom, Space.lg)
                 if hasProfile, let profile { infoCard(profile) }
+                if let placeCount {
+                    readinessCard(ReadinessKt.readinessChecklist(profile: profile, contacts: Int32(contactCount), places: Int32(placeCount)))
+                }
                 settingsRow
             }
             .padding(.horizontal, Space.lg)
@@ -56,9 +62,11 @@ struct HomeView: View {
         // Reloaded every time home is shown (useFocusEffect).
         .task {
             Analytics.shared.screen(path: "home", properties: [:])
+            // The active emergency first: nothing optional delays the Start/Resume button's state.
+            emergency = try? await model.store.activeEmergency()
             profile = try? await model.store.profile()
             contactCount = ((try? await model.store.contacts()) ?? []).count
-            emergency = try? await model.store.activeEmergency()
+            placeCount = (try? await model.store.destinations())?.count
             updateCountdown()
         }
         .onReceive(tick) { _ in updateCountdown() }
@@ -133,7 +141,8 @@ struct HomeView: View {
                                 .background(Circle().fill(Color.white.opacity(0.2)))
                             VStack(alignment: .leading, spacing: 0) {
                                 RNText(title, Typography.bodyBold.spec, color: white).padding(.bottom, 2)
-                                RNText(subtitle, Typography.caption.spec.weight(500), color: white)
+                                // 14pt at least: older eyes read it in sun, white on red.
+                                RNText(subtitle, Typography.label.spec.weight(500).spacing(0), color: white)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
@@ -190,7 +199,7 @@ struct HomeView: View {
             VStack(spacing: Space.xs) {
                 SFIcon(icon, 22, colors.primaryText)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(colors.primaryLight))
+                    .background(Circle().fill(colors.iconContainer))
                     .padding(.bottom, Space.xs)
                 RNText(title, Typography.bodyBold.spec, color: colors.text)
                 // 14pt, not caption: the counts are read at a glance by older eyes.
@@ -223,7 +232,7 @@ struct HomeView: View {
                 HStack(spacing: Space.md) {
                     SFIcon("doc.text.fill", 22, colors.primaryText)
                         .frame(width: 44, height: 44)
-                        .background(Circle().fill(colors.primaryLight))
+                        .background(Circle().fill(colors.iconContainer))
                     VStack(alignment: .leading, spacing: Space.xxs) {
                         RNText(t("emergencyInfo.title"), Typography.bodyBold.spec, color: colors.text, lines: 1)
                         RNText(t("emergencyInfo.script911"), Typography.caption.spec.weight(600), color: colors.primaryText)
@@ -252,6 +261,59 @@ struct HomeView: View {
         .buttonStyle(.pressable)
         .accessibilityIdentifier("home-readout")
         .padding(.bottom, Space.lg)
+    }
+
+    /// "Ready for an emergency": what's filled in for the script and the search, each line
+    /// opening the screen that fills it in. Done is said by the icon and by the word, not by
+    /// colour alone; a missing line carries an "Add" action in the accent colour.
+    private func readinessCard(_ checks: [ReadinessCheck]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: Space.sm) {
+                RNText(t("readiness.title"), Typography.bodyBold.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
+                RNText(t("readiness.summary", ["done": checks.filter(\.done).count, "total": checks.count]),
+                       Typography.label.spec.weight(500).spacing(0), color: colors.textSecondary)
+            }
+            .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            ForEach(checks, id: \.item.key) { check in
+                let label = t("readiness.items.\(check.item.key)")
+                let state = t(check.done ? "readiness.done" : "readiness.add")
+                Button { openReadiness(check.item) } label: {
+                    HStack(spacing: Space.md) {
+                        SFIcon(check.done ? "checkmark.circle.fill" : "circle", 22, check.done ? colors.success : colors.icon)
+                        RNText(label, Typography.body.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
+                        RNText(state, Typography.label.spec.spacing(0), color: check.done ? colors.textSecondary : colors.primaryText)
+                        SFIcon("chevron.right", 16, check.done ? colors.textSecondary : colors.primaryText)
+                    }
+                    .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+                    .frame(minHeight: 48)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.pressable)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("\(label), \(state)")
+                .accessibilityAddTraits(.isButton)
+            }
+        }
+        .padding(.vertical, Space.sm)
+        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+        .padding(.bottom, Space.lg)
+    }
+
+    /// Each line reports what its home shortcut reports (avatar, Contacts tile, Places tile).
+    private func openReadiness(_ item: ReadinessItem) {
+        if item == .contacts {
+            Analytics.shared.track(event: .screenViewed, properties: ["screen": "contacts", "source": "home"])
+            model.path.append(.contacts)
+        } else if item == .places {
+            Analytics.shared.track(event: .destinationAddTapped, properties: ["source": "home"])
+            model.path.append(.destinations)
+        } else {
+            Analytics.shared.track(event: .screenViewed, properties: ["screen": "profile", "source": "home"])
+            model.path.append(.profile)
+        }
     }
 
     /// A plain row, not a card: Settings is used rarely, so it doesn't carry the weight of

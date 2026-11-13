@@ -27,5 +27,17 @@
     "deescalation": "Cómo calmarle"
   },
   "settingsLink": "Configuración",
-  "editProfile": "Editar perfil"
+  "editProfile": "Editar perfil",
+  "readiness": {
+    "title": "Preparación para una emergencia",
+    "summary": "{{done}} de {{total}} listos",
+    "add": "Agregar",
+    "done": "Listo",
+    "items": {
+      "photo": "Foto reciente",
+      "description": "Descripción física",
+      "contacts": "Contactos de emergencia",
+      "places": "Lugares probables"
+    }
+  }
 }

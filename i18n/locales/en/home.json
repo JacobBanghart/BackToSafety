@@ -27,5 +27,17 @@
     "deescalation": "De-escalation"
   },
   "settingsLink": "Settings",
-  "editProfile": "Edit profile"
+  "editProfile": "Edit profile",
+  "readiness": {
+    "title": "Ready for an emergency",
+    "summary": "{{done}} of {{total}} ready",
+    "add": "Add",
+    "done": "Done",
+    "items": {
+      "photo": "Recent photo",
+      "description": "Physical description",
+      "contacts": "Emergency contacts",
+      "places": "Likely places"
+    }
+  }
 }

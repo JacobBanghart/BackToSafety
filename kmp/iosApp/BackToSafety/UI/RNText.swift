@@ -66,8 +66,8 @@ struct RNText: View {
     var color: Color
     var align: TextAlignment = .leading
     var lines: Int?
-    /// Pieces of [text], each marked (`true`) or not: a marked piece is drawn bold and underlined
-    /// in [mark], on [highlight], so it can't be read past.
+    /// Pieces of [text], each marked (`true`) or not: a marked piece is a chip, drawn bold in
+    /// [mark] and in brackets on [highlight], so it can't be read past or taken for a link.
     private var runs: [(text: String, marked: Bool)]?
     private var highlight: Color?
     private var mark: Color?
@@ -128,13 +128,9 @@ struct RNText: View {
             if run.marked {
                 a[.font] = UIFont.systemFont(ofSize: spec.size * m, weight: .bold)
                 a[.backgroundColor] = UIColor(highlight)
-                if let mark {
-                    a[.foregroundColor] = UIColor(mark)
-                    a[.underlineStyle] = NSUnderlineStyle.thick.rawValue
-                    a[.underlineColor] = UIColor(mark)
-                }
+                if let mark { a[.foregroundColor] = UIColor(mark) }
             }
-            out.append(NSAttributedString(string: run.marked ? "\u{00a0}\(run.text)\u{00a0}" : run.text, attributes: a))
+            out.append(NSAttributedString(string: run.marked ? "\u{00a0}[\(run.text)]\u{00a0}" : run.text, attributes: a))
         }
         return out
     }

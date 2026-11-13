@@ -57,6 +57,9 @@ struct AppColors {
     var borderFocused: Color { pick(Light.borderFocused, Dark.borderFocused) }
     var primary: Color { pick(Light.primary, Dark.primary) }
     var primaryLight: Color { pick(Light.primaryLight, Dark.primaryLight) }
+    /// The round or square tile behind an accent icon on a card. In dark mode it is a step lighter
+    /// than primaryLight, so the disc separates from the card (primaryText on it is 4.8:1).
+    var iconContainer: Color { pick(Light.iconContainer, Dark.iconContainer) }
     /// The primary color for text and icons on the background (primary itself is a fill).
     var primaryText: Color { pick(Light.primaryText, Dark.primaryText) }
     /// The countdown card: the accent in light mode, a calm deep tone of the same purple in dark.

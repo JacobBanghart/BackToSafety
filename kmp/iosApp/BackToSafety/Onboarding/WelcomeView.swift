@@ -8,7 +8,6 @@ struct WelcomeView: View {
     @Environment(\.appColors) private var colors
 
     var body: some View {
-        let featureBg = colors.isDark ? Color.white.opacity(0.08) : Color(argb: Neutral.c100)
         let optionBg = colors.isDark ? Color.white.opacity(0.1) : Color(argb: Neutral.c100)
         VStack(spacing: 0) {
             // The viewport's height decides how the first screen ends: only whole feature cards show
@@ -33,7 +32,7 @@ struct WelcomeView: View {
                             HStack(alignment: .top, spacing: 16) {
                                 SFIcon(icon, 22, colors.primaryText)
                                     .frame(width: 44, height: 44)
-                                    .background(Circle().fill(colors.primaryLight))
+                                    .background(Circle().fill(colors.iconContainer))
                                 VStack(alignment: .leading, spacing: Space.xs) {
                                     RNText(t("welcome.features.\(key).title"), Typography.bodyBold.spec, color: colors.text)
                                     RNText(t("welcome.features.\(key).description"), Typography.body.spec, color: colors.textSecondary)
@@ -41,7 +40,10 @@ struct WelcomeView: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .padding(Space.lg)
-                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(featureBg))
+                            // A card like the app's others (card fill, 1pt border): grey on grey
+                            // made the feature text look disabled.
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
                         }
 
                         VStack(alignment: .leading, spacing: 0) {
@@ -80,7 +82,9 @@ struct WelcomeView: View {
             // pinned over the content it still made the cards above it look cut off, and the layout
             // already ends the first screen on whole blocks.
             Rectangle().fill(colors.border).frame(height: 1)
-            VStack(spacing: Space.md) {
+            // The privacy line sits a full lg under the button, so it reads as its own promise
+            // rather than as the button's caption.
+            VStack(spacing: Space.lg) {
                 Button {
                     Task {
                         _ = try? await model.store.completeStep(step: "welcome")

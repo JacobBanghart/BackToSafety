@@ -63,10 +63,10 @@ struct SwitchToggle: View {
     }
 }
 
-/// The header's action (Add / Update / Save / Saving...): the form's main action as a tonal
-/// button in the bar, a tinted container (primaryLight) with the accent label. Bare text was too
-/// easy to miss and a solid fill crowded the bar. The container is 40pt inside a 48pt target;
-/// while it can't be pressed (Saving...) it's the surface tone with secondary text.
+/// The header's action (Add / Update / Save / Saving...): the screen's main action, so it is a
+/// filled primary button in the same rounded rectangle as the body's primary buttons (a tonal
+/// one read as too weak). The container is 40pt inside a 48pt target and ends at the 16pt
+/// margin; while it can't be pressed (Saving...) it takes PrimaryButton's dimmed look.
 struct HeaderSaveButton: View {
     let label: String
     let testID: String
@@ -76,10 +76,10 @@ struct HeaderSaveButton: View {
 
     var body: some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: enabled ? colors.primaryText : colors.textSecondary, lines: 1)
+            RNText(label, Typography.bodyBold.spec, color: enabled ? colors.textOnPrimary : colors.primaryText, lines: 1)
                 .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
                 .frame(minWidth: 72, minHeight: 40)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(enabled ? colors.primaryLight : colors.surface))
+                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(enabled ? colors.primary : colors.primaryLight))
                 .frame(minHeight: 48)
                 .contentShape(Rectangle())
         }

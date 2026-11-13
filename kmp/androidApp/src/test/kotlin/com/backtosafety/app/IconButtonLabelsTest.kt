@@ -10,7 +10,9 @@ import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
@@ -19,6 +21,7 @@ import com.backtosafety.app.contacts.ContactsScreen
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.home.HomeScreen
 import com.backtosafety.app.ui.AppTheme
+import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translate
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
@@ -88,6 +91,20 @@ class IconButtonLabelsTest {
         compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) { opened += it } } }
         compose.onNodeWithContentDescription("Editar perfil").assert(isButton).assertHasClickAction().performClick()
         assertEquals(listOf("profile"), opened)
+    }
+
+    @Test
+    fun eachReadinessLineIsAButtonThatSaysItsStateAndOpensItsScreen() {
+        runBlocking { store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margarita")) }
+        val opened = mutableListOf<String>()
+        compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) { opened += it } } }
+        // No photo yet: said as missing, by the word and not only the empty circle.
+        compose.onNodeWithContentDescription("Foto reciente, Agregar").assert(isButton).performScrollTo().performClick()
+        // A place is saved (setUp), so the places line says it's done and still opens the list.
+        compose.onNodeWithContentDescription("Lugares probables, Listo").assert(isButton).performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Contactos de emergencia, Listo").performScrollTo().performClick()
+        assertEquals(listOf("profile", "destinations", "contacts"), opened)
+        compose.onNodeWithText("2 de 4 listos").assertExists()
     }
 
     @Test
