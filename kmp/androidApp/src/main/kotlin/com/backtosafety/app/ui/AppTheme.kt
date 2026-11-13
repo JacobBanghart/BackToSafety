@@ -2,7 +2,11 @@ package com.backtosafety.app.ui
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -133,11 +137,42 @@ fun ceilPx(px: Float): Float = kotlin.math.ceil(px - 0.001f)
 fun DesignTokens.Type.style(fontWeight: Int = this.fontWeight, letterSpacing: Float = this.letterSpacing): TextStyle =
     rnTextStyle(fontSize, lineHeight, fontWeight, letterSpacing)
 
+/**
+ * The design tokens as Material 3's colour scheme, so the platform's own components (TopAppBar,
+ * Switch, Card, the outlined text field, ripples) take the app's colours rather than Material's
+ * baseline purple. Each role maps to the token that plays it: surfaces are the page and the card,
+ * the outline is the icon grey (3:1 for a switch's off state) and the outline variant the hairline.
+ */
+fun AppColors.materialScheme(): ColorScheme {
+    val base = if (isDark) darkColorScheme() else lightColorScheme()
+    return base.copy(
+        primary = primary, onPrimary = textOnPrimary,
+        primaryContainer = primaryLight, onPrimaryContainer = primaryText,
+        secondaryContainer = primaryLight, onSecondaryContainer = primaryText,
+        background = background, onBackground = text,
+        surface = background, onSurface = text,
+        surfaceVariant = surface, onSurfaceVariant = textSecondary,
+        surfaceContainerLowest = card, surfaceContainerLow = card, surfaceContainer = card,
+        surfaceContainerHigh = surface, surfaceContainerHighest = border,
+        surfaceTint = Color.Transparent,
+        outline = icon, outlineVariant = border,
+        error = error, onError = Color(DesignTokens.Light.textOnPrimary),
+    )
+}
+
 @Composable
 fun AppTheme(dark: Boolean, content: @Composable () -> Unit) {
     val viewConfiguration = LocalViewConfiguration.current
+    val colors = AppColors(dark)
+    MaterialTheme(colorScheme = colors.materialScheme()) {
+        AppThemeLocals(colors, viewConfiguration, content)
+    }
+}
+
+@Composable
+private fun AppThemeLocals(colors: AppColors, viewConfiguration: ViewConfiguration, content: @Composable () -> Unit) {
     CompositionLocalProvider(
-        LocalAppColors provides AppColors(dark),
+        LocalAppColors provides colors,
         // RN doesn't grow small touchables to 48dp (only an explicit hitSlop does). Matching
         // that keeps taps landing where they do in the RN app, and makes the bounds Compose
         // reports to UI Automator the real ones.

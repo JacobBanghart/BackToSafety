@@ -340,38 +340,51 @@ struct ReadoutView: View {
         }
     }
 
+    /// A contact with their call button: side by side while the name and role fit whole beside
+    /// it, otherwise the button goes under them at full width. At large text the button
+    /// squeezed the name column and cut "Primary Caregiver" short. Mirrors Android `BesideOrUnder`.
     private func contactRow(_ c: ContactEntity, _ index: Int) -> some View {
         let hairline = 1 / UIScreen.main.scale
         let role = nonEmpty(c.relationship) ?? c.role.map { t("roles.\($0)", ["ns": "contacts", "defaultValue": $0]) } ?? ""
+        let who = VStack(alignment: .leading, spacing: 2) {
+            RNText(c.name, Typography.bodyBold.spec, color: colors.text)
+            RNText(role, Typography.caption.spec, color: colors.textSecondary)
+        }
         return VStack(spacing: 0) {
             Rectangle().fill(colors.border).frame(height: hairline)
-            HStack(spacing: Space.md) {
-                VStack(alignment: .leading, spacing: 2) {
-                    RNText(c.name, Typography.bodyBold.spec, color: colors.text, lines: 1)
-                    // Two lines, so the larger call button doesn't cut the role short at large text.
-                    RNText(role, Typography.caption.spec, color: colors.textSecondary, lines: 2)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Space.md) {
+                    who.fixedSize(horizontal: true, vertical: false)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    callButton(c, index, fullWidth: false)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    Analytics.shared.track(event: .readoutContactCalled, properties: [:])
-                    dial(c.phone, .contact)
-                } label: {
-                    // Calling the family is a key action under stress, so it is a full-size button
-                    // (56pt, 18pt bold, a 20pt phone icon) like the body's primary buttons, not a chip.
-                    HStack(spacing: Space.sm) {
-                        SFIcon("phone.fill", 20, white)
-                        RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyLarge.spec.weight(700), color: white)
-                    }
-                    .fixedSize()
-                    .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
-                    .frame(minHeight: 56)
-                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(success))
+                VStack(alignment: .leading, spacing: Space.sm) {
+                    who.frame(maxWidth: .infinity, alignment: .leading)
+                    callButton(c, index, fullWidth: true)
                 }
-                .buttonStyle(.pressable)
-                .accessibilityIdentifier("readout-contact-\(index)-call")
             }
             .padding(.top, Space.sm)
         }
+    }
+
+    /// Calling the family is a key action under stress, so it is a full-size button (56pt, 18pt
+    /// bold, a 20pt phone icon) like the body's primary buttons, not a chip.
+    private func callButton(_ c: ContactEntity, _ index: Int, fullWidth: Bool) -> some View {
+        Button {
+            Analytics.shared.track(event: .readoutContactCalled, properties: [:])
+            dial(c.phone, .contact)
+        } label: {
+            HStack(spacing: Space.sm) {
+                SFIcon("phone.fill", 20, white)
+                RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyLarge.spec.weight(700), color: white)
+            }
+            .fixedSize()
+            .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+            .frame(maxWidth: fullWidth ? .infinity : nil, minHeight: 56)
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(success))
+        }
+        .buttonStyle(.pressable)
+        .accessibilityIdentifier("readout-contact-\(index)-call")
     }
 
     private func copyButton(script: Bool, label: String, icon: String, action: @escaping () -> Void) -> some View {

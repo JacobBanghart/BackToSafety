@@ -3,8 +3,10 @@ package com.backtosafety.app.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -88,6 +90,7 @@ fun AppInput(
     // the way RN's controlled TextInput does, or the next keystroke lands mid-number.
     var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     if (field.text != value) field = TextFieldValue(value, TextRange(value.length))
+    val interaction = remember { MutableInteractionSource() }
     BasicTextField(
         value = field,
         onValueChange = {
@@ -101,18 +104,14 @@ fun AppInput(
         modifier = modifier
             .fillMaxWidth()
             .testTag(testTag)
-            .then(if (multiline) Modifier.heightIn(min = 80.udp) else Modifier.height(48.udp))
-            .clip(RoundedCornerShape(radius.lg.dp))
-            .background(colors.inputBackground)
-            .border(1.udp, colors.inputBorder, RoundedCornerShape(radius.lg.dp)),
+            .then(if (multiline) Modifier.heightIn(min = 80.udp) else Modifier.height(48.udp)),
+        interactionSource = interaction,
         decorationBox = { field ->
-            Box(
-                Modifier.padding(horizontal = space.lg.udp, vertical = if (multiline) space.sm.udp else 0.dp),
-                contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart,
-            ) {
-                if (value.isEmpty()) Text(placeholder, style = textStyle, color = colors.inputPlaceholder)
-                field()
-            }
+            OutlinedFieldDecoration(
+                value, field, interaction, multiline, { Text(placeholder, style = textStyle, color = colors.inputPlaceholder) },
+                background = colors.inputBackground, border = colors.inputBorder,
+                padding = PaddingValues(horizontal = space.lg.udp, vertical = if (multiline) space.sm.udp else 0.dp),
+            )
         },
     )
 }

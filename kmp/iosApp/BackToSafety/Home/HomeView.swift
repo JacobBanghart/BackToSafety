@@ -281,10 +281,21 @@ struct HomeView: View {
                 let state = t(check.done ? "readiness.done" : "readiness.add")
                 Button { openReadiness(check.item) } label: {
                     HStack(spacing: Space.md) {
-                        SFIcon(check.done ? "checkmark.circle.fill" : "circle", 22, check.done ? colors.success : colors.icon)
+                        // To do is a plus in a circle (an empty circle read as a radio button),
+                        // done a green check.
+                        SFIcon(check.done ? "checkmark.circle.fill" : "plus.circle", 22, check.done ? colors.success : colors.primaryText)
                         RNText(label, Typography.body.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
-                        RNText(state, Typography.label.spec.spacing(0), color: check.done ? colors.textSecondary : colors.primaryText)
-                        SFIcon("chevron.right", 16, check.done ? colors.textSecondary : colors.primaryText)
+                        if check.done {
+                            RNText(state, Typography.label.spec.spacing(0), color: colors.textSecondary)
+                            SFIcon("chevron.right", 16, colors.textSecondary)
+                        } else {
+                            // A missing item's Add looks like the button it is: a tonal capsule at
+                            // body size, still quieter than the red emergency banner above.
+                            RNText(state, Typography.bodyBold.spec, color: colors.primaryText)
+                                .padding(.horizontal, Space.lg)
+                                .frame(minHeight: 36)
+                                .background(Capsule().fill(colors.primaryLight))
+                        }
                     }
                     .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
                     .frame(minHeight: 48)

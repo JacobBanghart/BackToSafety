@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -57,6 +58,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
@@ -513,19 +516,18 @@ private fun IdentityCard(t: Translate, p: Profile) {
 private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () -> Unit) {
     val colors = LocalAppColors.current
     val rule = hairline
-    Row(
-        Modifier.fillMaxWidth()
+    BesideOrUnder(
+        gap = space.md.udp,
+        stackGap = space.sm.udp,
+        modifier = Modifier.fillMaxWidth()
             .drawBehind { drawLine(colors.border, Offset(0f, rule.toPx() / 2), Offset(size.width, rule.toPx() / 2), rule.toPx()) }
             .padding(top = rule).padding(top = space.sm.udp),
-        horizontalArrangement = Arrangement.spacedBy(space.md.udp),
-        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.udp)) {
-            Text(c.name, style = type.bodyBold.style(), color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Column(verticalArrangement = Arrangement.spacedBy(2.udp)) {
+            Text(c.name, style = type.bodyBold.style(), color = colors.text)
             val role = c.relationship?.ifEmpty { null }
                 ?: c.role?.let { t("roles.$it", mapOf("ns" to "contacts", "defaultValue" to it)) } ?: ""
-            // Two lines, so the larger call button doesn't cut the role short at large text.
-            Text(role, style = type.caption.style(), color = colors.textSecondary, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(role, style = type.caption.style(), color = colors.textSecondary)
         }
         // Calling the family is a key action under stress, so it is a full-size button (56dp,
         // 18sp bold, a 20dp phone icon) like the body's primary buttons, not a small chip.
@@ -534,11 +536,43 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
             Modifier.testTag("readout-contact-$index-call").heightIn(min = 56.udp).clip(shape)
                 .clickable(role = Role.Button, onClick = onCall).background(success)
                 .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-            horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+            horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon("phone.fill", 20f, white)
             Text(formatPhoneNumber(c.phone), style = type.bodyLarge.style(fontWeight = 700), color = white)
+        }
+    }
+}
+
+/**
+ * Two children: the first (who) and the second (an action). Side by side while the first fits
+ * whole beside the action; otherwise the action goes under it at full width. At large text the
+ * call button squeezed the name column and cut "Primary Caregiver" short. Mirrors the iOS
+ * contact row's ViewThatFits.
+ */
+@Composable
+internal fun BesideOrUnder(gap: Dp, stackGap: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { measurables, constraints ->
+        val (info, action) = measurables
+        val width = constraints.maxWidth
+        val actionWidth = action.maxIntrinsicWidth(Constraints.Infinity)
+        val infoWidth = info.maxIntrinsicWidth(Constraints.Infinity)
+        if (infoWidth + gap.roundToPx() + actionWidth <= width) {
+            val a = action.measure(Constraints.fixedWidth(actionWidth))
+            val i = info.measure(Constraints(maxWidth = width - gap.roundToPx() - actionWidth))
+            val height = maxOf(a.height, i.height)
+            layout(width, height) {
+                i.place(0, (height - i.height) / 2)
+                a.place(width - a.width, (height - a.height) / 2)
+            }
+        } else {
+            val i = info.measure(Constraints(maxWidth = width))
+            val a = action.measure(Constraints.fixedWidth(width))
+            layout(width, i.height + stackGap.roundToPx() + a.height) {
+                i.place(0, 0)
+                a.place(0, i.height + stackGap.roundToPx())
+            }
         }
     }
 }

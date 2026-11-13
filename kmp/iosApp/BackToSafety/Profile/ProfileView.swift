@@ -275,16 +275,18 @@ struct ProfileView: View {
         .padding(.bottom, Space.xl)
     }
 
-    /// Two equal choices, so one fill: the primary, with its icon, 48pt tall.
+    /// Two equal, secondary choices: outlined in the primary ink with its icon, 48pt tall, as on
+    /// the onboarding photo step, so they don't weigh as much as Save.
     private func photoButton(_ label: String, _ testID: String, _ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, colors.textOnPrimary)
-                RNText(label, Typography.bodyBold.spec, color: colors.textOnPrimary)
+                SFIcon(icon, 18, colors.primaryText)
+                RNText(label, Typography.bodyBold.spec, color: colors.primaryText)
             }
             .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
             .frame(maxWidth: .infinity, minHeight: 48)
-            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primaryText, lineWidth: 1))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)

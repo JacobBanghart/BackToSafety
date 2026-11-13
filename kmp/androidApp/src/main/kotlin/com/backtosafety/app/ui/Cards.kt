@@ -1,5 +1,6 @@
 package com.backtosafety.app.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -19,6 +22,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,20 +35,26 @@ private const val DETAIL_LABEL_WIDTH = 120
 /** How strongly a [AppCard] with `danger` is washed with the error colour (its border is 0.5). */
 const val DANGER_FILL_ALPHA = 0.08f
 
-/** components/AppCard.tsx: card background, 1dp border, radius lg, padding lg, margin below md. */
+/**
+ * A section card: Material 3's OutlinedCard in the theme's card colour and hairline, radius lg,
+ * padding lg, margin below md. A danger card (Delete Account) is washed and edged in the error
+ * colour, so it is marked as destructive by the whole card, not only by its icon.
+ */
 @Composable
 fun AppCard(modifier: Modifier = Modifier, surface: Boolean = false, danger: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     val colors = LocalAppColors.current
-    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
-    Column(
-        modifier.padding(bottom = DesignTokens.Spacing.md.udp).fillMaxWidth().clip(shape)
-            .background(if (surface) colors.surface else colors.card)
-            // A danger card (Delete Account) is washed and edged in the error colour, so it is
-            // marked as destructive by the whole card, not only by its icon.
-            .then(if (danger) Modifier.background(colors.error.copy(alpha = DANGER_FILL_ALPHA)) else Modifier)
-            .rnBorder(1.udp, if (danger) colors.error.copy(alpha = 0.5f) else colors.border, shape).padding(DesignTokens.Spacing.lg.udp),
-        content = content,
-    )
+    val fill = if (surface) colors.surface else colors.card
+    OutlinedCard(
+        modifier.padding(bottom = DesignTokens.Spacing.md.udp).fillMaxWidth(),
+        shape = RoundedCornerShape(DesignTokens.Radius.lg.dp),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = if (danger) colors.error.copy(alpha = DANGER_FILL_ALPHA).compositeOver(fill) else fill,
+            contentColor = colors.text,
+        ),
+        border = BorderStroke(1.dp, if (danger) colors.error.copy(alpha = 0.5f) else colors.border),
+    ) {
+        Column(Modifier.fillMaxWidth().padding(DesignTokens.Spacing.lg.udp), content = content)
+    }
 }
 
 /**

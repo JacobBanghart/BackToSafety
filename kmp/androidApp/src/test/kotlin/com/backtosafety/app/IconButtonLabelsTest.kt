@@ -7,9 +7,12 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -129,6 +132,26 @@ class IconButtonLabelsTest {
         compose.onNodeWithContentDescription("Reordenar a Beto").assert(
             SemanticsMatcher("can move down") { node -> node.config[SemanticsActions.CustomActions].map { it.label } == listOf("Bajar") },
         )
+        // Two contacts: there's already a backup, so no prompt for one.
+        compose.onNodeWithText("Agrega un contacto de respaldo").assertDoesNotExist()
+    }
+
+    @Test
+    fun withOneContactTheListSuggestsASecond() {
+        compose.setContent { AppTheme(dark = false) { ContactsScreen(t("contacts"), t("common"), store) {} } }
+        compose.onNodeWithText("Agrega un contacto de respaldo").assertExists()
+        compose.onNodeWithText("Si no logras comunicarte con Ana en una emergencia, tendrás a otra persona a quien llamar.").assertExists()
+    }
+
+    @Test
+    fun theNotifyRowIsOneSwitchThatSaysWhetherItIsOn() {
+        compose.setContent { AppTheme(dark = false) { ContactsScreen(t("contacts"), t("common"), store) {} } }
+        compose.onNodeWithContentDescription("Editar a Ana").performClick()
+        val isSwitch = SemanticsMatcher("role is Switch") { SemanticsProperties.Role in it.config && it.config[SemanticsProperties.Role] == Role.Switch }
+        // The whole row is the control: its label, the Switch role and on/off, not a bare button.
+        val row = compose.onNodeWithTag("contacts-form-notify").performScrollTo().assert(isSwitch).assertIsOn()
+        row.performClick()
+        compose.onNodeWithTag("contacts-form-notify").assertIsOff()
     }
 
     @Test

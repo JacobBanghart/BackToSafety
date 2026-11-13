@@ -342,22 +342,24 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
                 ) { Icon("camera.fill", 38f, colors.primaryText) }
             }
         }
-        // Two equal choices, so one fill: the primary, with its icon, 48dp tall. Side by side
-        // while they fit inside the screen's margins, stacked at large text.
+        // Two equal, secondary choices: outlined in the primary ink with its icon, 48dp tall, as
+        // on the onboarding photo step, so they don't weigh as much as Save. Side by side while
+        // they fit inside the screen's margins, stacked at large text.
         ButtonRowOrStack(space.md.udp) {
             for ((label, tag, icon, action) in listOf(
                 Quad(t("takePhoto"), "profile-photo-take", "camera.fill", onCamera),
                 Quad(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle", onLibrary),
             )) {
+                val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                 Row(
-                    Modifier.testTag(tag).heightIn(min = 48.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                    Modifier.testTag(tag).heightIn(min = 48.udp).clip(shape)
                         .clickable(role = Role.Button, onClick = action)
-                        .background(colors.primary).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+                        .rnBorder(1.udp, colors.primaryText, shape).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
                     horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(icon, 18f, colors.textOnPrimary)
-                    Text(label, style = type.bodyBold.style(), color = colors.textOnPrimary)
+                    Icon(icon, 18f, colors.primaryText)
+                    Text(label, style = type.bodyBold.style(), color = colors.primaryText)
                 }
             }
         }

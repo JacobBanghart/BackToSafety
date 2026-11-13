@@ -53,13 +53,14 @@ struct SwitchToggle: View {
     @Environment(\.appColors) private var colors
 
     var body: some View {
-        // On, the knob is the primary's own ink (white in light, deep violet on the dark
-        // theme's light primary), so it stays visible on the track.
-        Circle().fill(on ? colors.textOnPrimary : Color(argb: Light.background)).frame(width: 24, height: 24)
-            .offset(x: on ? 20 : 0)
-            .frame(width: 44, height: 24, alignment: .leading)
-            .padding(3)
-            .background(RoundedRectangle(cornerRadius: 15).fill(on ? colors.primary : colors.border))
+        // The system switch, tinted with the brand primary, so the form reads as iOS. It only
+        // draws: the row around it is the control (the whole row toggles), and the row gives
+        // VoiceOver the switch's role and state.
+        Toggle("", isOn: .constant(on))
+            .labelsHidden()
+            .tint(colors.primary)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
     }
 }
 

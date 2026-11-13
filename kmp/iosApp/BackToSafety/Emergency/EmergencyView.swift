@@ -331,13 +331,14 @@ struct EmergencyView: View {
                    Typography.body.spec, color: white, align: .center)
                 .padding(.top, Space.xs)
             VStack(spacing: Space.xs) {
+                // A 10pt track that reads at arm's length; a 6pt pale one disappeared on the card.
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.4))
+                        Capsule().fill(Color.white.opacity(0.3))
                         Capsule().fill(white).frame(width: geo.size.width * progress)
                     }
                 }
-                .frame(height: 6)
+                .frame(height: 10)
                 let progressText = t("timer.stepsProgress", ["checked": checked.count, "total": steps.count])
                 RNText(progressText, Typography.label.spec.weight(500).spacing(0), color: white, align: .center)
                     .frame(maxWidth: .infinity)
@@ -598,20 +599,20 @@ struct EmergencyView: View {
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
                     }
-                    // Three actions with long labels stack full width, as platform alerts stack
-                    // them. Staying is the safe choice, so it is first and filled. Going back says
-                    // what it does (the timer keeps running), so it can't be read as ending the
-                    // search; End Emergency is the only red one, set apart below the others.
-                    VStack(spacing: Space.sm) {
+                    // Two choices, then a third set apart. Keep Searching is the safe one, so it
+                    // is the only filled button. Leaving is a text action that says what happens
+                    // (the timer keeps running), so the two can't be read as the same choice. End
+                    // Emergency is the destructive one: below a rule, edged and washed in red.
+                    VStack(spacing: Space.xs) {
                         button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, colors.textOnPrimary) { modal = nil }
-                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.text, outline: true) {
+                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.primaryText) {
                             Analytics.shared.track(event: .emergencyLeave, properties: [:])
                             leave()
                         }
                     }
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Space.xs)
-                    Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.xs)
+                    Rectangle().fill(colors.border).frame(height: 1)
                     Button {
                         Analytics.shared.track(event: .emergencyCancelled, properties: endedProperties())
                         // Ended without an outcome: stamp the end time, keep the outcome as it was.
@@ -621,16 +622,18 @@ struct EmergencyView: View {
                             leave()
                         }
                     } label: {
-                        // A destructive button, not a bare link: outlined in the theme's error color.
-                        RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.error)
-                            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
-                            .padding(.vertical, Space.md)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1))
-                            .contentShape(Rectangle()).accessibilityElement(children: .combine)
+                        HStack(spacing: Space.sm) {
+                            SFIcon("xmark.circle.fill", 20, colors.error)
+                            RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.error)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
+                        .padding(.vertical, Space.md)
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.error.opacity(dangerFillOpacity)))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1.5))
+                        .contentShape(Rectangle()).accessibilityElement(children: .combine)
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("emergency-modal-leave-end")
-                    .padding(.top, Space.xs)
                 case .catchUpWarning, .catchUpExpired:
                     let key = which == .catchUpWarning ? "warning" : "expired"
                     let number = ["emergencyNumber": emergencyNumber]

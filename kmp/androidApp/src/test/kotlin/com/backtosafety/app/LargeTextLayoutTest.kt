@@ -1,7 +1,10 @@
 package com.backtosafety.app
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -20,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
 import com.backtosafety.app.onboarding.WelcomeScreen
+import com.backtosafety.app.readout.BesideOrUnder
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.ButtonRowOrStack
 import com.backtosafety.app.ui.ChipGrid
@@ -92,6 +96,39 @@ class LargeTextLayoutTest {
 
     @Test
     fun theWelcomeScreenShowsOnlyWholeBlocksAboveTheFooterAtTheLargestText() = assertWelcomeEndsOnWholeBlocks(2f)
+
+    /** A contact row (name and role, then the call button) laid out at [scale] in a 347dp column. */
+    private fun contactRow(scale: Float) {
+        largeText(scale) {
+            Box(Modifier.width(347.dp)) {
+                BesideOrUnder(gap = 12.dp, stackGap = 8.dp) {
+                    Column {
+                        Text("John Smith", modifier = Modifier.testTag("name"))
+                        Text("Primary Caregiver", modifier = Modifier.testTag("role"))
+                    }
+                    Text("(555) 123-4567", modifier = Modifier.testTag("call").padding(horizontal = 16.dp, vertical = 16.dp))
+                }
+            }
+        }
+    }
+
+    @Test
+    fun aContactsCallButtonGoesUnderTheNameWhenBothDontFitOnOneLine() {
+        // At the largest text the button beside the name cut "Primary Caregiver" short.
+        contactRow(2f)
+        val role = compose.onNodeWithTag("role").getUnclippedBoundsInRoot()
+        val call = compose.onNodeWithTag("call").getUnclippedBoundsInRoot()
+        assertTrue("the call button is beside the role (${call.top} < ${role.bottom})", call.top >= role.bottom)
+        assertEquals("the stacked call button isn't full width", 347f, call.width.value, 0.5f)
+    }
+
+    @Test
+    fun aContactsCallButtonStaysBesideTheNameWhenBothFit() {
+        contactRow(1f)
+        val name = compose.onNodeWithTag("name").getUnclippedBoundsInRoot()
+        val call = compose.onNodeWithTag("call").getUnclippedBoundsInRoot()
+        assertTrue("the call button isn't beside the name", call.left >= name.right && call.top < name.bottom)
+    }
 
     @Test
     fun optionChipsAreAllTheSameHeightWhenALabelIsLong() {

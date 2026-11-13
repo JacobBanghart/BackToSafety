@@ -225,6 +225,11 @@ struct ContactsView: View {
                                     moveUp: index > 0 ? { move(list, from: index, to: index - 1) } : nil,
                                     moveDown: index < list.count - 1 ? { move(list, from: index, to: index + 1) } : nil)
                     }
+                    // With a single contact, nobody else is called if they don't answer: say so
+                    // right above the Add button.
+                    if list.count == 1, let only = list.first {
+                        secondContactPrompt(only.name)
+                    }
                     HStack(spacing: Space.sm) {
                         addButton("contacts-add", action: add)
                         importButton("contacts-import")
@@ -236,6 +241,26 @@ struct ContactsView: View {
             .padding([.horizontal, .top], Space.lg)
         }
         .scrollStopsAtSafeArea()
+    }
+
+    /// Shown under the only contact: why a second one matters. Quiet (surface fill, no action of
+    /// its own) because the Add button sits right under it; read as one element by VoiceOver.
+    private func secondContactPrompt(_ name: String) -> some View {
+        HStack(spacing: Space.md) {
+            SFIcon("person.badge.plus", 20, colors.primaryText)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(colors.iconContainer))
+            VStack(alignment: .leading, spacing: Space.xxs) {
+                RNText(t("secondContact.title"), Typography.bodyBold.spec, color: colors.text)
+                RNText(t("secondContact.body", ["name": name]), Typography.label.spec.weight(400).spacing(0), color: colors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(Space.lg)
+        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.surface))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .padding(.bottom, Space.sm)
     }
 
     private var empty: some View {
@@ -423,6 +448,10 @@ struct ContactsView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.pressable)
+                // Read as the switch it looks like: its label, role and on/off state.
+                .accessibilityRepresentation {
+                    Toggle(t("notifyInEmergency"), isOn: $form.notifyOnEmergency)
+                }
                 .accessibilityIdentifier("contacts-form-notify")
                 .padding(.bottom, Space.lg)
                 FormTextInput(label: t("form.notesLabel"), text: $form.notes, testID: "contacts-form-notes",

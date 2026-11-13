@@ -80,6 +80,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.backtosafety.app.BuildConfig
+import com.backtosafety.app.ui.DANGER_FILL_ALPHA
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
@@ -471,6 +472,10 @@ private fun vibrate(context: Context, alert: CountdownAlert) {
     }
 }
 
+/** The timer card's progress track: thick enough to read, its unfilled part a clear white tint. */
+private const val TIMER_TRACK_HEIGHT = 10
+private const val TIMER_TRACK_ALPHA = 0.3f
+
 @Composable
 private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked: Int, total: Int, emergencyNumber: String) {
     val space = DesignTokens.Spacing
@@ -512,8 +517,9 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
             modifier = Modifier.padding(top = space.xs.udp),
         )
         Column(Modifier.fillMaxWidth().padding(top = space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
-            Box(Modifier.fillMaxWidth().height(6.udp).clip(RoundedCornerShape(3.udp)).background(Color.White.copy(alpha = 0.4f))) {
-                Box(Modifier.fillMaxWidth(checked.toFloat() / total).fillMaxHeight().clip(RoundedCornerShape(3.udp)).background(white))
+            // A 10dp track that reads at arm's length; a 6dp pale one disappeared on the card.
+            Box(Modifier.fillMaxWidth().height(TIMER_TRACK_HEIGHT.udp).clip(CircleShape).background(Color.White.copy(alpha = TIMER_TRACK_ALPHA))) {
+                Box(Modifier.fillMaxWidth(checked.toFloat() / total).fillMaxHeight().clip(CircleShape).background(white))
             }
             Text(
                 t("timer.stepsProgress", mapOf("checked" to checked, "total" to total)),
@@ -845,11 +851,11 @@ private fun EmergencyModal(
                                 .heightIn(min = 48.udp).clickable(onClick = onNotificationSettings).padding(vertical = space.md.udp),
                         )
                     }
-                    // Three actions with long labels stack full width, as platform dialogs stack
-                    // them. Staying is the safe choice, so it is first and filled. Going back says
-                    // what it does (the timer keeps running), so it can't be read as ending the
-                    // search; End Emergency is the only red one, set apart below the others.
-                    Column(Modifier.fillMaxWidth().padding(top = space.xs.udp), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+                    // Two choices, then a third set apart. Keep Searching is the safe one, so it
+                    // is the only filled button. Leaving is a text action that says what happens
+                    // (the timer keeps running), so the two can't be read as the same choice. End
+                    // Emergency is the destructive one: below a rule, edged and washed in red.
+                    Column(Modifier.fillMaxWidth().padding(top = space.xs.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
                         Box(
                             Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-stay").clip(buttonShape)
                                 .background(colors.primary).clickable(role = Role.Button, onClick = onDismiss)
@@ -858,19 +864,23 @@ private fun EmergencyModal(
                         ) { Text(t("modal.leave.stay"), style = buttonText, color = colors.textOnPrimary, textAlign = TextAlign.Center) }
                         Box(
                             Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
-                                .clickable(role = Role.Button, onClick = onLeave).rnBorder(1.udp, colors.inputBorder, buttonShape)
+                                .clickable(role = Role.Button, onClick = onLeave)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
-                        ) { Text(t("modal.leave.leave"), style = buttonText, color = colors.text, textAlign = TextAlign.Center) }
+                        ) { Text(t("modal.leave.leave"), style = buttonText, color = colors.primaryText, textAlign = TextAlign.Center) }
                     }
-                    Box(Modifier.padding(top = space.xs.udp).fillMaxWidth().height(1.udp).background(colors.border))
-                    // A destructive button, not a bare link: outlined in the theme's error color.
-                    Box(
-                        Modifier.padding(top = space.xs.udp).fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-end")
-                            .clip(buttonShape).clickable(role = Role.Button, onClick = onEnd).rnBorder(1.udp, colors.error, buttonShape)
+                    Box(Modifier.fillMaxWidth().height(1.udp).background(colors.border))
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-end")
+                            .clip(buttonShape).background(colors.error.copy(alpha = DANGER_FILL_ALPHA))
+                            .clickable(role = Role.Button, onClick = onEnd).rnBorder(1.5f.udp, colors.error, buttonShape)
                             .padding(vertical = space.md.udp, horizontal = space.lg.udp),
-                        contentAlignment = Alignment.Center,
-                    ) { Text(t("modal.leave.end"), style = buttonText, color = colors.error) }
+                        horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon("xmark.circle.fill", 20f, colors.error)
+                        Text(t("modal.leave.end"), style = buttonText, color = colors.error)
+                    }
                 }
                 Modal.CATCH_UP_WARNING, Modal.CATCH_UP_EXPIRED -> {
                     val key = modal.catchUp!!.key

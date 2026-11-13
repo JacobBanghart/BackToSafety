@@ -90,12 +90,8 @@ fun ScreenHeader(
         },
         windowInsets = WindowInsets(0.dp),
         expandedHeight = 64.udp,
-        colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = colors.background,
-            scrolledContainerColor = colors.background,
-            titleContentColor = colors.text,
-            navigationIconContentColor = colors.text,
-            actionIconContentColor = colors.text,
-        ),
+        // The theme's own app bar colours: AppTheme maps Material's surface to the page
+        // background and onSurface to the text colour.
+        colors = TopAppBarDefaults.topAppBarColors(),
     )
 }

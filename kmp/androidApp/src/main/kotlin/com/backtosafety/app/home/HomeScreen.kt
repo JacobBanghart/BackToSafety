@@ -364,6 +364,9 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
     }
 }
 
+/** The height of a readiness line's Add capsule; the whole line (48dp) is the touch target. */
+private const val READINESS_ADD_HEIGHT = 36
+
 /**
  * "Ready for an emergency": what's filled in for the script and the search, each line opening
  * the screen that fills it in. Done is said by the icon and by the word, not by colour alone;
@@ -409,13 +412,22 @@ private fun ReadinessCard(t: Translate, checks: List<ReadinessCheck>, onOpen: (R
                 horizontalArrangement = Arrangement.spacedBy(space.md.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(if (check.done) "checkmark.circle.fill" else "circle", 22f, if (check.done) colors.success else colors.icon)
+                // To do is a plus in a circle (an empty circle read as a radio button), done a
+                // green check.
+                Icon(if (check.done) "checkmark.circle.fill" else "plus.circle", 22f, if (check.done) colors.success else colors.primaryText)
                 Text(label, style = type.body.style(), color = colors.text, modifier = Modifier.weight(1f))
-                Text(
-                    state, style = type.label.style(letterSpacing = 0f),
-                    color = if (check.done) colors.textSecondary else colors.primaryText,
-                )
-                Icon("chevron.right", 16f, if (check.done) colors.textSecondary else colors.primaryText)
+                if (check.done) {
+                    Text(state, style = type.label.style(letterSpacing = 0f), color = colors.textSecondary)
+                    Icon("chevron.right", 16f, colors.textSecondary)
+                } else {
+                    // A missing item's Add looks like the button it is: a tonal capsule at body
+                    // size, still quieter than the red emergency banner above.
+                    Box(
+                        Modifier.heightIn(min = READINESS_ADD_HEIGHT.udp).clip(CircleShape).background(colors.primaryLight)
+                            .padding(horizontal = space.lg.udp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(state, style = type.bodyBold.style(), color = colors.primaryText) }
+                }
             }
         }
     }

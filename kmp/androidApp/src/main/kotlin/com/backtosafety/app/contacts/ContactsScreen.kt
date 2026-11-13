@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -301,6 +302,9 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                             open(contact, contact.toForm())
                         }
                     }
+                    // With a single contact, nobody else is called if they don't answer: say so
+                    // right above the Add button.
+                    if (list.size == 1) SecondContactPrompt(t, list.first().name)
                     Row(Modifier.padding(top = space.sm.udp), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         AddButton(t("addContact"), "contacts-add") {
                             Analytics.track(AnalyticsEvent.CONTACT_ADD_TAPPED)
@@ -448,6 +452,30 @@ private fun RowScope.ImportButton(label: String, testID: String, enabled: Boolea
     }
 }
 
+/**
+ * Shown under the only contact: why a second one matters. Quiet (surface fill, no action of its
+ * own) because the Add button sits right under it; read as one sentence by TalkBack.
+ */
+@Composable
+private fun SecondContactPrompt(t: Translate, name: String) {
+    val colors = LocalAppColors.current
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = space.sm.udp).semantics(mergeDescendants = true) {}
+            .clip(shape).background(colors.surface).rnBorder(1.udp, colors.border, shape).padding(space.lg.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.md.udp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(40.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
+            Icon("person.badge.plus", 20f, colors.primaryText)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
+            Text(t("secondContact.title"), style = type.bodyBold.style(), color = colors.text)
+            Text(t("secondContact.body", mapOf("name" to name)), style = type.label.style(fontWeight = 400, letterSpacing = 0f), color = colors.textSecondary)
+        }
+    }
+}
+
 @Composable
 private fun Empty(t: Translate, importing: Boolean, onAdd: () -> Unit, onImport: () -> Unit) {
     val colors = LocalAppColors.current
@@ -513,7 +541,8 @@ private fun Form(
         val toggleShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
         Row(
             Modifier.fillMaxWidth().padding(bottom = space.lg.udp).testTag("contacts-form-notify").clip(toggleShape)
-                .clickable { onChange(form.copy(notifyOnEmergency = !form.notifyOnEmergency)) }
+                // The whole row is the switch: TalkBack reads its label, the Switch role and on/off.
+                .toggleable(form.notifyOnEmergency, role = Role.Switch) { onChange(form.copy(notifyOnEmergency = it)) }
                 .background(colors.inputBackground).rnBorder(1.udp, colors.inputBorder, toggleShape).padding(space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

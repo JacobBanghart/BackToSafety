@@ -68,6 +68,9 @@
     "lightbulb.fill": "lightbulb",
     "line.3.horizontal": "drag-indicator",
     "arrow.left": "arrow-back",
-    "tshirt.fill": "checkroom"
+    "tshirt.fill": "checkroom",
+    "xmark.circle.fill": "cancel",
+    "plus.circle": "add-circle-outline",
+    "person.badge.plus": "person-add"
   }
 }

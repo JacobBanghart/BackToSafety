@@ -12,6 +12,10 @@
     "body": "Add people to call or text when they wander.",
     "button": "Add First Contact"
   },
+  "secondContact": {
+    "title": "Add a backup contact",
+    "body": "If {{name}} can't be reached in an emergency, you'll have someone else to call."
+  },
   "roles": {
     "primary_caregiver": "Primary Caregiver",
     "caregiver": "Caregiver",
