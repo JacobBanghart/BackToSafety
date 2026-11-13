@@ -68,8 +68,8 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     val space = DesignTokens.Spacing
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    // Saveable: a picked photo survives rotation, a font-size change and the system reclaiming
-    // the app, all of which recreate this screen.
+    // Saveable: a picked photo survives a font-size change and the system reclaiming the app,
+    // both of which recreate this screen (rotation doesn't: MainActivity handles it).
     var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
 

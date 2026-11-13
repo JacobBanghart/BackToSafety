@@ -15,6 +15,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.core.app.ActivityOptionsCompat
@@ -48,7 +49,8 @@ import java.io.File
 /**
  * A photo survives the app being recreated mid-flow: the system can reclaim the app while the
  * cropper has the screen, and the cropped photo then arrives before Profile has reloaded its
- * form; onboarding keeps a picked photo across rotation (issue #3).
+ * form; onboarding keeps a picked photo when its screen is recreated (process death, or a
+ * font-size change; rotation doesn't recreate MainActivity). Found reproducing issue #3.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w411dp-h914dp-xxhdpi")
@@ -81,6 +83,7 @@ class PhotoRecreationTest {
                 is ActivityResultContracts.TakePicture -> dispatchResult(requestCode, Activity.RESULT_OK, null)
                 is ActivityResultContracts.PickVisualMedia -> dispatchResult(requestCode, Activity.RESULT_OK, Intent().setData(Uri.fromFile(jpeg("picked.jpg"))))
                 is CropImageContract -> if (holdCrop) cropRequest = requestCode else dispatchResult(requestCode, Activity.RESULT_OK, cropped())
+                else -> error("The photo flow launched an activity this test doesn't stand in for: $contract")
             }
         }
     }
@@ -134,11 +137,12 @@ class PhotoRecreationTest {
     @Test
     fun aPhotoCroppedAfterTheAppWasReclaimedReachesTheProfile() {
         var registry = Registry(holdCrop = true)
+        var left = 0
         val tester = StateRestorationTester(compose)
         tester.setContent {
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(registry)) {
                 AppTheme(dark = false) {
-                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, {}, {})
+                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, { left++ }, {})
                 }
             }
         }
@@ -155,13 +159,18 @@ class PhotoRecreationTest {
         }
         tester.emulateSavedInstanceStateRestore()
 
+        // The photo is an unsaved edit: Back asks before discarding it rather than leaving.
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo-take").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("profile-back").performClick()
+        assertEquals(0, left)
+
         compose.onNodeWithTag("profile-save").performClick()
         compose.waitUntil(5_000) { savedPhoto() != null }
         assertIsSavedPhoto(savedPhoto())
     }
 
     @Test
-    fun aPhotoPickedDuringOnboardingSurvivesRotation() {
+    fun aPhotoPickedDuringOnboardingSurvivesItsScreenBeingRecreated() {
         val tester = StateRestorationTester(compose)
         var continued = 0
         tester.setContent {
