@@ -112,8 +112,8 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             .fillMaxSize()
             .background(colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
-            .verticalScroll(rememberScrollState())
             .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
             .padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp, bottom = space.xxl.udp),
     ) {
         // Header
@@ -285,22 +285,22 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
             .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .padding(space.lg.udp),
     ) {
-        // The 911 script lives here, so the card leads with an icon and a title-size heading,
-        // and its "911 Script" pill is body size: it outranks the plain Settings row below.
+        // One set with the Contacts and Places cards above: the same 44dp round icon, a bodyBold
+        // title and a smaller second line, laid out as a row because the card is full width.
+        // The title stays on one line at large text; "911 Script" is the second line, in the
+        // accent colour, and the chevron says the whole card opens it.
         Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(40.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-                Icon("doc.text.fill", 20f, colors.primaryText)
+            Box(Modifier.size(44.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
+                Icon("doc.text.fill", 22f, colors.primaryText)
             }
-            Text(t("emergencyInfo.title"), style = type.title.style(), color = colors.text, modifier = Modifier.weight(1f))
-            Row(
-                Modifier.heightIn(min = 36.udp).clip(CircleShape).background(colors.primaryLight)
-                    .padding(start = space.md.udp, end = space.sm.udp),
-                horizontalArrangement = Arrangement.spacedBy(space.xxs.udp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(t("emergencyInfo.script911"), style = type.bodyBold.style(), color = colors.primaryText)
-                Icon("chevron.right", 18f, colors.primaryText)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
+                Text(
+                    t("emergencyInfo.title"), style = type.bodyBold.style(), color = colors.text,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+                Text(t("emergencyInfo.script911"), style = type.caption.style(fontWeight = 600), color = colors.primaryText)
             }
+            Icon("chevron.right", 20f, colors.primaryText)
         }
         val items = listOfNotNull(
             profile.medicalConditions?.takeIf { it.isNotEmpty() }?.let { "emergencyInfo.healthNotes" to it },

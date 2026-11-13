@@ -242,6 +242,7 @@ struct ContactsView: View {
             }
             .padding([.horizontal, .top], Space.lg)
         }
+        .scrollStopsAtSafeArea()
     }
 
     private var empty: some View {
@@ -408,5 +409,6 @@ struct ContactsView: View {
             .padding(Space.lg)
         }
         .scrollDismissesKeyboard(.interactively)
+        .scrollStopsAtSafeArea()
     }
 }

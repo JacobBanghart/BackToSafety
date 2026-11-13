@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
@@ -33,6 +34,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
 
@@ -155,5 +158,41 @@ fun SkipButton(label: String, testTag: String, onClick: () -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         Text(label, style = DesignTokens.Typography.body.style(), color = colors.textSecondary)
+    }
+}
+
+/**
+ * Buttons side by side at their natural width, centred, while they fit; otherwise stacked, each
+ * the full width. At large text two buttons in a row ran to within a few pixels of the screen
+ * edge and past the screen's margin. Mirrors iOS `ButtonRowOrStack`.
+ */
+@Composable
+fun ButtonRowOrStack(gap: Dp, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    Layout(content, modifier) { measurables, constraints ->
+        val gapPx = gap.roundToPx()
+        val natural = measurables.map { it.maxIntrinsicWidth(Constraints.Infinity) }
+        val fits = natural.sum() + gapPx * (measurables.size - 1) <= constraints.maxWidth
+        if (fits) {
+            val placeables = measurables.mapIndexed { i, m -> m.measure(Constraints.fixedWidth(natural[i])) }
+            val width = placeables.sumOf { it.width } + gapPx * (placeables.size - 1)
+            val height = placeables.maxOf { it.height }
+            layout(maxOf(width, constraints.minWidth), height) {
+                var x = (maxOf(width, constraints.minWidth) - width) / 2
+                for (p in placeables) {
+                    p.place(x, (height - p.height) / 2)
+                    x += p.width + gapPx
+                }
+            }
+        } else {
+            val placeables = measurables.map { it.measure(Constraints.fixedWidth(constraints.maxWidth)) }
+            val height = placeables.sumOf { it.height } + gapPx * (placeables.size - 1)
+            layout(constraints.maxWidth, height) {
+                var y = 0
+                for (p in placeables) {
+                    p.place(0, y)
+                    y += p.height + gapPx
+                }
+            }
+        }
     }
 }

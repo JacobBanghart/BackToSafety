@@ -22,8 +22,6 @@ struct SettingsView: View {
         var id: Self { self }
     }
 
-    private var error: Color { Color(argb: Semantic.error) }
-
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: t("screenTitle"), testID: "settings", onBack: { model.path.removeLast() })
@@ -40,25 +38,6 @@ struct SettingsView: View {
                                 }
                             }
                         }
-                    }
-
-                    AppCard {
-                        sectionHeader("trash.fill", error, t("sections.deleteAccount.title"))
-                        description(t("sections.deleteAccount.description"))
-                        Button { alert = .confirmDelete } label: {
-                            HStack(spacing: Space.sm) {
-                                SFIcon("trash.fill", 18, .white)
-                                RNText(t(deleting ? "sections.deleteAccount.deletingButton" : "sections.deleteAccount.button"),
-                                       Typography.bodyBold.spec, color: .white)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14).padding(.horizontal, 20)
-                            .background(RoundedRectangle(cornerRadius: Radius.md).fill(error))
-                            .opacity(deleting ? 0.6 : 1)
-                        }
-                        .buttonStyle(.pressable)
-                        .disabled(deleting)
-                        .accessibilityIdentifier("settings-delete-account")
                     }
 
                     if devMode {
@@ -98,9 +77,33 @@ struct SettingsView: View {
                             alert = .copied
                         }
                     }
+
+                    // The danger zone sits last, under About, and is outlined rather than a solid red
+                    // block: deleting everything is rare and final, so it shouldn't read as prominently
+                    // as a routine option. Its confirmation alert is unchanged.
+                    AppCard {
+                        sectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
+                        description(t("sections.deleteAccount.description"))
+                        Button { alert = .confirmDelete } label: {
+                            HStack(spacing: Space.sm) {
+                                SFIcon("trash.fill", 18, colors.error)
+                                RNText(t(deleting ? "sections.deleteAccount.deletingButton" : "sections.deleteAccount.button"),
+                                       Typography.bodyBold.spec, color: colors.error)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
+                            .padding(.vertical, Space.md).padding(.horizontal, 20)
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1))
+                            .contentShape(Rectangle())
+                            .opacity(deleting ? 0.6 : 1)
+                        }
+                        .buttonStyle(.pressable)
+                        .disabled(deleting)
+                        .accessibilityIdentifier("settings-delete-account")
+                    }
                 }
                 .padding(Space.xl)
             }
+            .scrollStopsAtSafeArea()
         }
         .background(colors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)

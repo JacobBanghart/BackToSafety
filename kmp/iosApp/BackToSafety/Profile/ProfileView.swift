@@ -183,8 +183,8 @@ struct ProfileView: View {
                                            Typography.body.spec.weight(500), color: selected ? white : colors.text)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, Space.sm + 1)
-                                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? colors.tint : .clear))
-                                        .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
+                                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? colors.tint : .clear))
+                                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.pressable)
@@ -243,6 +243,7 @@ struct ProfileView: View {
             .padding(Space.lg)
         }
         .scrollDismissesKeyboard(.interactively)
+        .scrollStopsAtSafeArea()
     }
 
     private func photoSection(_ photoUri: String) -> some View {
@@ -261,7 +262,8 @@ struct ProfileView: View {
                 }
             }
             .padding(.bottom, Space.md)
-            HStack(spacing: Space.md) {
+            // Side by side while they fit inside the screen's margins, stacked at large text.
+            ButtonRowOrStack(gap: Space.md) {
                 photoButton(t("takePhoto"), "profile-photo-take", "camera.fill", action: takePhoto)
                 photoButton(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle") {
                     Analytics.shared.track(event: .profilePhotoChosen, properties: [:])
@@ -281,7 +283,7 @@ struct ProfileView: View {
                 RNText(label, Typography.bodyBold.spec, color: white)
             }
             .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
-            .frame(minHeight: 48)
+            .frame(maxWidth: .infinity, minHeight: 48)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
         }
         .buttonStyle(.pressable)
@@ -337,8 +339,8 @@ struct ProfileView: View {
         )
         .frame(height: multiline ? nil : 46)
         .padding(1)
-        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
-        .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
     }
 
     private func field(_ field: ProfileField) -> some View {
@@ -374,8 +376,8 @@ struct ProfileView: View {
             .padding(.horizontal, Space.md - 1)
             .frame(minHeight: 46)
             .padding(1)
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
         }
     }
 
@@ -398,7 +400,7 @@ struct ProfileView: View {
                     Button { datePicking = false } label: {
                         RNText(t("dateModal.cancel"), Typography.bodyBold.spec, color: colors.textSecondary)
                             .padding(.horizontal, Space.md).frame(minWidth: 88, minHeight: 40)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
@@ -410,7 +412,7 @@ struct ProfileView: View {
                     } label: {
                         RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: white)
                             .padding(.horizontal, Space.md).frame(minWidth: 88, minHeight: 40)
-                            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.tint))
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("profile-date-apply")

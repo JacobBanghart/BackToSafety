@@ -79,8 +79,10 @@ fun ScreenHeader(
             Box(Modifier.padding(start = space.xs.udp)) { BackButton(onBack, Modifier.testTag("$testID-back")) }
         },
         actions = {
+            // With the bar's own 4dp, the action ends at the screen's 16dp margin like the content
+            // below it (at 8dp a large-text Save pill nearly touched the edge).
             Row(
-                Modifier.widthIn(min = 48.udp).padding(end = space.sm.udp),
+                Modifier.widthIn(min = 48.udp).padding(end = space.md.udp),
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically,
                 content = right,

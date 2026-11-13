@@ -38,15 +38,16 @@ struct FormTextInput: View {
             )
             .frame(height: multiline ? nil : 46)
             .padding(1)
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.inputBackground))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(focused ? colors.borderFocused : colors.inputBorder, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.inputBackground))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(focused ? colors.borderFocused : colors.inputBorder, lineWidth: 1))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, Space.md)
     }
 }
 
-/// The custom on/off switch on the contact form: 50x30, a 24pt knob that slides 20pt.
+/// The custom on/off switch on the contact form: 50x30, a 24pt knob that slides 20pt. On is the
+/// brand primary, like every other selected control.
 struct SwitchToggle: View {
     let on: Bool
     @Environment(\.appColors) private var colors
@@ -56,7 +57,7 @@ struct SwitchToggle: View {
             .offset(x: on ? 20 : 0)
             .frame(width: 44, height: 24, alignment: .leading)
             .padding(3)
-            .background(RoundedRectangle(cornerRadius: 15).fill(on ? Color(argb: Semantic.success) : colors.border))
+            .background(RoundedRectangle(cornerRadius: 15).fill(on ? colors.primary : colors.border))
     }
 }
 
@@ -105,8 +106,8 @@ struct OptionChip: View {
             // Fills its ChipGrid cell, so a row's two chips are the same width and height.
             .frame(maxWidth: .infinity, minHeight: 48, maxHeight: .infinity, alignment: .leading)
             .contentShape(Rectangle())
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? selectedColor : colors.inputBackground))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(selected ? selectedColor : colors.inputBorder, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? selectedColor : colors.inputBackground))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(selected ? selectedColor : colors.inputBorder, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
@@ -114,25 +115,59 @@ struct OptionChip: View {
     }
 }
 
-/// Option chips two to a row, each half the width and as tall as its neighbour: they line up
-/// at any text size, where a flowing row left one chip alone on the last line.
+/// Option chips two to a row at equal width, so they line up where a flowing row left one chip
+/// alone on the last line. Two to a row only while every label fits on one line in half the
+/// width: at large text one long label ("Primary Caregiver") wrapped inside its chip while the
+/// others didn't, so then every chip takes the full width, one per row. Mirrors Android's
+/// `ChipGrid`.
 struct ChipGrid<Item, Content: View>: View {
     let items: [Item]
     @ViewBuilder let chip: (Item) -> Content
 
     var body: some View {
-        VStack(spacing: Space.sm) {
-            ForEach(Array(stride(from: 0, to: items.count, by: 2)), id: \.self) { i in
-                HStack(spacing: Space.sm) {
-                    chip(items[i])
-                    if i + 1 < items.count {
-                        chip(items[i + 1])
-                    } else {
-                        Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
-                    }
-                }
-                .fixedSize(horizontal: false, vertical: true)
+        ChipGridLayout(gap: Space.sm) {
+            ForEach(items.indices, id: \.self) { i in chip(items[i]) }
+        }
+    }
+}
+
+private struct ChipGridLayout: Layout {
+    let gap: CGFloat
+
+    private struct Plan {
+        var cell: CGFloat
+        var columns: Int
+        var rowHeights: [CGFloat]
+    }
+
+    private func plan(width: CGFloat, _ subviews: Subviews) -> Plan {
+        let half = (width - gap) / 2
+        // A chip's ideal width is its label on one line.
+        let twoUp = subviews.allSatisfy { $0.sizeThatFits(.unspecified).width <= half }
+        let cell = twoUp ? half : width
+        let columns = twoUp ? 2 : 1
+        let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: cell, height: nil)).height }
+        let rowHeights = stride(from: 0, to: heights.count, by: columns).map { heights[$0 ..< min($0 + columns, heights.count)].max() ?? 0 }
+        return Plan(cell: cell, columns: columns, rowHeights: rowHeights)
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
+        let width = proposal.width ?? 0
+        let rows = plan(width: width, subviews).rowHeights
+        return CGSize(width: width, height: rows.reduce(0, +) + gap * CGFloat(max(rows.count - 1, 0)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
+        let p = plan(width: bounds.width, subviews)
+        var y = bounds.minY
+        for (row, height) in p.rowHeights.enumerated() {
+            for column in 0 ..< p.columns {
+                let i = row * p.columns + column
+                guard i < subviews.count else { break }
+                subviews[i].place(at: CGPoint(x: bounds.minX + CGFloat(column) * (p.cell + gap), y: y),
+                                  proposal: ProposedViewSize(width: p.cell, height: height))
             }
+            y += height + gap
         }
     }
 }
@@ -152,7 +187,7 @@ struct FormDeleteButton: View {
             }
             .frame(maxWidth: .infinity, minHeight: 46)
             .padding(.horizontal, Space.md + 1).padding(.vertical, 1)
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(error, lineWidth: 1))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(error, lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)

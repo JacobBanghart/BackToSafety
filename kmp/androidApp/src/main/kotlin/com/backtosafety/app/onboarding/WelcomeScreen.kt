@@ -7,6 +7,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,11 +36,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
@@ -75,36 +78,31 @@ fun WelcomeScreen(
             .background(colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
-        Column(
-            Modifier
-                .weight(1f)
-                .verticalScroll(scroll)
-                .padding(start = space.xl.udp, end = space.xl.udp, top = space.xxxl.udp, bottom = space.xl.udp),
-        ) {
-            Column(
-                Modifier.fillMaxWidth().padding(bottom = space.xxl.udp),
-                horizontalAlignment = Alignment.CenterHorizontally,
+        // The viewport's height decides how the first screen ends: only whole feature cards show
+        // above the footer (a card cut mid-sentence by the rule read as broken at large text).
+        BoxWithConstraints(Modifier.weight(1f)) {
+            WelcomeLayout(
+                viewportHeight = constraints.maxHeight,
+                modifier = Modifier
+                    .verticalScroll(scroll)
+                    .padding(horizontal = space.xl.udp),
             ) {
-                Logo(Modifier.padding(bottom = space.xl.udp).size(180.udp))
-                Text(
-                    t("welcome.title"),
-                    style = rnTextStyle(36f, 44f, fontWeight = 700, letterSpacing = type.display.letterSpacing),
-                    color = colors.text,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = space.lg.udp),
-                )
-                Text(
-                    t("welcome.description"),
-                    style = type.bodyLarge.style(),
-                    color = colors.textSecondary,
-                    textAlign = TextAlign.Center,
-                )
-            }
-
-            Column(
-                Modifier.padding(bottom = space.xxl.udp),
-                verticalArrangement = Arrangement.spacedBy(space.lg.udp),
-            ) {
+                Logo(Modifier)
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        t("welcome.title"),
+                        style = rnTextStyle(36f, 44f, fontWeight = 700, letterSpacing = type.display.letterSpacing),
+                        color = colors.text,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = space.lg.udp),
+                    )
+                    Text(
+                        t("welcome.description"),
+                        style = type.bodyLarge.style(),
+                        color = colors.textSecondary,
+                        textAlign = TextAlign.Center,
+                    )
+                }
                 for ((key, icon) in listOf("timer" to "timer", "readout" to "doc.text.fill", "privacy" to "lock.fill")) {
                     Row(
                         Modifier
@@ -124,46 +122,45 @@ fun WelcomeScreen(
                         }
                     }
                 }
-            }
-
-            Column(Modifier.padding(bottom = space.xl.udp)) {
-                Text(
-                    t("welcome.themeLabel").uppercase(),
-                    style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
-                    color = colors.textSecondary,
-                    modifier = Modifier.padding(bottom = space.md.udp),
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                    for ((value, label, icon) in listOf(
-                        Triple("light", "welcome.themeOptions.light", "sun.max.fill"),
-                        Triple("dark", "welcome.themeOptions.dark", "moon.fill"),
-                        Triple("system", "welcome.themeOptions.auto", "iphone"),
-                    )) {
-                        val selected = themePreference == value
-                        Row(
-                            Modifier
-                                .weight(1f)
-                                .testTag("onboarding-welcome-theme-$value")
-                                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                                .background(if (selected) colors.primaryLight else optionBg)
-                                .border(
-                                    2.udp,
-                                    if (selected) colors.tint else Color.Transparent,
-                                    RoundedCornerShape(DesignTokens.Radius.lg.dp),
+                Column {
+                    Text(
+                        t("welcome.themeLabel").uppercase(),
+                        style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
+                        color = colors.textSecondary,
+                        modifier = Modifier.padding(bottom = space.md.udp),
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
+                        for ((value, label, icon) in listOf(
+                            Triple("light", "welcome.themeOptions.light", "sun.max.fill"),
+                            Triple("dark", "welcome.themeOptions.dark", "moon.fill"),
+                            Triple("system", "welcome.themeOptions.auto", "iphone"),
+                        )) {
+                            val selected = themePreference == value
+                            Row(
+                                Modifier
+                                    .weight(1f)
+                                    .testTag("onboarding-welcome-theme-$value")
+                                    .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                                    .background(if (selected) colors.primaryLight else optionBg)
+                                    .border(
+                                        2.udp,
+                                        if (selected) colors.tint else Color.Transparent,
+                                        RoundedCornerShape(DesignTokens.Radius.lg.dp),
+                                    )
+                                    .selectable(selected, role = Role.RadioButton) { onThemeChange(value) }
+                                    .padding(space.md.udp),
+                                horizontalArrangement = Arrangement.spacedBy(8.udp, Alignment.CenterHorizontally),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(icon, 20f, if (selected) colors.primaryText else colors.textSecondary)
+                                Text(
+                                    t(label),
+                                    style = type.bodyLarge.style().copy(
+                                        fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
+                                    ),
+                                    color = if (selected) colors.primaryText else colors.text,
                                 )
-                                .selectable(selected, role = Role.RadioButton) { onThemeChange(value) }
-                                .padding(space.md.udp),
-                            horizontalArrangement = Arrangement.spacedBy(8.udp, Alignment.CenterHorizontally),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(icon, 20f, if (selected) colors.primaryText else colors.textSecondary)
-                            Text(
-                                t(label),
-                                style = type.bodyLarge.style().copy(
-                                    fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
-                                ),
-                                color = if (selected) colors.primaryText else colors.text,
-                            )
+                            }
                         }
                     }
                 }
@@ -219,3 +216,65 @@ private fun Logo(modifier: Modifier) {
     }
     Image(bitmap, contentDescription = null, modifier = modifier, contentScale = ContentScale.Fit)
 }
+
+/**
+ * The welcome content: logo, title, the three feature cards and the theme picker, stacked with
+ * the screen's gaps. A card the viewport's bottom edge would cut mid-sentence (large text, short
+ * screens) never shows at rest: the logo shrinks (to [LOGO_MIN]) until that card fits with a
+ * gap above the footer, and if that isn't enough the card moves wholly below the fold, so the
+ * first screen ends on complete cards and "Scroll for more" says the rest is there.
+ * Children, in order: logo, hero text, the feature cards, the theme picker. Mirrors iOS
+ * `WelcomeLayout`.
+ */
+@Composable
+private fun WelcomeLayout(viewportHeight: Int, modifier: Modifier, content: @Composable () -> Unit) {
+    val space = DesignTokens.Spacing
+    val topPad = space.xxxl.udp
+    val afterLogo = space.xl.udp
+    val afterHero = space.xxl.udp
+    val betweenCards = space.lg.udp
+    val afterCards = space.xxl.udp
+    val bottomPad = (space.xl * 2).udp
+    val foldGap = space.lg.udp
+    val logoMax = LOGO_MAX.udp
+    val logoMin = LOGO_MIN.udp
+    Layout(content, modifier) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val full = Constraints(minWidth = width, maxWidth = width)
+        val hero = measurables[1].measure(full)
+        val cards = measurables.subList(2, measurables.size - 1).map { it.measure(full) }
+        val theme = measurables.last().measure(full)
+        val maxLogo = logoMax.roundToPx()
+        val cardsTop = topPad.roundToPx() + maxLogo + afterLogo.roundToPx() + hero.height + afterHero.roundToPx()
+        val fold = viewportHeight - foldGap.roundToPx()
+        var logo = maxLogo
+        var pushDown = 0
+        if (constraints.hasBoundedWidth && viewportHeight != Constraints.Infinity) {
+            var top = cardsTop
+            for (card in cards) {
+                val bottom = top + card.height
+                if (bottom > fold && top < viewportHeight) {
+                    val overflow = bottom - fold
+                    if (overflow <= maxLogo - logoMin.roundToPx()) logo = maxLogo - overflow else pushDown = viewportHeight - top
+                    break
+                }
+                top = bottom + betweenCards.roundToPx()
+            }
+        }
+        val logoPlaceable = measurables[0].measure(Constraints.fixed(logo, logo))
+        var y = topPad.roundToPx() + pushDown
+        val placements = buildList {
+            add(Triple(logoPlaceable, (width - logo) / 2, y)); y += logo + afterLogo.roundToPx()
+            add(Triple(hero, 0, y)); y += hero.height + afterHero.roundToPx()
+            cards.forEachIndexed { i, card ->
+                add(Triple(card, 0, y)); y += card.height + if (i < cards.lastIndex) betweenCards.roundToPx() else 0
+            }
+            y += afterCards.roundToPx()
+            add(Triple(theme, 0, y)); y += theme.height + bottomPad.roundToPx()
+        }
+        layout(width, y) { placements.forEach { (p, x, py) -> p.place(x, py) } }
+    }
+}
+
+private const val LOGO_MAX = 180
+private const val LOGO_MIN = 96

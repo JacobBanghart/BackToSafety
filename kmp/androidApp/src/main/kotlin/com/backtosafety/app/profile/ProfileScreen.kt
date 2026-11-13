@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.ui.ButtonRowOrStack
 import com.backtosafety.app.ui.HeaderSaveButton
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
@@ -211,7 +212,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             form = form?.with(field, value)
         }
         val toggle: (String) -> Unit = { expanded = if (expanded == it) null else it }
-        Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp)) {
+        Column(Modifier.weight(1f).imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
             PhotoSection(
                 t, f[ProfileField.PHOTO_URI],
                 onCamera = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_TAKEN); picker.fromCamera() },
@@ -246,7 +247,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         for (hand in listOf("left", "right", "unknown")) {
                             val selected = f.dominantHand == hand
-                            val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                            val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                             Box(
                                 Modifier.weight(1f).testTag("profile-hand-$hand").clip(shape)
                                     .clickable { form = f.copy(dominantHand = hand) }
@@ -341,8 +342,9 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
                 ) { Icon("camera.fill", 38f, colors.primaryText) }
             }
         }
-        // Two equal choices, so one fill: the primary, with its icon, 48dp tall.
-        Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
+        // Two equal choices, so one fill: the primary, with its icon, 48dp tall. Side by side
+        // while they fit inside the screen's margins, stacked at large text.
+        ButtonRowOrStack(space.md.udp) {
             for ((label, tag, icon, action) in listOf(
                 Quad(t("takePhoto"), "profile-photo-take", "camera.fill", onCamera),
                 Quad(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle", onLibrary),
@@ -351,7 +353,7 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
                     Modifier.testTag(tag).heightIn(min = 48.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                         .clickable(role = Role.Button, onClick = action)
                         .background(colors.primary).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(icon, 18f, white)
@@ -428,7 +430,7 @@ private fun Field(t: Translate, field: ProfileField, form: ProfileForm, onChange
 private fun DateOfBirth(label: String, pickerLabel: String, value: String, onChange: (String) -> Unit) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Group(label) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 48.udp).clip(shape).background(colors.card)

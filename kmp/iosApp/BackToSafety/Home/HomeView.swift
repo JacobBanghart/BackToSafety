@@ -46,6 +46,7 @@ struct HomeView: View {
             .padding(.bottom, Space.xxl)
         }
         .scrollIndicators(.hidden)
+        .scrollStopsAtSafeArea()
         .background(colors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         // Reloaded every time home is shown (useFocusEffect).
@@ -180,21 +181,20 @@ struct HomeView: View {
             model.path.append(.readout)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                // The 911 script lives here, so the card leads with an icon and a title-size heading,
-                // and its "911 Script" pill is body size: it outranks the plain Settings row below.
+                // One set with the Contacts and Places cards above: the same 44pt round icon, a
+                // bodyBold title and a smaller second line, laid out as a row because the card is
+                // full width. The title stays on one line at large text; "911 Script" is the second
+                // line, in the accent colour, and the chevron says the whole card opens it.
                 HStack(spacing: Space.md) {
-                    SFIcon("doc.text.fill", 20, colors.primaryText)
-                        .frame(width: 40, height: 40)
+                    SFIcon("doc.text.fill", 22, colors.primaryText)
+                        .frame(width: 44, height: 44)
                         .background(Circle().fill(colors.primaryLight))
-                    RNText(t("emergencyInfo.title"), Typography.title.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
-                    HStack(spacing: Space.xxs) {
-                        RNText(t("emergencyInfo.script911"), Typography.bodyBold.spec, color: colors.primaryText)
-                        SFIcon("chevron.right", 18, colors.primaryText)
+                    VStack(alignment: .leading, spacing: Space.xxs) {
+                        RNText(t("emergencyInfo.title"), Typography.bodyBold.spec, color: colors.text, lines: 1)
+                        RNText(t("emergencyInfo.script911"), Typography.caption.spec.weight(600), color: colors.primaryText)
                     }
-                    .fixedSize()
-                    .padding(.leading, Space.md).padding(.trailing, Space.sm)
-                    .frame(minHeight: 36)
-                    .background(Capsule().fill(colors.primaryLight))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    SFIcon("chevron.right", 20, colors.primaryText)
                 }
                 if !items.isEmpty {
                     Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.md)

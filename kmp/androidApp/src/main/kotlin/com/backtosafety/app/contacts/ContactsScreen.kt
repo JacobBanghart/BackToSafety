@@ -258,7 +258,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         when {
             list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(tCommon("loading"), color = colors.text) }
             showForm -> Form(t, form, { form = it }, editing, ::delete)
-            else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
+            else -> Column(Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
                 if (list.isEmpty()) {
                     Empty(t, importing, onAdd = {
                         Analytics.track(AnalyticsEvent.CONTACT_ADD_TAPPED)
@@ -446,7 +446,7 @@ private fun Form(
     onDelete: (ContactEntity) -> Unit,
 ) {
     val colors = LocalAppColors.current
-    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp)) {
+    Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
         Text(
             t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
             modifier = Modifier.padding(bottom = space.xl.udp),

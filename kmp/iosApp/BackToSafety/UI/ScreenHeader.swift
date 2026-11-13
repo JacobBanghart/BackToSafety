@@ -49,7 +49,9 @@ struct ScreenHeader<Right: View>: View {
             BackButton(action: onBack)
                 .accessibilityIdentifier("\(testID)-back")
             Spacer()
-            right().frame(minWidth: 48, alignment: .trailing).padding(.trailing, Space.sm)
+            // With the bar's 4pt, the action ends at the screen's 16pt margin like the content
+            // below it (at 8pt a large-text Save pill nearly touched the edge).
+            right().frame(minWidth: 48, alignment: .trailing).padding(.trailing, Space.md)
         }
         .frame(maxWidth: .infinity, minHeight: 56)
         .padding(.horizontal, Space.xs)

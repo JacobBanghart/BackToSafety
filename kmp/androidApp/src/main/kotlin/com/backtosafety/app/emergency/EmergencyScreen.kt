@@ -322,9 +322,11 @@ fun EmergencyScreen(
             Column(
                 Modifier
                     .weight(1f)
+                    // The viewport stops above the gesture bar, so at rest no text sits under its
+                    // handle (it read as a strikethrough); the keyboard inset takes over when open.
                     .imePadding()
-                    .verticalScroll(rememberScrollState())
                     .navigationBarsPadding()
+                    .verticalScroll(rememberScrollState())
                     .padding(space.lg.udp),
                 verticalArrangement = Arrangement.spacedBy(space.lg.udp),
             ) {
@@ -534,9 +536,9 @@ private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, 
                 .fillMaxWidth()
                 .heightIn(min = 64.udp, max = 120.udp)
                 .testTag("emergency-wearing-input")
-                .clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
+                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                 .background(if (colors.isDark) Color(DesignTokens.Neutral.c800) else Color(DesignTokens.Neutral.c50))
-                .border(1.udp, colors.inputBorder, RoundedCornerShape(DesignTokens.Radius.md.dp)),
+                .border(1.udp, colors.inputBorder, RoundedCornerShape(DesignTokens.Radius.lg.dp)),
             decorationBox = { field ->
                 // RN's 1dp border takes space: padding plus border.
                 Box(Modifier.padding(horizontal = (space.md + 1).udp, vertical = (space.sm + 1).udp)) {
@@ -566,9 +568,10 @@ private fun ActionButtons(
     val emergencyRed = Color(DesignTokens.Semantic.errorDark)
     val white = Color(DesignTokens.Light.textOnPrimary)
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
-    // Calling for help is the most urgent action: it comes first and is the one solid, raised,
-    // larger red control. Found — Safe ends the search, so it is clear but quieter: outlined in
-    // the success colour (text colour by theme, so it passes 4.5:1 on the card).
+    // Calling for help is the most urgent action: it comes first and is the largest, raised red
+    // control with headline type. Found — Safe ends the search, so it is a solid green button too
+    // (an outline vanished in dark mode), but shorter, flat and with smaller type, so it never
+    // outranks Call 911. White on semantic success passes 4.5:1 in both themes.
     Column(verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 72.udp).testTag("emergency-call-911").shadow(6.udp, shape).clip(shape)
@@ -585,13 +588,13 @@ private fun ActionButtons(
         }
         Row(
             Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-found").clip(shape)
-                .background(colors.card).rnBorder(2.udp, colors.success, shape).clickable(role = Role.Button, onClick = onFound)
+                .background(Color(DesignTokens.Semantic.success)).clickable(role = Role.Button, onClick = onFound)
                 .padding(vertical = space.md.udp, horizontal = space.xl.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon("checkmark.circle.fill", 22f, colors.success)
-            Text(t("actions.foundSafe"), style = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight), color = colors.success)
+            Icon("checkmark.circle.fill", 22f, white)
+            Text(t("actions.foundSafe"), style = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight), color = white)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
             for ((label, tag, icon, action) in listOf(
@@ -749,7 +752,7 @@ private fun EmergencyModal(
     val white = Color(DesignTokens.Light.textOnPrimary)
     val success = Color(DesignTokens.Semantic.success)
     val buttonText = type.bodyBold.style()
-    val buttonShape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val buttonShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Box(
         Modifier.fillMaxSize().background(Color(if (colors.isDark) DesignTokens.Dark.overlay else DesignTokens.Light.overlay))
             // Modal: touches outside the card must not reach the screen underneath.
@@ -862,7 +865,7 @@ private fun LoadFailed(t: Translate, onRetry: () -> Unit, onBack: () -> Unit) {
             Text(t("loadFailed.message"), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
             Box(
                 Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-load-retry")
-                    .clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primary)
+                    .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.primary)
                     .clickable(onClick = onRetry).padding(vertical = space.md.udp, horizontal = space.lg.udp),
                 contentAlignment = Alignment.Center,
             ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary)) }

@@ -108,7 +108,7 @@ fun RnTextField(
     var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     if (field.text != value) field = TextFieldValue(value, TextRange(value.length))
     val textStyle = rnTextStyle(16f, 20f)
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     BasicTextField(
         value = field,
         onValueChange = {
@@ -151,13 +151,13 @@ fun RnTextField(
     )
 }
 
-/** The custom on/off switch on the contact form: 50x30, a 24dp knob that slides 20dp. */
+/** The custom on/off switch on the contact form: 50x30, a 24dp knob that slides 20dp. On is the brand primary, like every other selected control. */
 @Composable
 fun Toggle(on: Boolean) {
     val colors = LocalAppColors.current
     Box(
         Modifier.size(50.udp, 30.udp).clip(RoundedCornerShape(15.udp))
-            .background(if (on) Color(DesignTokens.Semantic.success) else colors.border).padding(3.udp),
+            .background(if (on) colors.primary else colors.border).padding(3.udp),
     ) {
         Box(
             Modifier.offset(x = if (on) 20.udp else 0.dp).size(24.udp).clip(CircleShape)

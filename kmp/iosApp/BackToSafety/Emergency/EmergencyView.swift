@@ -116,6 +116,7 @@ struct EmergencyView: View {
                 }
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
+                .scrollStopsAtSafeArea()
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("emergency-screen")
@@ -298,7 +299,7 @@ struct EmergencyView: View {
                     RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary))
                         .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                         .padding(.vertical, Space.md).padding(.horizontal, Space.lg)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primary))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.pressable)
@@ -358,8 +359,8 @@ struct EmergencyView: View {
                 multiline: true, lineHeight: 20 * fontMultiplier, minHeight: 62, maxHeight: 118
             )
             .padding(1)
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.inputBorder, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.inputBorder, lineWidth: 1))
             Button { showWearing = false } label: {
                 RNText(t("wearing.dismiss"), Typography.bodyBold.spec, color: colors.primaryText)
                     .padding(.horizontal, Space.sm)
@@ -378,9 +379,10 @@ struct EmergencyView: View {
     @Environment(\.dynamicTypeSize) private var dynamicType
     private var fontMultiplier: CGFloat { rnFontMultiplier(dynamicType) }
 
-    /// Calling for help is the most urgent action: it comes first and is the one solid, raised,
-    /// larger red control. Found — Safe ends the search, so it is clear but quieter: outlined in
-    /// the success colour (text colour by theme, so it passes 4.5:1 on the card).
+    /// Calling for help is the most urgent action: it comes first and is the largest, raised red
+    /// control with headline type. Found — Safe ends the search, so it is a solid green button too
+    /// (an outline vanished in dark mode), but shorter, flat and with smaller type, so it never
+    /// outranks Call 911. White on semantic success passes 4.5:1 in both themes.
     private var actionButtons: some View {
         let white = Color(argb: Light.textOnPrimary)
         let emergencyRed = Color(argb: Semantic.errorDark)
@@ -401,13 +403,12 @@ struct EmergencyView: View {
             .accessibilityIdentifier("emergency-call-911")
             Button(action: found) {
                 HStack(spacing: Space.sm) {
-                    SFIcon("checkmark.circle.fill", 22, colors.success)
-                    RNText(t("actions.foundSafe"), Typography.bodyBold.spec.size(18), color: colors.success)
+                    SFIcon("checkmark.circle.fill", 22, white)
+                    RNText(t("actions.foundSafe"), Typography.bodyBold.spec.size(18), color: white)
                 }
                 .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.md)
                 .padding(.vertical, Space.md).padding(.horizontal, Space.xl)
-                .background(shape.fill(colors.card))
-                .overlay(shape.strokeBorder(colors.success, lineWidth: 2))
+                .background(shape.fill(Color(argb: Semantic.success)))
                 .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
@@ -533,8 +534,8 @@ struct EmergencyView: View {
                     .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                     .padding(.vertical, Space.md + (outline ? 1 : 0)).padding(.horizontal, Space.lg + (outline ? 1 : 0))
                     .frame(maxHeight: outline || rowItem ? .infinity : nil)
-                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(bg))
-                    .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(outline ? colors.border : .clear, lineWidth: 1))
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(bg))
+                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(outline ? colors.border : .clear, lineWidth: 1))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
@@ -594,7 +595,7 @@ struct EmergencyView: View {
                         RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.error)
                             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                             .padding(.vertical, Space.md)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.error, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1))
                             .contentShape(Rectangle()).accessibilityElement(children: .combine)
                     }
                     .buttonStyle(.pressable)

@@ -264,7 +264,7 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
             when {
                 list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(tCommon("loading"), color = colors.text) }
                 showForm -> Form(t, form, { form = it }, editing, ::delete)
-                else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
+                else -> Column(Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
                     Row(
                         Modifier.fillMaxWidth().padding(bottom = space.lg.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                             .background(colors.primaryLight).padding(space.md.udp),
@@ -382,7 +382,7 @@ private fun PlaceCard(
                 }
             }
             Box(
-                Modifier.testTag("destinations-item-$index-edit").size(40.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
+                Modifier.testTag("destinations-item-$index-edit").size(40.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                     .semantics { contentDescription = t("editName", mapOf("name" to d.name)) }
                     .clickable(role = Role.Button, onClick = onEdit).background(p600.copy(alpha = 0x15 / 255f)),
                 contentAlignment = Alignment.Center,
@@ -440,7 +440,7 @@ private fun Empty(t: Translate, personName: String?, onAdd: () -> Unit) {
 private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, editing: DestinationEntity?, onDelete: (DestinationEntity) -> Unit) {
     val colors = LocalAppColors.current
     val warning = Color(DesignTokens.Semantic.warning)
-    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp)) {
+    Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
         Text(
             t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
             modifier = Modifier.padding(bottom = space.sm.udp),
@@ -485,7 +485,7 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
                 for ((risk, color) in RISKS) {
                     val c = Color(color)
                     val selected = form.riskLevel == risk
-                    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                     Box(
                         Modifier.weight(1f).testTag("destinations-form-risk-$risk").clip(shape)
                             .clickable { onChange(form.copy(riskLevel = risk)) }
@@ -559,7 +559,7 @@ private fun Detail(
                 notes.ifEmpty { null }?.let { DetailRow("note.text", colors.textSecondary, t("detail.notes"), it, colors.text) }
             }
             Row(Modifier.padding(space.lg.udp), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                val buttonShape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                val buttonShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                 Row(
                     Modifier.weight(1f).heightIn(min = 44.udp).testTag("destinations-detail-close").clip(buttonShape)
                         .clickable(onClick = onClose).rnBorder(1.dp, colors.border, buttonShape),

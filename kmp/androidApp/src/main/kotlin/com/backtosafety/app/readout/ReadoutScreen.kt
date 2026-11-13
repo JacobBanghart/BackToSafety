@@ -151,7 +151,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             onBack()
         })
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp),
+            Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp),
             verticalArrangement = Arrangement.spacedBy(space.md.udp),
         ) {
             // Call 911: the most prominent action, the same solid red as on the search screen.
@@ -183,12 +183,22 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     Text(t("sections.script.hint"), style = type.caption.style(), color = colors.textSecondary, modifier = hint)
                     Text(script, style = rnTextStyle(16f, 22f), color = colors.text, modifier = Modifier.testTag("readout-script-text"))
                     if (missing.isNotEmpty()) {
-                        Text(
-                            t("sections.script.missingDetails", mapOf("details" to missing.joinToString(", "))),
-                            style = rnTextStyle(type.caption.fontSize, 18f, type.caption.fontWeight, type.caption.letterSpacing),
-                            color = colors.warning,
-                            modifier = Modifier.padding(top = space.sm.udp).testTag("readout-script-missing"),
-                        )
+                        // The one prompt that improves the script, so a callout at body size with an
+                        // amber tint and icon, not a caption that reads as a footnote.
+                        val calloutShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+                        Row(
+                            Modifier.padding(top = space.md.udp).fillMaxWidth().clip(calloutShape)
+                                .background(colors.warning.copy(alpha = 0.12f)).rnBorder(1.udp, colors.warning.copy(alpha = 0.5f), calloutShape)
+                                .padding(space.md.udp),
+                            horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+                        ) {
+                            Icon("lightbulb.fill", 18f, colors.warning, Modifier.padding(top = 3.udp))
+                            Text(
+                                t("sections.script.missingDetails", mapOf("details" to missing.joinToString(", "))),
+                                style = type.body.style(fontWeight = 500), color = colors.text,
+                                modifier = Modifier.weight(1f).testTag("readout-script-missing"),
+                            )
+                        }
                     }
                 } else {
                     Text(t("sections.script.collapsed"), style = type.caption.style(), color = colors.textSecondary, modifier = hint)
@@ -301,7 +311,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
 
             // Copy actions
             Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
-                val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                 val label = type.body.style()
                 Row(
                     Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("readout-copy-script").clip(shape)
@@ -479,7 +489,7 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
                 ?: c.role?.let { t("roles.$it", mapOf("ns" to "contacts", "defaultValue" to it)) } ?: ""
             Text(role, style = type.caption.style(), color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+        val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
         Row(
             Modifier.testTag("readout-contact-$index-call").heightIn(min = 48.udp).clip(shape)
                 .clickable(role = Role.Button, onClick = onCall).background(success)

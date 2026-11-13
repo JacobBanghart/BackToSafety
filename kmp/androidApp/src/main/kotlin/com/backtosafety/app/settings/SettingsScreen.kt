@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -138,7 +139,7 @@ fun SettingsScreen(
     ) {
         ScreenHeader(t("screenTitle"), "settings", onBack)
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.xl.udp),
+            Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.xl.udp),
             verticalArrangement = Arrangement.spacedBy(space.lg.udp),
         ) {
             AppCard {
@@ -150,26 +151,6 @@ fun SettingsScreen(
                             onThemeChange(value)
                         }
                     }
-                }
-            }
-
-            AppCard {
-                SectionHeader("trash.fill", Color(DesignTokens.Semantic.error), t("sections.deleteAccount.title"))
-                Description(t("sections.deleteAccount.description"))
-                val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
-                Row(
-                    Modifier.fillMaxWidth().testTag("settings-delete-account").alpha(if (deleting) 0.6f else 1f).clip(shape)
-                        .clickable(enabled = !deleting, onClick = ::deleteAccount)
-                        .background(Color(DesignTokens.Semantic.error)).padding(vertical = 14.udp, horizontal = 20.udp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val white = Color(DesignTokens.Light.textOnPrimary)
-                    Icon("trash.fill", 18f, white)
-                    Text(
-                        t(if (deleting) "sections.deleteAccount.deletingButton" else "sections.deleteAccount.button"),
-                        style = DesignTokens.Typography.bodyBold.style(), color = white,
-                    )
                 }
             }
 
@@ -214,6 +195,28 @@ fun SettingsScreen(
                         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(null, it))
                         showAlert(context, tCommon("copied"), t("deviceIdCopied"), confirm = tCommon("ok") to {})
                     }
+                }
+            }
+
+            // The danger zone sits last, under About, and is outlined rather than a solid red
+            // block: deleting everything is rare and final, so it shouldn't read as prominently
+            // as a routine option. Its confirmation dialog is unchanged.
+            AppCard {
+                SectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
+                Description(t("sections.deleteAccount.description"))
+                val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("settings-delete-account").alpha(if (deleting) 0.6f else 1f)
+                        .clip(shape).clickable(enabled = !deleting, role = Role.Button, onClick = ::deleteAccount)
+                        .rnBorder(1.udp, colors.error, shape).padding(vertical = space.md.udp, horizontal = 20.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon("trash.fill", 18f, colors.error)
+                    Text(
+                        t(if (deleting) "sections.deleteAccount.deletingButton" else "sections.deleteAccount.button"),
+                        style = DesignTokens.Typography.bodyBold.style(), color = colors.error,
+                    )
                 }
             }
         }

@@ -165,6 +165,16 @@ extension View {
     }
 }
 
+extension View {
+    /// A screen's scroll view stops at the bottom safe area: at rest nothing readable sits under
+    /// the home indicator, where its bar reads as a strikethrough. SwiftUI scroll content draws
+    /// into the safe area unless clipped to the scroll view's frame. Matches Android, whose
+    /// scroll viewport ends above the gesture bar.
+    func scrollStopsAtSafeArea() -> some View {
+        clipped()
+    }
+}
+
 /// RN Pressable: no built-in press or disabled styling (SwiftUI's .plain dims disabled
 /// buttons on top of the app's own 0.5).
 struct PressableStyle: ButtonStyle {
@@ -173,4 +183,19 @@ struct PressableStyle: ButtonStyle {
 
 extension ButtonStyle where Self == PressableStyle {
     static var pressable: PressableStyle { PressableStyle() }
+}
+
+/// Buttons side by side at their natural width, centred, while they fit; otherwise stacked, each
+/// the full width. At large text two buttons in a row ran to within a few points of the screen
+/// edge and past the screen's margin. Mirrors Android's `ButtonRowOrStack`.
+struct ButtonRowOrStack<Content: View>: View {
+    var gap: CGFloat
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: gap, content: content).fixedSize()
+            VStack(spacing: gap, content: content)
+        }
+    }
 }

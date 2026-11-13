@@ -92,10 +92,18 @@ struct ReadoutView: View {
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
                             let note = t("sections.script.missingDetails", ["details": missing.joined(separator: ", ")])
-                            RNText(note, Typography.caption.spec.lineHeight(18), color: colors.warning)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .rnID("readout-script-missing", label: note)
-                                .padding(.top, Space.sm)
+                            // The one prompt that improves the script, so a callout at body size with an
+                            // amber tint and icon, not a caption that reads as a footnote.
+                            HStack(alignment: .top, spacing: Space.sm) {
+                                SFIcon("lightbulb.fill", 18, colors.warning).padding(.top, 3)
+                                RNText(note, Typography.body.spec.weight(500), color: colors.text)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .rnID("readout-script-missing", label: note)
+                            }
+                            .padding(Space.md)
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.warning.opacity(0.12)))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.warning.opacity(0.5), lineWidth: 1))
+                            .padding(.top, Space.md)
                         }
                     } else {
                         RNText(t("sections.script.collapsed"), Typography.caption.spec, color: colors.textSecondary)
@@ -177,6 +185,7 @@ struct ReadoutView: View {
             .padding(Space.lg)
         }
         .scrollIndicators(.hidden)
+        .scrollStopsAtSafeArea()
     }
 
     private func nonEmpty(_ s: String?) -> String? { (s ?? "").isEmpty ? nil : s }
@@ -326,7 +335,7 @@ struct ReadoutView: View {
                     .fixedSize()
                     .padding(.horizontal, Space.md).padding(.vertical, Space.sm)
                     .frame(minHeight: 48)
-                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(success))
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(success))
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("readout-contact-\(index)-call")
@@ -343,8 +352,8 @@ struct ReadoutView: View {
             }
             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
             .padding(.vertical, Space.md + (script ? 0 : 1))
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(script ? colors.primary : colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(script ? .clear : colors.border, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(script ? colors.primary : colors.card))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(script ? .clear : colors.border, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(script ? "readout-copy-script" : "readout-copy-all")

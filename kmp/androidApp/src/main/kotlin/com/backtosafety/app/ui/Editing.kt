@@ -7,11 +7,7 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -29,8 +25,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
 
@@ -72,7 +70,7 @@ fun OptionChip(
 ) {
     val colors = LocalAppColors.current
     val white = Color(DesignTokens.Light.textOnPrimary)
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Row(
         modifier.testTag(testID).heightIn(min = 48.udp).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
             .background(if (selected) selectedColor else colors.inputBackground)
@@ -90,7 +88,7 @@ fun OptionChip(
 @Composable
 fun FormDeleteButton(label: String, testID: String, onClick: () -> Unit) {
     val error = Color(DesignTokens.Semantic.error)
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Row(
         Modifier.fillMaxWidth().padding(top = DesignTokens.Spacing.md.udp).heightIn(min = 48.udp).testTag(testID).clip(shape)
             .clickable(onClick = onClick).rnBorder(1.dp, error, shape).padding(horizontal = DesignTokens.Spacing.md.udp),
@@ -114,17 +112,28 @@ fun Modifier.listCard(dragging: Boolean): Modifier {
 }
 
 /**
- * Option chips two to a row, each half the width and as tall as its neighbour: they line up
- * at any text size, where a flowing row left one chip alone on the last line.
+ * Option chips two to a row at equal width, so they line up where a flowing row left one chip
+ * alone on the last line. Two to a row only while every label fits on one line in half the
+ * width: at large text one long label ("Primary Caregiver") wrapped inside its chip while the
+ * others didn't, so then every chip takes the full width, one per row. Mirrors iOS `ChipGrid`.
  */
 @Composable
 fun <T> ChipGrid(items: List<T>, chip: @Composable (item: T, modifier: Modifier) -> Unit) {
     val gap = DesignTokens.Spacing.sm.udp
-    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
-        for (pair in items.chunked(2)) {
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                for (item in pair) chip(item, Modifier.weight(1f).fillMaxHeight())
-                if (pair.size == 1) Spacer(Modifier.weight(1f))
+    Layout({ for (item in items) chip(item, Modifier) }) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val gapPx = gap.roundToPx()
+        val half = (width - gapPx) / 2
+        val twoUp = measurables.all { it.maxIntrinsicWidth(Constraints.Infinity) <= half }
+        val cell = if (twoUp) half else width
+        val placeables = measurables.map { it.measure(Constraints(minWidth = cell, maxWidth = cell)) }
+        val rows = placeables.chunked(if (twoUp) 2 else 1)
+        val height = rows.sumOf { row -> row.maxOf { it.height } } + gapPx * (rows.size - 1).coerceAtLeast(0)
+        layout(width, height) {
+            var y = 0
+            for (row in rows) {
+                row.forEachIndexed { i, p -> p.place(i * (cell + gapPx), y) }
+                y += row.maxOf { it.height } + gapPx
             }
         }
     }

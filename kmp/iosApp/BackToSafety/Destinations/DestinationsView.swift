@@ -241,6 +241,7 @@ struct DestinationsView: View {
             }
             .padding([.horizontal, .top], Space.lg)
         }
+        .scrollStopsAtSafeArea()
     }
 
     private var empty: some View {
@@ -316,7 +317,7 @@ struct DestinationsView: View {
                 Button { edit(d) } label: {
                     SFIcon("pencil", 18, colors.primaryText)
                         .frame(width: 40, height: 40)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(p600.opacity(0x15 / 255.0)))
                 }
                 .buttonStyle(.pressable)
                 .accessibilityLabel(t("editName", ["name": d.name]))
@@ -387,7 +388,7 @@ struct DestinationsView: View {
                         RNText(tCommon("close"), Typography.bodyBold.spec, color: colors.textSecondary)
                             .frame(maxWidth: .infinity, minHeight: 42)
                             .padding(1)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
@@ -398,7 +399,7 @@ struct DestinationsView: View {
                             RNText(tCommon("edit"), Typography.bodyBold.spec, color: white)
                         }
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.tint))
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("destinations-detail-edit")
@@ -470,8 +471,8 @@ struct DestinationsView: View {
                                 RNText(t("riskLevels.\(risk)"), Typography.body.spec.weight(600), color: selected ? white : c)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, Space.md + 2)
-                                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? c : .clear))
-                                    .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(c, lineWidth: 2))
+                                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? c : .clear))
+                                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(c, lineWidth: 2))
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.pressable)
@@ -494,6 +495,7 @@ struct DestinationsView: View {
             .padding(Space.lg)
         }
         .scrollDismissesKeyboard(.interactively)
+        .scrollStopsAtSafeArea()
     }
 }
 
