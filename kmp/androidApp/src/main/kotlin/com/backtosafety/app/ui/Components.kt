@@ -24,7 +24,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
@@ -40,7 +39,7 @@ import com.backtosafety.core.DesignTokens
 private val space = DesignTokens.Spacing
 private val radius = DesignTokens.Radius
 
-/** components/OnboardingStepHeader.tsx: back chevron, step dots, and a balancing spacer. */
+/** components/OnboardingStepHeader.tsx: the platform back button, step dots, and a balancing spacer. */
 @Composable
 fun OnboardingStepHeader(activeStep: Int, totalSteps: Int, onBack: () -> Unit) {
     val colors = LocalAppColors.current
@@ -48,9 +47,7 @@ fun OnboardingStepHeader(activeStep: Int, totalSteps: Int, onBack: () -> Unit) {
         Modifier.fillMaxWidth().padding(bottom = space.xxl.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(48.udp).clip(CircleShape).clickable(role = Role.Button, onClick = onBack), contentAlignment = Alignment.Center) {
-            Icon("chevron.left", 24f, colors.tint)
-        }
+        BackButton(onBack)
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally)) {
             for (step in 1..totalSteps) {
                 val on = step <= activeStep
@@ -135,14 +132,16 @@ fun PrimaryButton(
         modifier
             .fillMaxWidth()
             .testTag(testTag)
-            .alpha(if (dimmed) 0.5f else 1f)
             .clip(RoundedCornerShape(radius.lg.dp))
-            .background(colors.primary)
+            // Not ready yet: a pale fill with the primary text on it, which still reads at
+            // over 4.5:1 in both themes (half-transparent white on primary didn't).
+            .background(if (dimmed) colors.primaryLight else colors.primary)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .heightIn(min = 48.udp)
             .padding(vertical = verticalPadding.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = textStyle, color = colors.textOnPrimary)
+        Text(label, style = textStyle, color = if (dimmed) colors.primaryText else colors.textOnPrimary)
     }
 }
 

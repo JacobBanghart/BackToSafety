@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -155,13 +156,13 @@ fun WelcomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.udp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon(icon, 20f, if (selected) colors.tint else colors.textSecondary)
+                            Icon(icon, 20f, if (selected) colors.primaryText else colors.textSecondary)
                             Text(
                                 t(label),
                                 style = type.bodyLarge.style().copy(
                                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
                                 ),
-                                color = if (selected) colors.tint else colors.textSecondary,
+                                color = if (selected) colors.primaryText else colors.text,
                             )
                         }
                     }
@@ -169,12 +170,15 @@ fun WelcomeScreen(
             }
         }
 
-        Column(Modifier.padding(space.lg.udp), verticalArrangement = Arrangement.spacedBy(space.lg.udp)) {
+        // A rule above the footer: the content stops at a visible edge rather than a card looking
+        // cut off by the scroll hint.
+        Box(Modifier.fillMaxWidth().height(1.udp).background(colors.border))
+        Column(Modifier.padding(space.lg.udp), verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
             if (scroll.value <= 10) {
                 Text(
                     t("welcome.scrollHint").uppercase(),
-                    style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
-                    color = colors.textSecondary,
+                    style = type.caption.style(fontWeight = 700, letterSpacing = 1f),
+                    color = colors.primaryText,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -198,8 +202,8 @@ fun WelcomeScreen(
             }
             Text(
                 t("welcome.privacy"),
-                style = type.caption.style(),
-                color = colors.textSecondary,
+                style = type.caption.style(fontWeight = 500),
+                color = colors.text,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )

@@ -252,10 +252,12 @@ struct ProfileView: View {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 120, height: 120).clipShape(Circle())
                         .accessibilityIdentifier("profile-photo")
                 } else {
-                    SFIcon("camera.fill", 38, colors.textSecondary)
+                    // An empty photo slot: a tinted fill and a dashed tint outline, visible on a dark
+                    // background as well as a light one.
+                    SFIcon("camera.fill", 38, colors.primaryText)
                         .frame(width: 120, height: 120)
-                        .background(Circle().fill(colors.card))
-                        .overlay(Circle().inset(by: 1).stroke(colors.inputBorder, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
+                        .background(Circle().fill(colors.primaryLight))
+                        .overlay(Circle().inset(by: 1).stroke(colors.tint, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
                 }
             }
             .padding(.bottom, Space.md)
@@ -320,7 +322,7 @@ struct ProfileView: View {
         .padding(.bottom, Space.lg)
     }
 
-    /// The profile's input: body text, 1pt border, radius md, padding md; 44pt single-line or
+    /// The profile's input: body text, 1pt border, radius md, padding md; 48pt single-line or
     /// a text area from 80pt (padding 10).
     private func input(_ text: Binding<String>, _ testID: String, _ placeholder: String, multiline: Bool = false,
                        keyboard: UIKeyboardType = .default, capitalization: UITextAutocapitalizationType = .sentences,
@@ -333,7 +335,7 @@ struct ProfileView: View {
                                  right: multiline ? Space.md : Space.md - 1),
             multiline: multiline, keyboard: keyboard, capitalization: capitalization, minHeight: 78, format: format
         )
-        .frame(height: multiline ? nil : 42)
+        .frame(height: multiline ? nil : 46)
         .padding(1)
         .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
         .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
@@ -348,7 +350,7 @@ struct ProfileView: View {
     }
 
     /// The date of birth: typed as MM/DD/YYYY, or picked in a spinner sheet. As in RN, a
-    /// bordered row (padding md) holds the 44pt input and the calendar button beside it.
+    /// bordered row (padding md) holds the 48pt input and the 48pt calendar button beside it.
     private func dateOfBirth(_ label: String) -> some View {
         group(label) {
             HStack(spacing: 0) {
@@ -358,18 +360,19 @@ struct ProfileView: View {
                     placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint), insets: .zero,
                     keyboard: .numberPad, maxLength: 10, format: { ProfileField.dateOfBirth.formatInput(value: $0) }
                 )
-                .frame(height: 44)
+                .frame(height: 48)
                 Button {
                     pendingDob = AgeKt.parseDob(value: form?[.dateOfBirth] ?? "").map(toDate) ?? toDate(Kotlinx_datetimeLocalDate(year: 1940, month: 1, day: 1))
                     datePicking = true
                 } label: {
-                    SFIcon("calendar", 18, colors.textSecondary).frame(minWidth: 44 - Space.sm, minHeight: 44).padding(.leading, Space.sm).contentShape(Rectangle())
+                    SFIcon("calendar", 20, colors.textSecondary).frame(minWidth: 48 - Space.sm, minHeight: 48).padding(.leading, Space.sm).contentShape(Rectangle())
                 }
                 .buttonStyle(.pressable)
+                .accessibilityLabel(t("fields.dateOfBirthPicker"))
                 .accessibilityIdentifier("profile-dob-calendar")
             }
             .padding(.horizontal, Space.md - 1)
-            .frame(minHeight: 42)
+            .frame(minHeight: 46)
             .padding(1)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))

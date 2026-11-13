@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -43,7 +44,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -112,6 +112,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             .background(colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
             .verticalScroll(rememberScrollState())
+            .navigationBarsPadding()
             .padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp, bottom = space.xxl.udp),
     ) {
         // Header
@@ -143,7 +144,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                     ) { Icon("person.fill", 28f, colors.textSecondary) }
                 }
                 Box(
-                    Modifier.align(Alignment.BottomEnd).size(20.udp).clip(CircleShape).background(colors.tint)
+                    Modifier.align(Alignment.BottomEnd).size(20.udp).clip(CircleShape).background(colors.primary)
                         .rnBorder(2.udp, Color(DesignTokens.Light.textOnPrimary), CircleShape),
                     contentAlignment = Alignment.Center,
                 ) { Icon("pencil", 10f, Color(DesignTokens.Light.textOnPrimary)) }
@@ -164,8 +165,9 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             Modifier
                 .fillMaxWidth()
                 .padding(bottom = space.lg.udp)
-                .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.xl.dp))
-                .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp))
+                // The same radius as every other card on home.
+                .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                 .background(if (active != null) EMERGENCY_ACTIVE_BG else EMERGENCY_IDLE_BG)
                 .testTag("home-start-emergency")
                 // One accessible element, read as its texts, like RN's touchable (Maestro matches it).
@@ -282,16 +284,21 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
             .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .padding(space.lg.udp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(t("emergencyInfo.title"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
+        // The 911 script lives here, so the card leads with an icon and a title-size heading,
+        // and its "911 Script" pill is body size: it outranks the plain Settings row below.
+        Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(40.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
+                Icon("doc.text.fill", 20f, colors.primaryText)
+            }
+            Text(t("emergencyInfo.title"), style = type.title.style(), color = colors.text, modifier = Modifier.weight(1f))
             Row(
-                Modifier.clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primaryLight)
-                    .padding(horizontal = space.sm.udp, vertical = space.xs.udp),
+                Modifier.heightIn(min = 36.udp).clip(CircleShape).background(colors.primaryLight)
+                    .padding(start = space.md.udp, end = space.sm.udp),
                 horizontalArrangement = Arrangement.spacedBy(space.xxs.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(t("emergencyInfo.script911"), style = type.caption.style().copy(fontWeight = FontWeight.SemiBold), color = colors.primaryText)
-                Icon("chevron.right", 14f, colors.primaryText)
+                Text(t("emergencyInfo.script911"), style = type.bodyBold.style(), color = colors.primaryText)
+                Icon("chevron.right", 18f, colors.primaryText)
             }
         }
         val items = listOfNotNull(

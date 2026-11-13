@@ -1,6 +1,35 @@
 import Shared
 import SwiftUI
 
+private struct BackLabelKey: EnvironmentKey {
+    static let defaultValue = ""
+}
+
+extension EnvironmentValues {
+    /// What VoiceOver says for every back control (common.json "back"). Set once at the root
+    /// so each header doesn't need its own translator; a bare chevron has no useful label.
+    var backLabel: String {
+        get { self[BackLabelKey.self] }
+        set { self[BackLabelKey.self] = newValue }
+    }
+}
+
+/// The platform's back control: the navigation bar's chevron in a 48pt target, labelled
+/// [backLabel] for VoiceOver.
+struct BackButton: View {
+    let action: () -> Void
+    @Environment(\.appColors) private var colors
+    @Environment(\.backLabel) private var backLabel
+
+    var body: some View {
+        Button(action: action) {
+            SFIcon("chevron.left", 24, colors.primaryText).frame(width: 48, height: 48).contentShape(Rectangle())
+        }
+        .buttonStyle(.pressable)
+        .accessibilityLabel(backLabel)
+    }
+}
+
 /// The screen's navigation bar (inline title, centred, as UINavigationBar draws it): a 48pt
 /// back control on the left, the title centred against the full width (optionally with an
 /// icon), and an optional action inset from the right edge. IDs: <testID>-back, -title.
@@ -17,12 +46,8 @@ struct ScreenHeader<Right: View>: View {
         // The title is an overlay (absoluteFill in RN): it never sets the header's height, so a
         // large-text title overflows the bar rather than growing it.
         HStack(spacing: 0) {
-            // The platform's back control: a 48pt target with a 24pt chevron centred in it.
-            Button(action: onBack) {
-                SFIcon("chevron.left", 24, colors.tint).frame(width: 48, height: 48).contentShape(Rectangle())
-            }
-            .buttonStyle(.pressable)
-            .accessibilityIdentifier("\(testID)-back")
+            BackButton(action: onBack)
+                .accessibilityIdentifier("\(testID)-back")
             Spacer()
             right().frame(minWidth: 48, alignment: .trailing).padding(.trailing, Space.sm)
         }

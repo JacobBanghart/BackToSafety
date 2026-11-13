@@ -373,12 +373,10 @@ struct ContactsView: View {
                               placeholder: t("form.addressPlaceholder"), multiline: true)
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(t("form.roleLabel"), Typography.bodyBold.spec, color: colors.text).padding(.bottom, Space.xs)
-                    FlowLayout(spacing: Space.sm) {
-                        ForEach(roles, id: \.0) { role, icon in
-                            OptionChip(label: t("roles.\(role)"), icon: icon, testID: "contacts-form-role-\(role)",
-                                       selected: form.role == role, selectedColor: colors.primary) {
-                                if form.role != role { form.role = role }
-                            }
+                    ChipGrid(items: roles) { item in
+                        OptionChip(label: t("roles.\(item.0)"), icon: item.1, testID: "contacts-form-role-\(item.0)",
+                                   selected: form.role == item.0, selectedColor: colors.primary) {
+                            if form.role != item.0 { form.role = item.0 }
                         }
                     }
                 }

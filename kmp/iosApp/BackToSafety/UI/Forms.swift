@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 
 /// components/AppTextInput.tsx on iOS: a bold label (with " *" when required), an optional
-/// hint, and the field: 44pt single-line or an 80-120pt text area, 1pt border (focused:
+/// hint, and the field: 48pt single-line (a full touch target) or an 80-120pt text area, 1pt border (focused:
 /// borderFocused), radius md, padding md. iOS inputs take the font's own line height.
 struct FormTextInput: View {
     let label: String
@@ -36,7 +36,7 @@ struct FormTextInput: View {
                 multiline: multiline, keyboard: keyboard, capitalization: capitalization, minHeight: 78, maxHeight: 118,
                 format: format, onFocus: { focused = $0 }
             )
-            .frame(height: multiline ? nil : 42)
+            .frame(height: multiline ? nil : 46)
             .padding(1)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.inputBackground))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(focused ? colors.borderFocused : colors.inputBorder, lineWidth: 1))
@@ -98,17 +98,42 @@ struct OptionChip: View {
         let white = Color(argb: Light.textOnPrimary)
         Button(action: action) {
             HStack(spacing: 6) {
-                SFIcon(icon, 14, selected ? white : colors.icon)
+                SFIcon(icon, 16, selected ? white : colors.icon)
                 RNText(label, Typography.caption.spec.weight(500), color: selected ? white : colors.text)
             }
             .padding(.horizontal, Space.md + 1).padding(.vertical, Space.sm + 1)
-            .frame(minHeight: 48)
+            // Fills its ChipGrid cell, so a row's two chips are the same width and height.
+            .frame(maxWidth: .infinity, minHeight: 48, maxHeight: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? selectedColor : colors.inputBackground))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(selected ? selectedColor : colors.inputBorder, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
         .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+}
+
+/// Option chips two to a row, each half the width and as tall as its neighbour: they line up
+/// at any text size, where a flowing row left one chip alone on the last line.
+struct ChipGrid<Item, Content: View>: View {
+    let items: [Item]
+    @ViewBuilder let chip: (Item) -> Content
+
+    var body: some View {
+        VStack(spacing: Space.sm) {
+            ForEach(Array(stride(from: 0, to: items.count, by: 2)), id: \.self) { i in
+                HStack(spacing: Space.sm) {
+                    chip(items[i])
+                    if i + 1 < items.count {
+                        chip(items[i + 1])
+                    } else {
+                        Color.clear.frame(maxWidth: .infinity, maxHeight: 0)
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+            }
+        }
     }
 }
 
@@ -125,7 +150,7 @@ struct FormDeleteButton: View {
                 SFIcon("trash", 14, error)
                 RNText(label, Typography.bodyBold.spec, color: error)
             }
-            .frame(maxWidth: .infinity, minHeight: 42)
+            .frame(maxWidth: .infinity, minHeight: 46)
             .padding(.horizontal, Space.md + 1).padding(.vertical, 1)
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(error, lineWidth: 1))
             .contentShape(Rectangle())

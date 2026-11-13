@@ -41,7 +41,7 @@ import com.backtosafety.core.DesignTokens
 
 /**
  * components/AppTextInput.tsx: a bold label (with " *" when required), an optional hint, and
- * the field: 44dp single-line or an 80-120dp text area, 1dp border (focused: borderFocused),
+ * the field: 48dp single-line (a full touch target) or an 80-120dp text area, 1dp border (focused: borderFocused),
  * radius md, body text on a 20 line height. Field margin below: md.
  */
 @Composable
@@ -81,7 +81,7 @@ fun FormTextInput(
 
 /**
  * An RN TextInput as the forms style it on Android: body text on a 20 line height, 1dp border
- * (inside the box), radius md, padding md horizontally; 44dp single-line, or a top-aligned
+ * (inside the box), radius md, padding md horizontally; 48dp single-line, or a top-aligned
  * text area from 80dp. Formatters rewrite the text on change; the cursor stays at the end the
  * way RN's controlled input keeps it.
  */
@@ -126,7 +126,7 @@ fun RnTextField(
             .onFocusChanged { onFocusChanged(it.isFocused) }
             .then(
                 if (multiline) Modifier.heightIn(min = 80.udp, max = textAreaMaxHeight?.udp ?: androidx.compose.ui.unit.Dp.Infinity)
-                else Modifier.height(44.udp),
+                else Modifier.height(48.udp),
             )
             .then(
                 if (bare) Modifier

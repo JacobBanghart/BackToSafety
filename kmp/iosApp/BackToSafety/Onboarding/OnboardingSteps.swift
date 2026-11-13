@@ -68,12 +68,13 @@ struct PhotoView: View {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 200, height: 200).clipShape(Circle())
                 } else {
                     VStack(spacing: 0) {
-                        SFIcon("camera.fill", 44, colors.textSecondary).padding(.top, Space.xs)
+                        SFIcon("camera.fill", 44, colors.primaryText).padding(.top, Space.xs)
                         RNText(t("photo.noPhoto"), TextSpec(size: 16, lineHeight: 24), color: colors.textSecondary).padding(.top, Space.sm)
                     }
                     .frame(width: 200, height: 200)
-                    .background(Circle().fill(colors.surface))
-                    .overlay(Circle().strokeBorder(colors.inputBorder, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
+                    // An empty photo slot: a tinted fill and a dashed tint outline, as on Edit Profile.
+                    .background(Circle().fill(colors.primaryLight))
+                    .overlay(Circle().strokeBorder(colors.tint, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
                 }
             }
             .frame(maxWidth: .infinity)

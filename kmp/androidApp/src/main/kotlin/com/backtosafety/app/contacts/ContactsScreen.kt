@@ -12,8 +12,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
@@ -23,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -58,6 +57,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.ui.ChipGrid
 import com.backtosafety.app.ui.FormDeleteButton
 import com.backtosafety.app.ui.FormTextInput
 import com.backtosafety.app.ui.HeaderSaveButton
@@ -256,7 +256,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         when {
             list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(tCommon("loading"), color = colors.text) }
             showForm -> Form(t, form, { form = it }, editing, ::delete)
-            else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
+            else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
                 if (list.isEmpty()) {
                     Empty(t, importing, onAdd = {
                         Analytics.track(AnalyticsEvent.CONTACT_ADD_TAPPED)
@@ -425,7 +425,6 @@ private fun Empty(t: Translate, importing: Boolean, onAdd: () -> Unit, onImport:
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Form(
     t: Translate,
@@ -435,7 +434,7 @@ private fun Form(
     onDelete: (ContactEntity) -> Unit,
 ) {
     val colors = LocalAppColors.current
-    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
+    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp)) {
         Text(
             t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
             modifier = Modifier.padding(bottom = space.xl.udp),
@@ -458,11 +457,9 @@ private fun Form(
         )
         Column(Modifier.padding(bottom = space.lg.udp)) {
             Text(t("form.roleLabel"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.padding(bottom = space.xs.udp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
-                for ((role, icon) in ROLES) {
-                    OptionChip(t("roles.$role"), icon, "contacts-form-role-$role", form.role == role, colors.primary) {
-                        if (form.role != role) onChange(form.copy(role = role))
-                    }
+            ChipGrid(ROLES) { (role, icon), modifier ->
+                OptionChip(t("roles.$role"), icon, "contacts-form-role-$role", form.role == role, colors.primary, modifier) {
+                    if (form.role != role) onChange(form.copy(role = role))
                 }
             }
         }

@@ -57,9 +57,9 @@ struct WelcomeView: View {
                                     model.setTheme(value)
                                 } label: {
                                     HStack(spacing: 8) {
-                                        SFIcon(icon, 20, selected ? colors.tint : colors.textSecondary)
+                                        SFIcon(icon, 20, selected ? colors.primaryText : colors.textSecondary)
                                         RNText(t(label), Typography.bodyLarge.spec.weight(selected ? 600 : 500),
-                                               color: selected ? colors.tint : colors.textSecondary)
+                                               color: selected ? colors.primaryText : colors.text)
                                     }
                                     .frame(maxWidth: .infinity)
                                     .padding(Space.md)
@@ -85,10 +85,13 @@ struct WelcomeView: View {
             .scrollIndicators(.hidden)
             .onPreferenceChange(ScrollOffsetKey.self) { scrolled = $0 > 10 }
 
-            VStack(spacing: Space.lg) {
+            // A rule above the footer: the content stops at a visible edge rather than a card looking
+            // cut off by the scroll hint.
+            Rectangle().fill(colors.border).frame(height: 1)
+            VStack(spacing: Space.md) {
                 if !scrolled {
-                    RNText(t("welcome.scrollHint").uppercased(), Typography.caption.spec.weight(600).spacing(1),
-                           color: colors.textSecondary, align: .center)
+                    RNText(t("welcome.scrollHint").uppercased(), Typography.caption.spec.weight(700).spacing(1),
+                           color: colors.primaryText, align: .center)
                         .frame(maxWidth: .infinity)
                 }
                 Button {
@@ -104,7 +107,7 @@ struct WelcomeView: View {
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("onboarding-get-started")
-                RNText(t("welcome.privacy"), Typography.caption.spec, color: colors.textSecondary, align: .center)
+                RNText(t("welcome.privacy"), Typography.caption.spec.weight(500), color: colors.text, align: .center)
                     .frame(maxWidth: .infinity)
             }
             .padding(Space.lg)

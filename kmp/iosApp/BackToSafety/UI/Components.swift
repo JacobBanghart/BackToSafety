@@ -2,7 +2,7 @@ import Shared
 import SwiftUI
 import UIKit
 
-/// components/OnboardingStepHeader.tsx: back chevron, step dots, and a balancing spacer.
+/// components/OnboardingStepHeader.tsx: the platform back button, step dots, and a balancing spacer.
 struct OnboardingStepHeader: View {
     let active: Int
     let total: Int
@@ -11,8 +11,7 @@ struct OnboardingStepHeader: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Button(action: onBack) { SFIcon("chevron.left", 24, colors.tint).frame(width: 48, height: 48).contentShape(Rectangle()) }
-                .buttonStyle(.pressable)
+            BackButton(action: onBack)
             HStack(spacing: Space.sm) {
                 ForEach(1 ... total, id: \.self) { step in
                     RoundedRectangle(cornerRadius: Radius.sm)
@@ -121,12 +120,14 @@ struct PrimaryButton: View {
     @Environment(\.appColors) private var colors
 
     var body: some View {
+        // Not ready yet: a pale fill with the primary text on it, which still reads at over
+        // 4.5:1 in both themes (half-transparent white on primary didn't).
+        let muted = dimmed ?? !enabled
         Button(action: action) {
-            RNText(label, spec, color: colors.textOnPrimary)
-                .frame(maxWidth: .infinity)
+            RNText(label, spec, color: muted ? colors.primaryText : colors.textOnPrimary)
+                .frame(maxWidth: .infinity, minHeight: max(0, 48 - 2 * verticalPadding))
                 .padding(.vertical, verticalPadding)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
-                .opacity((dimmed ?? !enabled) ? 0.5 : 1)
+                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(muted ? colors.primaryLight : colors.primary))
         }
         .buttonStyle(.pressable)
         .disabled(!enabled)

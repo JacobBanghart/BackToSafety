@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -323,6 +324,7 @@ fun EmergencyScreen(
                     .weight(1f)
                     .imePadding()
                     .verticalScroll(rememberScrollState())
+                    .navigationBarsPadding()
                     .padding(space.lg.udp),
                 verticalArrangement = Arrangement.spacedBy(space.lg.udp),
             ) {
@@ -336,8 +338,6 @@ fun EmergencyScreen(
                             .padding(space.md.udp),
                     ) { Text(hint, style = type.bodyBold.style(), color = Color(DesignTokens.Primary.c800)) }
                 }
-
-                if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
 
                 ActionButtons(
                     t, emergencyNumber,
@@ -392,6 +392,10 @@ fun EmergencyScreen(
                         }
                     },
                 )
+
+                // What they're wearing is asked for under the actions, so nothing sits between
+                // the timer and Call 911; it's still above the checklist, where the 911 call needs it.
+                if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
 
                 Checklist(t, steps, destinations, ::toggle)
                 TipsCard(t, profile)
@@ -546,7 +550,7 @@ private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, 
                 Modifier.testTag("emergency-wearing-dismiss").heightIn(min = 48.udp).clickable(role = Role.Button, onClick = onDismiss)
                     .padding(horizontal = space.sm.udp),
                 contentAlignment = Alignment.Center,
-            ) { Text(t("wearing.dismiss"), style = type.caption.style(), color = colors.textSecondary) }
+            ) { Text(t("wearing.dismiss"), style = type.bodyBold.style(), color = colors.primaryText) }
         }
     }
 }
@@ -561,30 +565,33 @@ private fun ActionButtons(
     val type = DesignTokens.Typography
     val emergencyRed = Color(DesignTokens.Semantic.errorDark)
     val white = Color(DesignTokens.Light.textOnPrimary)
-    val large = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight)
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
-    // Calling for help is the most urgent action, so it comes first and is a solid red as
-    // heavy as Found — Safe. Both fills carry white labels above 4.5:1.
-    Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+    // Calling for help is the most urgent action: it comes first and is the one solid, raised,
+    // larger red control. Found — Safe ends the search, so it is clear but quieter: outlined in
+    // the success colour (text colour by theme, so it passes 4.5:1 on the card).
+    Column(verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-call-911").shadow(2.udp, shape).clip(shape)
+            Modifier.fillMaxWidth().heightIn(min = 72.udp).testTag("emergency-call-911").shadow(6.udp, shape).clip(shape)
                 .background(emergencyRed).clickable(role = Role.Button, onClick = onCall)
                 .padding(vertical = space.lg.udp, horizontal = space.xl.udp),
-            horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+            horizontalArrangement = Arrangement.spacedBy(space.md.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon("phone.fill", 22f, white)
-            Text(t("actions.call911", mapOf("emergencyNumber" to emergencyNumber)), style = large, color = white)
+            Icon("phone.fill", 28f, white)
+            Text(
+                t("actions.call911", mapOf("emergencyNumber" to emergencyNumber)),
+                style = rnTextStyle(type.headline.fontSize, type.headline.lineHeight, type.headline.fontWeight), color = white,
+            )
         }
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-found").shadow(2.udp, shape).clip(shape)
-                .background(Color(DesignTokens.Semantic.success)).clickable(role = Role.Button, onClick = onFound)
-                .padding(vertical = space.lg.udp, horizontal = space.xl.udp),
+            Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-found").clip(shape)
+                .background(colors.card).rnBorder(2.udp, colors.success, shape).clickable(role = Role.Button, onClick = onFound)
+                .padding(vertical = space.md.udp, horizontal = space.xl.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon("checkmark.circle.fill", 22f, white)
-            Text(t("actions.foundSafe"), style = large, color = white)
+            Icon("checkmark.circle.fill", 22f, colors.success)
+            Text(t("actions.foundSafe"), style = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight), color = colors.success)
         }
         Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
             for ((label, tag, icon, action) in listOf(

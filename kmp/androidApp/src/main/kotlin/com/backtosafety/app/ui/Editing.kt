@@ -7,8 +7,13 @@ import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -56,19 +61,27 @@ fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: (
 
 /** roleOption / optionButton: an icon and a caption (500) in a bordered pill, 48dp tall to tap. */
 @Composable
-fun OptionChip(label: String, icon: String, testID: String, selected: Boolean, selectedColor: Color, onClick: () -> Unit) {
+fun OptionChip(
+    label: String,
+    icon: String,
+    testID: String,
+    selected: Boolean,
+    selectedColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     val colors = LocalAppColors.current
     val white = Color(DesignTokens.Light.textOnPrimary)
     val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
     Row(
-        Modifier.testTag(testID).heightIn(min = 48.udp).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
+        modifier.testTag(testID).heightIn(min = 48.udp).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
             .background(if (selected) selectedColor else colors.inputBackground)
             .rnBorder(1.dp, if (selected) selectedColor else colors.inputBorder, shape)
             .padding(horizontal = DesignTokens.Spacing.md.udp, vertical = DesignTokens.Spacing.sm.udp),
         horizontalArrangement = Arrangement.spacedBy(6.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, 14f, if (selected) white else colors.icon)
+        Icon(icon, 16f, if (selected) white else colors.icon)
         Text(label, style = DesignTokens.Typography.caption.style(fontWeight = 500), color = if (selected) white else colors.text)
     }
 }
@@ -79,7 +92,7 @@ fun FormDeleteButton(label: String, testID: String, onClick: () -> Unit) {
     val error = Color(DesignTokens.Semantic.error)
     val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
     Row(
-        Modifier.fillMaxWidth().padding(top = DesignTokens.Spacing.md.udp).heightIn(min = 44.udp).testTag(testID).clip(shape)
+        Modifier.fillMaxWidth().padding(top = DesignTokens.Spacing.md.udp).heightIn(min = 48.udp).testTag(testID).clip(shape)
             .clickable(onClick = onClick).rnBorder(1.dp, error, shape).padding(horizontal = DesignTokens.Spacing.md.udp),
         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.xs.udp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
@@ -98,4 +111,21 @@ fun Modifier.listCard(dragging: Boolean): Modifier {
         .then(if (dragging) Modifier.scale(1.02f).alpha(0.98f).shadow(4.dp, shape) else Modifier)
         .clip(shape).background(if (dragging) colors.primaryLight else colors.card)
         .rnBorder(1.dp, if (dragging) colors.primary else colors.border, shape)
+}
+
+/**
+ * Option chips two to a row, each half the width and as tall as its neighbour: they line up
+ * at any text size, where a flowing row left one chip alone on the last line.
+ */
+@Composable
+fun <T> ChipGrid(items: List<T>, chip: @Composable (item: T, modifier: Modifier) -> Unit) {
+    val gap = DesignTokens.Spacing.sm.udp
+    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+        for (pair in items.chunked(2)) {
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(gap)) {
+                for (item in pair) chip(item, Modifier.weight(1f).fillMaxHeight())
+                if (pair.size == 1) Spacer(Modifier.weight(1f))
+            }
+        }
+    }
 }

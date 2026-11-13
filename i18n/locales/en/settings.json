@@ -28,7 +28,8 @@
       "dbSchema": "DB Schema",
       "dbSchemaUnknown": "Unknown",
       "devSuffix": " (Dev)",
-      "deviceId": "Device ID"
+      "deviceId": "Device ID",
+      "diagnostics": "Support details"
     }
   },
   "themeOptions": {

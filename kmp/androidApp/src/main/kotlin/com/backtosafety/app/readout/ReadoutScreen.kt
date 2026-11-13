@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -150,7 +151,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             onBack()
         })
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.lg.udp),
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp),
             verticalArrangement = Arrangement.spacedBy(space.md.udp),
         ) {
             // Call 911: the most prominent action, the same solid red as on the search screen.

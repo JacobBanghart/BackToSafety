@@ -24,6 +24,7 @@
     "nickname": "Nickname / Preferred Name",
     "nicknamePlaceholder": "What they prefer to be called",
     "dateOfBirth": "Date of Birth",
+    "dateOfBirthPicker": "Choose date of birth",
     "height": "Height",
     "heightPlaceholder": "5'6\"",
     "weight": "Weight",

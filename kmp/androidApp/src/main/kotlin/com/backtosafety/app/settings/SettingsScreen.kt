@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -38,6 +39,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.ui.AppCard
@@ -135,7 +138,7 @@ fun SettingsScreen(
     ) {
         ScreenHeader(t("screenTitle"), "settings", onBack)
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.xl.udp),
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.xl.udp),
             verticalArrangement = Arrangement.spacedBy(space.lg.udp),
         ) {
             AppCard {
@@ -192,6 +195,14 @@ fun SettingsScreen(
                     versionLabel() + if (devMode) t("sections.about.devSuffix") else "",
                     testID = "settings-version", onPress = ::onVersionTap,
                 )
+                // Platform, theme and the device ID are for support, not for the caregiver: set
+                // apart under their own small heading rather than read as ordinary content.
+                Text(
+                    t("sections.about.diagnostics").uppercase(),
+                    style = DesignTokens.Typography.caption.style(fontWeight = 600, letterSpacing = 0.8f),
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(top = space.lg.udp, bottom = space.xxs.udp).semantics { heading() },
+                )
                 ListItem(t("sections.about.platform"), "android")
                 ListItem(t("sections.about.theme"), if (colors.isDark) "dark" else "light")
                 if (devMode) ListItem(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
@@ -237,7 +248,7 @@ private fun Description(text: String) {
     )
 }
 
-/** A theme or language choice: 2dp border, tint and primaryLight when selected. */
+/** A theme or language choice: 2dp border, tint and primaryLight when selected, the label in primaryText (tint on primaryLight is under 4.5:1). */
 @Composable
 private fun RowScope.Option(label: String, testID: String, selected: Boolean, icon: String? = null, onClick: () -> Unit) {
     val colors = LocalAppColors.current
@@ -251,11 +262,11 @@ private fun RowScope.Option(label: String, testID: String, selected: Boolean, ic
     ) {
         // A 24dp symbol, tinted like the label.
         icon?.let {
-            Icon(it, 24f, if (selected) colors.tint else colors.textSecondary, Modifier.padding(bottom = DesignTokens.Spacing.xs.udp))
+            Icon(it, 24f, if (selected) colors.primaryText else colors.textSecondary, Modifier.padding(bottom = DesignTokens.Spacing.xs.udp))
         }
         Text(
             label, style = rnTextStyle(14f, 24f, if (selected) 600 else 400),
-            color = if (selected) colors.tint else colors.text,
+            color = if (selected) colors.primaryText else colors.text,
         )
     }
 }

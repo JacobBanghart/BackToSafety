@@ -104,8 +104,10 @@ struct EmergencyView: View {
                                 .background(RoundedRectangle(cornerRadius: Radius.lg).fill(Color(argb: Secondary.c100)))
                                 .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(Color(argb: Secondary.c300), lineWidth: 1))
                         }
-                        if showWearing { wearingCard }
                         actionButtons
+                        // What they're wearing is asked for under the actions, so nothing sits between
+                        // the timer and Call 911; it's still above the checklist, where the 911 call needs it.
+                        if showWearing { wearingCard }
                         checklist
                         tipsCard
                         Color.clear.frame(height: Space.xxl)
@@ -359,7 +361,7 @@ struct EmergencyView: View {
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.inputBorder, lineWidth: 1))
             Button { showWearing = false } label: {
-                RNText(t("wearing.dismiss"), Typography.caption.spec, color: colors.textSecondary)
+                RNText(t("wearing.dismiss"), Typography.bodyBold.spec, color: colors.primaryText)
                     .padding(.horizontal, Space.sm)
                     .frame(minHeight: 48)
                     .contentShape(Rectangle()).accessibilityElement(children: .combine)
@@ -376,35 +378,37 @@ struct EmergencyView: View {
     @Environment(\.dynamicTypeSize) private var dynamicType
     private var fontMultiplier: CGFloat { rnFontMultiplier(dynamicType) }
 
-    /// Calling for help is the most urgent action, so it comes first and is a solid red as
-    /// heavy as Found — Safe. Both fills carry white labels above 4.5:1.
+    /// Calling for help is the most urgent action: it comes first and is the one solid, raised,
+    /// larger red control. Found — Safe ends the search, so it is clear but quieter: outlined in
+    /// the success colour (text colour by theme, so it passes 4.5:1 on the card).
     private var actionButtons: some View {
         let white = Color(argb: Light.textOnPrimary)
         let emergencyRed = Color(argb: Semantic.errorDark)
-        let large = Typography.bodyBold.spec.size(18)
-        return VStack(spacing: Space.sm) {
+        let shape = RoundedRectangle(cornerRadius: Radius.lg)
+        return VStack(spacing: Space.md) {
             Button(action: call911) {
-                HStack(spacing: Space.sm) {
-                    SFIcon("phone.fill", 22, white)
-                    RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), large, color: white)
+                HStack(spacing: Space.md) {
+                    SFIcon("phone.fill", 28, white)
+                    RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), Typography.headline.spec, color: white)
                 }
-                .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
+                .frame(maxWidth: .infinity, minHeight: 72 - 2 * Space.lg)
                 .padding(.vertical, Space.lg).padding(.horizontal, Space.xl)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(emergencyRed))
-                .rnShadow(.sm, dark: colors.isDark)
+                .background(shape.fill(emergencyRed))
+                .rnShadow(.lg, dark: colors.isDark)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityIdentifier("emergency-call-911")
             Button(action: found) {
                 HStack(spacing: Space.sm) {
-                    SFIcon("checkmark.circle.fill", 22, white)
-                    RNText(t("actions.foundSafe"), large, color: white)
+                    SFIcon("checkmark.circle.fill", 22, colors.success)
+                    RNText(t("actions.foundSafe"), Typography.bodyBold.spec.size(18), color: colors.success)
                 }
-                .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
-                .padding(.vertical, Space.lg).padding(.horizontal, Space.xl)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(Color(argb: Semantic.success)))
-                .rnShadow(.sm, dark: colors.isDark)
+                .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.md)
+                .padding(.vertical, Space.md).padding(.horizontal, Space.xl)
+                .background(shape.fill(colors.card))
+                .overlay(shape.strokeBorder(colors.success, lineWidth: 2))
+                .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityIdentifier("emergency-found")

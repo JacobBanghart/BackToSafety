@@ -83,6 +83,11 @@ struct SettingsView: View {
                         ListItem(label: t("sections.about.app"), value: appName)
                         ListItem(label: t("sections.about.version"), value: versionLabel + (devMode ? t("sections.about.devSuffix") : ""),
                                  testID: "settings-version", onPress: onVersionTap)
+                        // Platform, theme and the device ID are for support, not for the caregiver: set
+                        // apart under their own small heading rather than read as ordinary content.
+                        RNText(t("sections.about.diagnostics").uppercased(), Typography.caption.spec.weight(600).spacing(0.8), color: colors.textSecondary)
+                            .padding(.top, Space.lg).padding(.bottom, Space.xxs)
+                            .accessibilityAddTraits(.isHeader)
                         ListItem(label: t("sections.about.platform"), value: "ios")
                         ListItem(label: t("sections.about.theme"), value: colors.isDark ? "dark" : "light")
                         if devMode { ListItem(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
@@ -192,13 +197,13 @@ struct SettingsView: View {
         RNText(text, TextSpec(size: 16, lineHeight: 24), color: colors.textSecondary).padding(.bottom, Space.lg)
     }
 
-    /// A theme or language choice: 2pt border, tint and primaryLight when selected.
+    /// A theme or language choice: 2pt border, tint and primaryLight when selected, the label in primaryText (tint on primaryLight is under 4.5:1).
     private func option(_ label: String, _ testID: String, _ selected: Bool, _ icon: String?, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 0) {
                 // A 24pt symbol, tinted like the label.
-                if let icon { SFIcon(icon, 24, selected ? colors.tint : colors.textSecondary).padding(.bottom, Space.xs) }
-                RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.tint : colors.text)
+                if let icon { SFIcon(icon, 24, selected ? colors.primaryText : colors.textSecondary).padding(.bottom, Space.xs) }
+                RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.primaryText : colors.text)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Space.lg + 2)

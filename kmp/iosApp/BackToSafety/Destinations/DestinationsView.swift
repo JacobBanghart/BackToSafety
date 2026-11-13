@@ -8,6 +8,7 @@ private let categories = [
     ("walking_route", "figure.walk"), ("other", "mappin"),
 ]
 private let risks = [("high", Semantic.error), ("medium", Semantic.warning), ("low", Semantic.success)]
+/// The faint tint behind place icons. The icons themselves use primaryText: p600 on primaryLight was under 3:1 in dark.
 private let p600 = Color(argb: Primary.c600)
 private let white = Color(argb: Light.textOnPrimary)
 
@@ -192,7 +193,7 @@ struct DestinationsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: Space.md) {
-                    SFIcon("info.circle.fill", 18, p600)
+                    SFIcon("info.circle.fill", 18, colors.primaryText)
                     RNText(t("searchTip"), Typography.caption.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(Space.md)
@@ -286,7 +287,7 @@ struct DestinationsView: View {
     }
 
     private func categoryIcon(_ d: DestinationEntity, _ size: CGFloat) -> some View {
-        SFIcon(categoryOf(d).1, size, p600)
+        SFIcon(categoryOf(d).1, size, colors.primaryText)
             .frame(width: 28, height: 28)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
     }
@@ -313,7 +314,7 @@ struct DestinationsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button { edit(d) } label: {
-                    SFIcon("pencil", 18, p600)
+                    SFIcon("pencil", 18, colors.primaryText)
                         .frame(width: 40, height: 40)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
                 }
@@ -324,7 +325,7 @@ struct DestinationsView: View {
             if let address = d.address, !address.isEmpty {
                 Button { openMaps(address) } label: {
                     HStack(spacing: 6) {
-                        SFIcon("location", 14, p600)
+                        SFIcon("location", 14, colors.primaryText)
                         RNText(address, Typography.caption.spec, color: addressColor, lines: 1).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.vertical, Space.xs).padding(.horizontal, 10)
@@ -367,7 +368,7 @@ struct DestinationsView: View {
                     VStack(spacing: 0) {
                         if let address = d.address, !address.isEmpty {
                             Button { openMaps(address) } label: {
-                                detailRow("location", p600, t("detail.address"), address, addressColor).contentShape(Rectangle())
+                                detailRow("location", colors.primaryText, t("detail.address"), address, addressColor).contentShape(Rectangle())
                             }
                             .buttonStyle(.pressable)
                             .accessibilityIdentifier("destinations-detail-maps")
@@ -433,14 +434,12 @@ struct DestinationsView: View {
                               placeholder: t("form.namePlaceholder"), required: true, capitalization: .words)
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(t("form.categoryLabel"), Typography.bodyBold.spec, color: colors.text).padding(.bottom, Space.xs)
-                    FlowLayout(spacing: Space.sm) {
-                        ForEach(categories, id: \.0) { category, icon in
-                            OptionChip(label: t("categories.\(category)"), icon: icon, testID: "destinations-form-category-\(category)",
-                                       selected: form.category == category,
-                                       // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
-                                       selectedColor: category == "water" ? Color(argb: Light.warning) : colors.primary) {
-                                if form.category != category { form.category = category }
-                            }
+                    ChipGrid(items: categories) { item in
+                        OptionChip(label: t("categories.\(item.0)"), icon: item.1, testID: "destinations-form-category-\(item.0)",
+                                   selected: form.category == item.0,
+                                   // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
+                                   selectedColor: item.0 == "water" ? Color(argb: Light.warning) : colors.primary) {
+                            if form.category != item.0 { form.category = item.0 }
                         }
                     }
                     if form.category == "water" {

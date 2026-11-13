@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -48,6 +49,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -208,7 +211,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             form = form?.with(field, value)
         }
         val toggle: (String) -> Unit = { expanded = if (expanded == it) null else it }
-        Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
+        Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).navigationBarsPadding().padding(space.lg.udp)) {
             PhotoSection(
                 t, f[ProfileField.PHOTO_URI],
                 onCamera = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_TAKEN); picker.fromCamera() },
@@ -218,7 +221,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             Section("personal", t("sections.personal"), "person.fill", expanded, toggle) {
                 Field(t, ProfileField.FULL_NAME, f, ::update)
                 Field(t, ProfileField.NICKNAME, f, ::update)
-                DateOfBirth(t("fields.dateOfBirth"), f[ProfileField.DATE_OF_BIRTH], { update(ProfileField.DATE_OF_BIRTH, it) })
+                DateOfBirth(t("fields.dateOfBirth"), t("fields.dateOfBirthPicker"), f[ProfileField.DATE_OF_BIRTH], { update(ProfileField.DATE_OF_BIRTH, it) })
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     Box(Modifier.weight(1f)) {
                         Field(t, ProfileField.HEIGHT, f, ::update)
@@ -324,16 +327,18 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
             if (photo != null) {
                 Image(photo, null, Modifier.size(120.udp).clip(CircleShape).testTag("profile-photo"), contentScale = ContentScale.Crop)
             } else {
+                // An empty photo slot: a tinted fill and a dashed tint outline, visible on a dark
+                // background as well as a light one.
                 Box(
-                    Modifier.size(120.udp).clip(CircleShape).background(colors.card).drawBehind {
+                    Modifier.size(120.udp).clip(CircleShape).background(colors.primaryLight).drawBehind {
                         val stroke = 2.dp.toPx()
                         drawCircle(
-                            colors.inputBorder, radius = size.minDimension / 2 - stroke / 2,
+                            colors.tint, radius = size.minDimension / 2 - stroke / 2,
                             style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
                         )
                     },
                     contentAlignment = Alignment.Center,
-                ) { Icon("camera.fill", 38f, colors.textSecondary) }
+                ) { Icon("camera.fill", 38f, colors.primaryText) }
             }
         }
         // Two equal choices, so one fill: the primary, with its icon, 48dp tall.
@@ -417,16 +422,16 @@ private fun Field(t: Translate, field: ProfileField, form: ProfileForm, onChange
 
 /**
  * The date of birth: typed as MM/DD/YYYY, or picked in the platform date dialog. As in RN, a
- * bordered row (padding md) holds the 44dp input and the calendar button beside it.
+ * bordered row (padding md) holds the 48dp input and the 48dp calendar button beside it.
  */
 @Composable
-private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit) {
+private fun DateOfBirth(label: String, pickerLabel: String, value: String, onChange: (String) -> Unit) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
     Group(label) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 44.udp).clip(shape).background(colors.card)
+            Modifier.fillMaxWidth().heightIn(min = 48.udp).clip(shape).background(colors.card)
                 .rnBorder(1.dp, colors.border, shape).padding(horizontal = space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -437,8 +442,9 @@ private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit
                 modifier = Modifier.weight(1f),
             )
             Box(
-                Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 44.udp, minHeight = 44.udp)
-                    .clickable {
+                Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 48.udp, minHeight = 48.udp)
+                    .semantics { contentDescription = pickerLabel }
+                    .clickable(role = Role.Button) {
                         val initial = parseDob(value) ?: LocalDate(1940, 1, 1)
                         DatePickerDialog(context, { _, y, m, d -> onChange(formatDob(LocalDate(y, m + 1, d))) }, initial.year, initial.month.ordinal, initial.day)
                             .apply { datePicker.maxDate = AppClock.nowMs() }
@@ -446,7 +452,7 @@ private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit
                     }
                     .padding(start = space.sm.udp),
                 contentAlignment = Alignment.Center,
-            ) { Icon("calendar", 18f, colors.textSecondary) }
+            ) { Icon("calendar", 20f, colors.textSecondary) }
         }
     }
 }

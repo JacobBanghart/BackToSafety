@@ -112,11 +112,12 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     Modifier
                         .size(200.udp)
                         .clip(CircleShape)
-                        .background(colors.surface)
+                        // An empty photo slot: a tinted fill and a dashed tint outline, as on Edit Profile.
+                        .background(colors.primaryLight)
                         .drawBehind {
                             val stroke = 2.dp.toPx()
                             drawCircle(
-                                color = colors.inputBorder,
+                                color = colors.tint,
                                 radius = size.minDimension / 2 - stroke / 2,
                                 center = Offset(size.width / 2, size.height / 2),
                                 style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
@@ -125,7 +126,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Icon("camera.fill", 44f, colors.textSecondary, Modifier.padding(top = space.xs.udp))
+                    Icon("camera.fill", 44f, colors.primaryText, Modifier.padding(top = space.xs.udp))
                     Text(t("photo.noPhoto"), color = colors.textSecondary, modifier = Modifier.padding(top = space.sm.udp))
                 }
             }

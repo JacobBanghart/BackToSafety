@@ -90,7 +90,7 @@ struct HomeView: View {
                     }
                     SFIcon("pencil", 10, Color(argb: Light.textOnPrimary))
                         .frame(width: 20, height: 20)
-                        .background(Circle().fill(colors.tint))
+                        .background(Circle().fill(colors.primary))
                         .overlay(Circle().strokeBorder(Color(argb: Light.textOnPrimary), lineWidth: 2))
                 }
             }
@@ -136,7 +136,8 @@ struct HomeView: View {
                     GeometryReader { geo in emergencyIdle.frame(width: geo.size.width * elapsed) }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: Radius.xl))
+            // The same radius as every other card on home.
+            .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .rnShadow(.md, dark: colors.isDark)
         }
         .buttonStyle(.pressable)
@@ -178,15 +179,21 @@ struct HomeView: View {
             model.path.append(.readout)
         } label: {
             VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 0) {
-                    RNText(t("emergencyInfo.title"), Typography.bodyBold.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
+                // The 911 script lives here, so the card leads with an icon and a title-size heading,
+                // and its "911 Script" pill is body size: it outranks the plain Settings row below.
+                HStack(spacing: Space.md) {
+                    SFIcon("doc.text.fill", 20, colors.primaryText)
+                        .frame(width: 40, height: 40)
+                        .background(Circle().fill(colors.primaryLight))
+                    RNText(t("emergencyInfo.title"), Typography.title.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
                     HStack(spacing: Space.xxs) {
-                        RNText(t("emergencyInfo.script911"), Typography.caption.spec.weight(600), color: colors.primaryText)
-                        SFIcon("chevron.right", 14, colors.primaryText)
+                        RNText(t("emergencyInfo.script911"), Typography.bodyBold.spec, color: colors.primaryText)
+                        SFIcon("chevron.right", 18, colors.primaryText)
                     }
                     .fixedSize()
-                    .padding(.horizontal, Space.sm).padding(.vertical, Space.xs)
-                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
+                    .padding(.leading, Space.md).padding(.trailing, Space.sm)
+                    .frame(minHeight: 36)
+                    .background(Capsule().fill(colors.primaryLight))
                 }
                 if !items.isEmpty {
                     Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.md)
