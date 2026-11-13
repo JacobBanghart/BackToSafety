@@ -17,12 +17,6 @@
     395.4,
     263.6
   ],
-  "contacts-form-notes": [
-    16.0,
-    912.8,
-    395.4,
-    914.3
-  ],
   "contacts-form-notify": [
     16.0,
     775.6,
@@ -44,7 +38,7 @@
   "contacts-form-role-caregiver": [
     209.5,
     599.6,
-    395.4,
+    395.0,
     647.6
   ],
   "contacts-form-role-family": [
@@ -62,13 +56,13 @@
   "contacts-form-role-neighbor": [
     209.5,
     655.6,
-    395.4,
+    395.0,
     703.6
   ],
   "contacts-form-role-other": [
     209.5,
     711.6,
-    395.4,
+    395.0,
     759.6
   ],
   "contacts-form-role-primary_caregiver": [
@@ -78,9 +72,9 @@
     647.6
   ],
   "contacts-save": [
-    327.2,
+    323.0,
     59.8,
-    399.2,
+    395.0,
     107.8
   ],
   "contacts-title": [

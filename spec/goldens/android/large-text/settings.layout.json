@@ -5,11 +5,17 @@
     56.0,
     107.8
   ],
-  "settings-delete-account": [
+  "settings-device-id": [
     41.1,
-    554.3,
+    733.0,
     370.3,
-    609.1
+    827.0
+  ],
+  "settings-device-id-value": [
+    41.1,
+    764.6,
+    370.3,
+    817.9
   ],
   "settings-theme-dark": [
     268.6,
@@ -37,14 +43,14 @@
   ],
   "settings-version": [
     41.1,
-    770.7,
+    491.0,
     370.3,
-    838.1
+    558.5
   ],
   "settings-version-value": [
     41.1,
-    802.3,
+    522.7,
     129.1,
-    829.0
+    549.3
   ]
 }
