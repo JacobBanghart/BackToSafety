@@ -95,6 +95,7 @@ struct HomeView: View {
                 }
             }
             .buttonStyle(.pressable)
+            .accessibilityLabel(t("editProfile"))
             .accessibilityIdentifier("home-profile")
             .padding(.leading, Space.md)
         }

@@ -276,6 +276,7 @@ struct ContactsView: View {
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
         }
         .buttonStyle(.pressable)
+        .accessibilityLabel(label)
         .accessibilityIdentifier(testID)
     }
 
@@ -322,11 +323,11 @@ struct ContactsView: View {
                 .padding(.trailing, Space.md)
                 // Call is the action (green); Edit is secondary (outlined, neutral).
                 HStack(spacing: Space.sm) {
-                    circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), white, "phone.fill") {
+                    circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), white, "phone.fill", label: t("actions.callName", ["name": contact.name])) {
                         Analytics.shared.track(event: .contactCallTapped, properties: [:])
                         dial(contact.phone, target: .contact, screen: "contacts", tCommon: tCommon)
                     }
-                    circleAction("contacts-item-\(index)-edit", .clear, colors.text, "pencil", border: colors.inputBorder) {
+                    circleAction("contacts-item-\(index)-edit", .clear, colors.text, "pencil", label: t("actions.editName", ["name": contact.name]), border: colors.inputBorder) {
                         Analytics.shared.track(event: .contactEditTapped, properties: [:])
                         open(contact, ContactForm(contact))
                     }
@@ -345,7 +346,7 @@ struct ContactsView: View {
         .padding(.bottom, Space.md)
     }
 
-    private func circleAction(_ testID: String, _ fill: Color, _ tint: Color, _ icon: String, border: Color = .clear,
+    private func circleAction(_ testID: String, _ fill: Color, _ tint: Color, _ icon: String, label _: String, border: Color = .clear,
                               action: @escaping () -> Void) -> some View {
         Button(action: action) {
             SFIcon(icon, 18, tint).frame(width: 48, height: 48)

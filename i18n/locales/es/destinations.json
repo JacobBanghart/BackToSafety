@@ -1,6 +1,7 @@
 {
   "screenTitle": "Lugares para revisar",
   "loading": "Cargando...",
+  "editName": "Editar {{name}}",
   "addDestination": "Agregar lugar",
   "noDestinations": {
     "title": "Sin lugares guardados",

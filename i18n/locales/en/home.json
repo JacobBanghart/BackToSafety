@@ -24,5 +24,6 @@
     "cognitiveStatus": "Cognitive Status",
     "deescalation": "De-escalation"
   },
-  "settingsLink": "Settings"
+  "settingsLink": "Settings",
+  "editProfile": "Edit profile"
 }

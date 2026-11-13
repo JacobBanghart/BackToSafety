@@ -44,6 +44,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -130,7 +131,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                     style = type.headline.style(), color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
-            Box(Modifier.padding(start = space.md.udp).testTag("home-profile").clickable {
+            Box(Modifier.padding(start = space.md.udp).testTag("home-profile").semantics { contentDescription = t("editProfile") }.clickable(role = Role.Button) {
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "profile", "source" to "home"))
                 navigate("profile")
             }) {

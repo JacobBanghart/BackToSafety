@@ -2,6 +2,7 @@
   "screenTitle": "Places to Check",
   "loading": "Loading...",
   "addDestination": "Add Location",
+  "editName": "Edit {{name}}",
   "noDestinations": {
     "title": "No Saved Places",
     "body": "Add locations where {{name}} might go. These appear during an emergency search.",

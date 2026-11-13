@@ -38,6 +38,8 @@
   "actions": {
     "call": "Llamar",
     "edit": "Editar",
+    "callName": "Llamar a {{name}}",
+    "editName": "Editar a {{name}}",
     "delete": "Eliminar"
   },
   "deleteModal": {

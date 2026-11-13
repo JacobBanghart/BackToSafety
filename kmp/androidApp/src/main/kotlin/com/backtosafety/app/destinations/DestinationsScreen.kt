@@ -51,7 +51,10 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -380,7 +383,8 @@ private fun PlaceCard(
             }
             Box(
                 Modifier.testTag("destinations-item-$index-edit").size(40.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .clickable(onClick = onEdit).background(p600.copy(alpha = 0x15 / 255f)),
+                    .semantics { contentDescription = t("editName", mapOf("name" to d.name)) }
+                    .clickable(role = Role.Button, onClick = onEdit).background(p600.copy(alpha = 0x15 / 255f)),
                 contentAlignment = Alignment.Center,
             ) { Icon("pencil", 18f, LocalAppColors.current.primaryText) }
         }

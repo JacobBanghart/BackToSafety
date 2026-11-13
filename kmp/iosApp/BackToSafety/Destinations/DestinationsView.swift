@@ -319,6 +319,7 @@ struct DestinationsView: View {
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
                 }
                 .buttonStyle(.pressable)
+                .accessibilityLabel(t("editName", ["name": d.name]))
                 .accessibilityIdentifier("destinations-item-\(index)-edit")
             }
             .padding(.bottom, Space.sm)

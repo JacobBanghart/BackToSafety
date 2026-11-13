@@ -24,5 +24,6 @@
     "cognitiveStatus": "Estado cognitivo",
     "deescalation": "Cómo calmarle"
   },
-  "settingsLink": "Configuración"
+  "settingsLink": "Configuración",
+  "editProfile": "Editar perfil"
 }

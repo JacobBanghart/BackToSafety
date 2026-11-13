@@ -52,6 +52,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -349,8 +351,14 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
                 }
                 // Call is the action (green); Edit is secondary (outlined, neutral).
                 Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
-                    CircleAction("contacts-item-$index-call", Color(DesignTokens.Semantic.success), white, "phone.fill", onCall)
-                    CircleAction("contacts-item-$index-edit", Color.Transparent, colors.text, "pencil", onEdit, border = colors.inputBorder)
+                    CircleAction(
+                        "contacts-item-$index-call", Color(DesignTokens.Semantic.success), white, "phone.fill", onCall,
+                        label = t("actions.callName", mapOf("name" to contact.name)),
+                    )
+                    CircleAction(
+                        "contacts-item-$index-edit", Color.Transparent, colors.text, "pencil", onEdit,
+                        label = t("actions.editName", mapOf("name" to contact.name)), border = colors.inputBorder,
+                    )
                 }
             }
             contact.address?.ifEmpty { null }?.let {
@@ -364,9 +372,13 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
 }
 
 @Composable
-private fun CircleAction(testID: String, fill: Color, tint: Color, icon: String, onClick: () -> Unit, border: Color = Color.Transparent) {
+// The glyph is hidden from TalkBack, so [label] ("Call Ana") is the control's only spoken name.
+private fun CircleAction(
+    testID: String, fill: Color, tint: Color, icon: String, onClick: () -> Unit, label: String, border: Color = Color.Transparent,
+) {
     Box(
-        Modifier.testTag(testID).size(48.udp).clip(CircleShape).clickable(role = Role.Button, onClick = onClick).background(fill)
+        Modifier.testTag(testID).size(48.udp).clip(CircleShape).semantics { contentDescription = label }
+            .clickable(role = Role.Button, onClick = onClick).background(fill)
             .rnBorder(1.udp, border, CircleShape),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, 18f, tint) }
