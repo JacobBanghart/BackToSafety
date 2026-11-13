@@ -623,8 +623,8 @@ struct EmergencyView: View {
                         }
                     } label: {
                         HStack(spacing: Space.sm) {
-                            SFIcon("xmark.circle.fill", 20, colors.error)
-                            RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.error)
+                            SFIcon("xmark.circle.fill", 20, colors.errorText)
+                            RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.errorText)
                         }
                         .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                         .padding(.vertical, Space.md)

@@ -71,6 +71,8 @@ struct AppColors {
     var inputBorder: Color { pick(Light.inputBorder, Dark.inputBorder) }
     var inputPlaceholder: Color { pick(Light.inputPlaceholder, Dark.inputPlaceholder) }
     var error: Color { pick(Light.error, Dark.error) }
+    /// Error-coloured text and icons on the error-tinted fill (4.5:1 needs a deeper red in light, a paler one in dark).
+    var errorText: Color { pick(Light.errorText, Dark.errorText) }
     var success: Color { pick(Light.success, Dark.success) }
     var warning: Color { pick(Light.warning, Dark.warning) }
 }

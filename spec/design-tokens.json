@@ -77,6 +77,7 @@
       "success": "#15803d",
       "warning": "#b45309",
       "error": "#dc2626",
+      "errorText": "#b91c1c",
       "info": "#3b82f6"
     },
     "dark": {
@@ -110,6 +111,7 @@
       "success": "#4ade80",
       "warning": "#fbbf24",
       "error": "#f87171",
+      "errorText": "#fca5a5",
       "info": "#3b82f6"
     }
   },

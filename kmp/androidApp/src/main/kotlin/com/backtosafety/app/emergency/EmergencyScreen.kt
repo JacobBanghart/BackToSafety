@@ -878,8 +878,8 @@ private fun EmergencyModal(
                         horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon("xmark.circle.fill", 20f, colors.error)
-                        Text(t("modal.leave.end"), style = buttonText, color = colors.error)
+                        Icon("xmark.circle.fill", 20f, colors.errorText)
+                        Text(t("modal.leave.end"), style = buttonText, color = colors.errorText)
                     }
                 }
                 Modal.CATCH_UP_WARNING, Modal.CATCH_UP_EXPIRED -> {
