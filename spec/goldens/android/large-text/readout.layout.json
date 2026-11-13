@@ -11,17 +11,23 @@
     395.4,
     192.8
   ],
+  "readout-contact-0-call": [
+    192.0,
+    843.4,
+    379.0,
+    890.3
+  ],
   "readout-script-missing": [
     72.0,
-    509.7,
+    536.4,
     365.7,
-    589.7
+    616.4
   ],
   "readout-script-text": [
     32.4,
     304.4,
     379.0,
-    480.4
+    507.0
   ],
   "readout-script-toggle": [
     32.4,
