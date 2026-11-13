@@ -17,6 +17,12 @@
     395.4,
     266.3
   ],
+  "contacts-form-notify": [
+    16.0,
+    830.1,
+    395.4,
+    890.3
+  ],
   "contacts-form-phone": [
     16.0,
     309.0,
@@ -30,39 +36,45 @@
     447.6
   ],
   "contacts-form-role-caregiver": [
-    16.0,
-    669.0,
-    395.4,
-    717.0
+    209.5,
+    613.0,
+    395.0,
+    674.7
   ],
   "contacts-form-role-family": [
     16.0,
-    725.0,
-    395.4,
-    773.0
+    682.7,
+    201.5,
+    744.4
   ],
   "contacts-form-role-friend": [
     16.0,
-    837.0,
-    395.4,
-    885.0
+    752.4,
+    201.5,
+    814.1
   ],
   "contacts-form-role-neighbor": [
-    16.0,
-    781.0,
-    395.4,
-    829.0
+    209.5,
+    682.7,
+    395.0,
+    744.4
+  ],
+  "contacts-form-role-other": [
+    209.5,
+    752.4,
+    395.0,
+    814.1
   ],
   "contacts-form-role-primary_caregiver": [
     16.0,
     613.0,
-    395.4,
-    661.0
+    201.5,
+    674.7
   ],
   "contacts-save": [
-    339.4,
+    323.0,
     59.8,
-    403.4,
+    395.0,
     107.8
   ],
   "contacts-title": [
