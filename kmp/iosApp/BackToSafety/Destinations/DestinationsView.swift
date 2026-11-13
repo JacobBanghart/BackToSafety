@@ -226,8 +226,8 @@ struct DestinationsView: View {
                     }
                     Button(action: add) {
                         HStack(spacing: Space.sm) {
-                            SFIcon("plus", 20, white)
-                            RNText(t("addDestination"), Typography.bodyBold.spec, color: white)
+                            SFIcon("plus", 20, colors.textOnPrimary)
+                            RNText(t("addDestination"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(Space.lg)
@@ -255,7 +255,7 @@ struct DestinationsView: View {
                    Typography.body.spec, color: colors.textSecondary, align: .center)
             Button(action: add) {
                 HStack(spacing: Space.sm) {
-                    SFIcon("plus", 18, white)
+                    SFIcon("plus", 18, colors.textOnPrimary)
                     RNText(t("noDestinations.button"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                 }
                 .padding(.horizontal, Space.xl).padding(.vertical, Space.md)
@@ -395,11 +395,11 @@ struct DestinationsView: View {
                     .accessibilityIdentifier("destinations-detail-close")
                     Button { edit(d) } label: {
                         HStack(spacing: Space.xs) {
-                            SFIcon("pencil", 14, white)
-                            RNText(tCommon("edit"), Typography.bodyBold.spec, color: white)
+                            SFIcon("pencil", 14, colors.textOnPrimary)
+                            RNText(tCommon("edit"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.tint))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("destinations-detail-edit")
@@ -440,7 +440,8 @@ struct DestinationsView: View {
                         OptionChip(label: t("categories.\(item.0)"), icon: item.1, testID: "destinations-form-category-\(item.0)",
                                    selected: form.category == item.0,
                                    // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
-                                   selectedColor: item.0 == "water" ? Color(argb: Light.warning) : colors.primary) {
+                                   selectedColor: item.0 == "water" ? Color(argb: Light.warning) : colors.primary,
+                                   selectedContent: item.0 == "water" ? white : nil) {
                             if form.category != item.0 { form.category = item.0 }
                         }
                     }

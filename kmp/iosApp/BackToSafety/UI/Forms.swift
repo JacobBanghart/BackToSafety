@@ -53,7 +53,9 @@ struct SwitchToggle: View {
     @Environment(\.appColors) private var colors
 
     var body: some View {
-        Circle().fill(Color(argb: Light.background)).frame(width: 24, height: 24)
+        // On, the knob is the primary's own ink (white in light, deep violet on the dark
+        // theme's light primary), so it stays visible on the track.
+        Circle().fill(on ? colors.textOnPrimary : Color(argb: Light.background)).frame(width: 24, height: 24)
             .offset(x: on ? 20 : 0)
             .frame(width: 44, height: 24, alignment: .leading)
             .padding(3)
@@ -61,9 +63,9 @@ struct SwitchToggle: View {
     }
 }
 
-/// The header's action (Add / Update / Save / Saving...): a primary button inside a 48pt-tall
-/// target, so it is easy to hit without crowding the bar. It has the body buttons' shape
-/// (Radius.lg), not a pill: one shape means one kind of thing, a primary action.
+/// The header's action (Add / Update / Save / Saving...): the navigation bar's confirmation
+/// item, a semibold text button in the accent colour, not a filled button squeezed into the
+/// bar. 48pt tall; while it can't be pressed (Saving...) its label is the secondary text colour.
 struct HeaderSaveButton: View {
     let label: String
     let testID: String
@@ -73,11 +75,9 @@ struct HeaderSaveButton: View {
 
     var body: some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary), lines: 1)
-                .padding(.horizontal, Space.lg)
-                .frame(minWidth: 72, minHeight: 40)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
-                .frame(minHeight: 48)
+            RNText(label, Typography.bodyBold.spec, color: enabled ? colors.primaryText : colors.textSecondary, lines: 1)
+                .padding(.horizontal, Space.sm)
+                .frame(minWidth: 48, minHeight: 48)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
@@ -86,22 +86,28 @@ struct HeaderSaveButton: View {
     }
 }
 
-/// roleOption / optionButton: an icon and a caption (500) in a bordered pill, 48pt tall to tap.
+/// roleOption / optionButton: an icon and a caption (500) in a bordered chip, 48pt tall to tap.
+/// Selected is said three ways, not by fill alone: the fill, the ink on it (`selectedContent`,
+/// textOnPrimary by default), and a check mark at the end. The check's space is kept when
+/// unselected, so choosing a chip never changes how wide it measures (ChipGrid's two-up decision).
 struct OptionChip: View {
     let label: String
     let icon: String
     let testID: String
     let selected: Bool
     let selectedColor: Color
+    var selectedContent: Color?
     let action: () -> Void
     @Environment(\.appColors) private var colors
 
     var body: some View {
-        let white = Color(argb: Light.textOnPrimary)
+        let ink = selectedContent ?? colors.textOnPrimary
         Button(action: action) {
             HStack(spacing: 6) {
-                SFIcon(icon, 16, selected ? white : colors.icon)
-                RNText(label, Typography.caption.spec.weight(500), color: selected ? white : colors.text)
+                SFIcon(icon, 16, selected ? ink : colors.icon)
+                RNText(label, Typography.caption.spec.weight(selected ? 700 : 500), color: selected ? ink : colors.text)
+                Spacer(minLength: 0)
+                SFIcon("checkmark", 16, ink).opacity(selected ? 1 : 0)
             }
             .padding(.horizontal, Space.md + 1).padding(.vertical, Space.sm + 1)
             // Fills its ChipGrid cell, so a row's two chips are the same width and height.

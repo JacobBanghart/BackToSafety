@@ -105,9 +105,9 @@ struct EmergencyView: View {
                                 .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(Color(argb: Secondary.c300), lineWidth: 1))
                         }
                         actionButtons
-                        // What they're wearing is asked for under the actions, so nothing sits between
-                        // the timer and Call 911; it's still above the checklist, where the 911 call needs it.
-                        if showWearing { wearingCard }
+                        // The checklist is the guided task, so it starts in view: what they're wearing
+                        // is asked for after its first step (in `checklist`), not between the actions
+                        // and the checklist, where it pushed the steps below the fold.
                         checklist
                         tipsCard
                         Color.clear.frame(height: Space.xxl)
@@ -296,7 +296,7 @@ struct EmergencyView: View {
                 RNText(t("loadFailed.title"), Typography.title.spec, color: colors.text, align: .center)
                 RNText(t("loadFailed.message"), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
                 Button { Task { await load() } } label: {
-                    RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary))
+                    RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                         .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                         .padding(.vertical, Space.md).padding(.horizontal, Space.lg)
                         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
@@ -321,7 +321,10 @@ struct EmergencyView: View {
                    // 14pt and full white at least: smaller or tinted text faded into the card's purple.
                    Typography.label.spec.spacing(1), color: white)
                 .accessibilityIdentifier("emergency-timer-label")
-            RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 60, lineHeight: 72, weight: 700, letterSpacing: 2), color: white)
+            // Already display-size, so it doesn't grow with Dynamic Type: at large text the
+            // countdown pushed the checklist below the fold. The text around it still scales.
+            RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 56, lineHeight: 64, weight: 700, letterSpacing: 2), color: white)
+                .dynamicTypeSize(.large)
                 .accessibilityIdentifier("emergency-timer")
             RNText(expired ? t("timer.hintExpired", ["emergencyNumber": emergencyNumber]) : t("timer.hintActive"),
                    Typography.body.spec, color: white, align: .center)
@@ -339,10 +342,10 @@ struct EmergencyView: View {
                     .frame(maxWidth: .infinity)
                     .rnID("emergency-progress", label: progressText)
             }
-            .padding(.top, Space.md)
+            .padding(.top, Space.sm)
         }
         .frame(maxWidth: .infinity)
-        .padding(Space.xl)
+        .padding(.horizontal, Space.xl).padding(.vertical, Space.lg)
         .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.errorDark) : Color(argb: Primary.c700)))
         .rnShadow(.md, dark: colors.isDark)
     }
@@ -424,6 +427,8 @@ struct EmergencyView: View {
                 }
                 secondaryAction(t("actions.alertCircle"), "emergency-alert-contacts", icon: "bell.fill", action: alertContacts)
             }
+            // One height for the pair when one label wraps ("Emergency Info" at large text).
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -433,7 +438,7 @@ struct EmergencyView: View {
                 SFIcon(icon, 18, colors.primaryText)
                 RNText(label, Typography.bodyBold.spec, color: colors.text)
             }
-            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2)
+            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2, maxHeight: .infinity)
             .padding(Space.md + 1)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
             .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
@@ -510,6 +515,7 @@ struct EmergencyView: View {
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("emergency-step-\(step.id)")
+                if step.id == steps.first?.id, showWearing { wearingCard }
             }
         }
     }
@@ -580,7 +586,7 @@ struct EmergencyView: View {
                     // what it does (the timer keeps running), so it can't be read as ending the
                     // search; End Emergency is the only red one, set apart below the others.
                     VStack(spacing: Space.sm) {
-                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, white) { modal = nil }
+                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, colors.textOnPrimary) { modal = nil }
                         button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.text, outline: true) {
                             Analytics.shared.track(event: .emergencyLeave, properties: [:])
                             leave()
@@ -614,11 +620,12 @@ struct EmergencyView: View {
                     RNText(t("alerts.\(key).title", number), Typography.title.spec, color: colors.text, align: .center)
                     RNText(t("alerts.\(key).body", number), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
                     button(tCommon("ok"), "emergency-modal-catchup-ok",
-                           which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary, white) { modal = nil }
+                           which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary,
+                           which == .catchUpExpired ? white : colors.textOnPrimary) { modal = nil }
                 case .noContacts, .smsError:
                     title(which == .noContacts ? "modal.noContacts.title" : "modal.smsError.title")
                     message(which == .noContacts ? "modal.noContacts.message" : "modal.smsError.message")
-                    button(tCommon("ok"), "emergency-modal-info-ok", colors.primary, white) { modal = nil }
+                    button(tCommon("ok"), "emergency-modal-info-ok", colors.primary, colors.textOnPrimary) { modal = nil }
                 }
             }
             .padding(Space.xl)

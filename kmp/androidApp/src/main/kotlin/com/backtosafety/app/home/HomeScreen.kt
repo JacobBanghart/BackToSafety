@@ -71,8 +71,9 @@ import kotlinx.coroutines.delay
 
 // Starting a search and a search under way are both the deep red of Call 911: an emergency in
 // progress must never look calmer than the idle Start button (a purple running state did). The
-// running state differs by its timer icon, the time left in full white, and a brighter red sweep
-// across the time already used. White text passes 4.5:1 on both reds.
+// running state is told apart at a glance by its shape, not a subtitle: the live countdown is the
+// headline, a white ring outlines the card, and a brighter red sweep covers the time already
+// used. White text passes 4.5:1 on both reds.
 private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_SWEEP = Color(DesignTokens.Semantic.error)
@@ -148,9 +149,9 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 }
                 Box(
                     Modifier.align(Alignment.BottomEnd).size(20.udp).clip(CircleShape).background(colors.primary)
-                        .rnBorder(2.udp, Color(DesignTokens.Light.textOnPrimary), CircleShape),
+                        .rnBorder(2.udp, colors.background, CircleShape),
                     contentAlignment = Alignment.Center,
-                ) { Icon("pencil", 10f, Color(DesignTokens.Light.textOnPrimary)) }
+                ) { Icon("pencil", 10f, colors.textOnPrimary) }
             }
         }
 
@@ -164,6 +165,8 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 mapOf("time" to formatCountdown(secondsLeft), "checked" to active.checkedSteps.size, "total" to EMERGENCY_STEP_COUNT),
             )
         }
+        val running = active != null && !expired
+        val white = Color(DesignTokens.Light.textOnPrimary)
         Box(
             Modifier
                 .fillMaxWidth()
@@ -177,17 +180,21 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 .clearAndSetSemantics { contentDescription = "$title, $subtitle"; role = Role.Button }
                 .clickable { navigate("emergency") },
         ) {
-            if (active != null && !expired) {
+            if (running) {
                 val elapsed = (SEARCH_WINDOW_SECONDS - secondsLeft).toFloat() / SEARCH_WINDOW_SECONDS
                 Box(Modifier.matchParentSize().drawBehind { drawRect(EMERGENCY_SWEEP, size = Size(size.width * elapsed, size.height)) })
+                // Inset from the edge, so it reads as a ring inside the red on a white page too.
+                Box(Modifier.matchParentSize().padding(space.xs.udp).rnBorder(2.udp, white.copy(alpha = 0.9f), RoundedCornerShape(DesignTokens.Radius.md.dp)))
             }
-            Row(
+            if (running) {
+                RunningEmergency(t, secondsLeft, active?.checkedSteps?.size ?: 0)
+            } else Row(
                 Modifier.padding(vertical = space.lg.udp, horizontal = space.xl.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(44.udp).clip(CircleShape).background(Color.White.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
-                        Icon(if (active != null && !expired) "timer" else "exclamationmark.triangle.fill", 28f, Color(DesignTokens.Light.textOnPrimary))
+                        Icon("exclamationmark.triangle.fill", 28f, Color(DesignTokens.Light.textOnPrimary))
                     }
                     Column(Modifier.weight(1f)) {
                         Text(title, style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), modifier = Modifier.padding(bottom = 2.udp))
@@ -222,26 +229,25 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             }
         }
 
-        // Settings link
+        // Settings link: a plain row, not a card. It is used rarely, so it doesn't carry the
+        // weight of Emergency Info or the quick actions above it.
         Row(
             Modifier
                 .fillMaxWidth()
                 .padding(bottom = space.sm.udp)
+                .heightIn(min = 48.udp)
                 .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                .background(colors.card)
-                .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                // A Pressable inside the bordered card in RN: the ID covers the inside only.
                 .testTag("home-settings")
-                .clickable {
+                .clickable(role = Role.Button) {
                     Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "settings", "source" to "home"))
                     navigate("settings")
                 }
-                .padding(space.lg.udp),
+                .padding(horizontal = space.lg.udp, vertical = space.md.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon("gearshape", 18f, colors.textSecondary)
-            Text(t("settingsLink"), style = type.body.style(), color = colors.text, modifier = Modifier.weight(1f))
+            Text(t("settingsLink"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.weight(1f))
             Icon("chevron.right", 16f, colors.textSecondary)
         }
     }
@@ -267,7 +273,8 @@ private fun QuickAction(icon: String, title: String, subtitle: String, testTag: 
             Icon(icon, 22f, colors.primaryText)
         }
         Text(title, style = DesignTokens.Typography.bodyBold.style(), color = colors.text)
-        Text(subtitle, style = DesignTokens.Typography.caption.style(), color = colors.textSecondary)
+        // 14sp, not caption: the counts are read at a glance by older eyes.
+        Text(subtitle, style = DesignTokens.Typography.label.style(fontWeight = 400, letterSpacing = 0f), color = colors.textSecondary)
     }
 }
 
@@ -325,5 +332,33 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
                 }
             }
         }
+    }
+}
+
+/**
+ * The home button while a search runs: "EMERGENCY IN PROGRESS" as a small label, the time left
+ * as the headline (display size, so it reads from arm's length), then the steps done.
+ */
+@Composable
+private fun RunningEmergency(t: Translate, secondsLeft: Int, checked: Int) {
+    val space = DesignTokens.Spacing
+    val type = DesignTokens.Typography
+    val white = Color(DesignTokens.Light.textOnPrimary)
+    Row(Modifier.padding(vertical = space.lg.udp, horizontal = space.xl.udp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(space.xs.udp), verticalAlignment = Alignment.CenterVertically) {
+                Icon("timer", 18f, white)
+                Text(t("emergencyButton.activeTitle").uppercase(), style = type.label.style(letterSpacing = 1f), color = white)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.Bottom) {
+                Text(formatCountdown(secondsLeft), style = type.display.style(), color = white)
+                Text(t("emergencyButton.timeLeft"), style = type.bodyBold.style(), color = white, modifier = Modifier.padding(bottom = space.xs.udp))
+            }
+            Text(
+                t("emergencyButton.stepsDone", mapOf("checked" to checked, "total" to EMERGENCY_STEP_COUNT)),
+                style = type.body.style(fontWeight = 500), color = white,
+            )
+        }
+        Icon("chevron.right", 24f, white)
     }
 }

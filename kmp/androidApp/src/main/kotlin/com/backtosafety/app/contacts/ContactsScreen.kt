@@ -427,8 +427,9 @@ private fun RowScope.AddButton(label: String, testID: String, onClick: () -> Uni
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon("plus", 20f, white)
-        Text(label, style = type.bodyBold.style(), color = white, maxLines = 1)
+        // textOnPrimary, not white: the dark theme's primary is a light tone with dark ink on it.
+        Icon("plus", 20f, LocalAppColors.current.textOnPrimary)
+        Text(label, style = type.bodyBold.style(), color = LocalAppColors.current.textOnPrimary, maxLines = 1)
     }
 }
 

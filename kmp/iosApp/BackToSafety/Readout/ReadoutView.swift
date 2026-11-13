@@ -2,6 +2,13 @@ import Shared
 import SwiftUI
 import UIKit
 
+/// The clock time as the locale says it, without seconds ("9:00 AM", "9:00"): for speech.
+func localeClock(_ ms: Int64) -> String {
+    let f = DateFormatter()
+    f.setLocalizedDateFormatFromTemplate("jm")
+    return f.string(from: Date(timeIntervalSince1970: Double(ms) / 1000))
+}
+
 /// JS Date.toLocaleString() as Hermes formats it on iOS: the locale's "yMdjms" skeleton.
 func localeDateTime(_ ms: Int64) -> String {
     let f = DateFormatter()
@@ -49,8 +56,12 @@ struct ReadoutView: View {
 
     private func sheet(_ p: Profile) -> some View {
         let lastSeen = lastSeenMs.map(localeDateTime)
-        let input = ReadoutInput(profile: p, lastSeenTime: lastSeen, today: AppClock.shared.today())
+        let input = ReadoutInput(
+            profile: p, lastSeenTime: lastSeen, today: AppClock.shared.today(),
+            lastSeenClock: lastSeenMs.map(localeClock), lastSeenDate: lastSeenMs.map { AppClock.shared.dateOf(epochMs: $0) }
+        )
         let script = ReadoutKt.buildScript(input: input, t: t.lookup)
+        let parts = ReadoutKt.buildScriptParts(input: input, t: t.lookup).map { (text: $0.text, marked: $0.blank) }
         let missing = ReadoutKt.missingScriptDetails(input: input, t: t.lookup)
         let hand = p.dominantHand.flatMap { $0.isEmpty || $0 == "unknown" ? nil : $0 }
         return ScrollView {
@@ -88,7 +99,11 @@ struct ReadoutView: View {
                         RNText(t("sections.script.hint"), Typography.caption.spec, color: colors.textSecondary)
                             .padding(.top, Space.xxs).padding(.bottom, Space.xs)
                         // What is read to the dispatcher: large, comfortable reading size.
-                        RNText(script, Typography.bodyLarge.spec, color: colors.text)
+                        // Blanks (the location, an unknown time) are highlighted gaps the caller fills
+                        // in aloud, not bracketed text to read out to the dispatcher. VoiceOver and
+                        // the copy get the plain script, its blanks in brackets (as on Android).
+                        RNText(runs: parts, accessibilityText: script, Typography.bodyLarge.spec, color: colors.text,
+                               highlight: colors.warning.opacity(0.22))
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
@@ -352,7 +367,7 @@ struct ReadoutView: View {
     private func copyButton(script: Bool, label: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, script ? white : (copied == "all" ? colors.success : colors.text))
+                SFIcon(icon, 18, script ? colors.textOnPrimary : (copied == "all" ? colors.success : colors.text))
                 RNText(label, Typography.body.spec, color: script ? colors.textOnPrimary : colors.text)
             }
             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)

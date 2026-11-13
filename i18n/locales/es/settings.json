@@ -24,6 +24,8 @@
       "app": "App",
       "version": "Versión",
       "platform": "Plataforma",
+      "platformAndroid": "Android",
+      "platformIos": "iOS",
       "theme": "Tema",
       "dbSchema": "Esquema de BD",
       "dbSchemaUnknown": "Desconocido",

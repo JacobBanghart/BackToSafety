@@ -20,6 +20,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
@@ -83,5 +84,39 @@ fun ListItem(
             )
         }
         if (action != null) Icon(action.first, 20f, colors.primaryText)
+    }
+}
+
+/**
+ * A support detail (platform, theme, device ID): label and value on one line in caption type,
+ * with no rule, so it reads as secondary to the card rows above it. Like [ListItem] it carries
+ * testID on the row and <testID>-value on the value; with an [action] it is a 48dp button
+ * announced by that action, its icon at the end.
+ */
+@Composable
+fun DetailRow(
+    label: String,
+    value: String,
+    testID: String? = null,
+    action: Pair<String, String>? = null,
+    onPress: (() -> Unit)? = null,
+) {
+    val colors = LocalAppColors.current
+    val caption = DesignTokens.Typography.caption
+    Row(
+        Modifier.fillMaxWidth()
+            .then(if (testID != null) Modifier.testTag(testID) else Modifier)
+            .heightIn(min = if (onPress != null) 48.udp else 32.udp)
+            .then(if (onPress != null) Modifier.clickable(onClickLabel = action?.second, role = Role.Button, onClick = onPress) else Modifier),
+        horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.udp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, style = caption.style(), color = colors.textSecondary)
+        Text(
+            value, style = caption.style(fontWeight = 600), color = colors.text, textAlign = TextAlign.End,
+            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f).then(if (testID != null) Modifier.testTag("$testID-value") else Modifier),
+        )
+        if (action != null) Icon(action.first, 18f, colors.primaryText)
     }
 }

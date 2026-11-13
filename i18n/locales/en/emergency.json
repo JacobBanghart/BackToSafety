@@ -26,7 +26,7 @@
   "actions": {
     "foundSafe": "Found — Safe",
     "call911": "Call {{emergencyNumber}}",
-    "infoSheet": "Info Sheet",
+    "infoSheet": "Emergency Info",
     "alertCircle": "Alert Circle"
   },
   "checklist": {

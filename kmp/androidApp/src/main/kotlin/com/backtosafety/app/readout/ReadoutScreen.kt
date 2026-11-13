@@ -48,14 +48,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.dial
 import com.backtosafety.app.ui.hairline
+import com.backtosafety.app.ui.localeClock
 import com.backtosafety.app.ui.localeDateTime
 import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rnBorder
@@ -72,6 +80,7 @@ import com.backtosafety.core.ReadoutInput
 import com.backtosafety.core.Translate
 import com.backtosafety.core.buildCopyBlock
 import com.backtosafety.core.buildScript
+import com.backtosafety.core.buildScriptParts
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.describeMobility
@@ -128,8 +137,11 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         profile = p,
         lastSeenTime = lastSeen,
         today = AppClock.today(),
+        lastSeenClock = lastSeenMs?.let(::localeClock),
+        lastSeenDate = lastSeenMs?.let(AppClock::dateOf),
     )
     val script = buildScript(input, t)
+    val scriptParts = buildScriptParts(input, t)
     val missing = missingScriptDetails(input, t)
     val emergencyNumber = tCommon("emergencyNumber")
 
@@ -182,7 +194,19 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 if (expanded) {
                     Text(t("sections.script.hint"), style = type.caption.style(), color = colors.textSecondary, modifier = hint)
                     // What is read to the dispatcher: large, comfortable reading size.
-                    Text(script, style = type.bodyLarge.style(), color = colors.text, modifier = Modifier.testTag("readout-script-text"))
+                    // Blanks (the location, an unknown time) are highlighted gaps the caller fills
+                    // in aloud, not bracketed text to read out to the dispatcher. TalkBack and
+                    // the copy get the plain script, its blanks in brackets (as on iOS).
+                    val blank = SpanStyle(background = colors.warning.copy(alpha = 0.22f), fontWeight = FontWeight.SemiBold)
+                    Text(
+                        buildAnnotatedString {
+                            for (part in scriptParts) {
+                                if (part.blank) withStyle(blank) { append("\u00a0${part.text}\u00a0") } else append(part.text)
+                            }
+                        },
+                        style = type.bodyLarge.style(), color = colors.text,
+                        modifier = Modifier.testTag("readout-script-text").clearAndSetSemantics { text = AnnotatedString(script) },
+                    )
                     if (missing.isNotEmpty()) {
                         // The one prompt that improves the script, so a callout at body size with an
                         // amber tint and icon, not a caption that reads as a footnote.
@@ -324,7 +348,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val done = copied == Copied.SCRIPT
-                    Icon(if (done) "checkmark.circle.fill" else "doc.on.clipboard.fill", 18f, white)
+                    Icon(if (done) "checkmark.circle.fill" else "doc.on.clipboard.fill", 18f, colors.textOnPrimary)
                     Text(t(if (done) "copiedScriptButton" else "copyScriptButton"), style = label, color = colors.textOnPrimary)
                 }
                 Row(

@@ -7,7 +7,9 @@
     "activeTitle": "Emergency In Progress",
     "timerExpiredTitle": "Timer Expired — Call {{emergencyNumber}}",
     "timerExpiredSubtitle": "Tap to continue search protocol",
-    "remaining": "{{time}} remaining · {{checked}}/{{total}} steps"
+    "remaining": "{{time}} remaining · {{checked}}/{{total}} steps",
+    "timeLeft": "left",
+    "stepsDone": "{{checked}}/{{total}} steps done"
   },
   "quickActions": {
     "contacts": "Contacts",
@@ -18,7 +20,7 @@
   },
   "emergencyInfo": {
     "title": "Emergency Info",
-    "script911": "911 Script",
+    "script911": "911 call script and details",
     "healthNotes": "Health Notes",
     "medications": "Routine Medications (optional)",
     "cognitiveStatus": "Cognitive Status",

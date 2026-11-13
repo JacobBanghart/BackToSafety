@@ -260,8 +260,9 @@ struct ContactsView: View {
     private func addButton(_ testID: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon("plus", 20, white)
-                RNText(t("addContact"), Typography.bodyBold.spec, color: white, lines: 1).fixedSize()
+                // textOnPrimary, not white: the dark theme's primary is a light tone with dark ink on it.
+                SFIcon("plus", 20, colors.textOnPrimary)
+                RNText(t("addContact"), Typography.bodyBold.spec, color: colors.textOnPrimary, lines: 1).fixedSize()
             }
             // As in RN, where text doesn't shrink: at large sizes the label spills into the
             // padding rather than truncating, and the two buttons keep equal widths.

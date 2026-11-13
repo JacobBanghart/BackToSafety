@@ -3,9 +3,9 @@ import SwiftUI
 
 // Starting a search and a search under way are both the deep red of Call 911: an emergency in
 // progress must never look calmer than the idle Start button (a purple running state did). The
-// running state differs by its timer icon, the time left in full white, and a brighter red sweep
-// across the time already used (it was the background's own red, so invisible). White text
-// passes 4.5:1 on both reds.
+// running state is told apart at a glance by its shape, not a subtitle: the live countdown is the
+// headline, a white ring outlines the card, and a brighter red sweep covers the time already
+// used. White text passes 4.5:1 on both reds.
 private let emergencyIdle = Color(argb: Semantic.errorDark)
 private let emergencyActive = Color(argb: Semantic.errorDark)
 private let emergencySweep = Color(argb: Semantic.error)
@@ -93,10 +93,10 @@ struct HomeView: View {
                             .background(Circle().fill(colors.primaryLight))
                             .overlay(Circle().strokeBorder(colors.border, lineWidth: 1))
                     }
-                    SFIcon("pencil", 10, Color(argb: Light.textOnPrimary))
+                    SFIcon("pencil", 10, colors.textOnPrimary)
                         .frame(width: 20, height: 20)
                         .background(Circle().fill(colors.primary))
-                        .overlay(Circle().strokeBorder(Color(argb: Light.textOnPrimary), lineWidth: 2))
+                        .overlay(Circle().strokeBorder(colors.background, lineWidth: 2))
                 }
             }
             .buttonStyle(.pressable)
@@ -122,18 +122,24 @@ struct HomeView: View {
         let running = emergency != nil && !expired
         let elapsed = running ? CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS - secondsLeft) / CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS) : 0
         return Button { model.path.append(.emergency) } label: {
-            HStack(spacing: 0) {
-                HStack(spacing: Space.md) {
-                    SFIcon(running ? "timer" : "exclamationmark.triangle.fill", 28, white)
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(Color.white.opacity(0.2)))
-                    VStack(alignment: .leading, spacing: 0) {
-                        RNText(title, Typography.bodyBold.spec, color: white).padding(.bottom, 2)
-                        RNText(subtitle, Typography.caption.spec.weight(500), color: white)
+            Group {
+                if running {
+                    runningEmergency(checked: emergency?.checkedSteps.count ?? 0)
+                } else {
+                    HStack(spacing: 0) {
+                        HStack(spacing: Space.md) {
+                            SFIcon("exclamationmark.triangle.fill", 28, white)
+                                .frame(width: 44, height: 44)
+                                .background(Circle().fill(Color.white.opacity(0.2)))
+                            VStack(alignment: .leading, spacing: 0) {
+                                RNText(title, Typography.bodyBold.spec, color: white).padding(.bottom, 2)
+                                RNText(subtitle, Typography.caption.spec.weight(500), color: white)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        SFIcon("chevron.right", 20, .white.opacity(0.7))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                SFIcon("chevron.right", 20, .white.opacity(0.7))
             }
             .padding(.vertical, Space.lg)
             .padding(.horizontal, Space.xl)
@@ -142,6 +148,10 @@ struct HomeView: View {
                     emergency != nil ? emergencyActive : emergencyIdle
                     GeometryReader { geo in emergencySweep.frame(width: geo.size.width * elapsed) }
                 }
+            }
+            .overlay {
+                // Inset from the edge, so it reads as a ring inside the red on a white page too.
+                if running { RoundedRectangle(cornerRadius: Radius.md).strokeBorder(white.opacity(0.9), lineWidth: 2).padding(Space.xs) }
             }
             // The same radius as every other card on home.
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
@@ -156,6 +166,28 @@ struct HomeView: View {
         .padding(.bottom, Space.lg)
     }
 
+    /// The home button while a search runs: "EMERGENCY IN PROGRESS" as a small label, the time
+    /// left as the headline (display size, so it reads from arm's length), then the steps done.
+    private func runningEmergency(checked: Int) -> some View {
+        let white = Color(argb: Light.textOnPrimary)
+        return HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: Space.xxs) {
+                HStack(spacing: Space.xs) {
+                    SFIcon("timer", 18, white)
+                    RNText(t("emergencyButton.activeTitle").uppercased(), Typography.label.spec.spacing(1), color: white)
+                }
+                HStack(alignment: .bottom, spacing: Space.sm) {
+                    RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), Typography.display.spec, color: white)
+                    RNText(t("emergencyButton.timeLeft"), Typography.bodyBold.spec, color: white).padding(.bottom, Space.xs)
+                }
+                RNText(t("emergencyButton.stepsDone", ["checked": checked, "total": EmergencyKt.EMERGENCY_STEP_COUNT]),
+                       Typography.body.spec.weight(500), color: white)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            SFIcon("chevron.right", 24, white)
+        }
+    }
+
     private func quickAction(_ icon: String, _ title: String, _ subtitle: String, _ testID: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: Space.xs) {
@@ -164,7 +196,8 @@ struct HomeView: View {
                     .background(Circle().fill(colors.primaryLight))
                     .padding(.bottom, Space.xs)
                 RNText(title, Typography.bodyBold.spec, color: colors.text)
-                RNText(subtitle, Typography.caption.spec, color: colors.textSecondary)
+                // 14pt, not caption: the counts are read at a glance by older eyes.
+                RNText(subtitle, Typography.label.spec.weight(400).spacing(0), color: colors.textSecondary)
             }
             .frame(maxWidth: .infinity, minHeight: 110 - 2 * Space.lg - 2)
             .padding(Space.lg)
@@ -224,7 +257,8 @@ struct HomeView: View {
         .padding(.bottom, Space.lg)
     }
 
-    /// AppCard holding a Pressable: the testID covers the inside of the card's border.
+    /// A plain row, not a card: Settings is used rarely, so it doesn't carry the weight of
+    /// Emergency Info or the quick actions above it.
     private var settingsRow: some View {
         Button {
             Analytics.shared.track(event: .screenViewed, properties: ["screen": "settings", "source": "home"])
@@ -232,17 +266,15 @@ struct HomeView: View {
         } label: {
             HStack(spacing: Space.sm) {
                 SFIcon("gearshape", 18, colors.textSecondary)
-                RNText(t("settingsLink"), Typography.body.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
+                RNText(t("settingsLink"), Typography.body.spec, color: colors.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
                 SFIcon("chevron.right", 16, colors.textSecondary)
             }
-            .padding(Space.lg)
+            .padding(.horizontal, Space.lg).padding(.vertical, Space.md)
+            .frame(minHeight: 48)
             .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier("home-settings")
-        .padding(1)
-        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
         .padding(.bottom, Space.sm)
     }
 }

@@ -66,6 +66,9 @@ struct RNText: View {
     var color: Color
     var align: TextAlignment = .leading
     var lines: Int?
+    /// Pieces of [text], each marked (`true`) or not: a marked piece is drawn semibold on [highlight].
+    private var runs: [(text: String, marked: Bool)]?
+    private var highlight: Color?
     @Environment(\.dynamicTypeSize) private var dynamicType
 
     init(_ text: String, _ spec: TextSpec, color: Color, align: TextAlignment = .leading, lines: Int? = nil) {
@@ -74,6 +77,16 @@ struct RNText: View {
         self.color = color
         self.align = align
         self.lines = lines
+    }
+
+    /// Text in runs, the marked ones highlighted (the 911 script's blanks). [accessibilityText]
+    /// is what VoiceOver reads, which can differ from what is drawn.
+    init(runs: [(text: String, marked: Bool)], accessibilityText: String, _ spec: TextSpec, color: Color, highlight: Color) {
+        text = accessibilityText
+        self.spec = spec
+        self.color = color
+        self.runs = runs
+        self.highlight = highlight
     }
 
     var body: some View {
@@ -105,7 +118,17 @@ struct RNText: View {
             if lineHeight >= font.lineHeight { attributes[.baselineOffset] = (lineHeight - font.lineHeight) / 2 }
         }
         attributes[.paragraphStyle] = paragraph
-        return NSAttributedString(string: text, attributes: attributes)
+        guard let runs, let highlight else { return NSAttributedString(string: text, attributes: attributes) }
+        let out = NSMutableAttributedString()
+        for run in runs {
+            var a = attributes
+            if run.marked {
+                a[.font] = UIFont.systemFont(ofSize: spec.size * m, weight: .semibold)
+                a[.backgroundColor] = UIColor(highlight)
+            }
+            out.append(NSAttributedString(string: run.marked ? "\u{00a0}\(run.text)\u{00a0}" : run.text, attributes: a))
+        }
+        return out
     }
 }
 

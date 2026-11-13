@@ -56,5 +56,9 @@ fun photoSampleSize(width: Int, height: Int, targetPx: Int): Int {
 fun localeDateTime(epochMs: Long): String =
     DateFormat.getInstanceForSkeleton("yMdjms", Locale.getDefault()).format(Date(epochMs))
 
+/** The clock time as the locale says it, without seconds ("9:00 AM", "9:00"): for speech. */
+fun localeClock(epochMs: Long): String =
+    DateFormat.getInstanceForSkeleton("jm", Locale.getDefault()).format(Date(epochMs))
+
 fun localeTime(epochMs: Long): String =
     DateFormat.getInstanceForSkeleton("jms", Locale.getDefault()).format(Date(epochMs))

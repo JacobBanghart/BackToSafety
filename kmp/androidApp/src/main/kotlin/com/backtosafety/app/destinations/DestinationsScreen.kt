@@ -309,8 +309,8 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
                             horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon("plus", 20f, white)
-                            Text(t("addDestination"), style = type.bodyBold.style(), color = white)
+                            Icon("plus", 20f, colors.textOnPrimary)
+                            Text(t("addDestination"), style = type.bodyBold.style(), color = colors.textOnPrimary)
                         }
                     }
                     Box(Modifier.height(40.udp))
@@ -429,7 +429,7 @@ private fun Empty(t: Translate, personName: String?, onAdd: () -> Unit) {
                 .padding(horizontal = space.xl.udp, vertical = space.md.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon("plus", 18f, white)
+            Icon("plus", 18f, colors.textOnPrimary)
             Text(t("noDestinations.button"), style = type.bodyBold.style(), color = colors.textOnPrimary)
         }
     }
@@ -458,6 +458,7 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
                     // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
                     if (category == "water") Color(DesignTokens.Light.warning) else colors.primary,
                     modifier,
+                    selectedContent = if (category == "water") white else colors.textOnPrimary,
                 ) { if (form.category != category) onChange(form.copy(category = category)) }
             }
             if (form.category == "water") {
@@ -567,12 +568,12 @@ private fun Detail(
                 ) { Text(tCommon("close"), style = type.bodyBold.style(), color = colors.textSecondary) }
                 Row(
                     Modifier.weight(1f).heightIn(min = 44.udp).testTag("destinations-detail-edit").clip(buttonShape)
-                        .clickable(onClick = onEdit).background(colors.tint),
+                        .clickable(onClick = onEdit).background(colors.primary),
                     horizontalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon("pencil", 14f, white)
-                    Text(tCommon("edit"), style = type.bodyBold.style(), color = white)
+                    Icon("pencil", 14f, colors.textOnPrimary)
+                    Text(tCommon("edit"), style = type.bodyBold.style(), color = colors.textOnPrimary)
                 }
             }
         }

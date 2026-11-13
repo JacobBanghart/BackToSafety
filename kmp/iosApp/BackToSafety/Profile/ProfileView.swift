@@ -180,11 +180,11 @@ struct ProfileView: View {
                                 let selected = f.dominantHand == hand
                                 Button { form?.dominantHand = hand } label: {
                                     RNText(t("fields.dominantHand\(hand.prefix(1).uppercased() + hand.dropFirst())"),
-                                           Typography.body.spec.weight(500), color: selected ? white : colors.text)
+                                           Typography.body.spec.weight(500), color: selected ? colors.textOnPrimary : colors.text)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, Space.sm + 1)
-                                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? colors.tint : .clear))
-                                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
+                                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? colors.primary : .clear))
+                                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(selected ? colors.primary : colors.border, lineWidth: 1))
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.pressable)
@@ -205,10 +205,10 @@ struct ProfileView: View {
                                     }
                                 } label: {
                                     RNText(t(MobilityKt.MOBILITY_OPTION_KEYS[option] ?? option), Typography.body.spec.weight(500),
-                                           color: selected ? white : colors.text)
+                                           color: selected ? colors.textOnPrimary : colors.text)
                                         .padding(.horizontal, Space.md + 1).padding(.vertical, Space.xs + 1)
-                                        .background(Capsule().fill(selected ? colors.tint : .clear))
-                                        .overlay(Capsule().strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
+                                        .background(Capsule().fill(selected ? colors.primary : .clear))
+                                        .overlay(Capsule().strokeBorder(selected ? colors.primary : colors.border, lineWidth: 1))
                                 }
                                 .buttonStyle(.pressable)
                                 .accessibilityIdentifier("profile-mobility-\(slug(option))")
@@ -279,8 +279,8 @@ struct ProfileView: View {
     private func photoButton(_ label: String, _ testID: String, _ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, white)
-                RNText(label, Typography.bodyBold.spec, color: white)
+                SFIcon(icon, 18, colors.textOnPrimary)
+                RNText(label, Typography.bodyBold.spec, color: colors.textOnPrimary)
             }
             .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
             .frame(maxWidth: .infinity, minHeight: 48)
@@ -410,9 +410,9 @@ struct ProfileView: View {
                         form?[.dateOfBirth] = AgeKt.formatDob(date: Kotlinx_datetimeLocalDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
                         datePicking = false
                     } label: {
-                        RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: white)
+                        RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                             .padding(.horizontal, Space.md).frame(minWidth: 88, minHeight: 40)
-                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.tint))
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("profile-date-apply")

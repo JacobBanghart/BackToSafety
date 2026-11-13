@@ -16,6 +16,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -39,6 +40,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -57,6 +59,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -66,6 +69,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -392,11 +396,12 @@ fun EmergencyScreen(
                     },
                 )
 
-                // What they're wearing is asked for under the actions, so nothing sits between
-                // the timer and Call 911; it's still above the checklist, where the 911 call needs it.
-                if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
-
-                Checklist(t, steps, destinations, ::toggle)
+                // The checklist is the guided task, so it starts in view: what they're wearing is
+                // asked for after its first step (searching the home, while it can be checked),
+                // not between the actions and the checklist, where it pushed the steps below the fold.
+                Checklist(t, steps, destinations, ::toggle) {
+                    if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
+                }
                 TipsCard(t, profile)
                 Box(Modifier.height(space.xxl.udp))
             }
@@ -475,7 +480,7 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
             .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.xl.dp))
             .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp))
             .background(if (expired) Color(DesignTokens.Semantic.errorDark) else Color(DesignTokens.Primary.c700))
-            .padding(space.xl.udp),
+            .padding(horizontal = space.xl.udp, vertical = space.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(space.xs.udp),
     ) {
@@ -486,18 +491,23 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
             color = white,
             modifier = Modifier.testTag("emergency-timer-label"),
         )
-        Text(
-            formatCountdown(secondsLeft),
-            style = rnTextStyle(60f, 72f, fontWeight = 700, letterSpacing = 2f),
-            color = white,
-            modifier = Modifier.testTag("emergency-timer"),
-        )
+        // Already display-size, so it doesn't grow with the font scale: at large text a 78sp
+        // countdown pushed the checklist below the fold. The text around it still scales.
+        val density = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+            Text(
+                formatCountdown(secondsLeft),
+                style = rnTextStyle(56f, 64f, fontWeight = 700, letterSpacing = 2f),
+                color = white,
+                modifier = Modifier.testTag("emergency-timer"),
+            )
+        }
         Text(
             if (expired) t("timer.hintExpired", number) else t("timer.hintActive"),
             style = type.body.style(), color = white, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = space.xs.udp),
         )
-        Column(Modifier.fillMaxWidth().padding(top = space.md.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
+        Column(Modifier.fillMaxWidth().padding(top = space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
             Box(Modifier.fillMaxWidth().height(6.udp).clip(RoundedCornerShape(3.udp)).background(Color.White.copy(alpha = 0.4f))) {
                 Box(Modifier.fillMaxWidth(checked.toFloat() / total).fillMaxHeight().clip(RoundedCornerShape(3.udp)).background(white))
             }
@@ -598,19 +608,20 @@ private fun ActionButtons(
             Icon("checkmark.circle.fill", 22f, white)
             Text(t("actions.foundSafe"), style = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight), color = white)
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+        // One height for the pair when one label wraps ("Emergency Info" at large text).
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
             for ((label, tag, icon, action) in listOf(
                 SecondaryAction("actions.infoSheet", "emergency-readout", "doc.text.fill", onReadout),
                 SecondaryAction("actions.alertCircle", "emergency-alert-contacts", "bell.fill", onAlert),
             )) {
                 Row(
-                    Modifier.weight(1f).heightIn(min = 48.udp).testTag(tag).clip(shape).clickable(role = Role.Button, onClick = action)
+                    Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag(tag).clip(shape).clickable(role = Role.Button, onClick = action)
                         .background(colors.card).rnBorder(1.udp, colors.border, shape).padding(space.md.udp),
                     horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(icon, 18f, colors.primaryText)
-                    Text(t(label), style = type.bodyBold.style(), color = colors.text)
+                    Text(t(label), style = type.bodyBold.style(), color = colors.text, textAlign = TextAlign.Center)
                 }
             }
         }
@@ -620,7 +631,10 @@ private fun ActionButtons(
 private data class SecondaryAction(val label: String, val tag: String, val icon: String, val action: () -> Unit)
 
 @Composable
-private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: List<DestinationEntity>, onToggle: (String) -> Unit) {
+private fun Checklist(
+    t: Translate, steps: List<ChecklistStep>, destinations: List<DestinationEntity>, onToggle: (String) -> Unit,
+    afterFirst: @Composable () -> Unit = {},
+) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
@@ -632,7 +646,7 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
             Text(t("checklist.title"), style = type.title.style(), color = colors.text, modifier = Modifier.weight(1f))
             Text("${steps.count { it.checked }}/${steps.size}", style = type.bodyBold.style(), color = colors.textSecondary)
         }
-        for (step in steps) {
+        for ((index, step) in steps.withIndex()) {
             val urgentOpen = step.urgent && !step.checked
             val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
             Row(
@@ -717,6 +731,7 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                     }
                 }
             }
+            if (index == 0) afterFirst()
         }
     }
 }
@@ -774,12 +789,14 @@ private fun EmergencyModal(
             @Composable
             fun message(key: String) = Text(t(key), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
 
+            // On the primary fill the label is textOnPrimary (dark ink on the dark theme's light
+            // primary); on the red and green fills it is white.
             @Composable
-            fun fullButton(label: String, tag: String, bg: Color, onClick: () -> Unit) = Box(
+            fun fullButton(label: String, tag: String, bg: Color, onClick: () -> Unit, fg: Color = white) = Box(
                 Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag(tag).clip(buttonShape).background(bg)
                     .clickable(onClick = onClick).padding(vertical = space.md.udp, horizontal = space.lg.udp),
                 contentAlignment = Alignment.Center,
-            ) { Text(label, style = buttonText, color = white) }
+            ) { Text(label, style = buttonText, color = fg) }
 
             when (modal) {
                 Modal.FOUND -> {
@@ -815,7 +832,7 @@ private fun EmergencyModal(
                                 .background(colors.primary).clickable(role = Role.Button, onClick = onDismiss)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
-                        ) { Text(t("modal.leave.stay"), style = buttonText, color = white, textAlign = TextAlign.Center) }
+                        ) { Text(t("modal.leave.stay"), style = buttonText, color = colors.textOnPrimary, textAlign = TextAlign.Center) }
                         Box(
                             Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
                                 .clickable(role = Role.Button, onClick = onLeave).rnBorder(1.udp, colors.inputBorder, buttonShape)
@@ -838,13 +855,13 @@ private fun EmergencyModal(
                     Text(t("alerts.$key.title", number), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
                     Text(t("alerts.$key.body", number), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
                     val bg = if (modal == Modal.CATCH_UP_EXPIRED) Color(DesignTokens.Semantic.error) else colors.primary
-                    fullButton(tCommon("ok"), "emergency-modal-catchup-ok", bg, onDismiss)
+                    fullButton(tCommon("ok"), "emergency-modal-catchup-ok", bg, onDismiss, if (modal == Modal.CATCH_UP_EXPIRED) white else colors.textOnPrimary)
                 }
                 Modal.NO_CONTACTS, Modal.SMS_ERROR -> {
                     val noContacts = modal == Modal.NO_CONTACTS
                     title(if (noContacts) "modal.noContacts.title" else "modal.smsError.title")
                     message(if (noContacts) "modal.noContacts.message" else "modal.smsError.message")
-                    fullButton(tCommon("ok"), "emergency-modal-info-ok", colors.primary, onDismiss)
+                    fullButton(tCommon("ok"), "emergency-modal-info-ok", colors.primary, onDismiss, colors.textOnPrimary)
                 }
             }
         }
@@ -873,7 +890,7 @@ private fun LoadFailed(t: Translate, onRetry: () -> Unit, onBack: () -> Unit) {
                     .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.primary)
                     .clickable(onClick = onRetry).padding(vertical = space.md.udp, horizontal = space.lg.udp),
                 contentAlignment = Alignment.Center,
-            ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary)) }
+            ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = colors.textOnPrimary) }
         }
     }
 }

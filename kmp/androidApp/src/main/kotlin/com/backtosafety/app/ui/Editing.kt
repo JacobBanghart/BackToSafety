@@ -1,10 +1,7 @@
 package com.backtosafety.app.ui
 
-import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,7 +14,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -35,30 +31,30 @@ import com.backtosafety.core.DesignTokens
 // Pieces the contacts and places screens share (their RN styles are identical).
 
 /**
- * The header's action (Add / Update / Save / Saving...): a primary button inside a 48dp-tall
- * target, so it is easy to hit without crowding the bar. It has the body buttons' shape
- * (Radius.lg), not a pill: one shape means one kind of thing, a primary action.
+ * The header's action (Add / Update / Save / Saving...): the platform's app-bar action, a text
+ * button in the accent colour (Material's TextButton in a TopAppBar), not a filled button
+ * squeezed into the bar. 48dp tall with a pill ripple; while it can't be pressed (Saving...)
+ * its label is the secondary text colour.
  */
 @Composable
 fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
-    val source = remember { MutableInteractionSource() }
+    val colors = LocalAppColors.current
     Box(
-        Modifier.testTag(testID).heightIn(min = 48.udp)
-            .clickable(source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick),
+        Modifier.testTag(testID).heightIn(min = 48.udp).widthIn(min = 64.udp).clip(RoundedCornerShape(DesignTokens.Radius.full.dp))
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = DesignTokens.Spacing.sm.udp),
         contentAlignment = Alignment.Center,
     ) {
-        Box(
-            Modifier.widthIn(min = 72.udp).heightIn(min = 40.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                .indication(source, LocalIndication.current).background(LocalAppColors.current.primary)
-                .padding(horizontal = DesignTokens.Spacing.lg.udp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(label, style = DesignTokens.Typography.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), maxLines = 1)
-        }
+        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = if (enabled) colors.primaryText else colors.textSecondary, maxLines = 1)
     }
 }
 
-/** roleOption / optionButton: an icon and a caption (500) in a bordered pill, 48dp tall to tap. */
+/**
+ * roleOption / optionButton: an icon and a caption (500) in a bordered chip, 48dp tall to tap.
+ * Selected is said three ways, not by fill alone: the fill, the ink on it ([selectedContent]),
+ * and a check mark at the end. The check's space is kept when unselected, so choosing a chip
+ * never changes how wide it measures (ChipGrid's two-up decision).
+ */
 @Composable
 fun OptionChip(
     label: String,
@@ -67,10 +63,10 @@ fun OptionChip(
     selected: Boolean,
     selectedColor: Color,
     modifier: Modifier = Modifier,
+    selectedContent: Color = LocalAppColors.current.textOnPrimary,
     onClick: () -> Unit,
 ) {
     val colors = LocalAppColors.current
-    val white = Color(DesignTokens.Light.textOnPrimary)
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Row(
         modifier.testTag(testID).heightIn(min = 48.udp).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
@@ -80,8 +76,12 @@ fun OptionChip(
         horizontalArrangement = Arrangement.spacedBy(6.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, 16f, if (selected) white else colors.icon)
-        Text(label, style = DesignTokens.Typography.caption.style(fontWeight = 500), color = if (selected) white else colors.text)
+        Icon(icon, 16f, if (selected) selectedContent else colors.icon)
+        Text(
+            label, style = DesignTokens.Typography.caption.style(fontWeight = if (selected) 700 else 500),
+            color = if (selected) selectedContent else colors.text, modifier = Modifier.weight(1f),
+        )
+        Icon("checkmark", 16f, selectedContent, Modifier.alpha(if (selected) 1f else 0f))
     }
 }
 

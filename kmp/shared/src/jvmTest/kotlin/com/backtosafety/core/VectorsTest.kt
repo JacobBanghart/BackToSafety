@@ -52,6 +52,8 @@ class VectorsTest {
         profile = profile(o["profile"]!!.jsonObject),
         lastSeenTime = o["lastSeenTime"]?.str(),
         today = localDate(o["today"]!!.str()!!),
+        lastSeenClock = o["lastSeenClock"]?.str(),
+        lastSeenDate = o["lastSeenDate"]?.str()?.let(::localDate),
     )
 
     private fun ms(iso: String) = kotlin.time.Instant.parse(iso).toEpochMilliseconds()
@@ -93,6 +95,16 @@ class VectorsTest {
         "needsVehicleCheck" to { a -> JsonPrimitive(needsVehicleCheck(a[0].str())) },
         "vehicleCheckKind" to { a -> json(vehicleCheckKind(a.str(0)).key) },
         "buildScript" to { a -> json(buildScript(readoutInput(a[1].jsonObject), readoutT(a))) },
+        "buildScriptParts" to { a ->
+            JsonArray(
+                buildScriptParts(readoutInput(a[1].jsonObject), readoutT(a)).map { part ->
+                    buildJsonObject {
+                        put("text", part.text)
+                        if (part.blank) put("blank", true)
+                    }
+                },
+            )
+        },
         "buildCopyBlock" to { a -> json(buildCopyBlock(readoutInput(a[1].jsonObject), readoutT(a))) },
         "missingScriptDetails" to { a -> json(missingScriptDetails(readoutInput(a[1].jsonObject), readoutT(a))) },
         "buildInitialSteps" to { a ->

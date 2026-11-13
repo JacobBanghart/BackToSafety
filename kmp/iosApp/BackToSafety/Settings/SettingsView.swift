@@ -61,25 +61,30 @@ struct SettingsView: View {
                         RNText(t("sections.about.title"), TextSpec(size: 20, lineHeight: 0, weight: 700), color: colors.text)
                         ListItem(label: t("sections.about.app"), value: appName)
                         ListItem(label: t("sections.about.version"), value: versionLabel + (devMode ? t("sections.about.devSuffix") : ""),
-                                 testID: "settings-version", onPress: onVersionTap)
-                        // Platform, theme and the device ID are for support, not for the caregiver: set
-                        // apart under their own small heading rather than read as ordinary content.
+                                 testID: "settings-version", ruleColor: .clear, onPress: onVersionTap)
+                    }
+
+                    // Platform, theme and the device ID are for support, not for the caregiver: under
+                    // About, outside any card, in small type with one line each, so they read as
+                    // secondary. The values are words from the strings ("iOS", "Dark"), not raw keys.
+                    VStack(alignment: .leading, spacing: 0) {
                         RNText(t("sections.about.diagnostics").uppercased(), Typography.caption.spec.weight(600).spacing(0.8), color: colors.textSecondary)
-                            .padding(.top, Space.lg).padding(.bottom, Space.xxs)
+                            .padding(.bottom, Space.xs)
                             .accessibilityAddTraits(.isHeader)
-                        ListItem(label: t("sections.about.platform"), value: "ios")
-                        ListItem(label: t("sections.about.theme"), value: colors.isDark ? "dark" : "light")
-                        if devMode { ListItem(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
+                        DetailRow(label: t("sections.about.platform"), value: t("sections.about.platformIos"))
+                        DetailRow(label: t("sections.about.theme"), value: t(colors.isDark ? "themeOptions.dark" : "themeOptions.light"))
+                        if devMode { DetailRow(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
                         // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
                         // text, and support needs it pasted, not read out. The copy is the full ID.
-                        ListItem(label: t("sections.about.deviceId"), value: deviceId.map { FormattersKt.abbreviateId(id: $0, head: 8, tail: 4) } ?? "—",
-                                 testID: "settings-device-id", ruleColor: .clear,
-                                 action: (icon: "doc.on.clipboard.fill", label: t("sections.about.copyDeviceId"))) {
+                        DetailRow(label: t("sections.about.deviceId"), value: deviceId.map { FormattersKt.abbreviateId(id: $0, head: 8, tail: 4) } ?? "—",
+                                  testID: "settings-device-id",
+                                  action: (icon: "doc.on.clipboard.fill", label: t("sections.about.copyDeviceId"))) {
                             guard let deviceId else { return }
                             UIPasteboard.general.string = deviceId
                             alert = .copied
                         }
                     }
+                    .padding(.horizontal, Space.lg + 1)
 
                     // The danger zone sits last, under About, and is outlined rather than a solid red
                     // block: deleting everything is rare and final, so it shouldn't read as prominently

@@ -7,7 +7,9 @@
     "activeTitle": "Emergencia en curso",
     "timerExpiredTitle": "Tiempo agotado: llama al {{emergencyNumber}}",
     "timerExpiredSubtitle": "Toca para continuar con el protocolo de búsqueda",
-    "remaining": "Quedan {{time}} · {{checked}}/{{total}} pasos"
+    "remaining": "Quedan {{time}} · {{checked}}/{{total}} pasos",
+    "timeLeft": "restantes",
+    "stepsDone": "{{checked}}/{{total}} pasos hechos"
   },
   "quickActions": {
     "contacts": "Contactos",
@@ -18,7 +20,7 @@
   },
   "emergencyInfo": {
     "title": "Información de emergencia",
-    "script911": "Guion para el 911",
+    "script911": "Guion de llamada al 911 y datos",
     "healthNotes": "Notas de salud",
     "medications": "Medicamentos habituales (opcional)",
     "cognitiveStatus": "Estado cognitivo",

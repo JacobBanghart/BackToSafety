@@ -18,6 +18,7 @@ import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
+import com.backtosafety.core.ActiveEmergency
 import com.backtosafety.core.AlertScheduler
 import com.backtosafety.core.AppClock
 import com.backtosafety.core.EmergencyAway
@@ -135,6 +136,13 @@ class ScreenSnapshotTest(private val mode: String) {
     @Test fun welcome() = snapshot("welcome") { WelcomeScreen(t("onboarding"), "system", {}, {}) }
 
     @Test fun home() = snapshot("home") { HomeScreen(t("home"), "911", store) {} }
+
+    /** Home while a search runs: the countdown is the headline, so it can't pass for Start. */
+    @Test fun homeActive() {
+        val startedAt = kotlin.time.Instant.fromEpochMilliseconds(NOW_MS - 4 * 60_000L).toString()
+        runBlocking { store.saveActiveEmergency(ActiveEmergency(startedAt, "", listOf("search_home", "call_911", "check_yard"))) }
+        snapshot("home-active") { HomeScreen(t("home"), "911", store) {} }
+    }
 
     @Test fun settings() = snapshot("settings") {
         SettingsScreen(t("settings"), t("common"), store, "system", {}, "en", {}, {}, {})

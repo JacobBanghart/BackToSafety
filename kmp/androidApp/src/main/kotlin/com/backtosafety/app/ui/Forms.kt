@@ -161,7 +161,9 @@ fun Toggle(on: Boolean) {
     ) {
         Box(
             Modifier.offset(x = if (on) 20.udp else 0.dp).size(24.udp).clip(CircleShape)
-                .background(Color(DesignTokens.Light.background)),
+                // On, the knob is the primary's own ink (white in light, deep violet on the dark
+                // theme's light primary), so it stays visible on the track.
+                .background(if (on) colors.textOnPrimary else Color(DesignTokens.Light.background)),
         )
     }
 }

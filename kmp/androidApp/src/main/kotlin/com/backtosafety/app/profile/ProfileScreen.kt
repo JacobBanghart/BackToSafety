@@ -251,14 +251,14 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                             Box(
                                 Modifier.weight(1f).testTag("profile-hand-$hand").clip(shape)
                                     .clickable { form = f.copy(dominantHand = hand) }
-                                    .background(if (selected) colors.tint else Color.Transparent)
-                                    .rnBorder(1.dp, if (selected) colors.tint else colors.border, shape)
+                                    .background(if (selected) colors.primary else Color.Transparent)
+                                    .rnBorder(1.dp, if (selected) colors.primary else colors.border, shape)
                                     .padding(vertical = space.sm.udp),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     t("fields.dominantHand${hand.replaceFirstChar { it.uppercase() }}"),
-                                    style = type.body.style(fontWeight = 500), color = if (selected) white else colors.text,
+                                    style = type.body.style(fontWeight = 500), color = if (selected) colors.textOnPrimary else colors.text,
                                 )
                             }
                         }
@@ -277,13 +277,13 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                                             f.copy(mobility = f.mobility - option, mobilityOther = if (option == "Other") "" else f.mobilityOther)
                                         } else f.copy(mobility = f.mobility + option)
                                     }
-                                    .background(if (selected) colors.tint else Color.Transparent)
-                                    .rnBorder(1.dp, if (selected) colors.tint else colors.border, shape)
+                                    .background(if (selected) colors.primary else Color.Transparent)
+                                    .rnBorder(1.dp, if (selected) colors.primary else colors.border, shape)
                                     .padding(horizontal = space.md.udp, vertical = space.xs.udp),
                             ) {
                                 Text(
                                     t(MOBILITY_OPTION_KEYS.getValue(option)), style = type.body.style(fontWeight = 500),
-                                    color = if (selected) white else colors.text,
+                                    color = if (selected) colors.textOnPrimary else colors.text,
                                 )
                             }
                         }
@@ -356,8 +356,8 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
                     horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(icon, 18f, white)
-                    Text(label, style = type.bodyBold.style(), color = white)
+                    Icon(icon, 18f, colors.textOnPrimary)
+                    Text(label, style = type.bodyBold.style(), color = colors.textOnPrimary)
                 }
             }
         }

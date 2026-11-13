@@ -45,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.ui.AppCard
+import com.backtosafety.app.ui.DetailRow
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
@@ -175,24 +176,28 @@ fun SettingsScreen(
                 ListItem(
                     t("sections.about.version"),
                     versionLabel() + if (devMode) t("sections.about.devSuffix") else "",
-                    testID = "settings-version", onPress = ::onVersionTap,
+                    testID = "settings-version", ruleColor = Color.Transparent, onPress = ::onVersionTap,
                 )
-                // Platform, theme and the device ID are for support, not for the caregiver: set
-                // apart under their own small heading rather than read as ordinary content.
+            }
+
+            // Platform, theme and the device ID are for support, not for the caregiver: under
+            // About, outside any card, in small type with one line each, so they read as
+            // secondary. The values are words from the strings ("Android", "Dark"), not raw keys.
+            Column(Modifier.fillMaxWidth().padding(horizontal = (space.lg + 1).udp)) {
                 Text(
                     t("sections.about.diagnostics").uppercase(),
                     style = DesignTokens.Typography.caption.style(fontWeight = 600, letterSpacing = 0.8f),
                     color = colors.textSecondary,
-                    modifier = Modifier.padding(top = space.lg.udp, bottom = space.xxs.udp).semantics { heading() },
+                    modifier = Modifier.padding(bottom = space.xs.udp).semantics { heading() },
                 )
-                ListItem(t("sections.about.platform"), "android")
-                ListItem(t("sections.about.theme"), if (colors.isDark) "dark" else "light")
-                if (devMode) ListItem(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
-                ListItem(
+                DetailRow(t("sections.about.platform"), t("sections.about.platformAndroid"))
+                DetailRow(t("sections.about.theme"), t(if (colors.isDark) "themeOptions.dark" else "themeOptions.light"))
+                if (devMode) DetailRow(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
+                DetailRow(
                     // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
                     // text, and support needs it pasted, not read out. The copy is the full ID.
                     t("sections.about.deviceId"), deviceId?.let(::abbreviateId) ?: "—", testID = "settings-device-id",
-                    ruleColor = Color.Transparent, action = "doc.on.clipboard.fill" to t("sections.about.copyDeviceId"),
+                    action = "doc.on.clipboard.fill" to t("sections.about.copyDeviceId"),
                 ) {
                     deviceId?.let {
                         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(null, it))

@@ -17,6 +17,41 @@ struct AppCard<Content: View>: View {
     }
 }
 
+/// A support detail (platform, theme, device ID): label and value on one line in caption type,
+/// with no rule, so it reads as secondary to the card rows above it. Like `ListItem` it carries
+/// testID on the row and <testID>-value on the value; with an `action` it is a 48pt button
+/// announced by that action, its icon at the end.
+struct DetailRow: View {
+    let label: String
+    let value: String
+    var testID: String?
+    var action: (icon: String, label: String)?
+    var onPress: (() -> Void)?
+    @Environment(\.appColors) private var colors
+
+    var body: some View {
+        if let onPress {
+            Button(action: onPress) { row.frame(minHeight: 48).contentShape(Rectangle()) }
+                .buttonStyle(.pressable)
+                .accessibilityIdentifier(testID ?? "")
+                .accessibilityHint(action?.label ?? "")
+        } else {
+            row.frame(minHeight: 32)
+        }
+    }
+
+    private var row: some View {
+        HStack(spacing: Space.sm) {
+            RNText(label, Typography.caption.spec, color: colors.textSecondary)
+            RNText(value, Typography.caption.spec.weight(600), color: colors.text, align: .trailing, lines: 1)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .accessibilityIdentifier(testID.map { "\($0)-value" } ?? "")
+            if let action { SFIcon(action.icon, 18, colors.primaryText) }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 /// components/ListItem.tsx: a caption label over a body value, with a 1pt rule below that
 /// takes space. Pressable rows carry testID; the value carries <testID>-value.
 ///
