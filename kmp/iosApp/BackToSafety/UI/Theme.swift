@@ -59,6 +59,8 @@ struct AppColors {
     var primaryLight: Color { pick(Light.primaryLight, Dark.primaryLight) }
     /// The primary color for text and icons on the background (primary itself is a fill).
     var primaryText: Color { pick(Light.primaryText, Dark.primaryText) }
+    /// The countdown card: the accent in light mode, a calm deep tone of the same purple in dark.
+    var timer: Color { pick(Light.timer, Dark.timer) }
     var tint: Color { pick(Light.tint, Dark.tint) }
     var icon: Color { pick(Light.icon, Dark.icon) }
     var overlay: Color { pick(Light.overlay, Dark.overlay) }

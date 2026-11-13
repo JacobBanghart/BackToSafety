@@ -103,7 +103,7 @@ struct ReadoutView: View {
                         // in aloud, not bracketed text to read out to the dispatcher. VoiceOver and
                         // the copy get the plain script, its blanks in brackets (as on Android).
                         RNText(runs: parts, accessibilityText: script, Typography.bodyLarge.spec, color: colors.text,
-                               highlight: colors.warning.opacity(0.22))
+                               highlight: colors.warning.opacity(0.14), mark: colors.warning)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {

@@ -72,8 +72,8 @@ import kotlinx.coroutines.delay
 // Starting a search and a search under way are both the deep red of Call 911: an emergency in
 // progress must never look calmer than the idle Start button (a purple running state did). The
 // running state is told apart at a glance by its shape, not a subtitle: the live countdown is the
-// headline, a white ring outlines the card, and a brighter red sweep covers the time already
-// used. White text passes 4.5:1 on both reds.
+// headline and a brighter red sweep covers the time already used (an inset white ring was
+// dropped: inside the red it read as a second outline, noise). White text passes 4.5:1 on both reds.
 private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_SWEEP = Color(DesignTokens.Semantic.error)
@@ -166,7 +166,6 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             )
         }
         val running = active != null && !expired
-        val white = Color(DesignTokens.Light.textOnPrimary)
         Box(
             Modifier
                 .fillMaxWidth()
@@ -183,8 +182,6 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             if (running) {
                 val elapsed = (SEARCH_WINDOW_SECONDS - secondsLeft).toFloat() / SEARCH_WINDOW_SECONDS
                 Box(Modifier.matchParentSize().drawBehind { drawRect(EMERGENCY_SWEEP, size = Size(size.width * elapsed, size.height)) })
-                // Inset from the edge, so it reads as a ring inside the red on a white page too.
-                Box(Modifier.matchParentSize().padding(space.xs.udp).rnBorder(2.udp, white.copy(alpha = 0.9f), RoundedCornerShape(DesignTokens.Radius.md.dp)))
             }
             if (running) {
                 RunningEmergency(t, secondsLeft, active?.checkedSteps?.size ?: 0)
@@ -352,7 +349,8 @@ private fun RunningEmergency(t: Translate, secondsLeft: Int, checked: Int) {
             }
             Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.Bottom) {
                 Text(formatCountdown(secondsLeft), style = type.display.style(), color = white)
-                Text(t("emergencyButton.timeLeft"), style = type.bodyBold.style(), color = white, modifier = Modifier.padding(bottom = space.xs.udp))
+                // Title size, so "left" reads as part of the countdown rather than a footnote to it.
+                Text(t("emergencyButton.timeLeft"), style = type.title.style(), color = white, modifier = Modifier.padding(bottom = space.xxs.udp))
             }
             Text(
                 t("emergencyButton.stepsDone", mapOf("checked" to checked, "total" to EMERGENCY_STEP_COUNT)),

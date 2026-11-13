@@ -88,7 +88,9 @@ struct SettingsView: View {
 
                     // The danger zone sits last, under About, and is outlined rather than a solid red
                     // block: deleting everything is rare and final, so it shouldn't read as prominently
-                    // as a routine option. Its confirmation alert is unchanged.
+                    // as a routine option. A rule with space either side sets it apart from the support
+                    // details, so it doesn't read as one of them. Its confirmation alert is unchanged.
+                    Rectangle().fill(colors.border).frame(height: 1).padding(.vertical, Space.sm)
                     AppCard {
                         sectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
                         description(t("sections.deleteAccount.description"))
@@ -109,7 +111,8 @@ struct SettingsView: View {
                         .accessibilityIdentifier("settings-delete-account")
                     }
                 }
-                .padding(Space.xl)
+                // The 16pt margin of every other screen, so the cards line up with the header.
+                .padding(Space.lg)
             }
             .scrollStopsAtSafeArea()
         }

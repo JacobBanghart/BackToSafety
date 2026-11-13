@@ -104,11 +104,17 @@ class LargeTextLayoutTest {
             }
         }
         val heights = labels.map { compose.onNodeWithTag("chip-$it").getUnclippedBoundsInRoot().height }
-        assertEquals("ragged chip heights $heights", 1, heights.distinct().size)
+        // Equal to the pixel: dp values from the root carry float noise past the first decimal.
+        assertEquals("ragged chip heights $heights", 1, heights.map { Math.round(it.value * 10) }.distinct().size)
+        // Two columns even at 130%: the long label wraps inside its chip rather than taking a
+        // full row each, which pushed the rest of the form off the screen. Six chips, three rows.
         val grid = compose.onNodeWithTag("grid").getUnclippedBoundsInRoot()
-        val long = compose.onNodeWithTag("chip-Primary Caregiver").getUnclippedBoundsInRoot()
-        // At 130% the long label doesn't fit half the width, so every chip takes a full row.
-        assertEquals(grid.width, long.width)
+        val first = compose.onNodeWithTag("chip-Primary Caregiver").getUnclippedBoundsInRoot()
+        val second = compose.onNodeWithTag("chip-Caregiver").getUnclippedBoundsInRoot()
+        assertTrue("one chip per row (${first.width} of ${grid.width})", first.width < grid.width / 2)
+        assertEquals("the second chip isn't beside the first", first.top, second.top)
+        assertTrue("the label didn't wrap inside its chip (${first.height})", first.height > 48.dp)
+        assertTrue("the grid isn't three rows (${grid.height})", grid.height < heights[0] * 3 + 24.dp)
     }
 
     @Test

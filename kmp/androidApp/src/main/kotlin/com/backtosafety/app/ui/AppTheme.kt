@@ -38,6 +38,9 @@ class AppColors(val isDark: Boolean) {
 
     /** The primary color for text and icons on the background (primary itself is a fill). */
     val primaryText = Color(if (isDark) DesignTokens.Dark.primaryText else DesignTokens.Light.primaryText)
+
+    /** The countdown card: the accent in light mode, a calm deep tone of the same purple in dark. */
+    val timer = Color(if (isDark) DesignTokens.Dark.timer else DesignTokens.Light.timer)
     val tint = Color(if (isDark) DesignTokens.Dark.tint else DesignTokens.Light.tint)
     val inputBackground = Color(if (isDark) DesignTokens.Dark.inputBackground else DesignTokens.Light.inputBackground)
     val inputBorder = Color(if (isDark) DesignTokens.Dark.inputBorder else DesignTokens.Light.inputBorder)

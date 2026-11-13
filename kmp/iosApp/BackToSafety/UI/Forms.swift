@@ -63,9 +63,10 @@ struct SwitchToggle: View {
     }
 }
 
-/// The header's action (Add / Update / Save / Saving...): the navigation bar's confirmation
-/// item, a semibold text button in the accent colour, not a filled button squeezed into the
-/// bar. 48pt tall; while it can't be pressed (Saving...) its label is the secondary text colour.
+/// The header's action (Add / Update / Save / Saving...): the form's main action as a tonal
+/// button in the bar, a tinted container (primaryLight) with the accent label. Bare text was too
+/// easy to miss and a solid fill crowded the bar. The container is 40pt inside a 48pt target;
+/// while it can't be pressed (Saving...) it's the surface tone with secondary text.
 struct HeaderSaveButton: View {
     let label: String
     let testID: String
@@ -76,8 +77,10 @@ struct HeaderSaveButton: View {
     var body: some View {
         Button(action: action) {
             RNText(label, Typography.bodyBold.spec, color: enabled ? colors.primaryText : colors.textSecondary, lines: 1)
-                .padding(.horizontal, Space.sm)
-                .frame(minWidth: 48, minHeight: 48)
+                .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+                .frame(minWidth: 72, minHeight: 40)
+                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(enabled ? colors.primaryLight : colors.surface))
+                .frame(minHeight: 48)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
@@ -89,7 +92,7 @@ struct HeaderSaveButton: View {
 /// roleOption / optionButton: an icon and a caption (500) in a bordered chip, 48pt tall to tap.
 /// Selected is said three ways, not by fill alone: the fill, the ink on it (`selectedContent`,
 /// textOnPrimary by default), and a check mark at the end. The check's space is kept when
-/// unselected, so choosing a chip never changes how wide it measures (ChipGrid's two-up decision).
+/// unselected, so choosing a chip never changes how its label wraps.
 struct OptionChip: View {
     let label: String
     let icon: String
@@ -122,11 +125,10 @@ struct OptionChip: View {
     }
 }
 
-/// Option chips two to a row at equal width, so they line up where a flowing row left one chip
-/// alone on the last line. Two to a row only while every label fits on one line in half the
-/// width: at large text one long label ("Primary Caregiver") wrapped inside its chip while the
-/// others didn't, so then every chip takes the full width, one per row. Mirrors Android's
-/// `ChipGrid`.
+/// Option chips in two columns at equal width, every chip as tall as the tallest, so a long label
+/// ("Primary Caregiver" at large text) wraps inside its chip and the grid stays even. A single
+/// column at large text pushed the rest of the form ("Notify in Emergency") off the screen.
+/// Mirrors Android's `ChipGrid`.
 struct ChipGrid<Item, Content: View>: View {
     let items: [Item]
     @ViewBuilder let chip: (Item) -> Content
@@ -141,40 +143,27 @@ struct ChipGrid<Item, Content: View>: View {
 private struct ChipGridLayout: Layout {
     let gap: CGFloat
 
-    private struct Plan {
-        var cell: CGFloat
-        var columns: Int
-        var rowHeights: [CGFloat]
+    private func cellAndHeight(width: CGFloat, _ subviews: Subviews) -> (cell: CGFloat, height: CGFloat) {
+        let cell = (width - gap) / 2
+        let height = subviews.map { $0.sizeThatFits(ProposedViewSize(width: cell, height: nil)).height }.max() ?? 0
+        return (cell, height)
     }
 
-    private func plan(width: CGFloat, _ subviews: Subviews) -> Plan {
-        let half = (width - gap) / 2
-        // A chip's ideal width is its label on one line.
-        let twoUp = subviews.allSatisfy { $0.sizeThatFits(.unspecified).width <= half }
-        let cell = twoUp ? half : width
-        let columns = twoUp ? 2 : 1
-        let heights = subviews.map { $0.sizeThatFits(ProposedViewSize(width: cell, height: nil)).height }
-        let rowHeights = stride(from: 0, to: heights.count, by: columns).map { heights[$0 ..< min($0 + columns, heights.count)].max() ?? 0 }
-        return Plan(cell: cell, columns: columns, rowHeights: rowHeights)
-    }
+    private func rows(_ subviews: Subviews) -> Int { (subviews.count + 1) / 2 }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
         let width = proposal.width ?? 0
-        let rows = plan(width: width, subviews).rowHeights
-        return CGSize(width: width, height: rows.reduce(0, +) + gap * CGFloat(max(rows.count - 1, 0)))
+        let (_, height) = cellAndHeight(width: width, subviews)
+        let n = rows(subviews)
+        return CGSize(width: width, height: height * CGFloat(n) + gap * CGFloat(max(n - 1, 0)))
     }
 
     func placeSubviews(in bounds: CGRect, proposal _: ProposedViewSize, subviews: Subviews, cache _: inout ()) {
-        let p = plan(width: bounds.width, subviews)
-        var y = bounds.minY
-        for (row, height) in p.rowHeights.enumerated() {
-            for column in 0 ..< p.columns {
-                let i = row * p.columns + column
-                guard i < subviews.count else { break }
-                subviews[i].place(at: CGPoint(x: bounds.minX + CGFloat(column) * (p.cell + gap), y: y),
-                                  proposal: ProposedViewSize(width: p.cell, height: height))
-            }
-            y += height + gap
+        let (cell, height) = cellAndHeight(width: bounds.width, subviews)
+        for i in subviews.indices {
+            let x = bounds.minX + CGFloat(i % 2) * (cell + gap)
+            let y = bounds.minY + CGFloat(i / 2) * (height + gap)
+            subviews[i].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(width: cell, height: height))
         }
     }
 }

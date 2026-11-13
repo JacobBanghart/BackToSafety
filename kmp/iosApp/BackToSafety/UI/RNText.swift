@@ -66,9 +66,11 @@ struct RNText: View {
     var color: Color
     var align: TextAlignment = .leading
     var lines: Int?
-    /// Pieces of [text], each marked (`true`) or not: a marked piece is drawn semibold on [highlight].
+    /// Pieces of [text], each marked (`true`) or not: a marked piece is drawn bold and underlined
+    /// in [mark], on [highlight], so it can't be read past.
     private var runs: [(text: String, marked: Bool)]?
     private var highlight: Color?
+    private var mark: Color?
     @Environment(\.dynamicTypeSize) private var dynamicType
 
     init(_ text: String, _ spec: TextSpec, color: Color, align: TextAlignment = .leading, lines: Int? = nil) {
@@ -81,12 +83,13 @@ struct RNText: View {
 
     /// Text in runs, the marked ones highlighted (the 911 script's blanks). [accessibilityText]
     /// is what VoiceOver reads, which can differ from what is drawn.
-    init(runs: [(text: String, marked: Bool)], accessibilityText: String, _ spec: TextSpec, color: Color, highlight: Color) {
+    init(runs: [(text: String, marked: Bool)], accessibilityText: String, _ spec: TextSpec, color: Color, highlight: Color, mark: Color) {
         text = accessibilityText
         self.spec = spec
         self.color = color
         self.runs = runs
         self.highlight = highlight
+        self.mark = mark
     }
 
     var body: some View {
@@ -123,8 +126,13 @@ struct RNText: View {
         for run in runs {
             var a = attributes
             if run.marked {
-                a[.font] = UIFont.systemFont(ofSize: spec.size * m, weight: .semibold)
+                a[.font] = UIFont.systemFont(ofSize: spec.size * m, weight: .bold)
                 a[.backgroundColor] = UIColor(highlight)
+                if let mark {
+                    a[.foregroundColor] = UIColor(mark)
+                    a[.underlineStyle] = NSUnderlineStyle.thick.rawValue
+                    a[.underlineColor] = UIColor(mark)
+                }
             }
             out.append(NSAttributedString(string: run.marked ? "\u{00a0}\(run.text)\u{00a0}" : run.text, attributes: a))
         }

@@ -54,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -64,6 +65,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -474,12 +477,13 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
     val type = DesignTokens.Typography
     val white = Color(DesignTokens.Light.textOnPrimary)
     val number = mapOf("emergencyNumber" to emergencyNumber)
+    val colors = LocalAppColors.current
     Column(
         Modifier
             .fillMaxWidth()
             .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.xl.dp))
             .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp))
-            .background(if (expired) Color(DesignTokens.Semantic.errorDark) else Color(DesignTokens.Primary.c700))
+            .background(if (expired) Color(DesignTokens.Semantic.errorDark) else colors.timer)
             .padding(horizontal = space.xl.udp, vertical = space.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(space.xs.udp),
@@ -520,52 +524,71 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
     }
 }
 
+/**
+ * What they're wearing, as one row in the checklist: at rest a single line (the question, a
+ * shirt icon, a close button) so it doesn't sit as a large input in the middle of the urgent
+ * flow; tapped, it opens into a text area with the 911 hint under it. Once something is
+ * written it stays open, showing what was written. The field is always there (tapping the row
+ * is tapping it), so `emergency-wearing-input` holds the text in both states.
+ */
 @Composable
 private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, onChange: (String) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.card)
-            .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp)).padding(space.lg.udp),
-        verticalArrangement = Arrangement.spacedBy(space.sm.udp),
+    var focused by remember { mutableStateOf(false) }
+    val expanded = focused || wearing.isNotEmpty()
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    Row(
+        Modifier.fillMaxWidth().clip(shape).background(colors.card)
+            .rnBorder(if (focused) 2.udp else 1.udp, if (focused) colors.borderFocused else colors.inputBorder, shape)
+            .padding(start = space.md.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+        verticalAlignment = if (expanded) Alignment.Top else Alignment.CenterVertically,
     ) {
-        Text(t("wearing.label"), style = type.bodyBold.style(), color = colors.text)
-        Text(
-            t("wearing.hint", mapOf("emergencyNumber" to emergencyNumber)), style = type.caption.style(),
-            color = colors.textSecondary, modifier = Modifier.negativeTopMargin(space.xs.udp),
-        )
-        val input = rnTextStyle(16f, 20f)
-        BasicTextField(
-            wearing, onChange,
-            textStyle = input.copy(color = colors.text),
-            cursorBrush = SolidColor(colors.tint),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.udp, max = 120.udp)
-                .testTag("emergency-wearing-input")
-                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                .background(if (colors.isDark) Color(DesignTokens.Neutral.c800) else Color(DesignTokens.Neutral.c50))
-                .border(1.udp, colors.inputBorder, RoundedCornerShape(DesignTokens.Radius.lg.dp)),
-            decorationBox = { field ->
-                // RN's 1dp border takes space: padding plus border.
-                Box(Modifier.padding(horizontal = (space.md + 1).udp, vertical = (space.sm + 1).udp)) {
-                    if (wearing.isEmpty()) Text(t("wearing.placeholder"), style = input, color = colors.inputPlaceholder)
-                    field()
-                }
-            },
-        )
-        // A visible secondary button (outlined, ink text), not bare link text, which read as dim
-        // and hard to hit in dark mode. The same outline as the Leave dialog's secondary action.
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-            val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
-            Box(
-                Modifier.testTag("emergency-wearing-dismiss").heightIn(min = 48.udp).widthIn(min = 96.udp).clip(shape)
-                    .clickable(role = Role.Button, onClick = onDismiss).rnBorder(1.udp, colors.inputBorder, shape)
-                    .padding(horizontal = space.lg.udp),
-                contentAlignment = Alignment.Center,
-            ) { Text(t("wearing.dismiss"), style = type.bodyBold.style(), color = colors.text) }
+        Icon("tshirt.fill", 20f, colors.primaryText, if (expanded) Modifier.padding(top = space.md.udp) else Modifier)
+        Column(Modifier.weight(1f).padding(vertical = if (expanded) space.sm.udp else 0.udp)) {
+            if (expanded) Text(t("wearing.label"), style = type.label.style(letterSpacing = 0f), color = colors.text)
+            val input = if (expanded) rnTextStyle(16f, 22f) else type.bodyBold.style()
+            BasicTextField(
+                wearing, onChange,
+                textStyle = input.copy(color = colors.text),
+                cursorBrush = SolidColor(colors.tint),
+                maxLines = 5,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.udp)
+                    .testTag("emergency-wearing-input")
+                    .onFocusChanged { focused = it.isFocused },
+                decorationBox = { field ->
+                    Box(Modifier.padding(vertical = space.sm.udp), contentAlignment = Alignment.CenterStart) {
+                        if (wearing.isEmpty()) {
+                            // At rest the question is the row's text; open, an example of an answer.
+                            if (expanded) {
+                                Text(t("wearing.placeholder"), style = input, color = colors.inputPlaceholder)
+                            } else {
+                                Text(t("wearing.label"), style = input, color = colors.text)
+                            }
+                        }
+                        field()
+                    }
+                },
+            )
+            if (expanded) {
+                Text(
+                    t("wearing.hint", mapOf("emergencyNumber" to emergencyNumber)),
+                    style = type.caption.style(), color = colors.textSecondary,
+                )
+            }
         }
+        // A 48dp close button, labelled for TalkBack, at the row's end in both states, so it's
+        // never pushed below the edge at large text as the old Dismiss button was.
+        Box(
+            Modifier.testTag("emergency-wearing-dismiss").size(48.udp).clip(CircleShape)
+                .clickable(role = Role.Button, onClick = onDismiss)
+                .semantics { contentDescription = t("wearing.dismiss") },
+            contentAlignment = Alignment.Center,
+        ) { Icon("xmark", 20f, colors.textSecondary) }
     }
 }
 
@@ -608,19 +631,20 @@ private fun ActionButtons(
             Icon("checkmark.circle.fill", 22f, white)
             Text(t("actions.foundSafe"), style = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight), color = white)
         }
-        // One height for the pair when one label wraps ("Emergency Info" at large text).
+        // Icon above label, centred, at one height for the pair: beside a label that wrapped
+        // ("Emergency Info" at large text) a small icon looked detached and the two unequal.
         Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
             for ((label, tag, icon, action) in listOf(
                 SecondaryAction("actions.infoSheet", "emergency-readout", "doc.text.fill", onReadout),
                 SecondaryAction("actions.alertCircle", "emergency-alert-contacts", "bell.fill", onAlert),
             )) {
-                Row(
+                Column(
                     Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag(tag).clip(shape).clickable(role = Role.Button, onClick = action)
                         .background(colors.card).rnBorder(1.udp, colors.border, shape).padding(space.md.udp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Icon(icon, 18f, colors.primaryText)
+                    Icon(icon, 24f, colors.primaryText)
                     Text(t(label), style = type.bodyBold.style(), color = colors.text, textAlign = TextAlign.Center)
                 }
             }
@@ -655,7 +679,7 @@ private fun Checklist(
                     .testTag("emergency-step-${step.id}")
                     .clip(shape)
                     .clickable { onToggle(step.id) }
-                    .background(if (step.checked) Color(if (colors.isDark) p.c900 else p.c50) else colors.card)
+                    .background(if (step.checked) (if (colors.isDark) colors.primaryLight else Color(p.c50)) else colors.card)
                     .rnBorder(
                         if (urgentOpen) 2.udp else 1.udp,
                         if (urgentOpen) error else if (step.checked) Color(p.c300) else colors.border, shape,

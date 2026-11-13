@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
@@ -141,7 +143,8 @@ fun SettingsScreen(
     ) {
         ScreenHeader(t("screenTitle"), "settings", onBack)
         Column(
-            Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.xl.udp),
+            // The 16dp margin of every other screen, so the cards line up with the header's action.
+            Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp),
             verticalArrangement = Arrangement.spacedBy(space.lg.udp),
         ) {
             AppCard {
@@ -208,7 +211,9 @@ fun SettingsScreen(
 
             // The danger zone sits last, under About, and is outlined rather than a solid red
             // block: deleting everything is rare and final, so it shouldn't read as prominently
-            // as a routine option. Its confirmation dialog is unchanged.
+            // as a routine option. A rule with space either side sets it apart from the support
+            // details, so it doesn't read as one of them. Its confirmation dialog is unchanged.
+            Box(Modifier.padding(vertical = space.sm.udp).fillMaxWidth().height(1.udp).background(colors.border))
             AppCard {
                 SectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
                 Description(t("sections.deleteAccount.description"))

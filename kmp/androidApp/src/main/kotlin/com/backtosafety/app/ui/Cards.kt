@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,10 +21,12 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
+
+/** The label column of a [DetailRow], wide enough for "Device ID" in en and es at 130%. */
+private const val DETAIL_LABEL_WIDTH = 112
 
 /** components/AppCard.tsx: card background, 1dp border, radius lg, padding lg, margin below md. */
 @Composable
@@ -89,7 +92,9 @@ fun ListItem(
 
 /**
  * A support detail (platform, theme, device ID): label and value on one line in caption type,
- * with no rule, so it reads as secondary to the card rows above it. Like [ListItem] it carries
+ * with no rule, so it reads as secondary to the card rows above it. The labels are a fixed-width
+ * column and each value starts right after it, so a value reads with its label (right-aligned
+ * values sat far from them across the screen). Like [ListItem] it carries
  * testID on the row and <testID>-value on the value; with an [action] it is a 48dp button
  * announced by that action, its icon at the end.
  */
@@ -111,9 +116,9 @@ fun DetailRow(
         horizontalArrangement = Arrangement.spacedBy(DesignTokens.Spacing.sm.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = caption.style(), color = colors.textSecondary)
+        Text(label, style = caption.style(), color = colors.textSecondary, modifier = Modifier.widthIn(min = DETAIL_LABEL_WIDTH.udp))
         Text(
-            value, style = caption.style(fontWeight = 600), color = colors.text, textAlign = TextAlign.End,
+            value, style = caption.style(fontWeight = 600), color = colors.text,
             maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f).then(if (testID != null) Modifier.testTag("$testID-value") else Modifier),
         )

@@ -49,9 +49,9 @@ struct ScreenHeader<Right: View>: View {
             BackButton(action: onBack)
                 .accessibilityIdentifier("\(testID)-back")
             Spacer()
-            // A text action carries its own 8pt of padding: with the bar's 4pt and these 4pt its
-            // label ends at the screen's 16pt margin, like the content below it.
-            right().frame(minWidth: 48, alignment: .trailing).padding(.trailing, Space.xs)
+            // The action's container ends at the screen's 16pt margin (the bar's 4pt and these
+            // 12pt), lined up with the content below it.
+            right().frame(minWidth: 48, alignment: .trailing).padding(.trailing, Space.md)
         }
         .frame(maxWidth: .infinity, minHeight: 56)
         .padding(.horizontal, Space.xs)

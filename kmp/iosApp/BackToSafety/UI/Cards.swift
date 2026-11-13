@@ -42,9 +42,12 @@ struct DetailRow: View {
 
     private var row: some View {
         HStack(spacing: Space.sm) {
+            // The labels are a fixed-width column and each value starts right after it, so a value
+            // reads with its label (right-aligned values sat far from them across the screen).
             RNText(label, Typography.caption.spec, color: colors.textSecondary)
-            RNText(value, Typography.caption.spec.weight(600), color: colors.text, align: .trailing, lines: 1)
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                .frame(minWidth: 112, alignment: .leading)
+            RNText(value, Typography.caption.spec.weight(600), color: colors.text, lines: 1)
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .accessibilityIdentifier(testID.map { "\($0)-value" } ?? "")
             if let action { SFIcon(action.icon, 18, colors.primaryText) }
         }

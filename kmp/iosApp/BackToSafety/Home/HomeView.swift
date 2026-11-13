@@ -4,8 +4,8 @@ import SwiftUI
 // Starting a search and a search under way are both the deep red of Call 911: an emergency in
 // progress must never look calmer than the idle Start button (a purple running state did). The
 // running state is told apart at a glance by its shape, not a subtitle: the live countdown is the
-// headline, a white ring outlines the card, and a brighter red sweep covers the time already
-// used. White text passes 4.5:1 on both reds.
+// headline and a brighter red sweep covers the time already used (an inset white ring was
+// dropped: inside the red it read as a second outline, noise). White text passes 4.5:1 on both reds.
 private let emergencyIdle = Color(argb: Semantic.errorDark)
 private let emergencyActive = Color(argb: Semantic.errorDark)
 private let emergencySweep = Color(argb: Semantic.error)
@@ -149,10 +149,6 @@ struct HomeView: View {
                     GeometryReader { geo in emergencySweep.frame(width: geo.size.width * elapsed) }
                 }
             }
-            .overlay {
-                // Inset from the edge, so it reads as a ring inside the red on a white page too.
-                if running { RoundedRectangle(cornerRadius: Radius.md).strokeBorder(white.opacity(0.9), lineWidth: 2).padding(Space.xs) }
-            }
             // The same radius as every other card on home.
             .clipShape(RoundedRectangle(cornerRadius: Radius.lg))
             .rnShadow(.md, dark: colors.isDark)
@@ -178,7 +174,8 @@ struct HomeView: View {
                 }
                 HStack(alignment: .bottom, spacing: Space.sm) {
                     RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), Typography.display.spec, color: white)
-                    RNText(t("emergencyButton.timeLeft"), Typography.bodyBold.spec, color: white).padding(.bottom, Space.xs)
+                    // Title size, so "left" reads as part of the countdown rather than a footnote to it.
+                    RNText(t("emergencyButton.timeLeft"), Typography.title.spec, color: white).padding(.bottom, Space.xxs)
                 }
                 RNText(t("emergencyButton.stepsDone", ["checked": checked, "total": EmergencyKt.EMERGENCY_STEP_COUNT]),
                        Typography.body.spec.weight(500), color: white)

@@ -29,6 +29,7 @@ struct EmergencyView: View {
     @State private var checked: Set<String> = []
     @State private var wearing = ""
     @State private var showWearing = true
+    @State private var wearingFocused = false
     @State private var secondsLeft: Int32 = EmergencyKt.SEARCH_WINDOW_SECONDS
     @State private var profile: Profile?
     @State private var destinations: [DestinationEntity] = []
@@ -346,41 +347,53 @@ struct EmergencyView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.horizontal, Space.xl).padding(.vertical, Space.lg)
-        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.errorDark) : Color(argb: Primary.c700)))
+        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.errorDark) : colors.timer))
         .rnShadow(.md, dark: colors.isDark)
     }
 
+    /// What they're wearing, as one row in the checklist: at rest a single line (the question, a
+    /// shirt icon, a close button) so it doesn't sit as a large input in the middle of the urgent
+    /// flow; tapped, it opens into a text area with the 911 hint under it. Once something is
+    /// written it stays open, showing what was written. The field is always there (tapping the
+    /// row is tapping it), so `emergency-wearing-input` holds the text in both states.
     private var wearingCard: some View {
-        VStack(alignment: .leading, spacing: Space.sm) {
-            RNText(t("wearing.label"), Typography.bodyBold.spec, color: colors.text)
-            RNText(t("wearing.hint", ["emergencyNumber": emergencyNumber]), Typography.caption.spec, color: colors.textSecondary)
-                .padding(.top, -Space.xs)
-            RNTextInput(
-                text: $wearing, placeholder: t("wearing.placeholder"), testID: "emergency-wearing-input",
-                font: .systemFont(ofSize: 16 * fontMultiplier), textColor: UIColor(colors.text),
-                placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint),
-                insets: UIEdgeInsets(top: Space.sm - 1, left: Space.md, bottom: Space.sm - 1, right: Space.md),
-                multiline: true, lineHeight: 20 * fontMultiplier, minHeight: 62, maxHeight: 118
-            )
-            .padding(1)
-            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
-            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.inputBorder, lineWidth: 1))
-            // A visible secondary button (outlined, ink text), not bare link text, which read as dim
-            // and hard to hit in dark mode. The same outline as the Leave dialog's secondary action.
+        let expanded = wearingFocused || !wearing.isEmpty
+        let m = fontMultiplier
+        return HStack(alignment: expanded ? .top : .center, spacing: Space.sm) {
+            SFIcon("tshirt.fill", 20, colors.primaryText)
+                .padding(.top, expanded ? Space.md : 0)
+            VStack(alignment: .leading, spacing: 0) {
+                if expanded {
+                    RNText(t("wearing.label"), Typography.label.spec.spacing(0), color: colors.text)
+                }
+                // At rest the question is the row's text; open, an example of an answer.
+                RNTextInput(
+                    text: $wearing, placeholder: expanded ? t("wearing.placeholder") : t("wearing.label"),
+                    testID: "emergency-wearing-input",
+                    font: .systemFont(ofSize: 16 * m, weight: expanded ? .regular : .semibold), textColor: UIColor(colors.text),
+                    placeholderColor: UIColor(expanded ? colors.inputPlaceholder : colors.text), tint: UIColor(colors.tint),
+                    insets: UIEdgeInsets(top: Space.sm, left: 0, bottom: Space.sm, right: 0),
+                    multiline: true, lineHeight: 22 * m, minHeight: 48, maxHeight: 140,
+                    onFocus: { wearingFocused = $0 }
+                )
+                if expanded {
+                    RNText(t("wearing.hint", ["emergencyNumber": emergencyNumber]), Typography.caption.spec, color: colors.textSecondary)
+                }
+            }
+            .padding(.vertical, expanded ? Space.sm : 0)
+            // A 48pt close button, labelled for VoiceOver, at the row's end in both states, so it's
+            // never pushed below the edge at large text as the old Dismiss button was.
             Button { showWearing = false } label: {
-                RNText(t("wearing.dismiss"), Typography.bodyBold.spec, color: colors.text)
-                    .padding(.horizontal, Space.lg)
-                    .frame(minWidth: 96, minHeight: 48)
-                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.inputBorder, lineWidth: 1))
-                    .contentShape(Rectangle()).accessibilityElement(children: .combine)
+                SFIcon("xmark", 20, colors.textSecondary).frame(width: 48, height: 48).contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
+            .accessibilityLabel(t("wearing.dismiss"))
             .accessibilityIdentifier("emergency-wearing-dismiss")
-            .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .padding(Space.lg + 1)
+        .padding(.leading, Space.md)
         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg)
+            .strokeBorder(wearingFocused ? colors.borderFocused : colors.inputBorder, lineWidth: wearingFocused ? 2 : 1))
     }
 
     @Environment(\.dynamicTypeSize) private var dynamicType
@@ -432,11 +445,13 @@ struct EmergencyView: View {
         }
     }
 
+    /// Icon above label, centred, at one height for the pair: beside a label that wrapped
+    /// ("Emergency Info" at large text) a small icon looked detached and the two unequal.
     private func secondaryAction(_ label: String, _ testID: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, colors.primaryText)
-                RNText(label, Typography.bodyBold.spec, color: colors.text)
+            VStack(spacing: Space.xs) {
+                SFIcon(icon, 24, colors.primaryText)
+                RNText(label, Typography.bodyBold.spec, color: colors.text, align: .center)
             }
             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2, maxHeight: .infinity)
             .padding(Space.md + 1)
@@ -509,7 +524,7 @@ struct EmergencyView: View {
                         }
                     }
                     .padding(Space.md + border)
-                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? Color(argb: colors.isDark ? Primary.c900 : Primary.c50) : colors.card))
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? (colors.isDark ? colors.primaryLight : Color(argb: Primary.c50)) : colors.card))
                     .overlay(RoundedRectangle(cornerRadius: Radius.lg)
                         .strokeBorder(urgentOpen ? error : isChecked ? Color(argb: Primary.c300) : colors.border, lineWidth: border))
                 }

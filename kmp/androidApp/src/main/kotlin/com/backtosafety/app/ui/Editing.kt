@@ -31,21 +31,27 @@ import com.backtosafety.core.DesignTokens
 // Pieces the contacts and places screens share (their RN styles are identical).
 
 /**
- * The header's action (Add / Update / Save / Saving...): the platform's app-bar action, a text
- * button in the accent colour (Material's TextButton in a TopAppBar), not a filled button
- * squeezed into the bar. 48dp tall with a pill ripple; while it can't be pressed (Saving...)
- * its label is the secondary text colour.
+ * The header's action (Add / Update / Save / Saving...): the form's main action as Material's
+ * tonal button in the app bar, a tinted container (primaryLight) with the accent label. Bare
+ * text was too easy to miss and a solid fill crowded the bar. The container is 40dp inside a
+ * 48dp target; while it can't be pressed (Saving...) it's the surface tone with secondary text.
  */
 @Composable
 fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
     val colors = LocalAppColors.current
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Box(
-        Modifier.testTag(testID).heightIn(min = 48.udp).widthIn(min = 64.udp).clip(RoundedCornerShape(DesignTokens.Radius.full.dp))
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = DesignTokens.Spacing.sm.udp),
+        Modifier.testTag(testID).heightIn(min = 48.udp).clickable(enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = if (enabled) colors.primaryText else colors.textSecondary, maxLines = 1)
+        Box(
+            Modifier.heightIn(min = 40.udp).widthIn(min = 72.udp).clip(shape)
+                .background(if (enabled) colors.primaryLight else colors.surface)
+                .padding(horizontal = DesignTokens.Spacing.lg.udp, vertical = DesignTokens.Spacing.sm.udp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(label, style = DesignTokens.Typography.bodyBold.style(), color = if (enabled) colors.primaryText else colors.textSecondary, maxLines = 1)
+        }
     }
 }
 
@@ -53,7 +59,7 @@ fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: (
  * roleOption / optionButton: an icon and a caption (500) in a bordered chip, 48dp tall to tap.
  * Selected is said three ways, not by fill alone: the fill, the ink on it ([selectedContent]),
  * and a check mark at the end. The check's space is kept when unselected, so choosing a chip
- * never changes how wide it measures (ChipGrid's two-up decision).
+ * never changes how its label wraps.
  */
 @Composable
 fun OptionChip(
@@ -113,10 +119,10 @@ fun Modifier.listCard(dragging: Boolean): Modifier {
 }
 
 /**
- * Option chips two to a row at equal width, so they line up where a flowing row left one chip
- * alone on the last line. Two to a row only while every label fits on one line in half the
- * width: at large text one long label ("Primary Caregiver") wrapped inside its chip while the
- * others didn't, so then every chip takes the full width, one per row. Mirrors iOS `ChipGrid`.
+ * Option chips in two columns at equal width, every chip as tall as the tallest, so a long label
+ * ("Primary Caregiver" at large text) wraps inside its chip and the grid stays even. A single
+ * column at large text pushed the rest of the form ("Notify in Emergency") off the screen.
+ * Mirrors iOS `ChipGrid`.
  */
 @Composable
 fun <T> ChipGrid(items: List<T>, chip: @Composable (item: T, modifier: Modifier) -> Unit) {
@@ -124,15 +130,13 @@ fun <T> ChipGrid(items: List<T>, chip: @Composable (item: T, modifier: Modifier)
     Layout({ for (item in items) chip(item, Modifier) }) { measurables, constraints ->
         val width = constraints.maxWidth
         val gapPx = gap.roundToPx()
-        val half = (width - gapPx) / 2
-        val twoUp = measurables.all { it.maxIntrinsicWidth(Constraints.Infinity) <= half }
-        val cell = if (twoUp) half else width
-        val placeables = measurables.map { it.measure(Constraints(minWidth = cell, maxWidth = cell)) }
-        val rows = placeables.chunked(if (twoUp) 2 else 1)
-        val height = rows.sumOf { row -> row.maxOf { it.height } } + gapPx * (rows.size - 1).coerceAtLeast(0)
+        val cell = (width - gapPx) / 2
+        val rowHeight = measurables.maxOfOrNull { it.minIntrinsicHeight(cell) } ?: 0
+        val placeables = measurables.map { it.measure(Constraints(minWidth = cell, maxWidth = cell, minHeight = rowHeight)) }
+        val height = placeables.chunked(2).sumOf { row -> row.maxOf { it.height } } + gapPx * ((placeables.size + 1) / 2 - 1).coerceAtLeast(0)
         layout(width, height) {
             var y = 0
-            for (row in rows) {
+            for (row in placeables.chunked(2)) {
                 row.forEachIndexed { i, p -> p.place(i * (cell + gapPx), y) }
                 y += row.maxOf { it.height } + gapPx
             }

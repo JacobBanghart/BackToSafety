@@ -55,6 +55,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
@@ -197,7 +198,12 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     // Blanks (the location, an unknown time) are highlighted gaps the caller fills
                     // in aloud, not bracketed text to read out to the dispatcher. TalkBack and
                     // the copy get the plain script, its blanks in brackets (as on iOS).
-                    val blank = SpanStyle(background = colors.warning.copy(alpha = 0.22f), fontWeight = FontWeight.SemiBold)
+                    // A blank is marked so it can't be read past: bold amber text, underlined, on an
+                    // amber tint (a pale tint alone was easy to miss, and read as olive in dark mode).
+                    val blank = SpanStyle(
+                        color = colors.warning, background = colors.warning.copy(alpha = 0.14f),
+                        fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline,
+                    )
                     Text(
                         buildAnnotatedString {
                             for (part in scriptParts) {
