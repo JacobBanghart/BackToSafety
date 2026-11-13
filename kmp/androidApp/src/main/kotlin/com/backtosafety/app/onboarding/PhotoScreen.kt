@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +68,9 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     val space = DesignTokens.Spacing
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var photoUri by remember { mutableStateOf<String?>(null) }
+    // Saveable: a picked photo survives rotation, a font-size change and the system reclaiming
+    // the app, all of which recreate this screen.
+    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
 
     val picker = rememberPhotoPicker { photoUri = it }
