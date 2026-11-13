@@ -98,7 +98,7 @@
       "message": "The timer will continue in the background. You can return to resume.",
       "notificationsOff": "Notifications are off, so the 5-minute warning and the time-up alert won't reach you while you're away.",
       "stay": "Stay",
-      "leave": "Leave",
+      "leave": "Go Back, Keep Timer Running",
       "end": "End Emergency"
     },
     "noContacts": {

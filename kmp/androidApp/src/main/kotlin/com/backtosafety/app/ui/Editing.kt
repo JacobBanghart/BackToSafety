@@ -35,8 +35,9 @@ import com.backtosafety.core.DesignTokens
 // Pieces the contacts and places screens share (their RN styles are identical).
 
 /**
- * The header's action (Add / Update / Save / Saving...): a primary pill inside a 48dp-tall
- * target, so it is easy to hit without crowding the bar.
+ * The header's action (Add / Update / Save / Saving...): a primary button inside a 48dp-tall
+ * target, so it is easy to hit without crowding the bar. It has the body buttons' shape
+ * (Radius.lg), not a pill: one shape means one kind of thing, a primary action.
  */
 @Composable
 fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
@@ -47,7 +48,7 @@ fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: (
         contentAlignment = Alignment.Center,
     ) {
         Box(
-            Modifier.widthIn(min = 72.udp).heightIn(min = 36.udp).clip(RoundedCornerShape(DesignTokens.Radius.full.dp))
+            Modifier.widthIn(min = 72.udp).heightIn(min = 40.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                 .indication(source, LocalIndication.current).background(LocalAppColors.current.primary)
                 .padding(horizontal = DesignTokens.Spacing.lg.udp),
             contentAlignment = Alignment.Center,

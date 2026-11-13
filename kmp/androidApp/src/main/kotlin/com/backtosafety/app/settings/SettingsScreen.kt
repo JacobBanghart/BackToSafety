@@ -61,6 +61,7 @@ import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
+import com.backtosafety.core.abbreviateId
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.DATABASE_VERSION
 import com.backtosafety.core.invoke
@@ -188,8 +189,10 @@ fun SettingsScreen(
                 ListItem(t("sections.about.theme"), if (colors.isDark) "dark" else "light")
                 if (devMode) ListItem(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
                 ListItem(
-                    t("sections.about.deviceId"), deviceId ?: "—", testID = "settings-device-id",
-                    ruleColor = Color.Transparent,
+                    // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
+                    // text, and support needs it pasted, not read out. The copy is the full ID.
+                    t("sections.about.deviceId"), deviceId?.let(::abbreviateId) ?: "—", testID = "settings-device-id",
+                    ruleColor = Color.Transparent, action = "doc.on.clipboard.fill" to t("sections.about.copyDeviceId"),
                 ) {
                     deviceId?.let {
                         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(null, it))

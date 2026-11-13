@@ -1,10 +1,14 @@
 import Shared
 import SwiftUI
 
-// One deep red for starting a search and for the one under way, the same as the search
-// screen's Call 911: white text on it is above 4.5:1.
+// Starting a search and a search under way are both the deep red of Call 911: an emergency in
+// progress must never look calmer than the idle Start button (a purple running state did). The
+// running state differs by its timer icon, the time left in full white, and a brighter red sweep
+// across the time already used (it was the background's own red, so invisible). White text
+// passes 4.5:1 on both reds.
 private let emergencyIdle = Color(argb: Semantic.errorDark)
 private let emergencyActive = Color(argb: Semantic.errorDark)
+private let emergencySweep = Color(argb: Semantic.error)
 
 /// Port of app/index.tsx.
 struct HomeView: View {
@@ -115,16 +119,17 @@ struct HomeView: View {
                 "time": EmergencyKt.formatCountdown(seconds: secondsLeft), "checked": emergency?.checkedSteps.count ?? 0, "total": EmergencyKt.EMERGENCY_STEP_COUNT,
             ]))
         }
-        let elapsed = emergency != nil && !expired ? CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS - secondsLeft) / CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS) : 0
+        let running = emergency != nil && !expired
+        let elapsed = running ? CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS - secondsLeft) / CGFloat(EmergencyKt.SEARCH_WINDOW_SECONDS) : 0
         return Button { model.path.append(.emergency) } label: {
             HStack(spacing: 0) {
                 HStack(spacing: Space.md) {
-                    SFIcon("exclamationmark.triangle.fill", 28, white)
+                    SFIcon(running ? "timer" : "exclamationmark.triangle.fill", 28, white)
                         .frame(width: 44, height: 44)
                         .background(Circle().fill(Color.white.opacity(0.2)))
                     VStack(alignment: .leading, spacing: 0) {
                         RNText(title, Typography.bodyBold.spec, color: white).padding(.bottom, 2)
-                        RNText(subtitle, Typography.caption.spec, color: .white.opacity(0.8))
+                        RNText(subtitle, Typography.caption.spec.weight(500), color: white)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -135,7 +140,7 @@ struct HomeView: View {
             .background(alignment: .leading) {
                 ZStack(alignment: .leading) {
                     emergency != nil ? emergencyActive : emergencyIdle
-                    GeometryReader { geo in emergencyIdle.frame(width: geo.size.width * elapsed) }
+                    GeometryReader { geo in emergencySweep.frame(width: geo.size.width * elapsed) }
                 }
             }
             // The same radius as every other card on home.

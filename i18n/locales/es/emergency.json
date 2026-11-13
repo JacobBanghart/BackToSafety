@@ -98,7 +98,7 @@
       "message": "El temporizador seguirá corriendo en segundo plano. Puedes volver para continuar.",
       "notificationsOff": "Las notificaciones están desactivadas, así que no recibirás el aviso de los 5 minutos ni la alerta de fin del tiempo mientras estés fuera.",
       "stay": "Quedarme",
-      "leave": "Salir",
+      "leave": "Volver y seguir con el temporizador",
       "end": "Terminar emergencia"
     },
     "noContacts": {

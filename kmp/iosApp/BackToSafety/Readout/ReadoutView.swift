@@ -75,7 +75,7 @@ struct ReadoutView: View {
                 card {
                     Button { expanded.toggle() } label: {
                         HStack {
-                            sectionLabel("phone.connection.fill", t("sections.script.label"), colors.success)
+                            sectionLabel("phone.connection.fill", t("sections.script.label"), colors.primaryText)
                             Spacer()
                             SFIcon(expanded ? "chevron.up" : "chevron.down", 16, colors.textSecondary)
                         }
@@ -87,7 +87,8 @@ struct ReadoutView: View {
                     if expanded {
                         RNText(t("sections.script.hint"), Typography.caption.spec, color: colors.textSecondary)
                             .padding(.top, Space.xxs).padding(.bottom, Space.xs)
-                        RNText(script, TextSpec(size: 16, lineHeight: 22), color: colors.text)
+                        // What is read to the dispatcher: large, comfortable reading size.
+                        RNText(script, Typography.bodyLarge.spec, color: colors.text)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
@@ -112,6 +113,15 @@ struct ReadoutView: View {
                 }
 
                 identityCard(p)
+
+                // The people to call come straight after who is missing: during the call they are
+                // needed at once, and further down they fell below the fold.
+                if !contacts.isEmpty {
+                    card {
+                        sectionLabel("phone.fill", t("contacts.title"), colors.primaryText)
+                        ForEach(Array(contacts.enumerated()), id: \.offset) { index, c in contactRow(c, index) }
+                    }
+                }
 
                 if let lastSeen {
                     card {
@@ -153,13 +163,6 @@ struct ReadoutView: View {
                     ("sections.communication.safeWord", p.safeWord),
                 ])
                 devices(p)
-
-                if !contacts.isEmpty {
-                    card {
-                        sectionLabel("phone.fill", t("contacts.title"), colors.success)
-                        ForEach(Array(contacts.enumerated()), id: \.offset) { index, c in contactRow(c, index) }
-                    }
-                }
 
                 VStack(spacing: Space.sm) {
                     copyButton(script: true, label: copied == "script" ? t("copiedScriptButton") : t("copyScriptButton"),
@@ -211,11 +214,13 @@ struct ReadoutView: View {
             .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: hairline))
     }
 
-    private func sectionLabel(_ icon: String, _ text: String, _ color: Color) -> some View {
+    private func sectionLabel(_ icon: String, _ text: String, _ iconColor: Color) -> some View {
         HStack(spacing: Space.xs) {
-            SFIcon(icon, 14, color)
-            // bodyBold with fontSize 12: the 24 line height stays.
-            RNText(text.uppercased(), TextSpec(size: 12, lineHeight: 24, weight: 600, letterSpacing: 0.5), color: color)
+            SFIcon(icon, 16, iconColor)
+            // The label style (14, semibold) on the 24 line height: at 12 the headings read as fine print.
+            // The words are ink; only the icon carries the section's accent. Green is kept for status
+            // (Found, a copied script, call buttons), so a green heading read as one of those.
+            RNText(text.uppercased(), Typography.label.spec.lineHeight(CGFloat(Typography.bodyBold.lineHeight)), color: colors.text)
         }
         .padding(.bottom, Space.xs)
     }

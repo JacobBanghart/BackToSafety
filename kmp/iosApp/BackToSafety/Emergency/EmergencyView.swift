@@ -92,8 +92,8 @@ struct EmergencyView: View {
             }
         } else {
             VStack(spacing: 0) {
-                ScreenHeader(title: t("screenTitle"), testID: "emergency", onBack: { modal = .leave },
-                             titleIcon: ("exclamationmark.triangle.fill", Color(argb: Semantic.error)))
+                // No warning icon by the title: the red on this screen belongs to Call 911 alone.
+                ScreenHeader(title: t("screenTitle"), testID: "emergency", onBack: { modal = .leave })
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.lg) {
                         timerCard
@@ -318,7 +318,8 @@ struct EmergencyView: View {
         let progress = steps.isEmpty ? 0 : CGFloat(checked.count) / CGFloat(steps.count)
         return VStack(spacing: Space.xs) {
             RNText((expired ? t("timer.labelExpired", ["emergencyNumber": emergencyNumber]) : t("timer.labelActive")).uppercased(),
-                   Typography.caption.spec.weight(600).spacing(1), color: white)
+                   // 14pt and full white at least: smaller or tinted text faded into the card's purple.
+                   Typography.label.spec.spacing(1), color: white)
                 .accessibilityIdentifier("emergency-timer-label")
             RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 60, lineHeight: 72, weight: 700, letterSpacing: 2), color: white)
                 .accessibilityIdentifier("emergency-timer")
@@ -334,7 +335,7 @@ struct EmergencyView: View {
                 }
                 .frame(height: 6)
                 let progressText = t("timer.stepsProgress", ["checked": checked.count, "total": steps.count])
-                RNText(progressText, Typography.caption.spec, color: white, align: .center)
+                RNText(progressText, Typography.label.spec.weight(500).spacing(0), color: white, align: .center)
                     .frame(maxWidth: .infinity)
                     .rnID("emergency-progress", label: progressText)
             }
@@ -361,10 +362,13 @@ struct EmergencyView: View {
             .padding(1)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
             .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.inputBorder, lineWidth: 1))
+            // A visible secondary button (outlined, ink text), not bare link text, which read as dim
+            // and hard to hit in dark mode. The same outline as the Leave dialog's secondary action.
             Button { showWearing = false } label: {
-                RNText(t("wearing.dismiss"), Typography.bodyBold.spec, color: colors.primaryText)
-                    .padding(.horizontal, Space.sm)
-                    .frame(minHeight: 48)
+                RNText(t("wearing.dismiss"), Typography.bodyBold.spec, color: colors.text)
+                    .padding(.horizontal, Space.lg)
+                    .frame(minWidth: 96, minHeight: 48)
+                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.inputBorder, lineWidth: 1))
                     .contentShape(Rectangle()).accessibilityElement(children: .combine)
             }
             .buttonStyle(.pressable)
@@ -381,8 +385,8 @@ struct EmergencyView: View {
 
     /// Calling for help is the most urgent action: it comes first and is the largest, raised red
     /// control with headline type. Found — Safe ends the search, so it is a solid green button too
-    /// (an outline vanished in dark mode), but shorter, flat and with smaller type, so it never
-    /// outranks Call 911. White on semantic success passes 4.5:1 in both themes.
+    /// (an outline vanished in dark mode, a pale tonal fill read as disabled), but shorter, flat and
+    /// with smaller type, so it never outranks Call 911. White on semantic success passes 4.5:1.
     private var actionButtons: some View {
         let white = Color(argb: Light.textOnPrimary)
         let emergencyRed = Color(argb: Semantic.errorDark)
@@ -528,14 +532,13 @@ struct EmergencyView: View {
         let success = Color(argb: Semantic.success)
         func title(_ key: String) -> some View { RNText(t(key), Typography.title.spec, color: colors.text, align: .center) }
         func message(_ key: String) -> some View { RNText(t(key), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center) }
-        func button(_ label: String, _ testID: String, _ bg: Color, _ textColor: Color, outline: Bool = false, rowItem: Bool = false, _ action: @escaping () -> Void) -> some View {
+        func button(_ label: String, _ testID: String, _ bg: Color, _ textColor: Color, outline: Bool = false, _ action: @escaping () -> Void) -> some View {
             Button(action: action) {
-                RNText(label, Typography.bodyBold.spec, color: textColor)
+                RNText(label, Typography.bodyBold.spec, color: textColor, align: .center)
                     .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                     .padding(.vertical, Space.md + (outline ? 1 : 0)).padding(.horizontal, Space.lg + (outline ? 1 : 0))
-                    .frame(maxHeight: outline || rowItem ? .infinity : nil)
                     .background(RoundedRectangle(cornerRadius: Radius.lg).fill(bg))
-                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(outline ? colors.border : .clear, lineWidth: 1))
+                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(outline ? colors.inputBorder : .clear, lineWidth: 1))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
@@ -572,9 +575,12 @@ struct EmergencyView: View {
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
                     }
-                    // Staying is the safe choice, so it is the filled, default-looking one.
-                    HStack(spacing: Space.md) {
-                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, white, rowItem: true) { modal = nil }
+                    // Three actions with long labels stack full width, as platform alerts stack
+                    // them. Staying is the safe choice, so it is first and filled. Going back says
+                    // what it does (the timer keeps running), so it can't be read as ending the
+                    // search; End Emergency is the only red one, set apart below the others.
+                    VStack(spacing: Space.sm) {
+                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, white) { modal = nil }
                         button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.text, outline: true) {
                             Analytics.shared.track(event: .emergencyLeave, properties: [:])
                             leave()
@@ -582,6 +588,7 @@ struct EmergencyView: View {
                     }
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Space.xs)
+                    Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.xs)
                     Button {
                         Analytics.shared.track(event: .emergencyCancelled, properties: endedProperties())
                         // Ended without an outcome: stamp the end time, keep the outcome as it was.

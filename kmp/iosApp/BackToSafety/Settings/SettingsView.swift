@@ -70,8 +70,11 @@ struct SettingsView: View {
                         ListItem(label: t("sections.about.platform"), value: "ios")
                         ListItem(label: t("sections.about.theme"), value: colors.isDark ? "dark" : "light")
                         if devMode { ListItem(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
-                        ListItem(label: t("sections.about.deviceId"), value: deviceId ?? "—", testID: "settings-device-id",
-                                 ruleColor: .clear) {
+                        // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
+                        // text, and support needs it pasted, not read out. The copy is the full ID.
+                        ListItem(label: t("sections.about.deviceId"), value: deviceId.map { FormattersKt.abbreviateId(id: $0, head: 8, tail: 4) } ?? "—",
+                                 testID: "settings-device-id", ruleColor: .clear,
+                                 action: (icon: "doc.on.clipboard.fill", label: t("sections.about.copyDeviceId"))) {
                             guard let deviceId else { return }
                             UIPasteboard.general.string = deviceId
                             alert = .copied

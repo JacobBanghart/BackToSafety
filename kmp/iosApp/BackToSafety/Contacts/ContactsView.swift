@@ -219,18 +219,11 @@ struct ContactsView: View {
                         items: list, id: { $0.id },
                         onDragStart: { UIImpactFeedbackGenerator(style: .medium).impactOccurred() },
                         onRelease: { UIImpactFeedbackGenerator(style: .light).impactOccurred() },
-                        onReorder: { ordered in
-                            contacts = ordered
-                            Task {
-                                do { try await model.store.reorderContacts(ordered: ordered) } catch {
-                                    reportSaveFailed(screen: "contacts", action: "reorder", error: error)
-                                    showError(validation: false, t("errors.reorderFailed"))
-                                }
-                                await reload()
-                            }
-                        }
+                        onReorder: reorder
                     ) { contact, index, dragging in
-                        contactCard(contact, index, dragging)
+                        contactCard(contact, index, dragging,
+                                    moveUp: index > 0 ? { move(list, from: index, to: index - 1) } : nil,
+                                    moveDown: index < list.count - 1 ? { move(list, from: index, to: index + 1) } : nil)
                     }
                     HStack(spacing: Space.sm) {
                         addButton("contacts-add", action: add)
@@ -297,14 +290,43 @@ struct ContactsView: View {
         .accessibilityIdentifier(testID)
     }
 
-    private func contactCard(_ contact: ContactEntity, _ index: Int, _ dragging: Bool) -> some View {
+    private func reorder(_ ordered: [ContactEntity]) {
+        contacts = ordered
+        Task {
+            do { try await model.store.reorderContacts(ordered: ordered) } catch {
+                reportSaveFailed(screen: "contacts", action: "reorder", error: error)
+                showError(validation: false, t("errors.reorderFailed"))
+            }
+            await reload()
+        }
+    }
+
+    /// Moves one card a place up or down: VoiceOver's way to reorder.
+    private func move(_ list: [ContactEntity], from: Int, to: Int) {
+        var ordered = list
+        ordered.insert(ordered.remove(at: from), at: to)
+        reorder(ordered)
+    }
+
+    private func contactCard(_ contact: ContactEntity, _ index: Int, _ dragging: Bool,
+                             moveUp: (() -> Void)?, moveDown: (() -> Void)?) -> some View {
         let role = t("roles.\(roles.first { $0.0 == contact.role }?.0 ?? "other")")
         let relationship = contact.relationship.flatMap { $0.isEmpty ? nil : " • \($0)" } ?? ""
         return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 0) {
-                // A visible handle says the cards can be dragged into order (hold, then drag).
-                SFIcon("line.3.horizontal", 20, colors.textSecondary).padding(.trailing, Space.md)
-                    .accessibilityHidden(true)
+                // A visible handle says the cards can be dragged into order (hold, then drag). It is
+                // a 48pt target with a spoken name, and Move up / Move down actions, so VoiceOver
+                // users can reorder without dragging. The glyph is the platform's drag indicator (iOS's
+                // reorder lines, Material's dotted grip) at 24pt in secondary text.
+                SFIcon("line.3.horizontal", 24, colors.textSecondary)
+                    .frame(width: 48, height: 48)
+                    .contentShape(Rectangle())
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(t("actions.reorderName", ["name": contact.name]))
+                    .accessibilityActions {
+                        if let moveUp { Button(t("actions.moveUp"), action: moveUp) }
+                        if let moveDown { Button(t("actions.moveDown"), action: moveDown) }
+                    }
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(contact.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -312,9 +334,10 @@ struct ContactsView: View {
                     RNText(role + relationship, Typography.caption.spec, color: colors.textSecondary, lines: 1).padding(.top, 4)
                     if contact.notifyOnEmergency {
                         // Inside the card, under the role: it never collides with the name at large text.
+                        // Caption size (13) at least: at 11 the badge was the smallest text in the app.
                         HStack(spacing: 4) {
-                            SFIcon("checkmark.circle.fill", 12, colors.primaryText)
-                            RNText(t("alertCircleBadge"), TextSpec(size: 11, lineHeight: 14, weight: 700, letterSpacing: 0.5), color: colors.primaryText)
+                            SFIcon("checkmark.circle.fill", 14, colors.primaryText)
+                            RNText(t("alertCircleBadge"), Typography.caption.spec.weight(700).spacing(0.5), color: colors.primaryText)
                         }
                         .padding(.horizontal, Space.sm).padding(.vertical, 3)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))

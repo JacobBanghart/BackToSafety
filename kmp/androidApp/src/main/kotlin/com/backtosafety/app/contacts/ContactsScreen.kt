@@ -51,8 +51,10 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -269,24 +271,32 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                         Text(tCommon("nContacts", mapOf("count" to list.size)), style = type.body.style(), color = colors.textSecondary)
                         Text(t("reorderHint"), style = type.caption.style(), color = colors.textSecondary, modifier = Modifier.padding(top = space.xxs.udp))
                     }
+                    fun reorder(ordered: List<ContactEntity>) {
+                        contacts = ordered.mapIndexed { i, c -> c.copy(sortOrder = i) }
+                        scope.launch {
+                            runCatchingCancellable { store.reorderContacts(ordered) }.onFailure { e ->
+                                reportSaveFailed("contacts", "reorder", e)
+                                alert(false, t("errors.reorderFailed"))
+                            }
+                            reload()
+                        }
+                    }
+
+                    // Moves one card a place up or down: the screen reader's way to reorder.
+                    fun move(from: Int, to: Int) = reorder(list.toMutableList().apply { add(to, removeAt(from)) })
                     ReorderableColumn(
                         list, key = { it.id },
                         onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
-                        onReorder = { ordered ->
-                            contacts = ordered.mapIndexed { i, c -> c.copy(sortOrder = i) }
-                            scope.launch {
-                                runCatchingCancellable { store.reorderContacts(ordered) }.onFailure { e ->
-                                    reportSaveFailed("contacts", "reorder", e)
-                                    alert(false, t("errors.reorderFailed"))
-                                }
-                                reload()
-                            }
-                        },
+                        onReorder = ::reorder,
                     ) { contact, index, dragging ->
-                        ContactCard(t, contact, index, dragging, onCall = {
-                            Analytics.track(AnalyticsEvent.CONTACT_CALL_TAPPED)
-                            dial(context, contact.phone, DialTarget.CONTACT, "contacts", tCommon)
-                        }) {
+                        ContactCard(
+                            t, contact, index, dragging,
+                            onMoveUp = if (index > 0) ({ move(index, index - 1) }) else null,
+                            onMoveDown = if (index < list.lastIndex) ({ move(index, index + 1) }) else null,
+                            onCall = {
+                                Analytics.track(AnalyticsEvent.CONTACT_CALL_TAPPED)
+                                dial(context, contact.phone, DialTarget.CONTACT, "contacts", tCommon)
+                            }) {
                             Analytics.track(AnalyticsEvent.CONTACT_EDIT_TAPPED)
                             open(contact, contact.toForm())
                         }
@@ -317,14 +327,37 @@ private fun readContact(context: Context, picked: Uri): Pair<String, String> {
 }
 
 @Composable
-private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, dragging: Boolean, onCall: () -> Unit, onEdit: () -> Unit) {
+private fun ContactCard(
+    t: Translate,
+    contact: ContactEntity,
+    index: Int,
+    dragging: Boolean,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
+    onCall: () -> Unit,
+    onEdit: () -> Unit,
+) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Box(Modifier.padding(bottom = space.md.udp)) {
         Column(Modifier.listCard(dragging).padding(space.lg.udp)) {
             Row(Modifier.padding(bottom = space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
-                // A visible handle says the cards can be dragged into order (hold, then drag).
-                Icon("line.3.horizontal", 20f, colors.textSecondary, Modifier.padding(end = space.md.udp))
+                // A visible handle says the cards can be dragged into order (hold, then drag). It is
+                // a 48dp target with a spoken name, and Move up / Move down actions, so TalkBack
+                // users can reorder without dragging. The glyph is the platform's drag indicator (Material's
+                // dotted grip, iOS's reorder lines) at 24dp in secondary text: the thin "=" read as faint.
+                val moveUp = t("actions.moveUp")
+                val moveDown = t("actions.moveDown")
+                Box(
+                    Modifier.size(48.udp).semantics {
+                        contentDescription = t("actions.reorderName", mapOf("name" to contact.name))
+                        customActions = listOfNotNull(
+                            onMoveUp?.let { CustomAccessibilityAction(moveUp) { it(); true } },
+                            onMoveDown?.let { CustomAccessibilityAction(moveDown) { it(); true } },
+                        )
+                    },
+                    contentAlignment = Alignment.Center,
+                ) { Icon("line.3.horizontal", 24f, colors.textSecondary) }
                 Column(Modifier.weight(1f).padding(end = space.md.udp)) {
                     Text(
                         contact.name, style = type.bodyLarge.style(fontWeight = 600), color = colors.text, maxLines = 1,
@@ -338,14 +371,15 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
                     )
                     if (contact.notifyOnEmergency) {
                         // Inside the card, under the role: it never collides with the name at large text.
+                        // Caption size (13) at least: at 11 the badge was the smallest text in the app.
                         Row(
                             Modifier.padding(top = space.xs.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
                                 .background(colors.primaryLight).padding(horizontal = space.sm.udp, vertical = 3.udp),
                             horizontalArrangement = Arrangement.spacedBy(4.udp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon("checkmark.circle.fill", 12f, colors.primaryText)
-                            Text(t("alertCircleBadge"), style = rnTextStyle(11f, 14f, 700, 0.5f), color = colors.primaryText)
+                            Icon("checkmark.circle.fill", 14f, colors.primaryText)
+                            Text(t("alertCircleBadge"), style = type.caption.style(fontWeight = 700, letterSpacing = 0.5f), color = colors.primaryText)
                         }
                     }
                 }

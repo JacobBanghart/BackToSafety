@@ -175,13 +175,14 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("readout-script-toggle").clickable { expanded = !expanded },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    SectionLabel("phone.connection.fill", t("sections.script.label"), colors.success, Modifier.weight(1f))
+                    SectionLabel("phone.connection.fill", t("sections.script.label"), colors.primaryText, Modifier.weight(1f))
                     Icon(if (expanded) "chevron.up" else "chevron.down", 16f, colors.textSecondary)
                 }
                 val hint = Modifier.padding(top = space.xxs.udp, bottom = space.xs.udp)
                 if (expanded) {
                     Text(t("sections.script.hint"), style = type.caption.style(), color = colors.textSecondary, modifier = hint)
-                    Text(script, style = rnTextStyle(16f, 22f), color = colors.text, modifier = Modifier.testTag("readout-script-text"))
+                    // What is read to the dispatcher: large, comfortable reading size.
+                    Text(script, style = type.bodyLarge.style(), color = colors.text, modifier = Modifier.testTag("readout-script-text"))
                     if (missing.isNotEmpty()) {
                         // The one prompt that improves the script, so a callout at body size with an
                         // amber tint and icon, not a caption that reads as a footnote.
@@ -206,6 +207,20 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             }
 
             IdentityCard(t, p)
+
+            // The people to call come straight after who is missing: during the call they are
+            // needed at once, and further down they fell below the fold.
+            if (contacts.isNotEmpty()) {
+                Card {
+                    SectionLabel("phone.fill", t("contacts.title"), colors.primaryText)
+                    contacts.forEachIndexed { index, c ->
+                        ContactRow(t, c, index) {
+                            Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
+                            dial(c.phone, DialTarget.CONTACT)
+                        }
+                    }
+                }
+            }
 
             if (lastSeen != null) {
                 Card {
@@ -297,18 +312,6 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 }
             }
 
-            if (contacts.isNotEmpty()) {
-                Card {
-                    SectionLabel("phone.fill", t("contacts.title"), colors.success)
-                    contacts.forEachIndexed { index, c ->
-                        ContactRow(t, c, index) {
-                            Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
-                            dial(c.phone, DialTarget.CONTACT)
-                        }
-                    }
-                }
-            }
-
             // Copy actions
             Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                 val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
@@ -371,15 +374,18 @@ private fun Card(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-private fun SectionLabel(icon: String, text: String, color: Color, modifier: Modifier = Modifier) {
+private fun SectionLabel(icon: String, text: String, iconColor: Color, modifier: Modifier = Modifier) {
+    val colors = LocalAppColors.current
     Row(
         modifier.padding(bottom = space.xs.udp),
         horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, 14f, color)
-        // bodyBold with fontSize 12: the 24 line height stays.
-        Text(text.uppercase(), style = rnTextStyle(12f, type.bodyBold.lineHeight, type.bodyBold.fontWeight, 0.5f), color = color)
+        Icon(icon, 16f, iconColor)
+        // The label style (14, semibold) on the 24 line height: at 12 the headings read as fine print.
+        // The words are ink; only the icon carries the section's accent. Green is kept for status
+        // (Found, a copied script, call buttons), so a green heading read as one of those.
+        Text(text.uppercase(), style = rnTextStyle(type.label.fontSize, type.bodyBold.lineHeight, type.label.fontWeight, type.label.letterSpacing), color = colors.text)
     }
 }
 

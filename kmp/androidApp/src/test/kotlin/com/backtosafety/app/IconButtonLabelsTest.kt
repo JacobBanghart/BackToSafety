@@ -1,13 +1,17 @@
 package com.backtosafety.app
 
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.unit.dp
 import androidx.room.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
@@ -91,6 +95,23 @@ class IconButtonLabelsTest {
         compose.setContent { AppTheme(dark = false) { ContactsScreen(t("contacts"), t("common"), store) {} } }
         compose.onNodeWithContentDescription("Llamar a Ana").assert(isButton).assertHasClickAction()
         compose.onNodeWithContentDescription("Editar a Ana").assert(isButton).assertHasClickAction()
+    }
+
+    @Test
+    fun aContactIsReorderedWithTheHandlesMoveActionsAsTalkBackDoesIt() {
+        runBlocking { store.addContact(ContactEntity(name = "Beto", phone = "(555) 765-4321", role = "family")) }
+        compose.setContent { AppTheme(dark = false) { ContactsScreen(t("contacts"), t("common"), store) {} } }
+        val ana = compose.onNodeWithContentDescription("Reordenar a Ana").assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
+        val beto = compose.onNodeWithContentDescription("Reordenar a Beto")
+        // The first can only go down and the last only up.
+        assertEquals(listOf("Bajar"), ana.fetchSemanticsNode().config[SemanticsActions.CustomActions].map { it.label })
+        val up = beto.fetchSemanticsNode().config[SemanticsActions.CustomActions]
+        assertEquals(listOf("Subir"), up.map { it.label })
+        compose.runOnIdle { up.single().action() }
+        compose.waitUntil(5_000) { runBlocking { store.contacts().map { it.name } } == listOf("Beto", "Ana") }
+        compose.onNodeWithContentDescription("Reordenar a Beto").assert(
+            SemanticsMatcher("can move down") { node -> node.config[SemanticsActions.CustomActions].map { it.label } == listOf("Bajar") },
+        )
     }
 
     @Test

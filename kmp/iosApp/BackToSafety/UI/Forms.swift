@@ -61,8 +61,9 @@ struct SwitchToggle: View {
     }
 }
 
-/// The header's action (Add / Update / Save / Saving...): a primary pill inside a 48pt-tall
-/// target, so it is easy to hit without crowding the bar.
+/// The header's action (Add / Update / Save / Saving...): a primary button inside a 48pt-tall
+/// target, so it is easy to hit without crowding the bar. It has the body buttons' shape
+/// (Radius.lg), not a pill: one shape means one kind of thing, a primary action.
 struct HeaderSaveButton: View {
     let label: String
     let testID: String
@@ -74,8 +75,8 @@ struct HeaderSaveButton: View {
         Button(action: action) {
             RNText(label, Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary), lines: 1)
                 .padding(.horizontal, Space.lg)
-                .frame(minWidth: 72, minHeight: 36)
-                .background(Capsule().fill(colors.primary))
+                .frame(minWidth: 72, minHeight: 40)
+                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                 .frame(minHeight: 48)
                 .contentShape(Rectangle())
         }

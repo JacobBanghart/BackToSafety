@@ -79,7 +79,7 @@
     },
     "dark": {
       "text": "#fafafa",
-      "textSecondary": "#a3a3a3",
+      "textSecondary": "#bdbdbd",
       "textDisabled": "#525252",
       "textOnPrimary": "#ffffff",
       "textOnSecondary": "#171717",
@@ -145,6 +145,12 @@
       "fontWeight": "600",
       "lineHeight": 24,
       "letterSpacing": 0
+    },
+    "label": {
+      "fontSize": 14,
+      "fontWeight": "600",
+      "lineHeight": 20,
+      "letterSpacing": 0.5
     },
     "caption": {
       "fontSize": 13,

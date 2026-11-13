@@ -69,8 +69,10 @@ import com.backtosafety.core.invoke
 import com.backtosafety.core.secondsRemaining
 import kotlinx.coroutines.delay
 
-// One deep red for starting a search and for the one under way, the same as the search
-// screen's Call 911: white text on it is above 4.5:1.
+// Starting a search and a search under way are both the deep red of Call 911: an emergency in
+// progress must never look calmer than the idle Start button (a purple running state did). The
+// running state differs by its timer icon, the time left in full white, and a brighter red sweep
+// across the time already used. White text passes 4.5:1 on both reds.
 private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_SWEEP = Color(DesignTokens.Semantic.error)
@@ -185,11 +187,11 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             ) {
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(44.udp).clip(CircleShape).background(Color.White.copy(alpha = 0.2f)), contentAlignment = Alignment.Center) {
-                        Icon("exclamationmark.triangle.fill", 28f, Color(DesignTokens.Light.textOnPrimary))
+                        Icon(if (active != null && !expired) "timer" else "exclamationmark.triangle.fill", 28f, Color(DesignTokens.Light.textOnPrimary))
                     }
                     Column(Modifier.weight(1f)) {
                         Text(title, style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), modifier = Modifier.padding(bottom = 2.udp))
-                        Text(subtitle, style = type.caption.style(), color = Color.White.copy(alpha = 0.8f))
+                        Text(subtitle, style = type.caption.style(fontWeight = 500), color = Color(DesignTokens.Light.textOnPrimary))
                     }
                 }
                 Icon("chevron.right", 20f, Color.White.copy(alpha = 0.7f))

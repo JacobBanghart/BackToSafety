@@ -34,6 +34,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.Layout
@@ -167,19 +169,11 @@ fun WelcomeScreen(
             }
         }
 
-        // A rule above the footer: the content stops at a visible edge rather than a card looking
-        // cut off by the scroll hint.
+        // A rule above the footer: the content stops at a visible edge. No "scroll for more" cue:
+        // pinned over the content it still made the cards above it look cut off, and the layout
+        // already ends the first screen on whole blocks.
         Box(Modifier.fillMaxWidth().height(1.udp).background(colors.border))
         Column(Modifier.padding(space.lg.udp), verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
-            if (scroll.value <= 10) {
-                Text(
-                    t("welcome.scrollHint").uppercase(),
-                    style = type.caption.style(fontWeight = 700, letterSpacing = 1f),
-                    color = colors.primaryText,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -197,9 +191,10 @@ fun WelcomeScreen(
                     color = colors.textOnPrimary,
                 )
             }
+            // The privacy promise at body size in ink: at caption size it read as fine print.
             Text(
                 t("welcome.privacy"),
-                style = type.caption.style(fontWeight = 500),
+                style = type.body.style(fontWeight = 500),
                 color = colors.text,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
@@ -214,15 +209,18 @@ private fun Logo(modifier: Modifier) {
     val bitmap = remember {
         context.assets.open("images/logo-full.png").use { BitmapFactory.decodeStream(it) }.asImageBitmap()
     }
-    Image(bitmap, contentDescription = null, modifier = modifier, contentScale = ContentScale.Fit)
+    // In dark mode the logo's cream disc is toned down a little, so it doesn't glare on black.
+    val dim = if (LocalAppColors.current.isDark) ColorFilter.colorMatrix(ColorMatrix().apply { setToScale(LOGO_DARK, LOGO_DARK, LOGO_DARK, 1f) }) else null
+    Image(bitmap, contentDescription = null, modifier = modifier, contentScale = ContentScale.Fit, colorFilter = dim)
 }
 
 /**
  * The welcome content: logo, title, the three feature cards and the theme picker, stacked with
- * the screen's gaps. A card the viewport's bottom edge would cut mid-sentence (large text, short
- * screens) never shows at rest: the logo shrinks (to [LOGO_MIN]) until that card fits with a
- * gap above the footer, and if that isn't enough the card moves wholly below the fold, so the
- * first screen ends on complete cards and "Scroll for more" says the rest is there.
+ * the screen's gaps. A block (card or theme picker) the viewport's bottom edge would cut never
+ * shows at rest: the logo shrinks (to [LOGO_MIN]) until that block fits with a gap above the
+ * footer, and if that isn't enough the block and what follows it move wholly below the fold,
+ * so the first screen ends on complete blocks. Only what follows moves: everything above stays
+ * where it was (shifting it all down cut the block above instead).
  * Children, in order: logo, hero text, the feature cards, the theme picker. Mirrors iOS
  * `WelcomeLayout`.
  */
@@ -244,33 +242,43 @@ private fun WelcomeLayout(viewportHeight: Int, modifier: Modifier, content: @Com
         val hero = measurables[1].measure(full)
         val cards = measurables.subList(2, measurables.size - 1).map { it.measure(full) }
         val theme = measurables.last().measure(full)
+        // The blocks below the hero, each with the gap above it.
+        val blocks = cards + theme
+        val gaps = cards.indices.map { if (it == 0) 0 else betweenCards.roundToPx() } + afterCards.roundToPx()
         val maxLogo = logoMax.roundToPx()
-        val cardsTop = topPad.roundToPx() + maxLogo + afterLogo.roundToPx() + hero.height + afterHero.roundToPx()
+        val blocksTop = topPad.roundToPx() + maxLogo + afterLogo.roundToPx() + hero.height + afterHero.roundToPx()
         val fold = viewportHeight - foldGap.roundToPx()
         var logo = maxLogo
+        var pushAt = -1
         var pushDown = 0
         if (constraints.hasBoundedWidth && viewportHeight != Constraints.Infinity) {
-            var top = cardsTop
-            for (card in cards) {
-                val bottom = top + card.height
+            var top = blocksTop
+            for ((i, block) in blocks.withIndex()) {
+                top += gaps[i]
+                val bottom = top + block.height
                 if (bottom > fold && top < viewportHeight) {
                     val overflow = bottom - fold
-                    if (overflow <= maxLogo - logoMin.roundToPx()) logo = maxLogo - overflow else pushDown = viewportHeight - top
+                    if (overflow <= maxLogo - logoMin.roundToPx()) {
+                        logo = maxLogo - overflow
+                    } else {
+                        pushAt = i
+                        pushDown = viewportHeight - top
+                    }
                     break
                 }
-                top = bottom + betweenCards.roundToPx()
+                top = bottom
             }
         }
         val logoPlaceable = measurables[0].measure(Constraints.fixed(logo, logo))
-        var y = topPad.roundToPx() + pushDown
+        var y = topPad.roundToPx()
         val placements = buildList {
             add(Triple(logoPlaceable, (width - logo) / 2, y)); y += logo + afterLogo.roundToPx()
             add(Triple(hero, 0, y)); y += hero.height + afterHero.roundToPx()
-            cards.forEachIndexed { i, card ->
-                add(Triple(card, 0, y)); y += card.height + if (i < cards.lastIndex) betweenCards.roundToPx() else 0
+            blocks.forEachIndexed { i, block ->
+                y += gaps[i] + if (i == pushAt) pushDown else 0
+                add(Triple(block, 0, y)); y += block.height
             }
-            y += afterCards.roundToPx()
-            add(Triple(theme, 0, y)); y += theme.height + bottomPad.roundToPx()
+            y += bottomPad.roundToPx()
         }
         layout(width, y) { placements.forEach { (p, x, py) -> p.place(x, py) } }
     }
@@ -278,3 +286,6 @@ private fun WelcomeLayout(viewportHeight: Int, modifier: Modifier, content: @Com
 
 private const val LOGO_MAX = 180
 private const val LOGO_MIN = 96
+
+/** How much of its brightness the logo keeps in dark mode. */
+private const val LOGO_DARK = 0.85f

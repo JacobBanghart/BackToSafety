@@ -40,7 +40,10 @@
     "edit": "Edit",
     "callName": "Call {{name}}",
     "editName": "Edit {{name}}",
-    "delete": "Delete"
+    "delete": "Delete",
+    "reorderName": "Reorder {{name}}",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "deleteModal": {
     "title": "Delete Contact",

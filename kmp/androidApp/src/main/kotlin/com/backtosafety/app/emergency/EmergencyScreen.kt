@@ -16,7 +16,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -315,10 +314,8 @@ fun EmergencyScreen(
                 .background(colors.background)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
         ) {
-            ScreenHeader(
-                t("screenTitle"), "emergency", onBack = { modal = Modal.LEAVE },
-                titleIcon = "exclamationmark.triangle.fill" to Color(DesignTokens.Semantic.error),
-            )
+            // No warning icon by the title: the red on this screen belongs to Call 911 alone.
+            ScreenHeader(t("screenTitle"), "emergency", onBack = { modal = Modal.LEAVE })
             Column(
                 Modifier
                     .weight(1f)
@@ -484,7 +481,8 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
     ) {
         Text(
             (if (expired) t("timer.labelExpired", number) else t("timer.labelActive")).uppercase(),
-            style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
+            // 14sp and full white at least: smaller or tinted text faded into the card's purple.
+            style = type.label.style(letterSpacing = 1f),
             color = white,
             modifier = Modifier.testTag("emergency-timer-label"),
         )
@@ -505,7 +503,7 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
             }
             Text(
                 t("timer.stepsProgress", mapOf("checked" to checked, "total" to total)),
-                style = type.caption.style(), color = white, textAlign = TextAlign.Center,
+                style = type.label.style(fontWeight = 500, letterSpacing = 0f), color = white, textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().testTag("emergency-progress"),
             )
         }
@@ -547,12 +545,16 @@ private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, 
                 }
             },
         )
+        // A visible secondary button (outlined, ink text), not bare link text, which read as dim
+        // and hard to hit in dark mode. The same outline as the Leave dialog's secondary action.
         Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
             Box(
-                Modifier.testTag("emergency-wearing-dismiss").heightIn(min = 48.udp).clickable(role = Role.Button, onClick = onDismiss)
-                    .padding(horizontal = space.sm.udp),
+                Modifier.testTag("emergency-wearing-dismiss").heightIn(min = 48.udp).widthIn(min = 96.udp).clip(shape)
+                    .clickable(role = Role.Button, onClick = onDismiss).rnBorder(1.udp, colors.inputBorder, shape)
+                    .padding(horizontal = space.lg.udp),
                 contentAlignment = Alignment.Center,
-            ) { Text(t("wearing.dismiss"), style = type.bodyBold.style(), color = colors.primaryText) }
+            ) { Text(t("wearing.dismiss"), style = type.bodyBold.style(), color = colors.text) }
         }
     }
 }
@@ -570,8 +572,8 @@ private fun ActionButtons(
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     // Calling for help is the most urgent action: it comes first and is the largest, raised red
     // control with headline type. Found — Safe ends the search, so it is a solid green button too
-    // (an outline vanished in dark mode), but shorter, flat and with smaller type, so it never
-    // outranks Call 911. White on semantic success passes 4.5:1 in both themes.
+    // (an outline vanished in dark mode, a pale tonal fill read as disabled), but shorter, flat and
+    // with smaller type, so it never outranks Call 911. White on semantic success passes 4.5:1.
     Column(verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
         Row(
             Modifier.fillMaxWidth().heightIn(min = 72.udp).testTag("emergency-call-911").shadow(6.udp, shape).clip(shape)
@@ -803,22 +805,25 @@ private fun EmergencyModal(
                                 .heightIn(min = 48.udp).clickable(onClick = onNotificationSettings).padding(vertical = space.md.udp),
                         )
                     }
-                    // Staying is the safe choice, so it is the filled, default-looking one. Row items
-                    // stretch to the tallest one (the bordered button).
-                    Row(Modifier.fillMaxWidth().padding(top = space.xs.udp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
+                    // Three actions with long labels stack full width, as platform dialogs stack
+                    // them. Staying is the safe choice, so it is first and filled. Going back says
+                    // what it does (the timer keeps running), so it can't be read as ending the
+                    // search; End Emergency is the only red one, set apart below the others.
+                    Column(Modifier.fillMaxWidth().padding(top = space.xs.udp), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         Box(
-                            Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag("emergency-modal-leave-stay").clip(buttonShape)
+                            Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-stay").clip(buttonShape)
                                 .background(colors.primary).clickable(role = Role.Button, onClick = onDismiss)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
-                        ) { Text(t("modal.leave.stay"), style = buttonText, color = white) }
+                        ) { Text(t("modal.leave.stay"), style = buttonText, color = white, textAlign = TextAlign.Center) }
                         Box(
-                            Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
-                                .clickable(role = Role.Button, onClick = onLeave).rnBorder(1.udp, colors.border, buttonShape)
+                            Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
+                                .clickable(role = Role.Button, onClick = onLeave).rnBorder(1.udp, colors.inputBorder, buttonShape)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
-                        ) { Text(t("modal.leave.leave"), style = buttonText, color = colors.text) }
+                        ) { Text(t("modal.leave.leave"), style = buttonText, color = colors.text, textAlign = TextAlign.Center) }
                     }
+                    Box(Modifier.padding(top = space.xs.udp).fillMaxWidth().height(1.udp).background(colors.border))
                     // A destructive button, not a bare link: outlined in the theme's error color.
                     Box(
                         Modifier.padding(top = space.xs.udp).fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-end")
