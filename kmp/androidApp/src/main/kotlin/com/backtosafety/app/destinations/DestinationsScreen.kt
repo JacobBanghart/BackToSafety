@@ -441,10 +441,7 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
     val colors = LocalAppColors.current
     val warning = Color(DesignTokens.Semantic.warning)
     Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
-        Text(
-            t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
-            modifier = Modifier.padding(bottom = space.sm.udp),
-        )
+        // No heading here: the app bar already says "Add Location" / "Edit Location" (as on Contacts).
         Text(t("form.hint"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xl.udp))
         FormTextInput(
             t("form.nameLabel"), form.name, { onChange(form.copy(name = it)) }, "destinations-form-name",

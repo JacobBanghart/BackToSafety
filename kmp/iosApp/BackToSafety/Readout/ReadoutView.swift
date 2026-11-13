@@ -2,10 +2,10 @@ import Shared
 import SwiftUI
 import UIKit
 
-// The script's blank chips and the "Add for stronger script" callout are one amber family: the
-// callout a light wash, a blank a step stronger so it holds up as a chip inside a line of text.
+/// The "Add for stronger script" callout is a light amber wash. A script blank is the same warm
+/// family but a solid container with its own ink (tertiaryContainer): an opacity of amber over the
+/// dark card turned a muddy olive that read as an error.
 private let calloutFillOpacity = 0.12
-private let blankFillOpacity = 0.24
 
 /// The clock time as the locale says it, without seconds ("9:00 AM", "9:00"): for speech.
 func localeClock(_ ms: Int64) -> String {
@@ -106,11 +106,11 @@ struct ReadoutView: View {
                         // What is read to the dispatcher: large, comfortable reading size.
                         // Blanks (the location, an unknown time) are gaps the caller fills in aloud.
                         // Each is a filled chip, said by its shape and its brackets rather than by
-                        // colour: bold ink "[fill in location]" on the amber of the "Add for stronger
-                        // script" callout below (orange underlined text read as a link). VoiceOver and
-                        // the copy get the plain script, its blanks in brackets (as on Android).
+                        // colour: bold "[fill in location]" in the tertiary container's own ink (orange
+                        // underlined text read as a link). VoiceOver and the copy get the plain
+                        // script, its blanks in brackets (as on Android).
                         RNText(runs: parts, accessibilityText: script, Typography.bodyLarge.spec, color: colors.text,
-                               highlight: colors.warning.opacity(blankFillOpacity), mark: colors.text)
+                               highlight: colors.tertiaryContainer, mark: colors.onTertiaryContainer)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
@@ -134,16 +134,17 @@ struct ReadoutView: View {
                     }
                 }
 
-                identityCard(p)
-
-                // The people to call come straight after who is missing: during the call they are
-                // needed at once, and further down they fell below the fold.
+                // The people to call come straight after the script, before who is missing: a call
+                // button is the most urgent thing here, and under the identity card it fell below
+                // the fold at large text.
                 if !contacts.isEmpty {
                     card {
                         sectionLabel("phone.fill", t("contacts.title"), colors.primaryText)
                         ForEach(Array(contacts.enumerated()), id: \.offset) { index, c in contactRow(c, index) }
                     }
                 }
+
+                identityCard(p)
 
                 if let lastSeen {
                     card {

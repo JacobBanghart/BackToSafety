@@ -430,7 +430,7 @@ struct DestinationsView: View {
     private var formView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                RNText(t(editing != nil ? "form.editTitle" : "form.newTitle"), Typography.headline.spec, color: colors.text).padding(.bottom, Space.sm)
+                // No heading here: the app bar already says "Add Location" / "Edit Location" (as on Contacts).
                 RNText(t("form.hint"), Typography.body.spec, color: colors.textSecondary).padding(.bottom, Space.xl)
                 FormTextInput(label: t("form.nameLabel"), text: $form.name, testID: "destinations-form-name",
                               placeholder: t("form.namePlaceholder"), required: true, capitalization: .words)

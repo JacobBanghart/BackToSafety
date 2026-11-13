@@ -39,7 +39,7 @@ struct HomeView: View {
                         Analytics.shared.track(event: .screenViewed, properties: ["screen": "contacts", "source": "home"])
                         model.path.append(.contacts)
                     }
-                    quickAction("mappin.and.ellipse", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places") {
+                    quickAction("mappin.and.ellipse", t("quickActions.places"), placesSubtitle, "home-places") {
                         Analytics.shared.track(event: .destinationAddTapped, properties: ["source": "home"])
                         model.path.append(.destinations)
                     }
@@ -76,6 +76,13 @@ struct HomeView: View {
     private func updateCountdown() {
         guard let started = emergency?.startedAtMs?.int64Value else { return }
         secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started, nowMs: AppClock.shared.nowMs())
+    }
+
+    /// The real count, as Contacts shows: "Likely spots" with none saved contradicted the
+    /// checklist's "Likely places: Add". Until it's read (or if it fails) the plain subtitle.
+    private var placesSubtitle: String {
+        guard let placeCount else { return t("quickActions.placesSubtitle") }
+        return placeCount == 0 ? t("quickActions.placesNone") : t("quickActions.placesSaved", ["count": placeCount])
     }
 
     private func header(_ hasProfile: Bool) -> some View {

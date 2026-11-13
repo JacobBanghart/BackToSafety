@@ -101,10 +101,10 @@ private val type = DesignTokens.Typography
 // which are darker in light mode and lighter in dark mode so small labels stay legible.
 private val warning = Color(DesignTokens.Semantic.warning)
 
-// The script's blank chips and the "Add for stronger script" callout are one amber family: the
-// callout a light wash, a blank a step stronger so it holds up as a chip inside a line of text.
+// The "Add for stronger script" callout is a light amber wash. A script blank is the same warm
+// family but a solid container with its own ink (tertiaryContainer): an alpha of amber over the
+// dark card turned a muddy olive that read as an error.
 private const val CALLOUT_FILL_ALPHA = 0.12f
-private const val BLANK_FILL_ALPHA = 0.24f
 private val success = Color(DesignTokens.Semantic.success)
 private val emergencyRed = Color(DesignTokens.Semantic.errorDark)
 private val white = Color(DesignTokens.Light.textOnPrimary)
@@ -204,10 +204,10 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     // What is read to the dispatcher: large, comfortable reading size.
                     // Blanks (the location, an unknown time) are gaps the caller fills in aloud.
                     // Each is a filled chip, said by its shape and its brackets rather than by
-                    // colour: bold ink "[fill in location]" on the amber of the "Add for stronger
-                    // script" callout below (orange underlined text read as a link). TalkBack and
-                    // the copy get the plain script, its blanks in brackets (as on iOS).
-                    val blank = SpanStyle(color = colors.text, background = colors.warning.copy(alpha = BLANK_FILL_ALPHA), fontWeight = FontWeight.Bold)
+                    // colour: bold "[fill in location]" in the tertiary container's own ink (orange
+                    // underlined text read as a link). TalkBack and the copy get the plain script,
+                    // its blanks in brackets (as on iOS).
+                    val blank = SpanStyle(color = colors.onTertiaryContainer, background = colors.tertiaryContainer, fontWeight = FontWeight.Bold)
                     Text(
                         buildAnnotatedString {
                             for (part in scriptParts) {
@@ -240,10 +240,9 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                 }
             }
 
-            IdentityCard(t, p)
-
-            // The people to call come straight after who is missing: during the call they are
-            // needed at once, and further down they fell below the fold.
+            // The people to call come straight after the script, before who is missing: a call
+            // button is the most urgent thing here, and under the identity card it fell below the
+            // fold at large text.
             if (contacts.isNotEmpty()) {
                 Card {
                     SectionLabel("phone.fill", t("contacts.title"), colors.primaryText)
@@ -255,6 +254,8 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     }
                 }
             }
+
+            IdentityCard(t, p)
 
             if (lastSeen != null) {
                 Card {

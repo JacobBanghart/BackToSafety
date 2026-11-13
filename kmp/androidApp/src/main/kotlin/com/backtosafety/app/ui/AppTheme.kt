@@ -59,6 +59,10 @@ class AppColors(val isDark: Boolean) {
 
     /** Error-coloured text and icons on the error-tinted fill (4.5:1 needs a deeper red in light, a paler one in dark). */
     val errorText = Color(if (isDark) DesignTokens.Dark.errorText else DesignTokens.Light.errorText)
+
+    /** A highlight inside text (a script blank): a warm amber container, with its own ink, that reads as "fill this in", not as an error. */
+    val tertiaryContainer = Color(if (isDark) DesignTokens.Dark.tertiaryContainer else DesignTokens.Light.tertiaryContainer)
+    val onTertiaryContainer = Color(if (isDark) DesignTokens.Dark.onTertiaryContainer else DesignTokens.Light.onTertiaryContainer)
     val success = Color(if (isDark) DesignTokens.Dark.success else DesignTokens.Light.success)
     val warning = Color(if (isDark) DesignTokens.Dark.warning else DesignTokens.Light.warning)
     val icon = Color(if (isDark) DesignTokens.Dark.icon else DesignTokens.Light.icon)

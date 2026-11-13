@@ -32,7 +32,6 @@
     "notes": "Notes"
   },
   "form": {
-    "newTitle": "New Location",
     "editTitle": "Edit Location",
     "hint": "Add places they might go. These show up during an emergency search.",
     "nameLabel": "Location Name",

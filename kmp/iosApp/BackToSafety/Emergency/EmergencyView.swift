@@ -4,6 +4,9 @@ import Shared
 import SwiftUI
 import UserNotifications
 
+/// The unfilled part of the timer card's progress track: black over the card, a darker inset under the white fill.
+private let timerTrackShadeOpacity = 0.35
+
 private enum EmergencyModal: Identifiable {
     case found, leave, noContacts, smsError
     /// A countdown alert that came due while the screen wasn't showing (EmergencyAway).
@@ -327,20 +330,24 @@ struct EmergencyView: View {
             RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 56, lineHeight: 64, weight: 700, letterSpacing: 2), color: white)
                 .dynamicTypeSize(.large)
                 .accessibilityIdentifier("emergency-timer")
+            // Body size at medium weight: the calming line is read in a panic, so it isn't a caption.
             RNText(expired ? t("timer.hintExpired", ["emergencyNumber": emergencyNumber]) : t("timer.hintActive"),
-                   Typography.body.spec, color: white, align: .center)
+                   Typography.body.spec.weight(500), color: white, align: .center)
                 .padding(.top, Space.xs)
             VStack(spacing: Space.xs) {
-                // A 10pt track that reads at arm's length; a 6pt pale one disappeared on the card.
+                // A 10pt track that reads at arm's length. The unfilled part is a darker inset
+                // (black over the card) and the filled part solid white, so done and to-do differ
+                // in lightness, not only in a white tint that faded into the card.
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.3))
+                        Capsule().fill(Color.black.opacity(timerTrackShadeOpacity))
                         Capsule().fill(white).frame(width: geo.size.width * progress)
                     }
+                    .overlay(Capsule().strokeBorder(white.opacity(0.5), lineWidth: 1))
                 }
                 .frame(height: 10)
                 let progressText = t("timer.stepsProgress", ["checked": checked.count, "total": steps.count])
-                RNText(progressText, Typography.label.spec.weight(500).spacing(0), color: white, align: .center)
+                RNText(progressText, Typography.body.spec.weight(500), color: white, align: .center)
                     .frame(maxWidth: .infinity)
                     .rnID("emergency-progress", label: progressText)
             }
@@ -506,10 +513,13 @@ struct EmergencyView: View {
                             }
                             RNText(step.description_, TextSpec(size: 16, lineHeight: 20), color: colors.textSecondary)
                             if let hint = step.hint {
-                                HStack(alignment: .top, spacing: Space.xs) {
-                                    SFIcon("lightbulb.fill", 14, colors.primaryText).padding(.top, 2)
-                                    RNText(hint, Typography.caption.spec.italic(), color: colors.primaryText)
+                                // Useful advice, so at body size, upright and in ink, not the smallest
+                                // text on the screen; the lightbulb alone marks it as a tip.
+                                HStack(alignment: .top, spacing: Space.sm) {
+                                    SFIcon("lightbulb.fill", 18, colors.primaryText).padding(.top, 3)
+                                    RNText(hint, Typography.body.spec, color: colors.text)
                                 }
+                                .padding(.top, Space.xxs)
                             }
                             if step.id == "familiar_places", !destinations.isEmpty, !isChecked {
                                 Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.sm)

@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -108,6 +109,14 @@ class IconButtonLabelsTest {
         compose.onNodeWithContentDescription("Contactos de emergencia, Listo").performScrollTo().performClick()
         assertEquals(listOf("profile", "destinations", "contacts"), opened)
         compose.onNodeWithText("2 de 4 listos").assertExists()
+    }
+
+    @Test
+    fun thePlacesTileShowsHowManyPlacesAreSaved() {
+        compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) {} } }
+        // One place is saved (setUp): the tile says so, not the generic "Lugares probables".
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Lugares probables").assertDoesNotExist()
     }
 
     @Test

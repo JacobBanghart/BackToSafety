@@ -16,7 +16,9 @@
     "contactsNone": "None added",
     "contactsSaved": "{{count}} saved",
     "places": "Places",
-    "placesSubtitle": "Likely spots"
+    "placesSubtitle": "Likely spots",
+    "placesNone": "None added",
+    "placesSaved": "{{count}} saved"
   },
   "emergencyInfo": {
     "title": "Emergency Info",

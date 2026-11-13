@@ -16,7 +16,9 @@
     "contactsNone": "Ninguno agregado",
     "contactsSaved": "{{count}} guardados",
     "places": "Lugares",
-    "placesSubtitle": "Lugares probables"
+    "placesSubtitle": "Lugares probables",
+    "placesNone": "Ninguno agregado",
+    "placesSaved": "{{count}} guardados"
   },
   "emergencyInfo": {
     "title": "Información de emergencia",

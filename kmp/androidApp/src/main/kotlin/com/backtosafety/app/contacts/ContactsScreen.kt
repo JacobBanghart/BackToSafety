@@ -12,10 +12,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -305,7 +307,8 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                     // With a single contact, nobody else is called if they don't answer: say so
                     // right above the Add button.
                     if (list.size == 1) SecondContactPrompt(t, list.first().name)
-                    Row(Modifier.padding(top = space.sm.udp), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+                    // One height for both buttons: the outlined Import's icon and edge mustn't make it taller.
+                    Row(Modifier.padding(top = space.sm.udp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         AddButton(t("addContact"), "contacts-add") {
                             Analytics.track(AnalyticsEvent.CONTACT_ADD_TAPPED)
                             open(null, ContactForm())
@@ -345,7 +348,7 @@ private fun ContactCard(
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Box(Modifier.padding(bottom = space.md.udp)) {
         Column(Modifier.listCard(dragging).padding(space.lg.udp)) {
-            Row(Modifier.padding(bottom = space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(bottom = if (contact.notifyOnEmergency) 0.udp else space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
                 // A visible handle says the cards can be dragged into order (hold, then drag). It is
                 // a 48dp target with a spoken name, and Move up / Move down actions, so TalkBack
                 // users can reorder without dragging. The glyph is the platform's drag indicator (Material's
@@ -373,19 +376,6 @@ private fun ContactCard(
                         style = type.caption.style(), color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.udp),
                     )
-                    if (contact.notifyOnEmergency) {
-                        // Inside the card, under the role: it never collides with the name at large text.
-                        // Caption size (13) at least: at 11 the badge was the smallest text in the app.
-                        Row(
-                            Modifier.padding(top = space.xs.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                                .background(colors.primaryLight).padding(horizontal = space.sm.udp, vertical = 3.udp),
-                            horizontalArrangement = Arrangement.spacedBy(4.udp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon("checkmark.circle.fill", 14f, colors.primaryText)
-                            Text(t("alertCircleBadge"), style = type.caption.style(fontWeight = 700, letterSpacing = 0.5f), color = colors.primaryText)
-                        }
-                    }
                 }
                 // Call is the action (green); Edit is secondary (outlined, neutral).
                 Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
@@ -397,6 +387,21 @@ private fun ContactCard(
                         "contacts-item-$index-edit", Color.Transparent, colors.text, "pencil", onEdit,
                         label = t("actions.editName", mapOf("name" to contact.name)), border = colors.inputBorder,
                     )
+                }
+            }
+            if (contact.notifyOnEmergency) {
+                // Its own row under the role, lined up with the name, across the card's full width:
+                // squeezed between the name and the call/edit buttons it wrapped at large text and
+                // crowded them. Sentence case, as caps at large text read as shouting and ran long.
+                Row(
+                    Modifier.padding(start = 48.udp, top = space.xs.udp, bottom = space.sm.udp)
+                        .clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primaryLight)
+                        .padding(horizontal = space.sm.udp, vertical = 3.udp),
+                    horizontalArrangement = Arrangement.spacedBy(4.udp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon("checkmark.circle.fill", 16f, colors.primaryText)
+                    Text(t("alertCircleBadge"), style = type.caption.style(fontWeight = 600), color = colors.primaryText)
                 }
             }
             contact.address?.ifEmpty { null }?.let {
@@ -426,7 +431,7 @@ private fun CircleAction(
 private fun RowScope.AddButton(label: String, testID: String, onClick: () -> Unit) {
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Row(
-        Modifier.weight(1f).testTag(testID).clip(shape).clickable(onClick = onClick)
+        Modifier.weight(1f).fillMaxHeight().testTag(testID).clip(shape).clickable(onClick = onClick)
             .background(LocalAppColors.current.primary).padding(space.lg.udp),
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
@@ -441,14 +446,16 @@ private fun RowScope.AddButton(label: String, testID: String, onClick: () -> Uni
 private fun RowScope.ImportButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    // An outlined button in the accent, like the photo buttons: a pale grey edge beside the
+    // filled Add Contact read as disabled.
     Row(
-        Modifier.weight(1f).testTag(testID).clip(shape).clickable(enabled = enabled, onClick = onClick)
-            .background(colors.card).rnBorder(1.udp, colors.border, shape).padding(space.lg.udp),
+        Modifier.weight(1f).fillMaxHeight().testTag(testID).clip(shape).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .background(colors.card).rnBorder(1.5f.udp, colors.primaryText, shape).padding(space.lg.udp),
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon("square.and.arrow.down", 18f, colors.tint)
-        Text(label, style = type.bodyBold.style(), color = colors.text, maxLines = 1)
+        Icon("square.and.arrow.down", 18f, colors.primaryText)
+        Text(label, style = type.bodyBold.style(), color = colors.primaryText, maxLines = 1)
     }
 }
 
@@ -491,7 +498,7 @@ private fun Empty(t: Translate, importing: Boolean, onAdd: () -> Unit, onImport:
         Text(t("noContacts.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
         Text(t("noContacts.body"), style = type.body.style(), color = colors.textSecondary, textAlign = TextAlign.Center)
         Row(
-            Modifier.fillMaxWidth().widthIn(max = 560.udp).padding(top = space.sm.udp),
+            Modifier.fillMaxWidth().widthIn(max = 560.udp).padding(top = space.sm.udp).height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
         ) {
             AddButton(t("addContact"), "contacts-empty-add", onAdd)
@@ -510,10 +517,8 @@ private fun Form(
 ) {
     val colors = LocalAppColors.current
     Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
-        Text(
-            t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
-            modifier = Modifier.padding(bottom = space.xl.udp),
-        )
+        // No heading here: the app bar already says "Add Contact" / "Edit Contact", and a large
+        // second title right under it said the same thing twice and pushed the fields down.
         FormTextInput(
             t("form.nameLabel"), form.name, { onChange(form.copy(name = it)) }, "contacts-form-name",
             placeholder = t("form.namePlaceholder"), required = true, capitalization = KeyboardCapitalization.Words,

@@ -67,7 +67,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -472,9 +471,13 @@ private fun vibrate(context: Context, alert: CountdownAlert) {
     }
 }
 
-/** The timer card's progress track: thick enough to read, its unfilled part a clear white tint. */
+/**
+ * The timer card's progress track: thick enough to read at arm's length. The unfilled part is a
+ * darker inset (black over the card) and the filled part solid white, so done and to-do differ in
+ * lightness, not only in a white tint that faded into the card.
+ */
 private const val TIMER_TRACK_HEIGHT = 10
-private const val TIMER_TRACK_ALPHA = 0.3f
+private const val TIMER_TRACK_SHADE_ALPHA = 0.35f
 
 @Composable
 private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked: Int, total: Int, emergencyNumber: String) {
@@ -513,17 +516,20 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
         }
         Text(
             if (expired) t("timer.hintExpired", number) else t("timer.hintActive"),
-            style = type.body.style(), color = white, textAlign = TextAlign.Center,
+            // Body size at medium weight: the calming line is read in a panic, so it isn't a caption.
+            style = type.body.style(fontWeight = 500), color = white, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = space.xs.udp),
         )
         Column(Modifier.fillMaxWidth().padding(top = space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
-            // A 10dp track that reads at arm's length; a 6dp pale one disappeared on the card.
-            Box(Modifier.fillMaxWidth().height(TIMER_TRACK_HEIGHT.udp).clip(CircleShape).background(Color.White.copy(alpha = TIMER_TRACK_ALPHA))) {
+            Box(
+                Modifier.fillMaxWidth().height(TIMER_TRACK_HEIGHT.udp).clip(CircleShape)
+                    .background(Color.Black.copy(alpha = TIMER_TRACK_SHADE_ALPHA)).rnBorder(1.udp, white.copy(alpha = 0.5f), CircleShape),
+            ) {
                 Box(Modifier.fillMaxWidth(checked.toFloat() / total).fillMaxHeight().clip(CircleShape).background(white))
             }
             Text(
                 t("timer.stepsProgress", mapOf("checked" to checked, "total" to total)),
-                style = type.label.style(fontWeight = 500, letterSpacing = 0f), color = white, textAlign = TextAlign.Center,
+                style = type.body.style(fontWeight = 500), color = white, textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().testTag("emergency-progress"),
             )
         }
@@ -738,9 +744,11 @@ private fun Checklist(
                     }
                     Text(step.description, style = rnTextStyle(16f, 20f), color = colors.textSecondary)
                     step.hint?.let {
-                        Row(horizontalArrangement = Arrangement.spacedBy(space.xs.udp)) {
-                            Icon("lightbulb.fill", 14f, colors.primaryText, Modifier.padding(top = 2.udp))
-                            Text(it, style = type.caption.style().copy(fontStyle = FontStyle.Italic), color = colors.primaryText)
+                        // Useful advice, so at body size, upright and in ink, not the smallest
+                        // text on the screen; the lightbulb alone marks it as a tip.
+                        Row(Modifier.padding(top = space.xxs.udp), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+                            Icon("lightbulb.fill", 18f, colors.primaryText, Modifier.padding(top = 3.udp))
+                            Text(it, style = type.body.style(), color = colors.text)
                         }
                     }
                     if (step.id == "familiar_places" && destinations.isNotEmpty() && !step.checked) {

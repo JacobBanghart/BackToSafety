@@ -73,6 +73,9 @@ struct AppColors {
     var error: Color { pick(Light.error, Dark.error) }
     /// Error-coloured text and icons on the error-tinted fill (4.5:1 needs a deeper red in light, a paler one in dark).
     var errorText: Color { pick(Light.errorText, Dark.errorText) }
+    /// A highlight inside text (a script blank): a warm amber container, with its own ink, that reads as "fill this in", not as an error.
+    var tertiaryContainer: Color { pick(Light.tertiaryContainer, Dark.tertiaryContainer) }
+    var onTertiaryContainer: Color { pick(Light.onTertiaryContainer, Dark.onTertiaryContainer) }
     var success: Color { pick(Light.success, Dark.success) }
     var warning: Color { pick(Light.warning, Dark.warning) }
 }

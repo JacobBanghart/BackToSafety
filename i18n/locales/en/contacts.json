@@ -25,7 +25,6 @@
     "other": "Other"
   },
   "form": {
-    "newTitle": "New Contact",
     "editTitle": "Edit Contact",
     "nameLabel": "Name",
     "namePlaceholder": "Contact name",
@@ -71,7 +70,7 @@
     "title": "Contacts Permission Needed",
     "message": "Allow contacts access to import an emergency contact from your address book."
   },
-  "alertCircleBadge": "IN ALERT CIRCLE",
+  "alertCircleBadge": "In Alert Circle",
   "notifyHint": "Adds this contact to your Alert Circle (people who get emergency SMS alerts)",
   "reorderHint": "Press and hold any contact card to reorder emergency priority."
 }

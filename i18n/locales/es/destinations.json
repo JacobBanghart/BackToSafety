@@ -32,7 +32,6 @@
     "notes": "Notas"
   },
   "form": {
-    "newTitle": "Nuevo lugar",
     "editTitle": "Editar lugar",
     "hint": "Agrega lugares a donde podría ir. Aparecerán durante una búsqueda de emergencia.",
     "nameLabel": "Nombre del lugar",

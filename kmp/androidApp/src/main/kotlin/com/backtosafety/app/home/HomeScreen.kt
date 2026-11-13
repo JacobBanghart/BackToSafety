@@ -224,7 +224,14 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "contacts", "source" to "home"))
                 navigate("contacts")
             }
-            QuickAction("mappin.and.ellipse", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places", Modifier.weight(1f)) {
+            // The real count, as Contacts shows: "Likely spots" with none saved contradicted the
+            // checklist's "Likely places: Add". Until it's read (or if it fails) the plain subtitle.
+            val placesSubtitle = when (val n = placeCount) {
+                null -> t("quickActions.placesSubtitle")
+                0 -> t("quickActions.placesNone")
+                else -> t("quickActions.placesSaved", mapOf("count" to n))
+            }
+            QuickAction("mappin.and.ellipse", t("quickActions.places"), placesSubtitle, "home-places", Modifier.weight(1f)) {
                 Analytics.track(AnalyticsEvent.DESTINATION_ADD_TAPPED, mapOf("source" to "home"))
                 navigate("destinations")
             }

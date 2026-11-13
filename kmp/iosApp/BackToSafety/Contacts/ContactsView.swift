@@ -303,13 +303,15 @@ struct ContactsView: View {
     private func importButton(_ testID: String) -> some View {
         Button(action: importContact) {
             HStack(spacing: Space.sm) {
-                SFIcon("square.and.arrow.down", 18, colors.tint)
-                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.text, lines: 1).fixedSize()
+                SFIcon("square.and.arrow.down", 18, colors.primaryText)
+                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.primaryText, lines: 1).fixedSize()
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .padding(Space.lg + 1)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+            // An outlined button in the accent, like the photo buttons: a pale grey edge beside
+            // the filled Add Contact read as disabled.
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primaryText, lineWidth: 1.5))
         }
         .buttonStyle(.pressable)
         .disabled(importing)
@@ -358,17 +360,6 @@ struct ContactsView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .rnID("contacts-item-\(index)-name", label: contact.name)
                     RNText(role + relationship, Typography.caption.spec, color: colors.textSecondary, lines: 1).padding(.top, 4)
-                    if contact.notifyOnEmergency {
-                        // Inside the card, under the role: it never collides with the name at large text.
-                        // Caption size (13) at least: at 11 the badge was the smallest text in the app.
-                        HStack(spacing: 4) {
-                            SFIcon("checkmark.circle.fill", 14, colors.primaryText)
-                            RNText(t("alertCircleBadge"), Typography.caption.spec.weight(700).spacing(0.5), color: colors.primaryText)
-                        }
-                        .padding(.horizontal, Space.sm).padding(.vertical, 3)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
-                        .padding(.top, Space.xs)
-                    }
                 }
                 .padding(.trailing, Space.md)
                 // Call is the action (green); Edit is secondary (outlined, neutral).
@@ -383,7 +374,19 @@ struct ContactsView: View {
                     }
                 }
             }
-            .padding(.bottom, Space.sm)
+            .padding(.bottom, contact.notifyOnEmergency ? 0 : Space.sm)
+            if contact.notifyOnEmergency {
+                // Its own row under the role, lined up with the name, across the card's full width:
+                // squeezed between the name and the call/edit buttons it wrapped at large text and
+                // crowded them. Sentence case, as caps at large text read as shouting and ran long.
+                HStack(spacing: 4) {
+                    SFIcon("checkmark.circle.fill", 16, colors.primaryText)
+                    RNText(t("alertCircleBadge"), Typography.caption.spec.weight(600), color: colors.primaryText)
+                }
+                .padding(.horizontal, Space.sm).padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
+                .padding(.leading, 48).padding(.top, Space.xs).padding(.bottom, Space.sm)
+            }
             if let address = contact.address, !address.isEmpty {
                 HStack(spacing: Space.sm) {
                     SFIcon("location", 14, colors.icon)
@@ -411,8 +414,8 @@ struct ContactsView: View {
     private var formView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                RNText(t(editing != nil ? "form.editTitle" : "form.newTitle"), Typography.headline.spec, color: colors.text)
-                    .padding(.bottom, Space.xl)
+                // No heading here: the app bar already says "Add Contact" / "Edit Contact", and a
+                // large second title right under it said the same thing twice and pushed the fields down.
                 FormTextInput(label: t("form.nameLabel"), text: $form.name, testID: "contacts-form-name",
                               placeholder: t("form.namePlaceholder"), required: true, capitalization: .words)
                 FormTextInput(label: t("form.phoneLabel"), text: $form.phone, testID: "contacts-form-phone",

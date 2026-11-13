@@ -16,12 +16,17 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
+import androidx.room.Room
+import androidx.sqlite.driver.AndroidSQLiteDriver
+import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.contacts.ContactsScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.readout.BesideOrUnder
 import com.backtosafety.app.ui.AppTheme
@@ -30,8 +35,14 @@ import com.backtosafety.app.ui.ChipGrid
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OptionChip
+import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translations
+import com.backtosafety.core.data.Store
+import com.backtosafety.core.db.AppDatabase
+import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.invoke
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -120,6 +131,34 @@ class LargeTextLayoutTest {
         val call = compose.onNodeWithTag("call").getUnclippedBoundsInRoot()
         assertTrue("the call button is beside the role (${call.top} < ${role.bottom})", call.top >= role.bottom)
         assertEquals("the stacked call button isn't full width", 347f, call.width.value, 0.5f)
+    }
+
+    @Test
+    fun theAlertCircleBadgeTakesItsOwnRowUnderTheRoleAtTheLargestText() {
+        // Squeezed between the name and the call/edit buttons, "IN ALERT CIRCLE" wrapped to two
+        // lines of caps at 2x and crowded the buttons.
+        val db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
+            .setDriver(AndroidSQLiteDriver()).setQueryCoroutineContext(Dispatchers.Unconfined).allowMainThreadQueries().build()
+        try {
+            val store = Store(db)
+            runBlocking {
+                store.seed()
+                store.addContact(ContactEntity(name = "Ana", phone = "(555) 123-4567", role = "primary_caregiver", notifyOnEmergency = true))
+            }
+            val t = translations.translator("en", "contacts")
+            largeText(2f) { ContactsScreen(t, translations.translator("en", "common"), store) {} }
+            compose.waitUntil(5_000) { compose.onAllNodesWithText(t("alertCircleBadge")).fetchSemanticsNodes().isNotEmpty() }
+            assertEquals("sentence case, not shouting caps", "In Alert Circle", t("alertCircleBadge"))
+            val badge = compose.onNodeWithText(t("alertCircleBadge")).getUnclippedBoundsInRoot()
+            val name = compose.onNodeWithTag("contacts-item-0-name").getUnclippedBoundsInRoot()
+            val edit = compose.onNodeWithTag("contacts-item-0-edit").getUnclippedBoundsInRoot()
+            assertTrue("the badge sits beside the buttons (${badge.top} < ${edit.bottom})", badge.top >= edit.bottom)
+            // The pill starts under the name; its text follows the 8dp padding, 16dp check and 4dp gap.
+            assertEquals("the badge doesn't line up with the name", name.left.value + 28f, badge.left.value, 1f)
+            assertTrue("the badge wrapped to more than one line (${badge.height})", badge.height.value < 2 * DesignTokens.Typography.caption.lineHeight * 2f)
+        } finally {
+            db.close()
+        }
     }
 
     @Test
