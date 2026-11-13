@@ -29,9 +29,9 @@ struct WelcomeView: View {
                     .padding(.bottom, Space.xxl)
 
                     VStack(spacing: Space.lg) {
-                        ForEach([("timer", "⏱️"), ("readout", "📋"), ("privacy", "🔒")], id: \.0) { key, icon in
+                        ForEach([("timer", "timer"), ("readout", "doc.text.fill"), ("privacy", "lock.fill")], id: \.0) { key, icon in
                             HStack(alignment: .top, spacing: 16) {
-                                RNText(icon, TextSpec(size: 22, lineHeight: 24), color: colors.text)
+                                SFIcon(icon, 22, colors.primaryText)
                                     .frame(width: 44, height: 44)
                                     .background(Circle().fill(colors.primaryLight))
                                 VStack(alignment: .leading, spacing: Space.xs) {
@@ -47,17 +47,17 @@ struct WelcomeView: View {
                     .padding(.bottom, Space.xxl)
 
                     VStack(alignment: .leading, spacing: 0) {
-                        RNText(t("welcome.themeLabel").uppercased(), Typography.caption.spec.weight(600).spacing(1), color: colors.textDisabled)
+                        RNText(t("welcome.themeLabel").uppercased(), Typography.caption.spec.weight(600).spacing(1), color: colors.textSecondary)
                             .padding(.bottom, Space.md)
                         HStack(spacing: Space.md) {
-                            ForEach([("light", "welcome.themeOptions.light", "☀️"), ("dark", "welcome.themeOptions.dark", "🌙"),
-                                     ("system", "welcome.themeOptions.auto", "📱")], id: \.0) { value, label, icon in
+                            ForEach([("light", "welcome.themeOptions.light", "sun.max.fill"), ("dark", "welcome.themeOptions.dark", "moon.fill"),
+                                     ("system", "welcome.themeOptions.auto", "iphone")], id: \.0) { value, label, icon in
                                 let selected = model.themePreference == value
                                 Button {
                                     model.setTheme(value)
                                 } label: {
                                     HStack(spacing: 8) {
-                                        RNText(icon, TextSpec(size: 20, lineHeight: 24), color: colors.text)
+                                        SFIcon(icon, 20, selected ? colors.tint : colors.textSecondary)
                                         RNText(t(label), Typography.bodyLarge.spec.weight(selected ? 600 : 500),
                                                color: selected ? colors.tint : colors.textSecondary)
                                     }
@@ -68,6 +68,7 @@ struct WelcomeView: View {
                                 }
                                 .buttonStyle(.pressable)
                                 .accessibilityIdentifier("onboarding-welcome-theme-\(value)")
+                                .accessibilityAddTraits(selected ? .isSelected : [])
                             }
                         }
                     }
@@ -87,7 +88,7 @@ struct WelcomeView: View {
             VStack(spacing: Space.lg) {
                 if !scrolled {
                     RNText(t("welcome.scrollHint").uppercased(), Typography.caption.spec.weight(600).spacing(1),
-                           color: colors.textDisabled, align: .center)
+                           color: colors.textSecondary, align: .center)
                         .frame(maxWidth: .infinity)
                 }
                 Button {
@@ -98,12 +99,12 @@ struct WelcomeView: View {
                 } label: {
                     RNText(t("welcome.getStarted"), Typography.bodyLarge.spec.weight(600), color: colors.textOnPrimary)
                         .padding(.vertical, Space.md)
-                        .frame(maxWidth: .infinity, minHeight: 46)
+                        .frame(maxWidth: .infinity, minHeight: 48)
                         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("onboarding-get-started")
-                RNText(t("welcome.privacy"), Typography.caption.spec, color: colors.textDisabled, align: .center)
+                RNText(t("welcome.privacy"), Typography.caption.spec, color: colors.textSecondary, align: .center)
                     .frame(maxWidth: .infinity)
             }
             .padding(Space.lg)

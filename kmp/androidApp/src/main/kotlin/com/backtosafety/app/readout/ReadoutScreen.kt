@@ -46,6 +46,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -82,9 +83,12 @@ import kotlinx.coroutines.delay
 
 private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
+
+// Fills (white on top). Text and icons on the page use the theme's success/warning/error,
+// which are darker in light mode and lighter in dark mode so small labels stay legible.
 private val warning = Color(DesignTokens.Semantic.warning)
 private val success = Color(DesignTokens.Semantic.success)
-private val error = Color(DesignTokens.Semantic.error)
+private val emergencyRed = Color(DesignTokens.Semantic.errorDark)
 private val white = Color(DesignTokens.Light.textOnPrimary)
 
 private enum class Copied { SCRIPT, ALL }
@@ -149,26 +153,28 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.lg.udp),
             verticalArrangement = Arrangement.spacedBy(space.md.udp),
         ) {
-            // Call 911: the most prominent action.
+            // Call 911: the most prominent action, the same solid red as on the search screen.
             val callShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
-            Box(
-                Modifier.fillMaxWidth().testTag("readout-call-911").shadow(2.udp, callShape).clip(callShape)
-                    .clickable {
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("readout-call-911").shadow(2.udp, callShape).clip(callShape)
+                    .clickable(role = Role.Button) {
                         Analytics.track(AnalyticsEvent.READOUT_911_CALLED)
                         dial(emergencyNumber, DialTarget.EMERGENCY)
-                    }.background(error).padding(vertical = space.lg.udp),
-                contentAlignment = Alignment.Center,
+                    }.background(emergencyRed).padding(vertical = space.lg.udp),
+                horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
+                Icon("phone.fill", 22f, white)
                 Text(t("callButton"), style = rnTextStyle(type.bodyLarge.fontSize, type.bodyLarge.lineHeight, 700), color = white)
             }
 
             // 911 script
             Card {
                 Row(
-                    Modifier.fillMaxWidth().testTag("readout-script-toggle").clickable { expanded = !expanded },
+                    Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("readout-script-toggle").clickable { expanded = !expanded },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    SectionLabel("phone.connection.fill", t("sections.script.label"), success, Modifier.weight(1f))
+                    SectionLabel("phone.connection.fill", t("sections.script.label"), colors.success, Modifier.weight(1f))
                     Icon(if (expanded) "chevron.up" else "chevron.down", 16f, colors.textSecondary)
                 }
                 val hint = Modifier.padding(top = space.xxs.udp, bottom = space.xs.udp)
@@ -179,7 +185,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                         Text(
                             t("sections.script.missingDetails", mapOf("details" to missing.joinToString(", "))),
                             style = rnTextStyle(type.caption.fontSize, 18f, type.caption.fontWeight, type.caption.letterSpacing),
-                            color = warning,
+                            color = colors.warning,
                             modifier = Modifier.padding(top = space.sm.udp).testTag("readout-script-missing"),
                         )
                     }
@@ -192,7 +198,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
 
             if (lastSeen != null) {
                 Card {
-                    SectionLabel("clock.fill", t("sections.location.title"), colors.primary)
+                    SectionLabel("clock.fill", t("sections.location.title"), colors.primaryText)
                     InfoRow(t("sections.location.time"), lastSeen)
                 }
             }
@@ -201,7 +207,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             val hand = p.dominantHand?.takeIf { it.isNotEmpty() && it != "unknown" }
             if (listOf(p.height, p.weight, p.hairColor, p.eyeColor, p.identifyingMarks, hand, p.mobilityLevel).any { !it.isNullOrEmpty() }) {
                 Card {
-                    SectionLabel("eye.fill", t("sections.appearance.title"), colors.primary)
+                    SectionLabel("eye.fill", t("sections.appearance.title"), colors.primaryText)
                     @OptIn(ExperimentalLayoutApi::class)
                     FlowRow(
                         Modifier.padding(bottom = space.xs.udp),
@@ -237,7 +243,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             ).filter { !it.second.isNullOrEmpty() }
             if (medical.isNotEmpty()) {
                 Card {
-                    SectionLabel("cross.fill", t("sections.medical.title"), error)
+                    SectionLabel("cross.fill", t("sections.medical.title"), colors.error)
                     for ((label, value) in medical) InfoRow(t(label), value!!)
                 }
             }
@@ -253,7 +259,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             ).filter { !it.second.isNullOrEmpty() }
             if (communication.isNotEmpty()) {
                 Card {
-                    SectionLabel("bubble.left.fill", t("sections.communication.title"), colors.primary)
+                    SectionLabel("bubble.left.fill", t("sections.communication.title"), colors.primaryText)
                     for ((label, value) in communication) InfoRow(t(label), value!!)
                 }
             }
@@ -266,7 +272,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             val hotline = p.medicAlertHotline?.ifEmpty { null }
             if (devices.isNotEmpty() || hotline != null) {
                 Card {
-                    SectionLabel("location.fill", t("sections.devices.title"), colors.primary)
+                    SectionLabel("location.fill", t("sections.devices.title"), colors.primaryText)
                     for ((label, value) in devices) InfoRow(t(label), value!!)
                     if (hotline != null) {
                         InfoRow(
@@ -282,7 +288,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
 
             if (contacts.isNotEmpty()) {
                 Card {
-                    SectionLabel("phone.fill", t("contacts.title"), success)
+                    SectionLabel("phone.fill", t("contacts.title"), colors.success)
                     contacts.forEachIndexed { index, c ->
                         ContactRow(t, c, index) {
                             Analytics.track(AnalyticsEvent.READOUT_CONTACT_CALLED)
@@ -315,7 +321,7 @@ fun ReadoutScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     val done = copied == Copied.ALL
-                    Icon(if (done) "checkmark.circle.fill" else "square.and.arrow.up", 18f, if (done) success else colors.text)
+                    Icon(if (done) "checkmark.circle.fill" else "square.and.arrow.up", 18f, if (done) colors.success else colors.text)
                     Text(t(if (done) "copiedFullButton" else "copyFullButton"), style = label, color = colors.text)
                 }
             }
@@ -409,7 +415,7 @@ private fun WarnNote(text: String, iconSize: Float, modifier: Modifier = Modifie
             .rnBorder(1.udp, warning.copy(alpha = 0x40 / 255f), shape).padding(space.md.udp),
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
     ) {
-        Icon("exclamationmark.triangle.fill", iconSize, warning)
+        Icon("exclamationmark.triangle.fill", iconSize, colors.warning)
         Text(
             text, style = rnTextStyle(16f, 20f), modifier = Modifier.weight(1f),
             color = Color(if (colors.isDark) DesignTokens.Secondary.c100 else DesignTokens.Neutral.c700),
@@ -428,7 +434,7 @@ private fun IdentityCard(t: Translate, p: Profile) {
                 Image(photo, null, Modifier.size(80.udp).clip(photoShape), contentScale = ContentScale.Crop)
             } else {
                 Box(Modifier.size(80.udp).clip(photoShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-                    Icon("person.fill", 36f, colors.primary)
+                    Icon("person.fill", 36f, colors.primaryText)
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
@@ -474,7 +480,8 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
         }
         val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
         Row(
-            Modifier.testTag("readout-contact-$index-call").clip(shape).clickable(onClick = onCall).background(success)
+            Modifier.testTag("readout-contact-$index-call").heightIn(min = 48.udp).clip(shape)
+                .clickable(role = Role.Button, onClick = onCall).background(success)
                 .padding(horizontal = space.md.udp, vertical = space.sm.udp),
             horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
             verticalAlignment = Alignment.CenterVertically,

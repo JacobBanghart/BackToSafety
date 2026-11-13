@@ -35,6 +35,7 @@ import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -166,6 +167,15 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
         // differ from the system's, which the window's resource (values-night) follows.
         val activity = LocalActivity.current
         LaunchedEffect(background) { activity?.window?.setBackgroundDrawable(ColorDrawable(background.toArgb())) }
+        // The status and navigation bar icons follow the in-app theme too: enableEdgeToEdge
+        // picks them from the system's, which left light icons on a light screen.
+        LaunchedEffect(activity, dark) {
+            val window = activity?.window ?: return@LaunchedEffect
+            WindowCompat.getInsetsController(window, window.decorView).apply {
+                isAppearanceLightStatusBars = !dark
+                isAppearanceLightNavigationBars = !dark
+            }
+        }
         // The first screen's first frame: report how long the cold start took.
         LaunchedEffect(Unit) {
             withFrameNanos { }

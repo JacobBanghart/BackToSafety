@@ -51,7 +51,6 @@ import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rnBorder
-import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ActiveEmergency
@@ -69,7 +68,9 @@ import com.backtosafety.core.invoke
 import com.backtosafety.core.secondsRemaining
 import kotlinx.coroutines.delay
 
-private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.error)
+// One deep red for starting a search and for the one under way, the same as the search
+// screen's Call 911: white text on it is above 4.5:1.
+private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_SWEEP = Color(DesignTokens.Semantic.error)
 
@@ -195,14 +196,14 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
         // Quick actions
         Row(Modifier.padding(bottom = space.lg.udp), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
             QuickAction(
-                "📞", t("quickActions.contacts"),
+                "phone.fill", t("quickActions.contacts"),
                 if (contactCount == 0) t("quickActions.contactsNone") else t("quickActions.contactsSaved", mapOf("count" to contactCount)),
                 "home-contacts", Modifier.weight(1f),
             ) {
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "contacts", "source" to "home"))
                 navigate("contacts")
             }
-            QuickAction("📍", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places", Modifier.weight(1f)) {
+            QuickAction("mappin.and.ellipse", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places", Modifier.weight(1f)) {
                 Analytics.track(AnalyticsEvent.DESTINATION_ADD_TAPPED, mapOf("source" to "home"))
                 navigate("destinations")
             }
@@ -242,7 +243,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
 }
 
 @Composable
-private fun QuickAction(emoji: String, title: String, subtitle: String, testTag: String, modifier: Modifier, onClick: () -> Unit) {
+private fun QuickAction(icon: String, title: String, subtitle: String, testTag: String, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     Column(
@@ -250,7 +251,7 @@ private fun QuickAction(emoji: String, title: String, subtitle: String, testTag:
             .heightIn(min = 110.udp)
             .testTag(testTag)
             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .background(colors.card)
             .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .padding(space.lg.udp),
@@ -258,7 +259,7 @@ private fun QuickAction(emoji: String, title: String, subtitle: String, testTag:
         verticalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterVertically),
     ) {
         Box(Modifier.padding(bottom = space.xs.udp).size(44.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-            Text(emoji, style = rnTextStyle(22f, 24f))
+            Icon(icon, 22f, colors.primaryText)
         }
         Text(title, style = DesignTokens.Typography.bodyBold.style(), color = colors.text)
         Text(subtitle, style = DesignTokens.Typography.caption.style(), color = colors.textSecondary)
@@ -289,8 +290,8 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
                 horizontalArrangement = Arrangement.spacedBy(space.xxs.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(t("emergencyInfo.script911"), style = type.caption.style().copy(fontWeight = FontWeight.SemiBold), color = colors.tint)
-                Icon("chevron.right", 14f, colors.tint)
+                Text(t("emergencyInfo.script911"), style = type.caption.style().copy(fontWeight = FontWeight.SemiBold), color = colors.primaryText)
+                Icon("chevron.right", 14f, colors.primaryText)
             }
         }
         val items = listOfNotNull(

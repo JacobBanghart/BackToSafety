@@ -408,7 +408,7 @@ private fun Empty(t: Translate, personName: String?, onAdd: () -> Unit) {
         Box(
             Modifier.padding(bottom = space.sm.udp).size(88.udp).clip(CircleShape).background(colors.primaryLight),
             contentAlignment = Alignment.Center,
-        ) { Icon("mappin.and.ellipse", 40f, colors.primary) }
+        ) { Icon("mappin.and.ellipse", 40f, colors.primaryText) }
         Text(t("noDestinations.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
         Text(
             t("noDestinations.body", mapOf("name" to (personName?.ifEmpty { null } ?: t("noDestinations.nameFallback")))),
@@ -448,7 +448,8 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
                 for ((category, icon) in CATEGORIES) {
                     OptionChip(
                         t("categories.$category"), icon, "destinations-form-category-$category", form.category == category,
-                        if (category == "water") warning else p600,
+                        // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
+                        if (category == "water") Color(DesignTokens.Light.warning) else colors.primary,
                     ) { if (form.category != category) onChange(form.copy(category = category)) }
                 }
             }
@@ -458,8 +459,8 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
                         .background(warning.copy(alpha = 0x15 / 255f)).padding(10.udp),
                     horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon("exclamationmark.triangle.fill", 16f, warning)
-                    Text(t("waterWarning"), style = type.caption.style(), color = warning, modifier = Modifier.weight(1f))
+                    Icon("exclamationmark.triangle.fill", 16f, colors.warning)
+                    Text(t("waterWarning"), style = type.caption.style(), color = colors.warning, modifier = Modifier.weight(1f))
                 }
             }
             if (form.category == "other") {

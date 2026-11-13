@@ -244,7 +244,7 @@ struct DestinationsView: View {
 
     private var empty: some View {
         VStack(spacing: Space.md) {
-            SFIcon("mappin.and.ellipse", 40, colors.primary)
+            SFIcon("mappin.and.ellipse", 40, colors.primaryText)
                 .frame(width: 88, height: 88)
                 .background(Circle().fill(colors.primaryLight))
                 .padding(.bottom, Space.sm)
@@ -437,7 +437,8 @@ struct DestinationsView: View {
                         ForEach(categories, id: \.0) { category, icon in
                             OptionChip(label: t("categories.\(category)"), icon: icon, testID: "destinations-form-category-\(category)",
                                        selected: form.category == category,
-                                       selectedColor: category == "water" ? Color(argb: Semantic.warning) : p600) {
+                                       // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
+                                       selectedColor: category == "water" ? Color(argb: Light.warning) : colors.primary) {
                                 if form.category != category { form.category = category }
                             }
                         }
@@ -445,8 +446,8 @@ struct DestinationsView: View {
                     if form.category == "water" {
                         let warning = Color(argb: Semantic.warning)
                         HStack(spacing: Space.sm) {
-                            SFIcon("exclamationmark.triangle.fill", 16, warning)
-                            RNText(t("waterWarning"), Typography.caption.spec, color: warning).frame(maxWidth: .infinity, alignment: .leading)
+                            SFIcon("exclamationmark.triangle.fill", 16, colors.warning)
+                            RNText(t("waterWarning"), Typography.caption.spec, color: colors.warning).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .padding(10)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(warning.opacity(0x15 / 255.0)))

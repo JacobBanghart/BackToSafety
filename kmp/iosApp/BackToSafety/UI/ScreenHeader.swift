@@ -1,8 +1,9 @@
 import Shared
 import SwiftUI
 
-/// components/ScreenHeader.tsx: back chevron on the left, a title centered against the full
-/// width (optionally with an icon), and an optional right element. IDs: <testID>-back, -title.
+/// The screen's navigation bar (inline title, centred, as UINavigationBar draws it): a 48pt
+/// back control on the left, the title centred against the full width (optionally with an
+/// icon), and an optional action inset from the right edge. IDs: <testID>-back, -title.
 struct ScreenHeader<Right: View>: View {
     let title: String
     let testID: String
@@ -14,25 +15,26 @@ struct ScreenHeader<Right: View>: View {
 
     var body: some View {
         // The title is an overlay (absoluteFill in RN): it never sets the header's height, so a
-        // large-text title overflows the 52pt bar rather than growing it.
+        // large-text title overflows the bar rather than growing it.
         HStack(spacing: 0) {
+            // The platform's back control: a 48pt target with a 24pt chevron centred in it.
             Button(action: onBack) {
-                SFIcon("chevron.left", 22, colors.tint).frame(minWidth: 44, alignment: .leading).contentShape(Rectangle())
+                SFIcon("chevron.left", 24, colors.tint).frame(width: 48, height: 48).contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityIdentifier("\(testID)-back")
             Spacer()
-            right().frame(minWidth: 44, alignment: .trailing)
+            right().frame(minWidth: 48, alignment: .trailing).padding(.trailing, Space.sm)
         }
-        .frame(maxWidth: .infinity, minHeight: 52 - 2 * Space.md)
-        .padding(Space.md)
+        .frame(maxWidth: .infinity, minHeight: 56)
+        .padding(.horizontal, Space.xs)
         .overlay {
             HStack(spacing: Space.xs) {
                 if let icon = titleIcon { SFIcon(icon.name, titleIconSize, icon.color) }
                 RNText(title, Typography.title.spec, color: colors.text, lines: 1)
                     .accessibilityIdentifier("\(testID)-title")
             }
-            .padding(.horizontal, 44 + Space.md)
+            .padding(.horizontal, 48 + Space.sm)
             .fixedSize(horizontal: false, vertical: true)
         }
         .background(colors.background)

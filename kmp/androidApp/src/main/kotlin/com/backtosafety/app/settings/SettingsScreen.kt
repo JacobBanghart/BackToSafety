@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -36,6 +37,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.ui.AppCard
@@ -45,7 +47,6 @@ import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
-import com.backtosafety.app.ui.rnLineHeight
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.rnTextStyleNatural
 import com.backtosafety.app.ui.runCatchingCancellable
@@ -141,7 +142,7 @@ fun SettingsScreen(
                 SectionHeader("paintbrush.fill", colors.text, t("sections.appearance.title"))
                 Description(t("sections.appearance.description"))
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                    for ((value, icon) in listOf("system" to "📱", "light" to "☀️", "dark" to "🌙")) {
+                    for ((value, icon) in listOf("system" to "iphone", "light" to "sun.max.fill", "dark" to "moon.fill")) {
                         Option(t("themeOptions.$value"), "settings-theme-$value", themePreference == value, icon) {
                             onThemeChange(value)
                         }
@@ -242,15 +243,15 @@ private fun RowScope.Option(label: String, testID: String, selected: Boolean, ic
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Column(
-        Modifier.weight(1f).testTag(testID).clip(shape).clickable(onClick = onClick)
+        Modifier.weight(1f).testTag(testID).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
             .background(if (selected) colors.primaryLight else Color.Transparent)
             .rnBorder(2.udp, if (selected) colors.tint else colors.border, shape)
             .padding(vertical = DesignTokens.Spacing.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // themeIcon: fontSize 24 over ThemedText's 24 line height.
+        // A 24dp symbol, tinted like the label.
         icon?.let {
-            Text(it, style = rnTextStyle(24f, 24f), modifier = Modifier.padding(bottom = DesignTokens.Spacing.xs.udp).rnLineHeight(24f))
+            Icon(it, 24f, if (selected) colors.tint else colors.textSecondary, Modifier.padding(bottom = DesignTokens.Spacing.xs.udp))
         }
         Text(
             label, style = rnTextStyle(14f, 24f, if (selected) 600 else 400),

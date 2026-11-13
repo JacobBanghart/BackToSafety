@@ -58,15 +58,7 @@ struct ProfileView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: t("screenTitle"), testID: "profile", onBack: back) {
-                Button(action: save) {
-                    RNText(t(saving ? "saving" : "save"), Typography.bodyBold.spec, color: white, lines: 1)
-                        .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
-                        .frame(minWidth: 72)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
-                }
-                .buttonStyle(.pressable)
-                .disabled(saving)
-                .accessibilityIdentifier("profile-save")
+                HeaderSaveButton(label: t(saving ? "saving" : "save"), testID: "profile-save", enabled: !saving, action: save)
             }
             if form != nil { content } else { Spacer() }
         }
@@ -263,13 +255,13 @@ struct ProfileView: View {
                     SFIcon("camera.fill", 38, colors.textSecondary)
                         .frame(width: 120, height: 120)
                         .background(Circle().fill(colors.card))
-                        .overlay(Circle().inset(by: 1).stroke(colors.border, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
+                        .overlay(Circle().inset(by: 1).stroke(colors.inputBorder, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
                 }
             }
             .padding(.bottom, Space.md)
             HStack(spacing: Space.md) {
-                photoButton(t("takePhoto"), "profile-photo-take", colors.tint, action: takePhoto)
-                photoButton(t("choosePhoto"), "profile-photo-library", colors.primary) {
+                photoButton(t("takePhoto"), "profile-photo-take", "camera.fill", action: takePhoto)
+                photoButton(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle") {
                     Analytics.shared.track(event: .profilePhotoChosen, properties: [:])
                     picker = .library
                 }
@@ -279,11 +271,16 @@ struct ProfileView: View {
         .padding(.bottom, Space.xl)
     }
 
-    private func photoButton(_ label: String, _ testID: String, _ bg: Color, action: @escaping () -> Void) -> some View {
+    /// Two equal choices, so one fill: the primary, with its icon, 48pt tall.
+    private func photoButton(_ label: String, _ testID: String, _ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: white)
-                .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
-                .background(RoundedRectangle(cornerRadius: Radius.md).fill(bg))
+            HStack(spacing: Space.sm) {
+                SFIcon(icon, 18, white)
+                RNText(label, Typography.bodyBold.spec, color: white)
+            }
+            .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+            .frame(minHeight: 48)
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)

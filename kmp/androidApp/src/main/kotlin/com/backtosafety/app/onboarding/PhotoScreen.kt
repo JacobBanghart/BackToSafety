@@ -38,6 +38,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
@@ -115,7 +116,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                         .drawBehind {
                             val stroke = 2.dp.toPx()
                             drawCircle(
-                                color = colors.border,
+                                color = colors.inputBorder,
                                 radius = size.minDimension / 2 - stroke / 2,
                                 center = Offset(size.width / 2, size.height / 2),
                                 style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
@@ -124,7 +125,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("📷", style = rnTextStyle(48f, 56f), modifier = Modifier.padding(top = space.xs.udp))
+                    Icon("camera.fill", 44f, colors.textSecondary, Modifier.padding(top = space.xs.udp))
                     Text(t("photo.noPhoto"), color = colors.textSecondary, modifier = Modifier.padding(top = space.sm.udp))
                 }
             }
@@ -143,7 +144,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
         Text(
             t("photo.tip"),
             style = rnTextStyle(14f, 24f).copy(fontStyle = FontStyle.Italic),
-            color = colors.textDisabled,
+            color = colors.textSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -158,12 +159,12 @@ private fun OutlineButton(label: String, testTag: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .testTag(testTag)
             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-            .border(1.udp, colors.primary, RoundedCornerShape(DesignTokens.Radius.lg.dp))
+            .border(1.udp, colors.primaryText, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .clickable(onClick = onClick)
             // RN's 1dp border adds to the height (14 padding + 1 border each side).
             .padding(vertical = 15.udp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = colors.primary)
+        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = colors.primaryText)
     }
 }

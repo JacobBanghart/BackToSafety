@@ -76,7 +76,7 @@ fun NameScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Uni
             Field(t("name.nicknameLabel")) {
                 AppInput(nickname, { nickname = it }, t("name.nicknamePlaceholder"), "onboarding-name-nickname",
                     textStyle = rnTextStyle(18f, 22f), capitalization = KeyboardCapitalization.Words)
-                Text(t("name.nicknameHint"), style = type.body.style(), color = colors.textDisabled)
+                Text(t("name.nicknameHint"), style = type.body.style(), color = colors.textSecondary)
             }
             if (error.isNotEmpty()) Text(error, style = type.body.style(), color = colors.error)
         }

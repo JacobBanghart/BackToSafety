@@ -315,23 +315,23 @@ struct EmergencyView: View {
         let progress = steps.isEmpty ? 0 : CGFloat(checked.count) / CGFloat(steps.count)
         return VStack(spacing: Space.xs) {
             RNText((expired ? t("timer.labelExpired", ["emergencyNumber": emergencyNumber]) : t("timer.labelActive")).uppercased(),
-                   Typography.caption.spec.weight(600).spacing(1), color: .white.opacity(0.75))
+                   Typography.caption.spec.weight(600).spacing(1), color: white)
                 .accessibilityIdentifier("emergency-timer-label")
             RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 60, lineHeight: 72, weight: 700, letterSpacing: 2), color: white)
                 .accessibilityIdentifier("emergency-timer")
             RNText(expired ? t("timer.hintExpired", ["emergencyNumber": emergencyNumber]) : t("timer.hintActive"),
-                   Typography.body.spec, color: .white.opacity(0.9), align: .center)
+                   Typography.body.spec, color: white, align: .center)
                 .padding(.top, Space.xs)
             VStack(spacing: Space.xs) {
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.25))
+                        Capsule().fill(Color.white.opacity(0.4))
                         Capsule().fill(white).frame(width: geo.size.width * progress)
                     }
                 }
                 .frame(height: 6)
                 let progressText = t("timer.stepsProgress", ["checked": checked.count, "total": steps.count])
-                RNText(progressText, Typography.caption.spec, color: .white.opacity(0.9), align: .center)
+                RNText(progressText, Typography.caption.spec, color: white, align: .center)
                     .frame(maxWidth: .infinity)
                     .rnID("emergency-progress", label: progressText)
             }
@@ -339,7 +339,7 @@ struct EmergencyView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(Space.xl)
-        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.error) : Color(argb: Primary.c700)))
+        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.errorDark) : Color(argb: Primary.c700)))
         .rnShadow(.md, dark: colors.isDark)
     }
 
@@ -351,7 +351,7 @@ struct EmergencyView: View {
             RNTextInput(
                 text: $wearing, placeholder: t("wearing.placeholder"), testID: "emergency-wearing-input",
                 font: .systemFont(ofSize: 16 * fontMultiplier), textColor: UIColor(colors.text),
-                placeholderColor: UIColor(Color(argb: Neutral.c400)), tint: UIColor(colors.tint),
+                placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint),
                 insets: UIEdgeInsets(top: Space.sm - 1, left: Space.md, bottom: Space.sm - 1, right: Space.md),
                 multiline: true, lineHeight: 20 * fontMultiplier, minHeight: 62, maxHeight: 118
             )
@@ -359,7 +359,9 @@ struct EmergencyView: View {
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.inputBorder, lineWidth: 1))
             Button { showWearing = false } label: {
-                RNText(t("wearing.dismiss"), Typography.caption.spec, color: colors.textSecondary).padding(.vertical, Space.xs)
+                RNText(t("wearing.dismiss"), Typography.caption.spec, color: colors.textSecondary)
+                    .padding(.horizontal, Space.sm)
+                    .frame(minHeight: 48)
                     .contentShape(Rectangle()).accessibilityElement(children: .combine)
             }
             .buttonStyle(.pressable)
@@ -374,12 +376,26 @@ struct EmergencyView: View {
     @Environment(\.dynamicTypeSize) private var dynamicType
     private var fontMultiplier: CGFloat { rnFontMultiplier(dynamicType) }
 
+    /// Calling for help is the most urgent action, so it comes first and is a solid red as
+    /// heavy as Found — Safe. Both fills carry white labels above 4.5:1.
     private var actionButtons: some View {
-        let expired = secondsLeft == 0
         let white = Color(argb: Light.textOnPrimary)
-        let error = Color(argb: Semantic.error)
+        let emergencyRed = Color(argb: Semantic.errorDark)
         let large = Typography.bodyBold.spec.size(18)
         return VStack(spacing: Space.sm) {
+            Button(action: call911) {
+                HStack(spacing: Space.sm) {
+                    SFIcon("phone.fill", 22, white)
+                    RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), large, color: white)
+                }
+                .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
+                .padding(.vertical, Space.lg).padding(.horizontal, Space.xl)
+                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(emergencyRed))
+                .rnShadow(.sm, dark: colors.isDark)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityIdentifier("emergency-call-911")
             Button(action: found) {
                 HStack(spacing: Space.sm) {
                     SFIcon("checkmark.circle.fill", 22, white)
@@ -392,34 +408,26 @@ struct EmergencyView: View {
             }
             .buttonStyle(.pressable)
             .accessibilityIdentifier("emergency-found")
-            Button(action: call911) {
-                RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), large, color: expired ? white : error)
-                    .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
-                    .padding(.vertical, Space.lg + (expired ? 0 : 2)).padding(.horizontal, Space.xl)
-                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(expired ? error : .clear))
-                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(error, lineWidth: expired ? 0 : 2))
-                    .rnShadow(.sm, dark: colors.isDark && expired)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.pressable)
-            .accessibilityIdentifier("emergency-call-911")
             HStack(spacing: Space.sm) {
-                secondaryAction(t("actions.infoSheet"), "emergency-readout") {
+                secondaryAction(t("actions.infoSheet"), "emergency-readout", icon: "doc.text.fill") {
                     Analytics.shared.track(event: .screenViewed, properties: ["screen": "readout", "source": "emergency"])
                     model.path.append(.readout)
                 }
-                secondaryAction(t("actions.alertCircle"), "emergency-alert-contacts", action: alertContacts)
+                secondaryAction(t("actions.alertCircle"), "emergency-alert-contacts", icon: "bell.fill", action: alertContacts)
             }
         }
     }
 
-    private func secondaryAction(_ label: String, _ testID: String, action: @escaping () -> Void) -> some View {
+    private func secondaryAction(_ label: String, _ testID: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: colors.text)
-                .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2)
-                .padding(Space.md + 1)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-                .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+            HStack(spacing: Space.sm) {
+                SFIcon(icon, 18, colors.primaryText)
+                RNText(label, Typography.bodyBold.spec, color: colors.text)
+            }
+            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2)
+            .padding(Space.md + 1)
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
@@ -458,7 +466,8 @@ struct EmergencyView: View {
                             HStack(spacing: Space.sm) {
                                 RNText(step.title, Typography.bodyBold.spec, color: colors.text)
                                     .strikethrough(isChecked)
-                                    .opacity(isChecked ? 0.6 : 1)
+                                    // Done reads as done (struck through, on the tinted card) yet stays legible.
+                                    .opacity(isChecked ? 0.7 : 1)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 if urgentOpen {
                                     RNText(t("checklist.priority"), Typography.small.spec.weight(700).spacing(0.5), color: Color(argb: Light.textOnPrimary))
@@ -468,7 +477,10 @@ struct EmergencyView: View {
                             }
                             RNText(step.description_, TextSpec(size: 16, lineHeight: 20), color: colors.textSecondary)
                             if let hint = step.hint {
-                                RNText("💡 \(hint)", Typography.caption.spec.italic(), color: Color(argb: Primary.c600))
+                                HStack(alignment: .top, spacing: Space.xs) {
+                                    SFIcon("lightbulb.fill", 14, colors.primaryText).padding(.top, 2)
+                                    RNText(hint, Typography.caption.spec.italic(), color: colors.primaryText)
+                                }
                             }
                             if step.id == "familiar_places", !destinations.isEmpty, !isChecked {
                                 Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.sm)
@@ -476,7 +488,7 @@ struct EmergencyView: View {
                                     RNText(t("checklist.savedPlaces").uppercased(), Typography.small.spec.weight(600).spacing(0.4), color: colors.textSecondary)
                                         .padding(.bottom, Space.xxs)
                                     RNText(destinations.prefix(5).map(\.name).joined(separator: " • ") + (destinations.count > 5 ? " +\(destinations.count - 5)" : ""),
-                                           Typography.caption.spec, color: Color(argb: Primary.c600), lines: 2)
+                                           Typography.caption.spec, color: colors.primaryText, lines: 2)
                                 }
                                 .padding(.top, Space.sm - Space.xs)
                             }
@@ -486,7 +498,6 @@ struct EmergencyView: View {
                     .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? Color(argb: colors.isDark ? Primary.c900 : Primary.c50) : colors.card))
                     .overlay(RoundedRectangle(cornerRadius: Radius.lg)
                         .strokeBorder(urgentOpen ? error : isChecked ? Color(argb: Primary.c300) : colors.border, lineWidth: border))
-                    .opacity(isChecked ? 0.75 : 1)
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("emergency-step-\(step.id)")
@@ -542,7 +553,7 @@ struct EmergencyView: View {
                     message("modal.leave.message")
                     if notificationsDenied {
                         // The message promises the timer goes on; with notifications off its alerts won't come.
-                        RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: Color(argb: Semantic.error), align: .center)
+                        RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: colors.error, align: .center)
                             .accessibilityIdentifier("emergency-modal-leave-notifications-off")
                         Button {
                             if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
@@ -556,9 +567,10 @@ struct EmergencyView: View {
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
                     }
+                    // Staying is the safe choice, so it is the filled, default-looking one.
                     HStack(spacing: Space.md) {
-                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", .clear, colors.text, outline: true) { modal = nil }
-                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", colors.primary, white, rowItem: true) {
+                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, white, rowItem: true) { modal = nil }
+                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.text, outline: true) {
                             Analytics.shared.track(event: .emergencyLeave, properties: [:])
                             leave()
                         }
@@ -574,8 +586,11 @@ struct EmergencyView: View {
                             leave()
                         }
                     } label: {
-                        RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: Color(argb: Semantic.error))
+                        // A destructive button, not a bare link: outlined in the theme's error color.
+                        RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.error)
+                            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                             .padding(.vertical, Space.md)
+                            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.error, lineWidth: 1))
                             .contentShape(Rectangle()).accessibilityElement(children: .combine)
                     }
                     .buttonStyle(.pressable)

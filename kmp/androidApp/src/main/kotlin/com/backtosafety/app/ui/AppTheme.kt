@@ -35,12 +35,16 @@ class AppColors(val isDark: Boolean) {
     val border = Color(if (isDark) DesignTokens.Dark.border else DesignTokens.Light.border)
     val primary = Color(if (isDark) DesignTokens.Dark.primary else DesignTokens.Light.primary)
     val primaryLight = Color(if (isDark) DesignTokens.Dark.primaryLight else DesignTokens.Light.primaryLight)
+
+    /** The primary color for text and icons on the background (primary itself is a fill). */
+    val primaryText = Color(if (isDark) DesignTokens.Dark.primaryText else DesignTokens.Light.primaryText)
     val tint = Color(if (isDark) DesignTokens.Dark.tint else DesignTokens.Light.tint)
     val inputBackground = Color(if (isDark) DesignTokens.Dark.inputBackground else DesignTokens.Light.inputBackground)
     val inputBorder = Color(if (isDark) DesignTokens.Dark.inputBorder else DesignTokens.Light.inputBorder)
     val inputPlaceholder = Color(if (isDark) DesignTokens.Dark.inputPlaceholder else DesignTokens.Light.inputPlaceholder)
     val error = Color(if (isDark) DesignTokens.Dark.error else DesignTokens.Light.error)
     val success = Color(if (isDark) DesignTokens.Dark.success else DesignTokens.Light.success)
+    val warning = Color(if (isDark) DesignTokens.Dark.warning else DesignTokens.Light.warning)
     val icon = Color(if (isDark) DesignTokens.Dark.icon else DesignTokens.Light.icon)
     val borderFocused = Color(if (isDark) DesignTokens.Dark.borderFocused else DesignTokens.Light.borderFocused)
 }

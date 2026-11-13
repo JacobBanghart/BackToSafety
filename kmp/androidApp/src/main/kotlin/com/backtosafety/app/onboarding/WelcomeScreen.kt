@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -35,10 +36,12 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.rnTextStyle
@@ -101,7 +104,7 @@ fun WelcomeScreen(
                 Modifier.padding(bottom = space.xxl.udp),
                 verticalArrangement = Arrangement.spacedBy(space.lg.udp),
             ) {
-                for ((key, icon) in listOf("timer" to "⏱️", "readout" to "📋", "privacy" to "🔒")) {
+                for ((key, icon) in listOf("timer" to "timer", "readout" to "doc.text.fill", "privacy" to "lock.fill")) {
                     Row(
                         Modifier
                             .fillMaxWidth()
@@ -113,7 +116,7 @@ fun WelcomeScreen(
                         Box(
                             Modifier.size(44.udp).clip(CircleShape).background(colors.primaryLight),
                             contentAlignment = Alignment.Center,
-                        ) { Text(icon, style = rnTextStyle(22f, 24f)) }
+                        ) { Icon(icon, 22f, colors.primaryText) }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
                             Text(t("welcome.features.$key.title"), style = type.bodyBold.style(), color = colors.text)
                             Text(t("welcome.features.$key.description"), style = type.body.style(), color = colors.textSecondary)
@@ -126,14 +129,14 @@ fun WelcomeScreen(
                 Text(
                     t("welcome.themeLabel").uppercase(),
                     style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
-                    color = colors.textDisabled,
+                    color = colors.textSecondary,
                     modifier = Modifier.padding(bottom = space.md.udp),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     for ((value, label, icon) in listOf(
-                        Triple("light", "welcome.themeOptions.light", "☀️"),
-                        Triple("dark", "welcome.themeOptions.dark", "🌙"),
-                        Triple("system", "welcome.themeOptions.auto", "📱"),
+                        Triple("light", "welcome.themeOptions.light", "sun.max.fill"),
+                        Triple("dark", "welcome.themeOptions.dark", "moon.fill"),
+                        Triple("system", "welcome.themeOptions.auto", "iphone"),
                     )) {
                         val selected = themePreference == value
                         Row(
@@ -147,12 +150,12 @@ fun WelcomeScreen(
                                     if (selected) colors.tint else Color.Transparent,
                                     RoundedCornerShape(DesignTokens.Radius.lg.dp),
                                 )
-                                .clickable { onThemeChange(value) }
+                                .selectable(selected, role = Role.RadioButton) { onThemeChange(value) }
                                 .padding(space.md.udp),
                             horizontalArrangement = Arrangement.spacedBy(8.udp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Text(icon, style = rnTextStyle(20f, 24f))
+                            Icon(icon, 20f, if (selected) colors.tint else colors.textSecondary)
                             Text(
                                 t(label),
                                 style = type.bodyLarge.style().copy(
@@ -171,7 +174,7 @@ fun WelcomeScreen(
                 Text(
                     t("welcome.scrollHint").uppercase(),
                     style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
-                    color = colors.textDisabled,
+                    color = colors.textSecondary,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -179,11 +182,11 @@ fun WelcomeScreen(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 46.udp)
+                    .heightIn(min = 48.udp)
                     .testTag("onboarding-get-started")
                     .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                     .background(colors.primary)
-                    .clickable(onClick = onGetStarted)
+                    .clickable(role = Role.Button, onClick = onGetStarted)
                     .padding(vertical = space.md.udp),
                 contentAlignment = Alignment.Center,
             ) {
@@ -196,7 +199,7 @@ fun WelcomeScreen(
             Text(
                 t("welcome.privacy"),
                 style = type.caption.style(),
-                color = colors.textDisabled,
+                color = colors.textSecondary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
             )

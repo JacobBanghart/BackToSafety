@@ -57,6 +57,8 @@ struct AppColors {
     var borderFocused: Color { pick(Light.borderFocused, Dark.borderFocused) }
     var primary: Color { pick(Light.primary, Dark.primary) }
     var primaryLight: Color { pick(Light.primaryLight, Dark.primaryLight) }
+    /// The primary color for text and icons on the background (primary itself is a fill).
+    var primaryText: Color { pick(Light.primaryText, Dark.primaryText) }
     var tint: Color { pick(Light.tint, Dark.tint) }
     var icon: Color { pick(Light.icon, Dark.icon) }
     var overlay: Color { pick(Light.overlay, Dark.overlay) }
@@ -65,6 +67,7 @@ struct AppColors {
     var inputPlaceholder: Color { pick(Light.inputPlaceholder, Dark.inputPlaceholder) }
     var error: Color { pick(Light.error, Dark.error) }
     var success: Color { pick(Light.success, Dark.success) }
+    var warning: Color { pick(Light.warning, Dark.warning) }
 }
 
 private struct AppColorsKey: EnvironmentKey {

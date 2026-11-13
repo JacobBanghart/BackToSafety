@@ -1,7 +1,10 @@
 package com.backtosafety.app.ui
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -9,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -20,32 +25,43 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
 
 // Pieces the contacts and places screens share (their RN styles are identical).
 
-/** headerSaveButton: Add / Update / Saving... in the header's right slot. */
+/**
+ * The header's action (Add / Update / Save / Saving...): a primary pill inside a 48dp-tall
+ * target, so it is easy to hit without crowding the bar.
+ */
 @Composable
 fun HeaderSaveButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
+    val source = remember { MutableInteractionSource() }
     Box(
-        Modifier.testTag(testID).widthIn(min = 72.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-            .clickable(enabled = enabled, onClick = onClick).background(LocalAppColors.current.tint)
-            .padding(horizontal = DesignTokens.Spacing.md.udp, vertical = DesignTokens.Spacing.xs.udp),
+        Modifier.testTag(testID).heightIn(min = 48.udp)
+            .clickable(source, indication = null, enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), maxLines = 1)
+        Box(
+            Modifier.widthIn(min = 72.udp).heightIn(min = 36.udp).clip(RoundedCornerShape(DesignTokens.Radius.full.dp))
+                .indication(source, LocalIndication.current).background(LocalAppColors.current.primary)
+                .padding(horizontal = DesignTokens.Spacing.lg.udp),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(label, style = DesignTokens.Typography.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), maxLines = 1)
+        }
     }
 }
 
-/** roleOption / optionButton: an icon and a caption (500) in a bordered pill. */
+/** roleOption / optionButton: an icon and a caption (500) in a bordered pill, 48dp tall to tap. */
 @Composable
 fun OptionChip(label: String, icon: String, testID: String, selected: Boolean, selectedColor: Color, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     val white = Color(DesignTokens.Light.textOnPrimary)
     val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
     Row(
-        Modifier.testTag(testID).clip(shape).clickable(onClick = onClick)
+        Modifier.testTag(testID).heightIn(min = 48.udp).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
             .background(if (selected) selectedColor else colors.inputBackground)
             .rnBorder(1.dp, if (selected) selectedColor else colors.inputBorder, shape)
             .padding(horizontal = DesignTokens.Spacing.md.udp, vertical = DesignTokens.Spacing.sm.udp),

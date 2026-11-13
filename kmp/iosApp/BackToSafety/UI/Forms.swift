@@ -60,7 +60,8 @@ struct SwitchToggle: View {
     }
 }
 
-/// headerSaveButton: Add / Update / Saving... in the header's right slot.
+/// The header's action (Add / Update / Save / Saving...): a primary pill inside a 48pt-tall
+/// target, so it is easy to hit without crowding the bar.
 struct HeaderSaveButton: View {
     let label: String
     let testID: String
@@ -71,9 +72,11 @@ struct HeaderSaveButton: View {
     var body: some View {
         Button(action: action) {
             RNText(label, Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary), lines: 1)
-                .padding(.horizontal, Space.md).padding(.vertical, Space.xs)
-                .frame(minWidth: 72)
-                .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
+                .padding(.horizontal, Space.lg)
+                .frame(minWidth: 72, minHeight: 36)
+                .background(Capsule().fill(colors.primary))
+                .frame(minHeight: 48)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .disabled(!enabled)
@@ -81,7 +84,7 @@ struct HeaderSaveButton: View {
     }
 }
 
-/// roleOption / optionButton: an icon and a caption (500) in a bordered pill.
+/// roleOption / optionButton: an icon and a caption (500) in a bordered pill, 48pt tall to tap.
 struct OptionChip: View {
     let label: String
     let icon: String
@@ -99,11 +102,13 @@ struct OptionChip: View {
                 RNText(label, Typography.caption.spec.weight(500), color: selected ? white : colors.text)
             }
             .padding(.horizontal, Space.md + 1).padding(.vertical, Space.sm + 1)
+            .frame(minHeight: 48)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? selectedColor : colors.inputBackground))
             .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(selected ? selectedColor : colors.inputBorder, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 

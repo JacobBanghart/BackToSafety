@@ -25,9 +25,9 @@
   },
   "actions": {
     "foundSafe": "Encontrado: a salvo",
-    "call911": "📞 Llamar al {{emergencyNumber}}",
-    "infoSheet": "📋 Ficha de información",
-    "alertCircle": "📱 Avisar a contactos"
+    "call911": "Llamar al {{emergencyNumber}}",
+    "infoSheet": "Ficha de información",
+    "alertCircle": "Avisar a contactos"
   },
   "checklist": {
     "title": "Protocolo de búsqueda",

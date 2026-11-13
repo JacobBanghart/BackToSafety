@@ -10,7 +10,6 @@ struct SettingsView: View {
     let tCommon: Translate
     @EnvironmentObject private var model: AppModel
     @Environment(\.appColors) private var colors
-    @Environment(\.dynamicTypeSize) private var dynamicType
     @State private var devMode = isDebug
     @State private var tapCount = 0
     @State private var lastTap: TimeInterval = 0
@@ -34,7 +33,7 @@ struct SettingsView: View {
                         sectionHeader("paintbrush.fill", colors.text, t("sections.appearance.title"))
                         description(t("sections.appearance.description"))
                         HStack(spacing: Space.md) {
-                            ForEach([("system", "📱"), ("light", "☀️"), ("dark", "🌙")], id: \.0) { value, icon in
+                            ForEach([("system", "iphone"), ("light", "sun.max.fill"), ("dark", "moon.fill")], id: \.0) { value, icon in
                                 option(t("themeOptions.\(value)"), "settings-theme-\(value)", model.themePreference == value, icon) {
                                     Analytics.shared.track(event: .settingsThemeChanged, properties: ["theme": value])
                                     model.setTheme(value)
@@ -197,8 +196,8 @@ struct SettingsView: View {
     private func option(_ label: String, _ testID: String, _ selected: Bool, _ icon: String?, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 0) {
-                // The emoji font is taller than the line; RN clamps it to the 24pt line height.
-                if let icon { RNText(icon, TextSpec(size: 24, lineHeight: 24), color: colors.text).frame(height: 24 * rnFontMultiplier(dynamicType)).padding(.bottom, Space.xs) }
+                // A 24pt symbol, tinted like the label.
+                if let icon { SFIcon(icon, 24, selected ? colors.tint : colors.textSecondary).padding(.bottom, Space.xs) }
                 RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.tint : colors.text)
             }
             .frame(maxWidth: .infinity)
@@ -209,5 +208,6 @@ struct SettingsView: View {
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

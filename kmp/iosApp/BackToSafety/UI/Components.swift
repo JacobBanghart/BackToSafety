@@ -11,7 +11,7 @@ struct OnboardingStepHeader: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Button(action: onBack) { SFIcon("chevron.left", 20, colors.tint).frame(width: 44, height: 44) }
+            Button(action: onBack) { SFIcon("chevron.left", 24, colors.tint).frame(width: 48, height: 48).contentShape(Rectangle()) }
                 .buttonStyle(.pressable)
             HStack(spacing: Space.sm) {
                 ForEach(1 ... total, id: \.self) { step in
@@ -21,7 +21,7 @@ struct OnboardingStepHeader: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            Color.clear.frame(width: 44, height: 44)
+            Color.clear.frame(width: 48, height: 48)
         }
         .padding(.bottom, Space.xxl)
     }
@@ -134,7 +134,7 @@ struct PrimaryButton: View {
     }
 }
 
-/// "Skip for now": a quiet text button.
+/// "Skip for now": a quiet text button, still legible (textSecondary) and 48pt tall.
 struct SkipButton: View {
     let label: String
     let testID: String
@@ -143,8 +143,8 @@ struct SkipButton: View {
 
     var body: some View {
         Button(action: action) {
-            RNText(label, Typography.body.spec, color: colors.textDisabled)
-                .frame(maxWidth: .infinity)
+            RNText(label, Typography.body.spec, color: colors.textSecondary)
+                .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.sm)
                 .padding(.vertical, Space.sm)
                 .contentShape(Rectangle())
         }

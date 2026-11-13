@@ -246,7 +246,7 @@ struct ContactsView: View {
 
     private var empty: some View {
         VStack(spacing: Space.md) {
-            SFIcon("person.2.fill", 40, colors.primary)
+            SFIcon("person.2.fill", 40, colors.primaryText)
                 .frame(width: 88, height: 88)
                 .background(Circle().fill(colors.primaryLight))
                 .padding(.bottom, Space.sm)
@@ -300,19 +300,33 @@ struct ContactsView: View {
         let relationship = contact.relationship.flatMap { $0.isEmpty ? nil : " • \($0)" } ?? ""
         return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 0) {
+                // A visible handle says the cards can be dragged into order (hold, then drag).
+                SFIcon("line.3.horizontal", 20, colors.textSecondary).padding(.trailing, Space.md)
+                    .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(contact.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .rnID("contacts-item-\(index)-name", label: contact.name)
                     RNText(role + relationship, Typography.caption.spec, color: colors.textSecondary, lines: 1).padding(.top, 4)
+                    if contact.notifyOnEmergency {
+                        // Inside the card, under the role: it never collides with the name at large text.
+                        HStack(spacing: 4) {
+                            SFIcon("checkmark.circle.fill", 12, colors.primaryText)
+                            RNText(t("alertCircleBadge"), TextSpec(size: 11, lineHeight: 14, weight: 700, letterSpacing: 0.5), color: colors.primaryText)
+                        }
+                        .padding(.horizontal, Space.sm).padding(.vertical, 3)
+                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
+                        .padding(.top, Space.xs)
+                    }
                 }
                 .padding(.trailing, Space.md)
+                // Call is the action (green); Edit is secondary (outlined, neutral).
                 HStack(spacing: Space.sm) {
-                    circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), "phone.fill") {
+                    circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), white, "phone.fill") {
                         Analytics.shared.track(event: .contactCallTapped, properties: [:])
                         dial(contact.phone, target: .contact, screen: "contacts", tCommon: tCommon)
                     }
-                    circleAction("contacts-item-\(index)-edit", colors.primary, "pencil") {
+                    circleAction("contacts-item-\(index)-edit", .clear, colors.text, "pencil", border: colors.inputBorder) {
                         Analytics.shared.track(event: .contactEditTapped, properties: [:])
                         open(contact, ContactForm(contact))
                     }
@@ -328,25 +342,16 @@ struct ContactsView: View {
         }
         .padding(Space.lg + 1)
         .listCard(dragging: dragging, colors: colors)
-        .overlay(alignment: .topTrailing) {
-            if contact.notifyOnEmergency {
-                // Sits over the card's top edge (position absolute, top -10, right md).
-                HStack(spacing: 4) {
-                    SFIcon("checkmark.circle.fill", 11, colors.primary)
-                    RNText(t("alertCircleBadge"), TextSpec(size: 10, lineHeight: 12, weight: 700, letterSpacing: 0.5), color: colors.primary)
-                }
-                .padding(.horizontal, Space.sm + 1).padding(.vertical, 4)
-                .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
-                .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.primary, lineWidth: 1))
-                .offset(x: -Space.md, y: -10)
-            }
-        }
         .padding(.bottom, Space.md)
     }
 
-    private func circleAction(_ testID: String, _ color: Color, _ icon: String, action: @escaping () -> Void) -> some View {
+    private func circleAction(_ testID: String, _ fill: Color, _ tint: Color, _ icon: String, border: Color = .clear,
+                              action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            SFIcon(icon, 16, white).frame(width: 44, height: 44).background(Circle().fill(color))
+            SFIcon(icon, 18, tint).frame(width: 48, height: 48)
+                .background(Circle().fill(fill))
+                .overlay(Circle().strokeBorder(border, lineWidth: 1))
+                .contentShape(Circle())
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)

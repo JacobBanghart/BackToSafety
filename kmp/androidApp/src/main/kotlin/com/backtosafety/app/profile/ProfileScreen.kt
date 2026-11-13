@@ -47,9 +47,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.ui.HeaderSaveButton
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.RnTextField
@@ -197,12 +199,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
         ScreenHeader(t("screenTitle"), "profile", ::back) {
-            Box(
-                Modifier.testTag("profile-save").widthIn(min = 72.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .clickable(enabled = !saving, onClick = ::save).background(colors.tint)
-                    .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                contentAlignment = Alignment.Center,
-            ) { Text(t(if (saving) "saving" else "save"), style = type.bodyBold.style(), color = white, maxLines = 1) }
+            HeaderSaveButton(t(if (saving) "saving" else "save"), "profile-save", !saving, ::save)
         }
         if (f == null) return@Column
         // Reads the form at call time, never `f`: fields keep the callback from the composition
@@ -331,7 +328,7 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
                     Modifier.size(120.udp).clip(CircleShape).background(colors.card).drawBehind {
                         val stroke = 2.dp.toPx()
                         drawCircle(
-                            colors.border, radius = size.minDimension / 2 - stroke / 2,
+                            colors.inputBorder, radius = size.minDimension / 2 - stroke / 2,
                             style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
                         )
                     },
@@ -339,21 +336,28 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
                 ) { Icon("camera.fill", 38f, colors.textSecondary) }
             }
         }
+        // Two equal choices, so one fill: the primary, with its icon, 48dp tall.
         Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-            for ((label, tag, bg, action) in listOf(
-                Quad(t("takePhoto"), "profile-photo-take", colors.tint, onCamera),
-                Quad(t("choosePhoto"), "profile-photo-library", colors.primary, onLibrary),
+            for ((label, tag, icon, action) in listOf(
+                Quad(t("takePhoto"), "profile-photo-take", "camera.fill", onCamera),
+                Quad(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle", onLibrary),
             )) {
-                Box(
-                    Modifier.testTag(tag).clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).clickable(onClick = action)
-                        .background(bg).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                ) { Text(label, style = type.bodyBold.style(), color = white) }
+                Row(
+                    Modifier.testTag(tag).heightIn(min = 48.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                        .clickable(role = Role.Button, onClick = action)
+                        .background(colors.primary).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(icon, 18f, white)
+                    Text(label, style = type.bodyBold.style(), color = white)
+                }
             }
         }
     }
 }
 
-private data class Quad(val label: String, val tag: String, val bg: Color, val action: () -> Unit)
+private data class Quad(val label: String, val tag: String, val icon: String, val action: () -> Unit)
 
 @Composable
 private fun Section(
@@ -369,7 +373,7 @@ private fun Section(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(Modifier.size(36.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-                Icon(icon, 16f, colors.primary)
+                Icon(icon, 16f, colors.primaryText)
             }
             Text(title, style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
             Icon(if (expanded == key) "chevron.up" else "chevron.down", 16f, colors.textSecondary)

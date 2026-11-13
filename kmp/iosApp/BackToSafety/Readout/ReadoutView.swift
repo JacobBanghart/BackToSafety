@@ -21,9 +21,11 @@ struct ReadoutView: View {
     @State private var expanded = false
     @State private var copied: String?
 
+    // Fills (white on top). Text and icons on the page use the theme's success/warning/error,
+    // which are darker in light mode and lighter in dark mode so small labels stay legible.
     private var warning: Color { Color(argb: Semantic.warning) }
     private var success: Color { Color(argb: Semantic.success) }
-    private var error: Color { Color(argb: Semantic.error) }
+    private var emergencyRed: Color { Color(argb: Semantic.errorDark) }
     private var white: Color { Color(argb: Light.textOnPrimary) }
     private var emergencyNumber: String { tCommon("emergencyNumber") }
 
@@ -57,11 +59,15 @@ struct ReadoutView: View {
                     Analytics.shared.track(event: .readout911Called, properties: [:])
                     dial(emergencyNumber, .emergency)
                 } label: {
-                    RNText(t("callButton"), Typography.bodyLarge.spec.weight(700), color: white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Space.lg)
-                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(error))
-                        .rnShadow(.sm, dark: colors.isDark)
+                    // The most prominent action, the same solid red as on the search screen.
+                    HStack(spacing: Space.sm) {
+                        SFIcon("phone.fill", 22, white)
+                        RNText(t("callButton"), Typography.bodyLarge.spec.weight(700), color: white)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
+                    .padding(.vertical, Space.lg)
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(emergencyRed))
+                    .rnShadow(.sm, dark: colors.isDark)
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("readout-call-911")
@@ -69,10 +75,11 @@ struct ReadoutView: View {
                 card {
                     Button { expanded.toggle() } label: {
                         HStack {
-                            sectionLabel("phone.connection.fill", t("sections.script.label"), success)
+                            sectionLabel("phone.connection.fill", t("sections.script.label"), colors.success)
                             Spacer()
                             SFIcon(expanded ? "chevron.up" : "chevron.down", 16, colors.textSecondary)
                         }
+                        .frame(minHeight: 48)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
@@ -85,7 +92,7 @@ struct ReadoutView: View {
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
                             let note = t("sections.script.missingDetails", ["details": missing.joined(separator: ", ")])
-                            RNText(note, Typography.caption.spec.lineHeight(18), color: warning)
+                            RNText(note, Typography.caption.spec.lineHeight(18), color: colors.warning)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .rnID("readout-script-missing", label: note)
                                 .padding(.top, Space.sm)
@@ -100,7 +107,7 @@ struct ReadoutView: View {
 
                 if let lastSeen {
                     card {
-                        sectionLabel("clock.fill", t("sections.location.title"), colors.primary)
+                        sectionLabel("clock.fill", t("sections.location.title"), colors.primaryText)
                         infoRow(t("sections.location.time"), lastSeen)
                     }
                 }
@@ -108,7 +115,7 @@ struct ReadoutView: View {
                 // Mobility and dominant hand live here too, so they alone must show the card (F-26).
                 if [p.height, p.weight, p.hairColor, p.eyeColor, p.identifyingMarks, hand, p.mobilityLevel].contains(where: { !($0 ?? "").isEmpty }) {
                     card {
-                        sectionLabel("eye.fill", t("sections.appearance.title"), colors.primary)
+                        sectionLabel("eye.fill", t("sections.appearance.title"), colors.primaryText)
                         FlowLayout(spacing: Space.sm) {
                             if let v = nonEmpty(p.height) { chip(t("sections.appearance.height"), v) }
                             if let v = nonEmpty(p.weight) { chip(t("sections.appearance.weight"), v) }
@@ -127,11 +134,11 @@ struct ReadoutView: View {
 
                 warnNote(t("wearingCard"), 16)
 
-                section("cross.fill", t("sections.medical.title"), error, [
+                section("cross.fill", t("sections.medical.title"), colors.error, [
                     ("sections.medical.conditions", p.medicalConditions), ("sections.medical.medications", p.medications),
                     ("sections.medical.allergies", p.allergies), ("sections.medical.cognitiveStatus", p.cognitiveStatus),
                 ])
-                section("bubble.left.fill", t("sections.communication.title"), colors.primary, [
+                section("bubble.left.fill", t("sections.communication.title"), colors.primaryText, [
                     ("sections.communication.communication", p.communicationPreference), ("sections.communication.approach", p.approachGuidance),
                     ("sections.communication.escalation", p.escalationSigns), ("sections.communication.deescalation", p.deescalationTechniques),
                     ("sections.communication.likes", p.likes), ("sections.communication.triggers", p.dislikesTriggers),
@@ -141,7 +148,7 @@ struct ReadoutView: View {
 
                 if !contacts.isEmpty {
                     card {
-                        sectionLabel("phone.fill", t("contacts.title"), success)
+                        sectionLabel("phone.fill", t("contacts.title"), colors.success)
                         ForEach(Array(contacts.enumerated()), id: \.offset) { index, c in contactRow(c, index) }
                     }
                 }
@@ -228,7 +235,7 @@ struct ReadoutView: View {
 
     private func warnNote(_ text: String, _ iconSize: CGFloat) -> some View {
         HStack(alignment: .top, spacing: Space.sm) {
-            SFIcon("exclamationmark.triangle.fill", iconSize, warning)
+            SFIcon("exclamationmark.triangle.fill", iconSize, colors.warning)
             RNText(text, TextSpec(size: 16, lineHeight: 20), color: Color(argb: colors.isDark ? Secondary.c100 : Neutral.c700))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -255,7 +262,7 @@ struct ReadoutView: View {
         let hotline = nonEmpty(p.medicAlertHotline)
         if !rows.isEmpty || hotline != nil {
             card {
-                sectionLabel("location.fill", t("sections.devices.title"), colors.primary)
+                sectionLabel("location.fill", t("sections.devices.title"), colors.primaryText)
                 ForEach(rows, id: \.0) { key, value in infoRow(t(key), value) }
                 if let hotline {
                     Button {
@@ -275,7 +282,7 @@ struct ReadoutView: View {
                 if let image = loadPhoto(p.photoUri) {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 80, height: 80).clipShape(RoundedRectangle(cornerRadius: Radius.md))
                 } else {
-                    SFIcon("person.fill", 36, colors.primary)
+                    SFIcon("person.fill", 36, colors.primaryText)
                         .frame(width: 80, height: 80)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
                 }
@@ -318,6 +325,7 @@ struct ReadoutView: View {
                     }
                     .fixedSize()
                     .padding(.horizontal, Space.md).padding(.vertical, Space.sm)
+                    .frame(minHeight: 48)
                     .background(RoundedRectangle(cornerRadius: Radius.md).fill(success))
                 }
                 .buttonStyle(.pressable)
@@ -330,7 +338,7 @@ struct ReadoutView: View {
     private func copyButton(script: Bool, label: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, script ? white : (copied == "all" ? success : colors.text))
+                SFIcon(icon, 18, script ? white : (copied == "all" ? colors.success : colors.text))
                 RNText(label, Typography.body.spec, color: script ? colors.textOnPrimary : colors.text)
             }
             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)

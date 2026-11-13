@@ -23,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -53,6 +52,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -321,6 +321,8 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
     Box(Modifier.padding(bottom = space.md.udp)) {
         Column(Modifier.listCard(dragging).padding(space.lg.udp)) {
             Row(Modifier.padding(bottom = space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
+                // A visible handle says the cards can be dragged into order (hold, then drag).
+                Icon("line.3.horizontal", 20f, colors.textSecondary, Modifier.padding(end = space.md.udp))
                 Column(Modifier.weight(1f).padding(end = space.md.udp)) {
                     Text(
                         contact.name, style = type.bodyLarge.style(fontWeight = 600), color = colors.text, maxLines = 1,
@@ -332,10 +334,23 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
                         style = type.caption.style(), color = colors.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.padding(top = 4.udp),
                     )
+                    if (contact.notifyOnEmergency) {
+                        // Inside the card, under the role: it never collides with the name at large text.
+                        Row(
+                            Modifier.padding(top = space.xs.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
+                                .background(colors.primaryLight).padding(horizontal = space.sm.udp, vertical = 3.udp),
+                            horizontalArrangement = Arrangement.spacedBy(4.udp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon("checkmark.circle.fill", 12f, colors.primaryText)
+                            Text(t("alertCircleBadge"), style = rnTextStyle(11f, 14f, 700, 0.5f), color = colors.primaryText)
+                        }
+                    }
                 }
+                // Call is the action (green); Edit is secondary (outlined, neutral).
                 Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
-                    CircleAction("contacts-item-$index-call", Color(DesignTokens.Semantic.success), "phone.fill", onCall)
-                    CircleAction("contacts-item-$index-edit", colors.primary, "pencil", onEdit)
+                    CircleAction("contacts-item-$index-call", Color(DesignTokens.Semantic.success), white, "phone.fill", onCall)
+                    CircleAction("contacts-item-$index-edit", Color.Transparent, colors.text, "pencil", onEdit, border = colors.inputBorder)
                 }
             }
             contact.address?.ifEmpty { null }?.let {
@@ -345,28 +360,16 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
                 }
             }
         }
-        if (contact.notifyOnEmergency) {
-            // Sits over the card's top edge (position absolute, top -10, right md).
-            Row(
-                Modifier.align(Alignment.TopEnd).offset(x = -space.md.udp, y = (-10).dp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .background(colors.primaryLight).rnBorder(1.udp, colors.primary, RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .padding(horizontal = space.sm.udp, vertical = 3.udp),
-                horizontalArrangement = Arrangement.spacedBy(4.udp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon("checkmark.circle.fill", 11f, colors.primary)
-                Text(t("alertCircleBadge"), style = rnTextStyle(10f, 12f, 700, 0.5f), color = colors.primary)
-            }
-        }
     }
 }
 
 @Composable
-private fun CircleAction(testID: String, color: Color, icon: String, onClick: () -> Unit) {
+private fun CircleAction(testID: String, fill: Color, tint: Color, icon: String, onClick: () -> Unit, border: Color = Color.Transparent) {
     Box(
-        Modifier.testTag(testID).size(44.udp).clip(CircleShape).clickable(onClick = onClick).background(color),
+        Modifier.testTag(testID).size(48.udp).clip(CircleShape).clickable(role = Role.Button, onClick = onClick).background(fill)
+            .rnBorder(1.udp, border, CircleShape),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, 16f, white) }
+    ) { Icon(icon, 18f, tint) }
 }
 
 @Composable
@@ -409,7 +412,7 @@ private fun Empty(t: Translate, importing: Boolean, onAdd: () -> Unit, onImport:
         Box(
             Modifier.padding(bottom = space.sm.udp).size(88.udp).clip(CircleShape).background(colors.primaryLight),
             contentAlignment = Alignment.Center,
-        ) { Icon("person.2.fill", 40f, colors.primary) }
+        ) { Icon("person.2.fill", 40f, colors.primaryText) }
         Text(t("noContacts.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
         Text(t("noContacts.body"), style = type.body.style(), color = colors.textSecondary, textAlign = TextAlign.Center)
         Row(

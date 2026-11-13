@@ -25,9 +25,9 @@
   },
   "actions": {
     "foundSafe": "Found — Safe",
-    "call911": "📞 Call {{emergencyNumber}}",
-    "infoSheet": "📋 Info Sheet",
-    "alertCircle": "📱 Alert Circle"
+    "call911": "Call {{emergencyNumber}}",
+    "infoSheet": "Info Sheet",
+    "alertCircle": "Alert Circle"
   },
   "checklist": {
     "title": "Search Protocol",

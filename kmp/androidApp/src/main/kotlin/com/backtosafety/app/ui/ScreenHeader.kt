@@ -8,20 +8,25 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
 
 /**
- * components/ScreenHeader.tsx: back chevron on the left, a title centered against the full
- * width (optionally with an icon), and an optional right element. IDs: <testID>-back, -title.
+ * The screen's top app bar (centre-aligned, as Material 3's CenterAlignedTopAppBar): a 48dp
+ * back control on the left, the title centred against the full width (optionally with an
+ * icon), and an optional action inset from the right edge. IDs: <testID>-back, -title.
  */
 @Composable
 fun ScreenHeader(
@@ -34,14 +39,14 @@ fun ScreenHeader(
 ) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
-    Box(Modifier.fillMaxWidth().background(colors.background).heightIn(min = 52.udp).padding(space.md.udp)) {
+    Box(Modifier.fillMaxWidth().background(colors.background).heightIn(min = 56.udp).padding(horizontal = space.xs.udp)) {
         Row(
             Modifier.matchParentSize(),
             horizontalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(
-                Modifier.padding(horizontal = (44 + space.md).dp),
+                Modifier.padding(horizontal = (48 + space.sm).dp),
                 horizontalArrangement = Arrangement.spacedBy(space.xs.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -57,12 +62,13 @@ fun ScreenHeader(
             }
         }
         Row(Modifier.fillMaxWidth().align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
+            // The platform's back control: a 48dp target with a 24dp chevron centred in it.
             Box(
-                Modifier.widthIn(min = 44.udp).testTag("$testID-back").clickable(onClick = onBack),
-                contentAlignment = Alignment.CenterStart,
-            ) { Icon("chevron.left", 22f, colors.tint) }
+                Modifier.size(48.udp).testTag("$testID-back").clip(CircleShape).clickable(role = Role.Button, onClick = onBack),
+                contentAlignment = Alignment.Center,
+            ) { Icon("chevron.left", 24f, colors.tint) }
             Box(Modifier.weight(1f))
-            Box(Modifier.widthIn(min = 44.udp), contentAlignment = Alignment.CenterEnd) { right() }
+            Box(Modifier.widthIn(min = 48.udp).padding(end = space.sm.udp), contentAlignment = Alignment.CenterEnd) { right() }
         }
     }
 }

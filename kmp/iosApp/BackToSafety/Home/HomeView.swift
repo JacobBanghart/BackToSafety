@@ -1,7 +1,9 @@
 import Shared
 import SwiftUI
 
-private let emergencyIdle = Color(argb: Semantic.error)
+// One deep red for starting a search and for the one under way, the same as the search
+// screen's Call 911: white text on it is above 4.5:1.
+private let emergencyIdle = Color(argb: Semantic.errorDark)
 private let emergencyActive = Color(argb: Semantic.errorDark)
 
 /// Port of app/index.tsx.
@@ -24,13 +26,13 @@ struct HomeView: View {
                 header(hasProfile)
                 emergencyButton(expired)
                 HStack(spacing: Space.md) {
-                    quickAction("📞", t("quickActions.contacts"),
+                    quickAction("phone.fill", t("quickActions.contacts"),
                                 contactCount == 0 ? t("quickActions.contactsNone") : t("quickActions.contactsSaved", ["count": contactCount]),
                                 "home-contacts") {
                         Analytics.shared.track(event: .screenViewed, properties: ["screen": "contacts", "source": "home"])
                         model.path.append(.contacts)
                     }
-                    quickAction("📍", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places") {
+                    quickAction("mappin.and.ellipse", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places") {
                         Analytics.shared.track(event: .destinationAddTapped, properties: ["source": "home"])
                         model.path.append(.destinations)
                     }
@@ -146,10 +148,10 @@ struct HomeView: View {
         .padding(.bottom, Space.lg)
     }
 
-    private func quickAction(_ emoji: String, _ title: String, _ subtitle: String, _ testID: String, action: @escaping () -> Void) -> some View {
+    private func quickAction(_ icon: String, _ title: String, _ subtitle: String, _ testID: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: Space.xs) {
-                RNText(emoji, TextSpec(size: 22, lineHeight: 24), color: colors.text)
+                SFIcon(icon, 22, colors.primaryText)
                     .frame(width: 44, height: 44)
                     .background(Circle().fill(colors.primaryLight))
                     .padding(.bottom, Space.xs)
@@ -179,8 +181,8 @@ struct HomeView: View {
                 HStack(spacing: 0) {
                     RNText(t("emergencyInfo.title"), Typography.bodyBold.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
                     HStack(spacing: Space.xxs) {
-                        RNText(t("emergencyInfo.script911"), Typography.caption.spec.weight(600), color: colors.tint)
-                        SFIcon("chevron.right", 14, colors.tint)
+                        RNText(t("emergencyInfo.script911"), Typography.caption.spec.weight(600), color: colors.primaryText)
+                        SFIcon("chevron.right", 14, colors.primaryText)
                     }
                     .fixedSize()
                     .padding(.horizontal, Space.sm).padding(.vertical, Space.xs)

@@ -10,8 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -27,6 +28,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -46,8 +48,8 @@ fun OnboardingStepHeader(activeStep: Int, totalSteps: Int, onBack: () -> Unit) {
         Modifier.fillMaxWidth().padding(bottom = space.xxl.udp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.sizeIn(minWidth = 44.udp, minHeight = 44.udp).clickable(onClick = onBack), contentAlignment = Alignment.Center) {
-            Icon("chevron.left", 20f, colors.tint)
+        Box(Modifier.size(48.udp).clip(CircleShape).clickable(role = Role.Button, onClick = onBack), contentAlignment = Alignment.Center) {
+            Icon("chevron.left", 24f, colors.tint)
         }
         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally)) {
             for (step in 1..totalSteps) {
@@ -61,7 +63,7 @@ fun OnboardingStepHeader(activeStep: Int, totalSteps: Int, onBack: () -> Unit) {
                 )
             }
         }
-        Box(Modifier.sizeIn(minWidth = 44.udp, minHeight = 44.udp))
+        Box(Modifier.size(48.udp))
     }
 }
 
@@ -136,7 +138,7 @@ fun PrimaryButton(
             .alpha(if (dimmed) 0.5f else 1f)
             .clip(RoundedCornerShape(radius.lg.dp))
             .background(colors.primary)
-            .clickable(enabled = enabled, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(vertical = verticalPadding.dp),
         contentAlignment = Alignment.Center,
     ) {
@@ -144,14 +146,15 @@ fun PrimaryButton(
     }
 }
 
-/** "Skip for now": a quiet text button. */
+/** "Skip for now": a quiet text button, still legible (textSecondary) and 48dp tall. */
 @Composable
 fun SkipButton(label: String, testTag: String, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     Box(
-        Modifier.fillMaxWidth().testTag(testTag).clickable(onClick = onClick).padding(vertical = space.sm.udp),
+        Modifier.fillMaxWidth().testTag(testTag).heightIn(min = 48.udp).clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = space.sm.udp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = DesignTokens.Typography.body.style(), color = colors.textDisabled)
+        Text(label, style = DesignTokens.Typography.body.style(), color = colors.textSecondary)
     }
 }

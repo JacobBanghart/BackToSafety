@@ -56,6 +56,15 @@
     "note.text": "notes",
     "doc.on.clipboard.fill": "content-copy",
     "square.and.arrow.up": "share",
-    "questionmark.circle": "help-outline"
+    "questionmark.circle": "help-outline",
+    "photo.on.rectangle": "photo-library",
+    "timer": "timer",
+    "lock.fill": "lock",
+    "doc.text.fill": "description",
+    "sun.max.fill": "light-mode",
+    "moon.fill": "dark-mode",
+    "iphone": "smartphone",
+    "lightbulb.fill": "lightbulb",
+    "line.3.horizontal": "drag-handle"
   }
 }
