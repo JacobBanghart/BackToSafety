@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -108,6 +109,10 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     var initial by remember { mutableStateOf<ProfileForm?>(null) }
     var expanded by remember { mutableStateOf<String?>("personal") }
     var saving by remember { mutableStateOf(false) }
+    // A photo that comes back before the form has loaded waits here for it. After the system
+    // reclaims the app during the cropper, the cropped photo is handed over the moment this
+    // screen is recreated, before the store has been read.
+    var pendingPhoto by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         val p = store.profile()
@@ -121,8 +126,11 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             mobility = if (custom.isNotEmpty()) known + "Other" else known,
             mobilityOther = custom.joinToString(", "),
         )
-        form = loaded
+        // Read once, as the form loads (not a key: a new photo after this goes straight to the
+        // form). The photo is an edit, so it shows as unsaved until Save.
+        form = pendingPhoto?.let { loaded.with(ProfileField.PHOTO_URI, it) } ?: loaded
         initial = loaded
+        pendingPhoto = null
     }
 
     val f = form
@@ -181,7 +189,10 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         onDiscard = {}, onLeave = onBack,
     )
 
-    val picker = rememberPhotoPicker { uri -> form = form?.with(ProfileField.PHOTO_URI, uri) }
+    val picker = rememberPhotoPicker { uri ->
+        val current = form
+        if (current != null) form = current.with(ProfileField.PHOTO_URI, uri) else pendingPhoto = uri
+    }
 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
