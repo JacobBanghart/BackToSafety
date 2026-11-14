@@ -25,9 +25,9 @@
   },
   "actions": {
     "foundSafe": "Found — Safe",
-    "call911": "📞 Call {{emergencyNumber}}",
-    "infoSheet": "📋 Info Sheet",
-    "alertCircle": "📱 Alert Circle"
+    "call911": "Call {{emergencyNumber}}",
+    "infoSheet": "Emergency Info",
+    "alertCircle": "Alert Circle"
   },
   "checklist": {
     "title": "Search Protocol",
@@ -97,8 +97,8 @@
       "title": "Leave Emergency Search?",
       "message": "The timer will continue in the background. You can return to resume.",
       "notificationsOff": "Notifications are off, so the 5-minute warning and the time-up alert won't reach you while you're away.",
-      "stay": "Stay",
-      "leave": "Leave",
+      "stay": "Keep Searching",
+      "leave": "Leave — Timer Keeps Running",
       "end": "End Emergency"
     },
     "noContacts": {

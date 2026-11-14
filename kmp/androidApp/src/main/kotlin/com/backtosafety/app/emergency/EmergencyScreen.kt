@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -39,6 +40,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,19 +54,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -72,6 +79,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.backtosafety.app.BuildConfig
+import com.backtosafety.app.ui.DANGER_FILL_ALPHA
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
@@ -313,14 +321,15 @@ fun EmergencyScreen(
                 .background(colors.background)
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top)),
         ) {
-            ScreenHeader(
-                t("screenTitle"), "emergency", onBack = { modal = Modal.LEAVE },
-                titleIcon = "exclamationmark.triangle.fill" to Color(DesignTokens.Semantic.error),
-            )
+            // No warning icon by the title: the red on this screen belongs to Call 911 alone.
+            ScreenHeader(t("screenTitle"), "emergency", onBack = { modal = Modal.LEAVE })
             Column(
                 Modifier
                     .weight(1f)
+                    // The viewport stops above the gesture bar, so at rest no text sits under its
+                    // handle (it read as a strikethrough); the keyboard inset takes over when open.
                     .imePadding()
+                    .navigationBarsPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(space.lg.udp),
                 verticalArrangement = Arrangement.spacedBy(space.lg.udp),
@@ -336,10 +345,8 @@ fun EmergencyScreen(
                     ) { Text(hint, style = type.bodyBold.style(), color = Color(DesignTokens.Primary.c800)) }
                 }
 
-                if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
-
                 ActionButtons(
-                    t, emergencyNumber, expired,
+                    t, emergencyNumber,
                     onFound = {
                         if (!finished) {
                             finished = true
@@ -392,7 +399,12 @@ fun EmergencyScreen(
                     },
                 )
 
-                Checklist(t, steps, destinations, ::toggle)
+                // The checklist is the guided task, so it starts in view: what they're wearing is
+                // asked for after its first step (searching the home, while it can be checked),
+                // not between the actions and the checklist, where it pushed the steps below the fold.
+                Checklist(t, steps, destinations, ::toggle) {
+                    if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
+                }
                 TipsCard(t, profile)
                 Box(Modifier.height(space.xxl.udp))
             }
@@ -459,153 +471,209 @@ private fun vibrate(context: Context, alert: CountdownAlert) {
     }
 }
 
+/**
+ * The timer card's progress track: thick enough to read at arm's length. The unfilled part is a
+ * darker inset (black over the card) and the filled part solid white, so done and to-do differ in
+ * lightness, not only in a white tint that faded into the card.
+ */
+private const val TIMER_TRACK_HEIGHT = 10
+private const val TIMER_TRACK_SHADE_ALPHA = 0.35f
+
 @Composable
 private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked: Int, total: Int, emergencyNumber: String) {
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
     val white = Color(DesignTokens.Light.textOnPrimary)
     val number = mapOf("emergencyNumber" to emergencyNumber)
+    val colors = LocalAppColors.current
     Column(
         Modifier
             .fillMaxWidth()
             .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.xl.dp))
             .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp))
-            .background(if (expired) Color(DesignTokens.Semantic.error) else Color(DesignTokens.Primary.c700))
-            .padding(space.xl.udp),
+            .background(if (expired) Color(DesignTokens.Semantic.errorDark) else colors.timer)
+            .padding(horizontal = space.xl.udp, vertical = space.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(space.xs.udp),
     ) {
         Text(
             (if (expired) t("timer.labelExpired", number) else t("timer.labelActive")).uppercase(),
-            style = type.caption.style(fontWeight = 600, letterSpacing = 1f),
-            color = Color.White.copy(alpha = 0.75f),
+            // 14sp and full white at least: smaller or tinted text faded into the card's purple.
+            style = type.label.style(letterSpacing = 1f),
+            color = white,
             modifier = Modifier.testTag("emergency-timer-label"),
         )
-        Text(
-            formatCountdown(secondsLeft),
-            style = rnTextStyle(60f, 72f, fontWeight = 700, letterSpacing = 2f),
-            color = white,
-            modifier = Modifier.testTag("emergency-timer"),
-        )
+        // Already display-size, so it doesn't grow with the font scale: at large text a 78sp
+        // countdown pushed the checklist below the fold. The text around it still scales.
+        val density = LocalDensity.current
+        CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+            Text(
+                formatCountdown(secondsLeft),
+                style = rnTextStyle(56f, 64f, fontWeight = 700, letterSpacing = 2f),
+                color = white,
+                modifier = Modifier.testTag("emergency-timer"),
+            )
+        }
         Text(
             if (expired) t("timer.hintExpired", number) else t("timer.hintActive"),
-            style = type.body.style(), color = Color.White.copy(alpha = 0.9f), textAlign = TextAlign.Center,
+            // Body size at medium weight: the calming line is read in a panic, so it isn't a caption.
+            style = type.body.style(fontWeight = 500), color = white, textAlign = TextAlign.Center,
             modifier = Modifier.padding(top = space.xs.udp),
         )
-        Column(Modifier.fillMaxWidth().padding(top = space.md.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
-            Box(Modifier.fillMaxWidth().height(6.udp).clip(RoundedCornerShape(3.udp)).background(Color.White.copy(alpha = 0.25f))) {
-                Box(Modifier.fillMaxWidth(checked.toFloat() / total).fillMaxHeight().clip(RoundedCornerShape(3.udp)).background(white))
+        Column(Modifier.fillMaxWidth().padding(top = space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
+            Box(
+                Modifier.fillMaxWidth().height(TIMER_TRACK_HEIGHT.udp).clip(CircleShape)
+                    .background(Color.Black.copy(alpha = TIMER_TRACK_SHADE_ALPHA)).rnBorder(1.udp, white.copy(alpha = 0.5f), CircleShape),
+            ) {
+                Box(Modifier.fillMaxWidth(checked.toFloat() / total).fillMaxHeight().clip(CircleShape).background(white))
             }
             Text(
                 t("timer.stepsProgress", mapOf("checked" to checked, "total" to total)),
-                style = type.caption.style(), color = Color.White.copy(alpha = 0.9f), textAlign = TextAlign.Center,
+                style = type.body.style(fontWeight = 500), color = white, textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().testTag("emergency-progress"),
             )
         }
     }
 }
 
+/**
+ * What they're wearing, as one row in the checklist: at rest a single line (the question, a
+ * shirt icon, a close button) so it doesn't sit as a large input in the middle of the urgent
+ * flow; tapped, it opens into a text area with the 911 hint under it. Once something is
+ * written it stays open, showing what was written. The field is always there (tapping the row
+ * is tapping it), so `emergency-wearing-input` holds the text in both states.
+ */
 @Composable
 private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, onChange: (String) -> Unit, onDismiss: () -> Unit) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.card)
-            .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp)).padding(space.lg.udp),
-        verticalArrangement = Arrangement.spacedBy(space.sm.udp),
+    var focused by remember { mutableStateOf(false) }
+    val expanded = focused || wearing.isNotEmpty()
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    Row(
+        Modifier.fillMaxWidth().clip(shape).background(colors.card)
+            .rnBorder(if (focused) 2.udp else 1.udp, if (focused) colors.borderFocused else colors.inputBorder, shape)
+            .padding(start = space.md.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
+        verticalAlignment = if (expanded) Alignment.Top else Alignment.CenterVertically,
     ) {
-        Text(t("wearing.label"), style = type.bodyBold.style(), color = colors.text)
-        Text(
-            t("wearing.hint", mapOf("emergencyNumber" to emergencyNumber)), style = type.caption.style(),
-            color = colors.textSecondary, modifier = Modifier.negativeTopMargin(space.xs.udp),
-        )
-        val input = rnTextStyle(16f, 20f)
-        BasicTextField(
-            wearing, onChange,
-            textStyle = input.copy(color = colors.text),
-            cursorBrush = SolidColor(colors.tint),
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 64.udp, max = 120.udp)
-                .testTag("emergency-wearing-input")
-                .clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                .background(if (colors.isDark) Color(DesignTokens.Neutral.c800) else Color(DesignTokens.Neutral.c50))
-                .border(1.udp, colors.inputBorder, RoundedCornerShape(DesignTokens.Radius.md.dp)),
-            decorationBox = { field ->
-                // RN's 1dp border takes space: padding plus border.
-                Box(Modifier.padding(horizontal = (space.md + 1).udp, vertical = (space.sm + 1).udp)) {
-                    if (wearing.isEmpty()) Text(t("wearing.placeholder"), style = input, color = Color(DesignTokens.Neutral.c400))
-                    field()
-                }
-            },
-        )
-        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
-            Text(
-                t("wearing.dismiss"), style = type.caption.style(), color = colors.textSecondary,
-                modifier = Modifier.testTag("emergency-wearing-dismiss").clickable(onClick = onDismiss).padding(vertical = space.xs.udp),
+        Icon("tshirt.fill", 20f, colors.primaryText, if (expanded) Modifier.padding(top = space.md.udp) else Modifier)
+        Column(Modifier.weight(1f).padding(vertical = if (expanded) space.sm.udp else 0.udp)) {
+            if (expanded) Text(t("wearing.label"), style = type.label.style(letterSpacing = 0f), color = colors.text)
+            val input = if (expanded) rnTextStyle(16f, 22f) else type.bodyBold.style()
+            BasicTextField(
+                wearing, onChange,
+                textStyle = input.copy(color = colors.text),
+                cursorBrush = SolidColor(colors.tint),
+                maxLines = 5,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.udp)
+                    .testTag("emergency-wearing-input")
+                    .onFocusChanged { focused = it.isFocused },
+                decorationBox = { field ->
+                    Box(Modifier.padding(vertical = space.sm.udp), contentAlignment = Alignment.CenterStart) {
+                        if (wearing.isEmpty()) {
+                            // At rest the question is the row's text; open, an example of an answer.
+                            if (expanded) {
+                                Text(t("wearing.placeholder"), style = input, color = colors.inputPlaceholder)
+                            } else {
+                                Text(t("wearing.label"), style = input, color = colors.text)
+                            }
+                        }
+                        field()
+                    }
+                },
             )
+            if (expanded) {
+                Text(
+                    t("wearing.hint", mapOf("emergencyNumber" to emergencyNumber)),
+                    style = type.caption.style(), color = colors.textSecondary,
+                )
+            }
         }
+        // A 48dp close button, labelled for TalkBack, at the row's end in both states, so it's
+        // never pushed below the edge at large text as the old Dismiss button was.
+        Box(
+            Modifier.testTag("emergency-wearing-dismiss").size(48.udp).clip(CircleShape)
+                .clickable(role = Role.Button, onClick = onDismiss)
+                .semantics { contentDescription = t("wearing.dismiss") },
+            contentAlignment = Alignment.Center,
+        ) { Icon("xmark", 20f, colors.textSecondary) }
     }
 }
 
 @Composable
 private fun ActionButtons(
-    t: Translate, emergencyNumber: String, expired: Boolean,
+    t: Translate, emergencyNumber: String,
     onFound: () -> Unit, onCall: () -> Unit, onReadout: () -> Unit, onAlert: () -> Unit,
 ) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
-    val error = Color(DesignTokens.Semantic.error)
+    val emergencyRed = Color(DesignTokens.Semantic.errorDark)
     val white = Color(DesignTokens.Light.textOnPrimary)
-    val large = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight)
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
-    Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+    // Calling for help is the most urgent action: it comes first and is the largest, raised red
+    // control with headline type. Found — Safe ends the search, so it is a solid green button too
+    // (an outline vanished in dark mode, a pale tonal fill read as disabled), but shorter, flat and
+    // with smaller type, so it never outranks Call 911. White on semantic success passes 4.5:1.
+    Column(verticalArrangement = Arrangement.spacedBy(space.md.udp)) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-found").shadow(2.udp, shape).clip(shape)
-                .background(Color(DesignTokens.Semantic.success)).clickable(onClick = onFound)
+            Modifier.fillMaxWidth().heightIn(min = 72.udp).testTag("emergency-call-911").shadow(6.udp, shape).clip(shape)
+                .background(emergencyRed).clickable(role = Role.Button, onClick = onCall)
                 .padding(vertical = space.lg.udp, horizontal = space.xl.udp),
+            horizontalArrangement = Arrangement.spacedBy(space.md.udp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon("phone.fill", 28f, white)
+            Text(
+                t("actions.call911", mapOf("emergencyNumber" to emergencyNumber)),
+                style = rnTextStyle(type.headline.fontSize, type.headline.lineHeight, type.headline.fontWeight), color = white,
+            )
+        }
+        Row(
+            Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-found").clip(shape)
+                .background(Color(DesignTokens.Semantic.success)).clickable(role = Role.Button, onClick = onFound)
+                .padding(vertical = space.md.udp, horizontal = space.xl.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon("checkmark.circle.fill", 22f, white)
-            Text(t("actions.foundSafe"), style = large, color = white)
+            Text(t("actions.foundSafe"), style = rnTextStyle(18f, type.bodyBold.lineHeight, type.bodyBold.fontWeight), color = white)
         }
-        Row(
-            Modifier.fillMaxWidth().heightIn(min = 56.udp).testTag("emergency-call-911")
-                .then(if (expired) Modifier.shadow(2.udp, shape) else Modifier)
-                .clip(shape)
-                .clickable(onClick = onCall)
-                .background(if (expired) error else Color.Transparent)
-                .rnBorder(if (expired) 0.dp else 2.udp, error, shape)
-                .padding(vertical = space.lg.udp, horizontal = space.xl.udp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(t("actions.call911", mapOf("emergencyNumber" to emergencyNumber)), style = large, color = if (expired) white else error)
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
-            for ((label, tag, action) in listOf(
-                Triple("actions.infoSheet", "emergency-readout", onReadout),
-                Triple("actions.alertCircle", "emergency-alert-contacts", onAlert),
+        // Icon above label, centred, at one height for the pair: beside a label that wrapped
+        // ("Emergency Info" at large text) a small icon looked detached and the two unequal.
+        Row(Modifier.height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+            for ((label, tag, icon, action) in listOf(
+                SecondaryAction("actions.infoSheet", "emergency-readout", "doc.text.fill", onReadout),
+                SecondaryAction("actions.alertCircle", "emergency-alert-contacts", "bell.fill", onAlert),
             )) {
-                Box(
-                    Modifier.weight(1f).heightIn(min = 48.udp).testTag(tag).clip(shape).clickable(onClick = action)
+                Column(
+                    Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag(tag).clip(shape).clickable(role = Role.Button, onClick = action)
                         .background(colors.card).rnBorder(1.udp, colors.border, shape).padding(space.md.udp),
-                    contentAlignment = Alignment.Center,
-                ) { Text(t(label), style = type.bodyBold.style(), color = colors.text) }
+                    verticalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Icon(icon, 24f, colors.primaryText)
+                    Text(t(label), style = type.bodyBold.style(), color = colors.text, textAlign = TextAlign.Center)
+                }
             }
         }
     }
 }
 
+private data class SecondaryAction(val label: String, val tag: String, val icon: String, val action: () -> Unit)
+
 @Composable
-private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: List<DestinationEntity>, onToggle: (String) -> Unit) {
+private fun Checklist(
+    t: Translate, steps: List<ChecklistStep>, destinations: List<DestinationEntity>, onToggle: (String) -> Unit,
+    afterFirst: @Composable () -> Unit = {},
+) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
-    val p = DesignTokens.Primary
     val n = DesignTokens.Neutral
     val error = Color(DesignTokens.Semantic.error)
     Column(verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
@@ -613,21 +681,20 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
             Text(t("checklist.title"), style = type.title.style(), color = colors.text, modifier = Modifier.weight(1f))
             Text("${steps.count { it.checked }}/${steps.size}", style = type.bodyBold.style(), color = colors.textSecondary)
         }
-        for (step in steps) {
+        for ((index, step) in steps.withIndex()) {
             val urgentOpen = step.urgent && !step.checked
             val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
             Row(
                 Modifier
                     .fillMaxWidth()
                     .testTag("emergency-step-${step.id}")
-                    .alpha(if (step.checked) 0.75f else 1f)
                     .clip(shape)
                     .clickable { onToggle(step.id) }
-                    .background(if (step.checked) Color(if (colors.isDark) p.c900 else p.c50) else colors.card)
-                    .rnBorder(
-                        if (urgentOpen) 2.udp else 1.udp,
-                        if (urgentOpen) error else if (step.checked) Color(p.c300) else colors.border, shape,
-                    )
+                    // A done step steps back: the quiet surface tone, the plain border and secondary
+                    // text, so the steps still to do are the loudest cards (a purple done card
+                    // outshone them in dark mode). The green check says it is done.
+                    .background(if (step.checked) colors.surface else colors.card)
+                    .rnBorder(if (urgentOpen) 2.udp else 1.udp, if (urgentOpen) error else colors.border, shape)
                     .padding(space.md.udp),
                 horizontalArrangement = Arrangement.spacedBy(space.md.udp),
             ) {
@@ -638,7 +705,7 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                         .clip(CircleShape)
                         .background(
                             when {
-                                step.checked -> Color(p.c600)
+                                step.checked -> Color(DesignTokens.Semantic.success)
                                 step.urgent -> error.copy(alpha = 0x18 / 255f)
                                 else -> Color(if (colors.isDark) n.c700 else n.c200)
                             },
@@ -661,8 +728,9 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                         Text(
                             step.title,
                             style = type.bodyBold.style().copy(textDecoration = if (step.checked) TextDecoration.LineThrough else null),
-                            color = colors.text,
-                            modifier = Modifier.weight(1f).alpha(if (step.checked) 0.6f else 1f),
+                            // Done reads as done (struck through, secondary ink) yet stays legible.
+                            color = if (step.checked) colors.textSecondary else colors.text,
+                            modifier = Modifier.weight(1f),
                         )
                         if (urgentOpen) {
                             Box(Modifier.clip(RoundedCornerShape(DesignTokens.Radius.sm.dp)).background(error).padding(horizontal = space.sm.udp, vertical = space.xxs.udp)) {
@@ -676,7 +744,12 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                     }
                     Text(step.description, style = rnTextStyle(16f, 20f), color = colors.textSecondary)
                     step.hint?.let {
-                        Text("💡 $it", style = type.caption.style().copy(fontStyle = FontStyle.Italic), color = Color(p.c600))
+                        // Useful advice, so at body size, upright and in ink, not the smallest
+                        // text on the screen; the lightbulb alone marks it as a tip.
+                        Row(Modifier.padding(top = space.xxs.udp), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+                            Icon("lightbulb.fill", 18f, colors.primaryText, Modifier.padding(top = 3.udp))
+                            Text(it, style = type.body.style(), color = colors.text)
+                        }
                     }
                     if (step.id == "familiar_places" && destinations.isNotEmpty() && !step.checked) {
                         Box(Modifier.padding(top = space.sm.udp).fillMaxWidth().height(1.udp).background(colors.border))
@@ -689,12 +762,13 @@ private fun Checklist(t: Translate, steps: List<ChecklistStep>, destinations: Li
                             Text(
                                 destinations.take(5).joinToString(" • ") { it.name } +
                                     if (destinations.size > 5) " +${destinations.size - 5}" else "",
-                                style = type.caption.style(), color = Color(p.c600), maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                style = type.caption.style(), color = colors.primaryText, maxLines = 2, overflow = TextOverflow.Ellipsis,
                             )
                         }
                     }
                 }
             }
+            if (index == 0) afterFirst()
         }
     }
 }
@@ -732,7 +806,7 @@ private fun EmergencyModal(
     val white = Color(DesignTokens.Light.textOnPrimary)
     val success = Color(DesignTokens.Semantic.success)
     val buttonText = type.bodyBold.style()
-    val buttonShape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val buttonShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Box(
         Modifier.fillMaxSize().background(Color(if (colors.isDark) DesignTokens.Dark.overlay else DesignTokens.Light.overlay))
             // Modal: touches outside the card must not reach the screen underneath.
@@ -752,12 +826,14 @@ private fun EmergencyModal(
             @Composable
             fun message(key: String) = Text(t(key), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
 
+            // On the primary fill the label is textOnPrimary (dark ink on the dark theme's light
+            // primary); on the red and green fills it is white.
             @Composable
-            fun fullButton(label: String, tag: String, bg: Color, onClick: () -> Unit) = Box(
+            fun fullButton(label: String, tag: String, bg: Color, onClick: () -> Unit, fg: Color = white) = Box(
                 Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag(tag).clip(buttonShape).background(bg)
                     .clickable(onClick = onClick).padding(vertical = space.md.udp, horizontal = space.lg.udp),
                 contentAlignment = Alignment.Center,
-            ) { Text(label, style = buttonText, color = white) }
+            ) { Text(label, style = buttonText, color = fg) }
 
             when (modal) {
                 Modal.FOUND -> {
@@ -774,7 +850,7 @@ private fun EmergencyModal(
                     if (notificationsOff) {
                         // The message promises the timer goes on; with notifications off its alerts won't come.
                         Text(
-                            t("modal.leave.notificationsOff"), style = rnTextStyle(16f, 22f), color = Color(DesignTokens.Semantic.error),
+                            t("modal.leave.notificationsOff"), style = rnTextStyle(16f, 22f), color = colors.error,
                             textAlign = TextAlign.Center, modifier = Modifier.testTag("emergency-modal-leave-notifications-off"),
                         )
                         Text(
@@ -783,24 +859,36 @@ private fun EmergencyModal(
                                 .heightIn(min = 48.udp).clickable(onClick = onNotificationSettings).padding(vertical = space.md.udp),
                         )
                     }
-                    // RN row items stretch to the tallest one (the bordered button).
-                    Row(Modifier.fillMaxWidth().padding(top = space.xs.udp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
+                    // Two choices, then a third set apart. Keep Searching is the safe one, so it
+                    // is the only filled button. Leaving is a text action that says what happens
+                    // (the timer keeps running), so the two can't be read as the same choice. End
+                    // Emergency is the destructive one: below a rule, edged and washed in red.
+                    Column(Modifier.fillMaxWidth().padding(top = space.xs.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
                         Box(
-                            Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag("emergency-modal-leave-stay").clip(buttonShape)
-                                .clickable(onClick = onDismiss).rnBorder(1.udp, colors.border, buttonShape)
+                            Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-stay").clip(buttonShape)
+                                .background(colors.primary).clickable(role = Role.Button, onClick = onDismiss)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
-                        ) { Text(t("modal.leave.stay"), style = buttonText, color = colors.text) }
+                        ) { Text(t("modal.leave.stay"), style = buttonText, color = colors.textOnPrimary, textAlign = TextAlign.Center) }
                         Box(
-                            Modifier.weight(1f).fillMaxHeight().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
-                                .background(colors.primary).clickable(onClick = onLeave)
+                            Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
+                                .clickable(role = Role.Button, onClick = onLeave)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
-                        ) { Text(t("modal.leave.leave"), style = buttonText, color = white) }
+                        ) { Text(t("modal.leave.leave"), style = buttonText, color = colors.primaryText, textAlign = TextAlign.Center) }
                     }
-                    Box(
-                        Modifier.padding(top = space.xs.udp).testTag("emergency-modal-leave-end").clickable(onClick = onEnd).padding(vertical = space.md.udp),
-                    ) { Text(t("modal.leave.end"), style = buttonText, color = Color(DesignTokens.Semantic.error)) }
+                    Box(Modifier.fillMaxWidth().height(1.udp).background(colors.border))
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-end")
+                            .clip(buttonShape).background(colors.error.copy(alpha = DANGER_FILL_ALPHA))
+                            .clickable(role = Role.Button, onClick = onEnd).rnBorder(1.5f.udp, colors.error, buttonShape)
+                            .padding(vertical = space.md.udp, horizontal = space.lg.udp),
+                        horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon("xmark.circle.fill", 20f, colors.errorText)
+                        Text(t("modal.leave.end"), style = buttonText, color = colors.errorText)
+                    }
                 }
                 Modal.CATCH_UP_WARNING, Modal.CATCH_UP_EXPIRED -> {
                     val key = modal.catchUp!!.key
@@ -808,13 +896,13 @@ private fun EmergencyModal(
                     Text(t("alerts.$key.title", number), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
                     Text(t("alerts.$key.body", number), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
                     val bg = if (modal == Modal.CATCH_UP_EXPIRED) Color(DesignTokens.Semantic.error) else colors.primary
-                    fullButton(tCommon("ok"), "emergency-modal-catchup-ok", bg, onDismiss)
+                    fullButton(tCommon("ok"), "emergency-modal-catchup-ok", bg, onDismiss, if (modal == Modal.CATCH_UP_EXPIRED) white else colors.textOnPrimary)
                 }
                 Modal.NO_CONTACTS, Modal.SMS_ERROR -> {
                     val noContacts = modal == Modal.NO_CONTACTS
                     title(if (noContacts) "modal.noContacts.title" else "modal.smsError.title")
                     message(if (noContacts) "modal.noContacts.message" else "modal.smsError.message")
-                    fullButton(tCommon("ok"), "emergency-modal-info-ok", colors.primary, onDismiss)
+                    fullButton(tCommon("ok"), "emergency-modal-info-ok", colors.primary, onDismiss, colors.textOnPrimary)
                 }
             }
         }
@@ -840,10 +928,10 @@ private fun LoadFailed(t: Translate, onRetry: () -> Unit, onBack: () -> Unit) {
             Text(t("loadFailed.message"), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
             Box(
                 Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-load-retry")
-                    .clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primary)
+                    .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.primary)
                     .clickable(onClick = onRetry).padding(vertical = space.md.udp, horizontal = space.lg.udp),
                 contentAlignment = Alignment.Center,
-            ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary)) }
+            ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = colors.textOnPrimary) }
         }
     }
 }

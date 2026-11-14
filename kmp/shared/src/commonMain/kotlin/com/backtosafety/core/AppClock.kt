@@ -24,7 +24,10 @@ object AppClock {
      * rather than from the platform's calendar, whose year, month and day can be Buddhist, Hebrew,
      * Persian and so on, and it follows the debug clock too.
      */
-    fun today(): LocalDate = Instant.fromEpochMilliseconds(nowMs()).toLocalDateTime(TimeZone.currentSystemDefault()).date
+    fun today(): LocalDate = dateOf(nowMs())
+
+    /** The Gregorian date of [epochMs] in the device's time zone, as [today] reckons it. */
+    fun dateOf(epochMs: Long): LocalDate = Instant.fromEpochMilliseconds(epochMs).toLocalDateTime(TimeZone.currentSystemDefault()).date
 
     /** Moves the clock forward (or back), frozen or not. Ignored without test seams. */
     fun advance(ms: Long) {

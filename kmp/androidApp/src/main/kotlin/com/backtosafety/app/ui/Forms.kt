@@ -5,8 +5,10 @@ import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,6 +20,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -32,16 +37,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.backtosafety.core.DesignTokens
 
 /**
  * components/AppTextInput.tsx: a bold label (with " *" when required), an optional hint, and
- * the field: 44dp single-line or an 80-120dp text area, 1dp border (focused: borderFocused),
+ * the field: 48dp single-line (a full touch target) or an 80-120dp text area, 1dp border (focused: borderFocused),
  * radius md, body text on a 20 line height. Field margin below: md.
  */
 @Composable
@@ -81,7 +88,7 @@ fun FormTextInput(
 
 /**
  * An RN TextInput as the forms style it on Android: body text on a 20 line height, 1dp border
- * (inside the box), radius md, padding md horizontally; 44dp single-line, or a top-aligned
+ * (inside the box), radius md, padding md horizontally; 48dp single-line, or a top-aligned
  * text area from 80dp. Formatters rewrite the text on change; the cursor stays at the end the
  * way RN's controlled input keeps it.
  */
@@ -108,7 +115,7 @@ fun RnTextField(
     var field by remember { mutableStateOf(TextFieldValue(value, TextRange(value.length))) }
     if (field.text != value) field = TextFieldValue(value, TextRange(value.length))
     val textStyle = rnTextStyle(16f, 20f)
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val interaction = remember { MutableInteractionSource() }
     BasicTextField(
         value = field,
         onValueChange = {
@@ -126,44 +133,81 @@ fun RnTextField(
             .onFocusChanged { onFocusChanged(it.isFocused) }
             .then(
                 if (multiline) Modifier.heightIn(min = 80.udp, max = textAreaMaxHeight?.udp ?: androidx.compose.ui.unit.Dp.Infinity)
-                else Modifier.height(44.udp),
-            )
-            .then(
-                if (bare) Modifier
-                // RN's border is inside the box, so it's drawn over the padding, not around it.
-                else Modifier.clip(shape).background(background).border(1.dp, border, shape),
+                else Modifier.height(48.udp),
             ),
+        interactionSource = interaction,
         decorationBox = { inner ->
-            Row(
-                Modifier.padding(
-                    start = if (bare) 0.dp else (DesignTokens.Spacing.md + 1).udp,
-                    end = if (bare) 0.dp else (DesignTokens.Spacing.md + 1).udp,
-                )
-                    .padding(vertical = if (multiline) (textAreaPaddingV + 1).udp else 0.dp),
-                verticalAlignment = if (multiline) Alignment.Top else Alignment.CenterVertically,
-            ) {
-                Box(Modifier.weight(1f), contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart) {
+            if (bare) {
+                Box(contentAlignment = if (multiline) Alignment.TopStart else Alignment.CenterStart) {
                     if (value.isEmpty()) Text(placeholder, style = textStyle, color = colors.inputPlaceholder)
                     inner()
                 }
+            } else {
+                OutlinedFieldDecoration(
+                    value, inner, interaction, multiline, { Text(placeholder, style = textStyle, color = colors.inputPlaceholder) },
+                    background = background, border = border,
+                    padding = PaddingValues(
+                        horizontal = (DesignTokens.Spacing.md + 1).udp,
+                        vertical = if (multiline) (textAreaPaddingV + 1).udp else 0.dp,
+                    ),
+                )
             }
         },
     )
 }
 
-/** The custom on/off switch on the contact form: 50x30, a 24dp knob that slides 20dp. */
+/**
+ * Material 3's outlined text field container around a [BasicTextField]: the platform's outline
+ * (1dp at rest, 2dp in borderFocused while focused), container colour and placeholder, so the
+ * app's fields read as Android's own. The field itself (its testTag, formatting and cursor
+ * handling) is unchanged; the label stays above the field, as both apps show it.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun OutlinedFieldDecoration(
+    value: String,
+    inner: @Composable () -> Unit,
+    interaction: MutableInteractionSource,
+    multiline: Boolean,
+    placeholder: @Composable () -> Unit,
+    background: Color,
+    border: Color,
+    padding: PaddingValues,
+) {
+    val colors = LocalAppColors.current
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = background, unfocusedContainerColor = background,
+        focusedBorderColor = colors.borderFocused, unfocusedBorderColor = border,
+        cursorColor = colors.tint,
+    )
+    OutlinedTextFieldDefaults.DecorationBox(
+        value = value,
+        innerTextField = inner,
+        enabled = true,
+        singleLine = !multiline,
+        visualTransformation = VisualTransformation.None,
+        interactionSource = interaction,
+        placeholder = placeholder,
+        colors = fieldColors,
+        contentPadding = padding,
+        container = {
+            OutlinedTextFieldDefaults.Container(
+                enabled = true, isError = false, interactionSource = interaction, colors = fieldColors,
+                shape = RoundedCornerShape(DesignTokens.Radius.lg.dp),
+                focusedBorderThickness = 2.dp, unfocusedBorderThickness = 1.dp,
+            )
+        },
+    )
+}
+
+/**
+ * The contact form's on/off switch: Material 3's Switch, coloured by the theme (on is the brand
+ * primary). It only draws: the row around it is the toggleable control, so a tap anywhere on the
+ * row flips it and TalkBack reads the row as one switch.
+ */
 @Composable
 fun Toggle(on: Boolean) {
-    val colors = LocalAppColors.current
-    Box(
-        Modifier.size(50.udp, 30.udp).clip(RoundedCornerShape(15.udp))
-            .background(if (on) Color(DesignTokens.Semantic.success) else colors.border).padding(3.udp),
-    ) {
-        Box(
-            Modifier.offset(x = if (on) 20.udp else 0.dp).size(24.udp).clip(CircleShape)
-                .background(Color(DesignTokens.Light.background)),
-        )
-    }
+    Switch(checked = on, onCheckedChange = null, modifier = Modifier.clearAndSetSemantics {})
 }
 
 /** RN's Alert.alert on Android: the platform dialog. Buttons are (label, action); an alert with nothing to confirm passes `tCommon("ok") to {}`. */

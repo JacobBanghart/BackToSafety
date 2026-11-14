@@ -12,6 +12,10 @@
     "body": "Add people to call or text when they wander.",
     "button": "Add First Contact"
   },
+  "secondContact": {
+    "title": "Add a backup contact",
+    "body": "If {{name}} can't be reached in an emergency, you'll have someone else to call."
+  },
   "roles": {
     "primary_caregiver": "Primary Caregiver",
     "caregiver": "Caregiver",
@@ -21,7 +25,6 @@
     "other": "Other"
   },
   "form": {
-    "newTitle": "New Contact",
     "editTitle": "Edit Contact",
     "nameLabel": "Name",
     "namePlaceholder": "Contact name",
@@ -38,7 +41,12 @@
   "actions": {
     "call": "Call",
     "edit": "Edit",
-    "delete": "Delete"
+    "callName": "Call {{name}}",
+    "editName": "Edit {{name}}",
+    "delete": "Delete",
+    "reorderName": "Reorder {{name}}",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "deleteModal": {
     "title": "Delete Contact",
@@ -62,7 +70,7 @@
     "title": "Contacts Permission Needed",
     "message": "Allow contacts access to import an emergency contact from your address book."
   },
-  "alertCircleBadge": "IN ALERT CIRCLE",
+  "alertCircleBadge": "In Alert Circle",
   "notifyHint": "Adds this contact to your Alert Circle (people who get emergency SMS alerts)",
   "reorderHint": "Press and hold any contact card to reorder emergency priority."
 }

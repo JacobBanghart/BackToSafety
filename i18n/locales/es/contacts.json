@@ -12,6 +12,10 @@
     "body": "Agrega personas a quienes llamar o enviar mensajes si se pierde.",
     "button": "Agregar el primer contacto"
   },
+  "secondContact": {
+    "title": "Agrega un contacto de respaldo",
+    "body": "Si no logras comunicarte con {{name}} en una emergencia, tendrás a otra persona a quien llamar."
+  },
   "roles": {
     "primary_caregiver": "Cuidador principal",
     "caregiver": "Cuidador",
@@ -21,7 +25,6 @@
     "other": "Otro"
   },
   "form": {
-    "newTitle": "Nuevo contacto",
     "editTitle": "Editar contacto",
     "nameLabel": "Nombre",
     "namePlaceholder": "Nombre del contacto",
@@ -38,7 +41,12 @@
   "actions": {
     "call": "Llamar",
     "edit": "Editar",
-    "delete": "Eliminar"
+    "callName": "Llamar a {{name}}",
+    "editName": "Editar a {{name}}",
+    "delete": "Eliminar",
+    "reorderName": "Reordenar a {{name}}",
+    "moveUp": "Subir",
+    "moveDown": "Bajar"
   },
   "deleteModal": {
     "title": "Eliminar contacto",
@@ -62,7 +70,7 @@
     "title": "Se necesita permiso para los contactos",
     "message": "Permite el acceso a los contactos para importar un contacto de emergencia de tu agenda."
   },
-  "alertCircleBadge": "EN EL CÍRCULO DE ALERTA",
+  "alertCircleBadge": "En el círculo de alerta",
   "notifyHint": "Agrega este contacto a tu Círculo de Alerta (las personas que reciben los mensajes de emergencia)",
   "reorderHint": "Mantén presionada una tarjeta de contacto para cambiar su prioridad en una emergencia."
 }

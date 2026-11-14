@@ -34,6 +34,7 @@
     "ellipsis": "more-horiz",
     "checkmark.circle.fill": "check-circle",
     "checkmark": "check",
+    "circle": "radio-button-unchecked",
     "wrench.fill": "build",
     "trash.fill": "delete",
     "trash": "delete",
@@ -56,6 +57,20 @@
     "note.text": "notes",
     "doc.on.clipboard.fill": "content-copy",
     "square.and.arrow.up": "share",
-    "questionmark.circle": "help-outline"
+    "questionmark.circle": "help-outline",
+    "photo.on.rectangle": "photo-library",
+    "timer": "timer",
+    "lock.fill": "lock",
+    "doc.text.fill": "description",
+    "sun.max.fill": "light-mode",
+    "moon.fill": "dark-mode",
+    "iphone": "smartphone",
+    "lightbulb.fill": "lightbulb",
+    "line.3.horizontal": "drag-indicator",
+    "arrow.left": "arrow-back",
+    "tshirt.fill": "checkroom",
+    "xmark.circle.fill": "cancel",
+    "plus.circle": "add-circle-outline",
+    "person.badge.plus": "person-add"
   }
 }

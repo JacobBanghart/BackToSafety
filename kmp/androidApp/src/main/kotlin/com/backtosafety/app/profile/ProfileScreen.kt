@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -47,9 +48,14 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.ui.ButtonRowOrStack
+import com.backtosafety.app.ui.HeaderSaveButton
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.RnTextField
@@ -197,12 +203,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
         ScreenHeader(t("screenTitle"), "profile", ::back) {
-            Box(
-                Modifier.testTag("profile-save").widthIn(min = 72.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .clickable(enabled = !saving, onClick = ::save).background(colors.tint)
-                    .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                contentAlignment = Alignment.Center,
-            ) { Text(t(if (saving) "saving" else "save"), style = type.bodyBold.style(), color = white, maxLines = 1) }
+            HeaderSaveButton(t(if (saving) "saving" else "save"), "profile-save", !saving, ::save)
         }
         if (f == null) return@Column
         // Reads the form at call time, never `f`: fields keep the callback from the composition
@@ -211,7 +212,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             form = form?.with(field, value)
         }
         val toggle: (String) -> Unit = { expanded = if (expanded == it) null else it }
-        Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
+        Column(Modifier.weight(1f).imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
             PhotoSection(
                 t, f[ProfileField.PHOTO_URI],
                 onCamera = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_TAKEN); picker.fromCamera() },
@@ -221,7 +222,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             Section("personal", t("sections.personal"), "person.fill", expanded, toggle) {
                 Field(t, ProfileField.FULL_NAME, f, ::update)
                 Field(t, ProfileField.NICKNAME, f, ::update)
-                DateOfBirth(t("fields.dateOfBirth"), f[ProfileField.DATE_OF_BIRTH], { update(ProfileField.DATE_OF_BIRTH, it) })
+                DateOfBirth(t("fields.dateOfBirth"), t("fields.dateOfBirthPicker"), f[ProfileField.DATE_OF_BIRTH], { update(ProfileField.DATE_OF_BIRTH, it) })
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     Box(Modifier.weight(1f)) {
                         Field(t, ProfileField.HEIGHT, f, ::update)
@@ -246,18 +247,18 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                     Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         for (hand in listOf("left", "right", "unknown")) {
                             val selected = f.dominantHand == hand
-                            val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                            val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                             Box(
                                 Modifier.weight(1f).testTag("profile-hand-$hand").clip(shape)
                                     .clickable { form = f.copy(dominantHand = hand) }
-                                    .background(if (selected) colors.tint else Color.Transparent)
-                                    .rnBorder(1.dp, if (selected) colors.tint else colors.border, shape)
+                                    .background(if (selected) colors.primary else Color.Transparent)
+                                    .rnBorder(1.dp, if (selected) colors.primary else colors.border, shape)
                                     .padding(vertical = space.sm.udp),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     t("fields.dominantHand${hand.replaceFirstChar { it.uppercase() }}"),
-                                    style = type.body.style(fontWeight = 500), color = if (selected) white else colors.text,
+                                    style = type.body.style(fontWeight = 500), color = if (selected) colors.textOnPrimary else colors.text,
                                 )
                             }
                         }
@@ -276,13 +277,13 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                                             f.copy(mobility = f.mobility - option, mobilityOther = if (option == "Other") "" else f.mobilityOther)
                                         } else f.copy(mobility = f.mobility + option)
                                     }
-                                    .background(if (selected) colors.tint else Color.Transparent)
-                                    .rnBorder(1.dp, if (selected) colors.tint else colors.border, shape)
+                                    .background(if (selected) colors.primary else Color.Transparent)
+                                    .rnBorder(1.dp, if (selected) colors.primary else colors.border, shape)
                                     .padding(horizontal = space.md.udp, vertical = space.xs.udp),
                             ) {
                                 Text(
                                     t(MOBILITY_OPTION_KEYS.getValue(option)), style = type.body.style(fontWeight = 500),
-                                    color = if (selected) white else colors.text,
+                                    color = if (selected) colors.textOnPrimary else colors.text,
                                 )
                             }
                         }
@@ -327,33 +328,45 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
             if (photo != null) {
                 Image(photo, null, Modifier.size(120.udp).clip(CircleShape).testTag("profile-photo"), contentScale = ContentScale.Crop)
             } else {
+                // An empty photo slot: a tinted fill and a dashed tint outline, visible on a dark
+                // background as well as a light one.
                 Box(
-                    Modifier.size(120.udp).clip(CircleShape).background(colors.card).drawBehind {
+                    Modifier.size(120.udp).clip(CircleShape).background(colors.primaryLight).drawBehind {
                         val stroke = 2.dp.toPx()
                         drawCircle(
-                            colors.border, radius = size.minDimension / 2 - stroke / 2,
+                            colors.tint, radius = size.minDimension / 2 - stroke / 2,
                             style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
                         )
                     },
                     contentAlignment = Alignment.Center,
-                ) { Icon("camera.fill", 38f, colors.textSecondary) }
+                ) { Icon("camera.fill", 38f, colors.primaryText) }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-            for ((label, tag, bg, action) in listOf(
-                Quad(t("takePhoto"), "profile-photo-take", colors.tint, onCamera),
-                Quad(t("choosePhoto"), "profile-photo-library", colors.primary, onLibrary),
+        // Two equal, secondary choices: outlined in the primary ink with its icon, 48dp tall, as
+        // on the onboarding photo step, so they don't weigh as much as Save. Side by side while
+        // they fit inside the screen's margins, stacked at large text.
+        ButtonRowOrStack(space.md.udp) {
+            for ((label, tag, icon, action) in listOf(
+                Quad(t("takePhoto"), "profile-photo-take", "camera.fill", onCamera),
+                Quad(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle", onLibrary),
             )) {
-                Box(
-                    Modifier.testTag(tag).clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).clickable(onClick = action)
-                        .background(bg).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                ) { Text(label, style = type.bodyBold.style(), color = white) }
+                val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+                Row(
+                    Modifier.testTag(tag).heightIn(min = 48.udp).clip(shape)
+                        .clickable(role = Role.Button, onClick = action)
+                        .rnBorder(1.udp, colors.primaryText, shape).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(icon, 18f, colors.primaryText)
+                    Text(label, style = type.bodyBold.style(), color = colors.primaryText)
+                }
             }
         }
     }
 }
 
-private data class Quad(val label: String, val tag: String, val bg: Color, val action: () -> Unit)
+private data class Quad(val label: String, val tag: String, val icon: String, val action: () -> Unit)
 
 @Composable
 private fun Section(
@@ -368,8 +381,8 @@ private fun Section(
             horizontalArrangement = Arrangement.spacedBy(space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(36.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-                Icon(icon, 16f, colors.primary)
+            Box(Modifier.size(36.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
+                Icon(icon, 16f, colors.primaryText)
             }
             Text(title, style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
             Icon(if (expanded == key) "chevron.up" else "chevron.down", 16f, colors.textSecondary)
@@ -413,16 +426,16 @@ private fun Field(t: Translate, field: ProfileField, form: ProfileForm, onChange
 
 /**
  * The date of birth: typed as MM/DD/YYYY, or picked in the platform date dialog. As in RN, a
- * bordered row (padding md) holds the 44dp input and the calendar button beside it.
+ * bordered row (padding md) holds the 48dp input and the 48dp calendar button beside it.
  */
 @Composable
-private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit) {
+private fun DateOfBirth(label: String, pickerLabel: String, value: String, onChange: (String) -> Unit) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Group(label) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 44.udp).clip(shape).background(colors.card)
+            Modifier.fillMaxWidth().heightIn(min = 48.udp).clip(shape).background(colors.card)
                 .rnBorder(1.dp, colors.border, shape).padding(horizontal = space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -433,8 +446,9 @@ private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit
                 modifier = Modifier.weight(1f),
             )
             Box(
-                Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 44.udp, minHeight = 44.udp)
-                    .clickable {
+                Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 48.udp, minHeight = 48.udp)
+                    .semantics { contentDescription = pickerLabel }
+                    .clickable(role = Role.Button) {
                         val initial = parseDob(value) ?: LocalDate(1940, 1, 1)
                         DatePickerDialog(context, { _, y, m, d -> onChange(formatDob(LocalDate(y, m + 1, d))) }, initial.year, initial.month.ordinal, initial.day)
                             .apply { datePicker.maxDate = AppClock.nowMs() }
@@ -442,7 +456,7 @@ private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit
                     }
                     .padding(start = space.sm.udp),
                 contentAlignment = Alignment.Center,
-            ) { Icon("calendar", 18f, colors.textSecondary) }
+            ) { Icon("calendar", 20f, colors.textSecondary) }
         }
     }
 }

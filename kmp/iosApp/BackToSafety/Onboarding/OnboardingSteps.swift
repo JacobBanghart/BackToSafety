@@ -23,7 +23,7 @@ struct NameView: View {
                 }
                 Field(label: t("name.nicknameLabel")) {
                     AppInput(text: $nickname, placeholder: t("name.nicknamePlaceholder"), testID: "onboarding-name-nickname", size: 18, capitalization: .words)
-                    RNText(t("name.nicknameHint"), Typography.body.spec, color: colors.textDisabled)
+                    RNText(t("name.nicknameHint"), Typography.body.spec, color: colors.textSecondary)
                 }
                 if !error.isEmpty { RNText(error, Typography.body.spec, color: colors.error) }
             }
@@ -68,12 +68,13 @@ struct PhotoView: View {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 200, height: 200).clipShape(Circle())
                 } else {
                     VStack(spacing: 0) {
-                        RNText("📷", TextSpec(size: 48, lineHeight: 56), color: colors.text).padding(.top, Space.xs)
+                        SFIcon("camera.fill", 44, colors.primaryText).padding(.top, Space.xs)
                         RNText(t("photo.noPhoto"), TextSpec(size: 16, lineHeight: 24), color: colors.textSecondary).padding(.top, Space.sm)
                     }
                     .frame(width: 200, height: 200)
-                    .background(Circle().fill(colors.surface))
-                    .overlay(Circle().strokeBorder(colors.border, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
+                    // An empty photo slot: a tinted fill and a dashed tint outline, as on Edit Profile.
+                    .background(Circle().fill(colors.primaryLight))
+                    .overlay(Circle().strokeBorder(colors.tint, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
                 }
             }
             .frame(maxWidth: .infinity)
@@ -89,7 +90,7 @@ struct PhotoView: View {
                 }
             }
             .padding(.bottom, Space.xl)
-            RNText(t("photo.tip"), TextSpec(size: 14, lineHeight: 24).italic(), color: colors.textDisabled, align: .center)
+            RNText(t("photo.tip"), TextSpec(size: 14, lineHeight: 24).italic(), color: colors.textSecondary, align: .center)
                 .frame(maxWidth: .infinity)
         } footer: {
             SkipButton(label: t("photo.skip"), testID: "onboarding-photo-skip") {
@@ -119,10 +120,10 @@ struct PhotoView: View {
 
     private func outlineButton(_ label: String, _ testID: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: colors.primary)
+            RNText(label, Typography.bodyBold.spec, color: colors.primaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primary, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primaryText, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)

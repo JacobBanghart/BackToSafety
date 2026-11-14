@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -42,8 +43,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -51,7 +53,7 @@ import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rnBorder
-import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ActiveEmergency
@@ -61,15 +63,23 @@ import com.backtosafety.core.AppClock
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.EMERGENCY_STEP_COUNT
 import com.backtosafety.core.Profile
+import com.backtosafety.core.ReadinessCheck
+import com.backtosafety.core.ReadinessItem
 import com.backtosafety.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
+import com.backtosafety.core.readinessChecklist
 import com.backtosafety.core.secondsRemaining
 import kotlinx.coroutines.delay
 
-private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.error)
+// Starting a search and a search under way are both the deep red of Call 911: an emergency in
+// progress must never look calmer than the idle Start button (a purple running state did). The
+// running state is told apart at a glance by its shape, not a subtitle: the live countdown is the
+// headline and a brighter red sweep covers the time already used (an inset white ring was
+// dropped: inside the red it read as a second outline, noise). White text passes 4.5:1 on both reds.
+private val EMERGENCY_IDLE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_ACTIVE_BG = Color(DesignTokens.Semantic.errorDark)
 private val EMERGENCY_SWEEP = Color(DesignTokens.Semantic.error)
 
@@ -82,14 +92,20 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
     var profile by remember { mutableStateOf<Profile?>(null) }
     var contactCount by remember { mutableIntStateOf(0) }
     var emergency by remember { mutableStateOf<ActiveEmergency?>(null) }
+
+    // Null until read, and stays null if the read fails: then the readiness card isn't shown,
+    // rather than telling the user to add places they already have.
+    var placeCount by remember { mutableStateOf<Int?>(null) }
     var secondsLeft by remember { mutableIntStateOf(0) }
 
     // Reloaded every time home is shown (useFocusEffect).
     LaunchedEffect(Unit) {
         Analytics.screen("home")
+        // The active emergency first: nothing optional delays the Start/Resume button's state.
+        emergency = store.activeEmergency()
         profile = store.profile()
         contactCount = store.contacts().size
-        emergency = store.activeEmergency()
+        placeCount = runCatchingCancellable { store.destinations().size }.getOrNull()
     }
     // Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     LaunchedEffect(emergency) {
@@ -110,6 +126,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             .fillMaxSize()
             .background(colors.background)
             .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Top))
+            .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
             .padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp, bottom = space.xxl.udp),
     ) {
@@ -128,7 +145,7 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                     style = type.headline.style(), color = colors.text, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
-            Box(Modifier.padding(start = space.md.udp).testTag("home-profile").clickable {
+            Box(Modifier.padding(start = space.md.udp).testTag("home-profile").semantics { contentDescription = t("editProfile") }.clickable(role = Role.Button) {
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "profile", "source" to "home"))
                 navigate("profile")
             }) {
@@ -142,10 +159,10 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                     ) { Icon("person.fill", 28f, colors.textSecondary) }
                 }
                 Box(
-                    Modifier.align(Alignment.BottomEnd).size(20.udp).clip(CircleShape).background(colors.tint)
-                        .rnBorder(2.udp, Color(DesignTokens.Light.textOnPrimary), CircleShape),
+                    Modifier.align(Alignment.BottomEnd).size(20.udp).clip(CircleShape).background(colors.primary)
+                        .rnBorder(2.udp, colors.background, CircleShape),
                     contentAlignment = Alignment.Center,
-                ) { Icon("pencil", 10f, Color(DesignTokens.Light.textOnPrimary)) }
+                ) { Icon("pencil", 10f, colors.textOnPrimary) }
             }
         }
 
@@ -159,23 +176,27 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 mapOf("time" to formatCountdown(secondsLeft), "checked" to active.checkedSteps.size, "total" to EMERGENCY_STEP_COUNT),
             )
         }
+        val running = active != null && !expired
         Box(
             Modifier
                 .fillMaxWidth()
                 .padding(bottom = space.lg.udp)
-                .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.xl.dp))
-                .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp))
+                // The same radius as every other card on home.
+                .shadow(4.udp, RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                 .background(if (active != null) EMERGENCY_ACTIVE_BG else EMERGENCY_IDLE_BG)
                 .testTag("home-start-emergency")
                 // One accessible element, read as its texts, like RN's touchable (Maestro matches it).
                 .clearAndSetSemantics { contentDescription = "$title, $subtitle"; role = Role.Button }
                 .clickable { navigate("emergency") },
         ) {
-            if (active != null && !expired) {
+            if (running) {
                 val elapsed = (SEARCH_WINDOW_SECONDS - secondsLeft).toFloat() / SEARCH_WINDOW_SECONDS
                 Box(Modifier.matchParentSize().drawBehind { drawRect(EMERGENCY_SWEEP, size = Size(size.width * elapsed, size.height)) })
             }
-            Row(
+            if (running) {
+                RunningEmergency(t, secondsLeft, active?.checkedSteps?.size ?: 0)
+            } else Row(
                 Modifier.padding(vertical = space.lg.udp, horizontal = space.xl.udp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -185,7 +206,8 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                     }
                     Column(Modifier.weight(1f)) {
                         Text(title, style = type.bodyBold.style(), color = Color(DesignTokens.Light.textOnPrimary), modifier = Modifier.padding(bottom = 2.udp))
-                        Text(subtitle, style = type.caption.style(), color = Color.White.copy(alpha = 0.8f))
+                        // 14sp at least: older eyes read it in sun, white on red.
+                        Text(subtitle, style = type.label.style(fontWeight = 500, letterSpacing = 0f), color = Color(DesignTokens.Light.textOnPrimary))
                     }
                 }
                 Icon("chevron.right", 20f, Color.White.copy(alpha = 0.7f))
@@ -195,14 +217,21 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
         // Quick actions
         Row(Modifier.padding(bottom = space.lg.udp), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
             QuickAction(
-                "📞", t("quickActions.contacts"),
+                "phone.fill", t("quickActions.contacts"),
                 if (contactCount == 0) t("quickActions.contactsNone") else t("quickActions.contactsSaved", mapOf("count" to contactCount)),
                 "home-contacts", Modifier.weight(1f),
             ) {
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "contacts", "source" to "home"))
                 navigate("contacts")
             }
-            QuickAction("📍", t("quickActions.places"), t("quickActions.placesSubtitle"), "home-places", Modifier.weight(1f)) {
+            // The real count, as Contacts shows: "Likely spots" with none saved contradicted the
+            // checklist's "Likely places: Add". Until it's read (or if it fails) the plain subtitle.
+            val placesSubtitle = when (val n = placeCount) {
+                null -> t("quickActions.placesSubtitle")
+                0 -> t("quickActions.placesNone")
+                else -> t("quickActions.placesSaved", mapOf("count" to n))
+            }
+            QuickAction("mappin.and.ellipse", t("quickActions.places"), placesSubtitle, "home-places", Modifier.weight(1f)) {
                 Analytics.track(AnalyticsEvent.DESTINATION_ADD_TAPPED, mapOf("source" to "home"))
                 navigate("destinations")
             }
@@ -216,33 +245,52 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             }
         }
 
-        // Settings link
+        placeCount?.let { places ->
+            // Each line reports what its home shortcut reports (avatar, Contacts tile, Places tile).
+            ReadinessCard(t, readinessChecklist(p, contactCount, places)) { item ->
+                when (item) {
+                    ReadinessItem.PHOTO, ReadinessItem.DESCRIPTION -> {
+                        Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "profile", "source" to "home"))
+                        navigate("profile")
+                    }
+                    ReadinessItem.CONTACTS -> {
+                        Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "contacts", "source" to "home"))
+                        navigate("contacts")
+                    }
+                    ReadinessItem.PLACES -> {
+                        Analytics.track(AnalyticsEvent.DESTINATION_ADD_TAPPED, mapOf("source" to "home"))
+                        navigate("destinations")
+                    }
+                }
+            }
+        }
+
+        // Settings link: a plain row, not a card. It is used rarely, so it doesn't carry the
+        // weight of Emergency Info or the quick actions above it.
         Row(
             Modifier
                 .fillMaxWidth()
                 .padding(bottom = space.sm.udp)
+                .heightIn(min = 48.udp)
                 .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                .background(colors.card)
-                .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
-                // A Pressable inside the bordered card in RN: the ID covers the inside only.
                 .testTag("home-settings")
-                .clickable {
+                .clickable(role = Role.Button) {
                     Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "settings", "source" to "home"))
                     navigate("settings")
                 }
-                .padding(space.lg.udp),
+                .padding(horizontal = space.lg.udp, vertical = space.md.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon("gearshape", 18f, colors.textSecondary)
-            Text(t("settingsLink"), style = type.body.style(), color = colors.text, modifier = Modifier.weight(1f))
+            Text(t("settingsLink"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.weight(1f))
             Icon("chevron.right", 16f, colors.textSecondary)
         }
     }
 }
 
 @Composable
-private fun QuickAction(emoji: String, title: String, subtitle: String, testTag: String, modifier: Modifier, onClick: () -> Unit) {
+private fun QuickAction(icon: String, title: String, subtitle: String, testTag: String, modifier: Modifier, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     Column(
@@ -250,18 +298,19 @@ private fun QuickAction(emoji: String, title: String, subtitle: String, testTag:
             .heightIn(min = 110.udp)
             .testTag(testTag)
             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-            .clickable(onClick = onClick)
+            .clickable(role = Role.Button, onClick = onClick)
             .background(colors.card)
             .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .padding(space.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterVertically),
     ) {
-        Box(Modifier.padding(bottom = space.xs.udp).size(44.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-            Text(emoji, style = rnTextStyle(22f, 24f))
+        Box(Modifier.padding(bottom = space.xs.udp).size(44.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
+            Icon(icon, 22f, colors.primaryText)
         }
         Text(title, style = DesignTokens.Typography.bodyBold.style(), color = colors.text)
-        Text(subtitle, style = DesignTokens.Typography.caption.style(), color = colors.textSecondary)
+        // 14sp, not caption: the counts are read at a glance by older eyes.
+        Text(subtitle, style = DesignTokens.Typography.label.style(fontWeight = 400, letterSpacing = 0f), color = colors.textSecondary)
     }
 }
 
@@ -281,17 +330,22 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
             .rnBorder(1.udp, colors.border, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .padding(space.lg.udp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(t("emergencyInfo.title"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
-            Row(
-                Modifier.clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primaryLight)
-                    .padding(horizontal = space.sm.udp, vertical = space.xs.udp),
-                horizontalArrangement = Arrangement.spacedBy(space.xxs.udp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(t("emergencyInfo.script911"), style = type.caption.style().copy(fontWeight = FontWeight.SemiBold), color = colors.tint)
-                Icon("chevron.right", 14f, colors.tint)
+        // One set with the Contacts and Places cards above: the same 44dp round icon, a bodyBold
+        // title and a smaller second line, laid out as a row because the card is full width.
+        // The title stays on one line at large text; "911 Script" is the second line, in the
+        // accent colour, and the chevron says the whole card opens it.
+        Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp), verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.size(44.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
+                Icon("doc.text.fill", 22f, colors.primaryText)
             }
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
+                Text(
+                    t("emergencyInfo.title"), style = type.bodyBold.style(), color = colors.text,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+                Text(t("emergencyInfo.script911"), style = type.caption.style(fontWeight = 600), color = colors.primaryText)
+            }
+            Icon("chevron.right", 20f, colors.primaryText)
         }
         val items = listOfNotNull(
             profile.medicalConditions?.takeIf { it.isNotEmpty() }?.let { "emergencyInfo.healthNotes" to it },
@@ -314,5 +368,103 @@ private fun EmergencyInfoCard(t: Translate, profile: Profile, onClick: () -> Uni
                 }
             }
         }
+    }
+}
+
+/** The height of a readiness line's Add capsule; the whole line (48dp) is the touch target. */
+private const val READINESS_ADD_HEIGHT = 36
+
+/**
+ * "Ready for an emergency": what's filled in for the script and the search, each line opening
+ * the screen that fills it in. Done is said by the icon and by the word, not by colour alone;
+ * a missing line carries an "Add" action in the accent colour.
+ */
+@Composable
+private fun ReadinessCard(t: Translate, checks: List<ReadinessCheck>, onOpen: (ReadinessItem) -> Unit) {
+    val colors = LocalAppColors.current
+    val type = DesignTokens.Typography
+    val space = DesignTokens.Spacing
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = space.lg.udp)
+            .clip(shape)
+            .background(colors.card)
+            .rnBorder(1.udp, colors.border, shape)
+            .padding(vertical = space.sm.udp),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().semantics(mergeDescendants = true) { heading() }
+                .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(t("readiness.title"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
+            Text(
+                t("readiness.summary", mapOf("done" to checks.count { it.done }, "total" to checks.size)),
+                style = type.label.style(fontWeight = 500, letterSpacing = 0f), color = colors.textSecondary,
+                modifier = Modifier.padding(start = space.sm.udp),
+            )
+        }
+        for (check in checks) {
+            val label = t("readiness.items.${check.item.key}")
+            val state = t(if (check.done) "readiness.done" else "readiness.add")
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.udp)
+                    .clearAndSetSemantics { contentDescription = "$label, $state"; role = Role.Button }
+                    .clickable { onOpen(check.item) }
+                    .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+                horizontalArrangement = Arrangement.spacedBy(space.md.udp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // To do is a plus in a circle (an empty circle read as a radio button), done a
+                // green check.
+                Icon(if (check.done) "checkmark.circle.fill" else "plus.circle", 22f, if (check.done) colors.success else colors.primaryText)
+                Text(label, style = type.body.style(), color = colors.text, modifier = Modifier.weight(1f))
+                if (check.done) {
+                    Text(state, style = type.label.style(letterSpacing = 0f), color = colors.textSecondary)
+                    Icon("chevron.right", 16f, colors.textSecondary)
+                } else {
+                    // A missing item's Add looks like the button it is: a tonal capsule at body
+                    // size, still quieter than the red emergency banner above.
+                    Box(
+                        Modifier.heightIn(min = READINESS_ADD_HEIGHT.udp).clip(CircleShape).background(colors.primaryLight)
+                            .padding(horizontal = space.lg.udp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(state, style = type.bodyBold.style(), color = colors.primaryText) }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * The home button while a search runs: "EMERGENCY IN PROGRESS" as a small label, the time left
+ * as the headline (display size, so it reads from arm's length), then the steps done.
+ */
+@Composable
+private fun RunningEmergency(t: Translate, secondsLeft: Int, checked: Int) {
+    val space = DesignTokens.Spacing
+    val type = DesignTokens.Typography
+    val white = Color(DesignTokens.Light.textOnPrimary)
+    Row(Modifier.padding(vertical = space.lg.udp, horizontal = space.xl.udp), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(space.xs.udp), verticalAlignment = Alignment.CenterVertically) {
+                Icon("timer", 18f, white)
+                Text(t("emergencyButton.activeTitle").uppercase(), style = type.label.style(letterSpacing = 1f), color = white)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.Bottom) {
+                Text(formatCountdown(secondsLeft), style = type.display.style(), color = white)
+                // Title size, so "left" reads as part of the countdown rather than a footnote to it.
+                Text(t("emergencyButton.timeLeft"), style = type.title.style(), color = white, modifier = Modifier.padding(bottom = space.xxs.udp))
+            }
+            Text(
+                t("emergencyButton.stepsDone", mapOf("checked" to checked, "total" to EMERGENCY_STEP_COUNT)),
+                style = type.body.style(fontWeight = 500), color = white,
+            )
+        }
+        Icon("chevron.right", 24f, white)
     }
 }

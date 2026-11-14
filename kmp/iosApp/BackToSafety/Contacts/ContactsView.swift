@@ -219,18 +219,16 @@ struct ContactsView: View {
                         items: list, id: { $0.id },
                         onDragStart: { UIImpactFeedbackGenerator(style: .medium).impactOccurred() },
                         onRelease: { UIImpactFeedbackGenerator(style: .light).impactOccurred() },
-                        onReorder: { ordered in
-                            contacts = ordered
-                            Task {
-                                do { try await model.store.reorderContacts(ordered: ordered) } catch {
-                                    reportSaveFailed(screen: "contacts", action: "reorder", error: error)
-                                    showError(validation: false, t("errors.reorderFailed"))
-                                }
-                                await reload()
-                            }
-                        }
+                        onReorder: reorder
                     ) { contact, index, dragging in
-                        contactCard(contact, index, dragging)
+                        contactCard(contact, index, dragging,
+                                    moveUp: index > 0 ? { move(list, from: index, to: index - 1) } : nil,
+                                    moveDown: index < list.count - 1 ? { move(list, from: index, to: index + 1) } : nil)
+                    }
+                    // With a single contact, nobody else is called if they don't answer: say so
+                    // right above the Add button.
+                    if list.count == 1, let only = list.first {
+                        secondContactPrompt(only.name)
                     }
                     HStack(spacing: Space.sm) {
                         addButton("contacts-add", action: add)
@@ -242,11 +240,32 @@ struct ContactsView: View {
             }
             .padding([.horizontal, .top], Space.lg)
         }
+        .scrollStopsAtSafeArea()
+    }
+
+    /// Shown under the only contact: why a second one matters. Quiet (surface fill, no action of
+    /// its own) because the Add button sits right under it; read as one element by VoiceOver.
+    private func secondContactPrompt(_ name: String) -> some View {
+        HStack(spacing: Space.md) {
+            SFIcon("person.badge.plus", 20, colors.primaryText)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(colors.iconContainer))
+            VStack(alignment: .leading, spacing: Space.xxs) {
+                RNText(t("secondContact.title"), Typography.bodyBold.spec, color: colors.text)
+                RNText(t("secondContact.body", ["name": name]), Typography.label.spec.weight(400).spacing(0), color: colors.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(Space.lg)
+        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.surface))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+        .accessibilityElement(children: .combine)
+        .padding(.bottom, Space.sm)
     }
 
     private var empty: some View {
         VStack(spacing: Space.md) {
-            SFIcon("person.2.fill", 40, colors.primary)
+            SFIcon("person.2.fill", 40, colors.primaryText)
                 .frame(width: 88, height: 88)
                 .background(Circle().fill(colors.primaryLight))
                 .padding(.bottom, Space.sm)
@@ -266,8 +285,9 @@ struct ContactsView: View {
     private func addButton(_ testID: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon("plus", 20, white)
-                RNText(t("addContact"), Typography.bodyBold.spec, color: white, lines: 1).fixedSize()
+                // textOnPrimary, not white: the dark theme's primary is a light tone with dark ink on it.
+                SFIcon("plus", 20, colors.textOnPrimary)
+                RNText(t("addContact"), Typography.bodyBold.spec, color: colors.textOnPrimary, lines: 1).fixedSize()
             }
             // As in RN, where text doesn't shrink: at large sizes the label spills into the
             // padding rather than truncating, and the two buttons keep equal widths.
@@ -276,30 +296,65 @@ struct ContactsView: View {
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
         }
         .buttonStyle(.pressable)
+        .accessibilityLabel(label)
         .accessibilityIdentifier(testID)
     }
 
     private func importButton(_ testID: String) -> some View {
         Button(action: importContact) {
             HStack(spacing: Space.sm) {
-                SFIcon("square.and.arrow.down", 18, colors.tint)
-                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.text, lines: 1).fixedSize()
+                SFIcon("square.and.arrow.down", 18, colors.primaryText)
+                RNText(importing ? t("importing") : t("importContact"), Typography.bodyBold.spec, color: colors.primaryText, lines: 1).fixedSize()
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .padding(Space.lg + 1)
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+            // An outlined button in the accent, like the photo buttons: a pale grey edge beside
+            // the filled Add Contact read as disabled.
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primaryText, lineWidth: 1.5))
         }
         .buttonStyle(.pressable)
         .disabled(importing)
         .accessibilityIdentifier(testID)
     }
 
-    private func contactCard(_ contact: ContactEntity, _ index: Int, _ dragging: Bool) -> some View {
+    private func reorder(_ ordered: [ContactEntity]) {
+        contacts = ordered
+        Task {
+            do { try await model.store.reorderContacts(ordered: ordered) } catch {
+                reportSaveFailed(screen: "contacts", action: "reorder", error: error)
+                showError(validation: false, t("errors.reorderFailed"))
+            }
+            await reload()
+        }
+    }
+
+    /// Moves one card a place up or down: VoiceOver's way to reorder.
+    private func move(_ list: [ContactEntity], from: Int, to: Int) {
+        var ordered = list
+        ordered.insert(ordered.remove(at: from), at: to)
+        reorder(ordered)
+    }
+
+    private func contactCard(_ contact: ContactEntity, _ index: Int, _ dragging: Bool,
+                             moveUp: (() -> Void)?, moveDown: (() -> Void)?) -> some View {
         let role = t("roles.\(roles.first { $0.0 == contact.role }?.0 ?? "other")")
         let relationship = contact.relationship.flatMap { $0.isEmpty ? nil : " • \($0)" } ?? ""
         return VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 0) {
+                // A visible handle says the cards can be dragged into order (hold, then drag). It is
+                // a 48pt target with a spoken name, and Move up / Move down actions, so VoiceOver
+                // users can reorder without dragging. The glyph is the platform's drag indicator (iOS's
+                // reorder lines, Material's dotted grip) at 24pt in secondary text.
+                SFIcon("line.3.horizontal", 24, colors.textSecondary)
+                    .frame(width: 48, height: 48)
+                    .contentShape(Rectangle())
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel(t("actions.reorderName", ["name": contact.name]))
+                    .accessibilityActions {
+                        if let moveUp { Button(t("actions.moveUp"), action: moveUp) }
+                        if let moveDown { Button(t("actions.moveDown"), action: moveDown) }
+                    }
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(contact.name, Typography.bodyLarge.spec.weight(600), color: colors.text, lines: 1)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -307,18 +362,31 @@ struct ContactsView: View {
                     RNText(role + relationship, Typography.caption.spec, color: colors.textSecondary, lines: 1).padding(.top, 4)
                 }
                 .padding(.trailing, Space.md)
+                // Call is the action (green); Edit is secondary (outlined, neutral).
                 HStack(spacing: Space.sm) {
-                    circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), "phone.fill") {
+                    circleAction("contacts-item-\(index)-call", Color(argb: Semantic.success), white, "phone.fill", label: t("actions.callName", ["name": contact.name])) {
                         Analytics.shared.track(event: .contactCallTapped, properties: [:])
                         dial(contact.phone, target: .contact, screen: "contacts", tCommon: tCommon)
                     }
-                    circleAction("contacts-item-\(index)-edit", colors.primary, "pencil") {
+                    circleAction("contacts-item-\(index)-edit", .clear, colors.text, "pencil", label: t("actions.editName", ["name": contact.name]), border: colors.inputBorder) {
                         Analytics.shared.track(event: .contactEditTapped, properties: [:])
                         open(contact, ContactForm(contact))
                     }
                 }
             }
-            .padding(.bottom, Space.sm)
+            .padding(.bottom, contact.notifyOnEmergency ? 0 : Space.sm)
+            if contact.notifyOnEmergency {
+                // Its own row under the role, lined up with the name, across the card's full width:
+                // squeezed between the name and the call/edit buttons it wrapped at large text and
+                // crowded them. Sentence case, as caps at large text read as shouting and ran long.
+                HStack(spacing: 4) {
+                    SFIcon("checkmark.circle.fill", 16, colors.primaryText)
+                    RNText(t("alertCircleBadge"), Typography.caption.spec.weight(600), color: colors.primaryText)
+                }
+                .padding(.horizontal, Space.sm).padding(.vertical, 3)
+                .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
+                .padding(.leading, 48).padding(.top, Space.xs).padding(.bottom, Space.sm)
+            }
             if let address = contact.address, !address.isEmpty {
                 HStack(spacing: Space.sm) {
                     SFIcon("location", 14, colors.icon)
@@ -328,25 +396,16 @@ struct ContactsView: View {
         }
         .padding(Space.lg + 1)
         .listCard(dragging: dragging, colors: colors)
-        .overlay(alignment: .topTrailing) {
-            if contact.notifyOnEmergency {
-                // Sits over the card's top edge (position absolute, top -10, right md).
-                HStack(spacing: 4) {
-                    SFIcon("checkmark.circle.fill", 11, colors.primary)
-                    RNText(t("alertCircleBadge"), TextSpec(size: 10, lineHeight: 12, weight: 700, letterSpacing: 0.5), color: colors.primary)
-                }
-                .padding(.horizontal, Space.sm + 1).padding(.vertical, 4)
-                .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
-                .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.primary, lineWidth: 1))
-                .offset(x: -Space.md, y: -10)
-            }
-        }
         .padding(.bottom, Space.md)
     }
 
-    private func circleAction(_ testID: String, _ color: Color, _ icon: String, action: @escaping () -> Void) -> some View {
+    private func circleAction(_ testID: String, _ fill: Color, _ tint: Color, _ icon: String, label _: String, border: Color = .clear,
+                              action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            SFIcon(icon, 16, white).frame(width: 44, height: 44).background(Circle().fill(color))
+            SFIcon(icon, 18, tint).frame(width: 48, height: 48)
+                .background(Circle().fill(fill))
+                .overlay(Circle().strokeBorder(border, lineWidth: 1))
+                .contentShape(Circle())
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
@@ -355,8 +414,8 @@ struct ContactsView: View {
     private var formView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                RNText(t(editing != nil ? "form.editTitle" : "form.newTitle"), Typography.headline.spec, color: colors.text)
-                    .padding(.bottom, Space.xl)
+                // No heading here: the app bar already says "Add Contact" / "Edit Contact", and a
+                // large second title right under it said the same thing twice and pushed the fields down.
                 FormTextInput(label: t("form.nameLabel"), text: $form.name, testID: "contacts-form-name",
                               placeholder: t("form.namePlaceholder"), required: true, capitalization: .words)
                 FormTextInput(label: t("form.phoneLabel"), text: $form.phone, testID: "contacts-form-phone",
@@ -368,12 +427,10 @@ struct ContactsView: View {
                               placeholder: t("form.addressPlaceholder"), multiline: true)
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(t("form.roleLabel"), Typography.bodyBold.spec, color: colors.text).padding(.bottom, Space.xs)
-                    FlowLayout(spacing: Space.sm) {
-                        ForEach(roles, id: \.0) { role, icon in
-                            OptionChip(label: t("roles.\(role)"), icon: icon, testID: "contacts-form-role-\(role)",
-                                       selected: form.role == role, selectedColor: colors.primary) {
-                                if form.role != role { form.role = role }
-                            }
+                    ChipGrid(items: roles) { item in
+                        OptionChip(label: t("roles.\(item.0)"), icon: item.1, testID: "contacts-form-role-\(item.0)",
+                                   selected: form.role == item.0, selectedColor: colors.primary) {
+                            if form.role != item.0 { form.role = item.0 }
                         }
                     }
                 }
@@ -394,6 +451,10 @@ struct ContactsView: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.pressable)
+                // Read as the switch it looks like: its label, role and on/off state.
+                .accessibilityRepresentation {
+                    Toggle(t("notifyInEmergency"), isOn: $form.notifyOnEmergency)
+                }
                 .accessibilityIdentifier("contacts-form-notify")
                 .padding(.bottom, Space.lg)
                 FormTextInput(label: t("form.notesLabel"), text: $form.notes, testID: "contacts-form-notes",
@@ -404,5 +465,6 @@ struct ContactsView: View {
             .padding(Space.lg)
         }
         .scrollDismissesKeyboard(.interactively)
+        .scrollStopsAtSafeArea()
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -29,7 +30,9 @@ fun Icon(name: String, size: Float, color: Color, modifier: Modifier = Modifier)
     val glyph = icons.glyph(name) ?: return
     Text(
         glyph,
-        modifier = modifier,
+        // Decorative: the glyph is a private-use character TalkBack would read as noise. The
+        // control around it carries the label; tags in [modifier] (outside this) are kept.
+        modifier = modifier.clearAndSetSemantics {},
         color = color,
         // A vector-icons glyph is RN text with allowFontScaling={false}: sized in dp, so it
         // ignores the system font scale, and like all RN text rounded up to whole pixels.

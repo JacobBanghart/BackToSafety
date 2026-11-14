@@ -5,6 +5,7 @@ import android.content.ClipboardManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -12,11 +13,15 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
@@ -36,16 +41,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.ui.AppCard
+import com.backtosafety.app.ui.DetailRow
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
-import com.backtosafety.app.ui.rnLineHeight
 import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.rnTextStyleNatural
 import com.backtosafety.app.ui.runCatchingCancellable
@@ -56,6 +64,7 @@ import com.backtosafety.core.Analytics
 import com.backtosafety.core.AnalyticsEvent
 import com.backtosafety.core.DesignTokens
 import com.backtosafety.core.Translate
+import com.backtosafety.core.abbreviateId
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.DATABASE_VERSION
 import com.backtosafety.core.invoke
@@ -134,38 +143,19 @@ fun SettingsScreen(
     ) {
         ScreenHeader(t("screenTitle"), "settings", onBack)
         Column(
-            Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(space.xl.udp),
+            // The 16dp margin of every other screen, so the cards line up with the header's action.
+            Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp),
             verticalArrangement = Arrangement.spacedBy(space.lg.udp),
         ) {
             AppCard {
                 SectionHeader("paintbrush.fill", colors.text, t("sections.appearance.title"))
                 Description(t("sections.appearance.description"))
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                    for ((value, icon) in listOf("system" to "📱", "light" to "☀️", "dark" to "🌙")) {
+                    for ((value, icon) in listOf("system" to "iphone", "light" to "sun.max.fill", "dark" to "moon.fill")) {
                         Option(t("themeOptions.$value"), "settings-theme-$value", themePreference == value, icon) {
                             onThemeChange(value)
                         }
                     }
-                }
-            }
-
-            AppCard {
-                SectionHeader("trash.fill", Color(DesignTokens.Semantic.error), t("sections.deleteAccount.title"))
-                Description(t("sections.deleteAccount.description"))
-                val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
-                Row(
-                    Modifier.fillMaxWidth().testTag("settings-delete-account").alpha(if (deleting) 0.6f else 1f).clip(shape)
-                        .clickable(enabled = !deleting, onClick = ::deleteAccount)
-                        .background(Color(DesignTokens.Semantic.error)).padding(vertical = 14.udp, horizontal = 20.udp),
-                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    val white = Color(DesignTokens.Light.textOnPrimary)
-                    Icon("trash.fill", 18f, white)
-                    Text(
-                        t(if (deleting) "sections.deleteAccount.deletingButton" else "sections.deleteAccount.button"),
-                        style = DesignTokens.Typography.bodyBold.style(), color = white,
-                    )
                 }
             }
 
@@ -189,19 +179,59 @@ fun SettingsScreen(
                 ListItem(
                     t("sections.about.version"),
                     versionLabel() + if (devMode) t("sections.about.devSuffix") else "",
-                    testID = "settings-version", onPress = ::onVersionTap,
+                    testID = "settings-version", ruleColor = Color.Transparent, onPress = ::onVersionTap,
                 )
-                ListItem(t("sections.about.platform"), "android")
-                ListItem(t("sections.about.theme"), if (colors.isDark) "dark" else "light")
-                if (devMode) ListItem(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
-                ListItem(
-                    t("sections.about.deviceId"), deviceId ?: "—", testID = "settings-device-id",
-                    ruleColor = Color.Transparent,
+            }
+
+            // Platform, theme and the device ID are for support, not for the caregiver: under
+            // About, outside any card, in small type with one line each, so they read as
+            // secondary. The values are words from the strings ("Android", "Dark"), not raw keys.
+            Column(Modifier.fillMaxWidth().padding(horizontal = (space.lg + 1).udp)) {
+                Text(
+                    t("sections.about.diagnostics").uppercase(),
+                    style = DesignTokens.Typography.caption.style(fontWeight = 600, letterSpacing = 0.8f),
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(bottom = space.xs.udp).semantics { heading() },
+                )
+                DetailRow(t("sections.about.platform"), t("sections.about.platformAndroid"))
+                DetailRow(t("sections.about.theme"), t(if (colors.isDark) "themeOptions.dark" else "themeOptions.light"))
+                if (devMode) DetailRow(t("sections.about.dbSchema"), DATABASE_VERSION.toString())
+                DetailRow(
+                    // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
+                    // text, and support needs it pasted, not read out. The copy is the full ID.
+                    t("sections.about.deviceId"), deviceId?.let(::abbreviateId) ?: "—", testID = "settings-device-id",
+                    action = "doc.on.clipboard.fill" to t("sections.about.copyDeviceId"),
                 ) {
                     deviceId?.let {
                         context.getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(null, it))
                         showAlert(context, tCommon("copied"), t("deviceIdCopied"), confirm = tCommon("ok") to {})
                     }
+                }
+            }
+
+            // The danger zone sits last, under About, and is outlined rather than a solid red
+            // block: deleting everything is rare and final, so it shouldn't read as prominently
+            // as a routine option. A rule with space either side sets it apart from the support
+            // details, so it doesn't read as one of them. Its confirmation dialog is unchanged.
+            // The card is washed and edged in red and the button has a 1.5 red outline, so the
+            // warning is carried by more than a faint outline and icon.
+            Box(Modifier.padding(vertical = space.sm.udp).fillMaxWidth().height(1.udp).background(colors.border))
+            AppCard(danger = true) {
+                SectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
+                Description(t("sections.deleteAccount.description"))
+                val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("settings-delete-account").alpha(if (deleting) 0.6f else 1f)
+                        .clip(shape).clickable(enabled = !deleting, role = Role.Button, onClick = ::deleteAccount)
+                        .background(colors.card).rnBorder(1.5.dp, colors.error, shape).padding(vertical = space.md.udp, horizontal = 20.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon("trash.fill", 18f, colors.error)
+                    Text(
+                        t(if (deleting) "sections.deleteAccount.deletingButton" else "sections.deleteAccount.button"),
+                        style = DesignTokens.Typography.bodyBold.style(), color = colors.error,
+                    )
                 }
             }
         }
@@ -236,25 +266,25 @@ private fun Description(text: String) {
     )
 }
 
-/** A theme or language choice: 2dp border, tint and primaryLight when selected. */
+/** A theme or language choice: 2dp border, tint and primaryLight when selected, the label in primaryText (tint on primaryLight is under 4.5:1). */
 @Composable
 private fun RowScope.Option(label: String, testID: String, selected: Boolean, icon: String? = null, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Column(
-        Modifier.weight(1f).testTag(testID).clip(shape).clickable(onClick = onClick)
+        Modifier.weight(1f).testTag(testID).clip(shape).selectable(selected, role = Role.RadioButton, onClick = onClick)
             .background(if (selected) colors.primaryLight else Color.Transparent)
             .rnBorder(2.udp, if (selected) colors.tint else colors.border, shape)
             .padding(vertical = DesignTokens.Spacing.lg.udp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        // themeIcon: fontSize 24 over ThemedText's 24 line height.
+        // A 24dp symbol, tinted like the label.
         icon?.let {
-            Text(it, style = rnTextStyle(24f, 24f), modifier = Modifier.padding(bottom = DesignTokens.Spacing.xs.udp).rnLineHeight(24f))
+            Icon(it, 24f, if (selected) colors.primaryText else colors.textSecondary, Modifier.padding(bottom = DesignTokens.Spacing.xs.udp))
         }
         Text(
             label, style = rnTextStyle(14f, 24f, if (selected) 600 else 400),
-            color = if (selected) colors.tint else colors.text,
+            color = if (selected) colors.primaryText else colors.text,
         )
     }
 }

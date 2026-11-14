@@ -4,6 +4,9 @@ import Shared
 import SwiftUI
 import UserNotifications
 
+/// The unfilled part of the timer card's progress track: black over the card, a darker inset under the white fill.
+private let timerTrackShadeOpacity = 0.35
+
 private enum EmergencyModal: Identifiable {
     case found, leave, noContacts, smsError
     /// A countdown alert that came due while the screen wasn't showing (EmergencyAway).
@@ -29,6 +32,7 @@ struct EmergencyView: View {
     @State private var checked: Set<String> = []
     @State private var wearing = ""
     @State private var showWearing = true
+    @State private var wearingFocused = false
     @State private var secondsLeft: Int32 = EmergencyKt.SEARCH_WINDOW_SECONDS
     @State private var profile: Profile?
     @State private var destinations: [DestinationEntity] = []
@@ -92,8 +96,8 @@ struct EmergencyView: View {
             }
         } else {
             VStack(spacing: 0) {
-                ScreenHeader(title: t("screenTitle"), testID: "emergency", onBack: { modal = .leave },
-                             titleIcon: ("exclamationmark.triangle.fill", Color(argb: Semantic.error)))
+                // No warning icon by the title: the red on this screen belongs to Call 911 alone.
+                ScreenHeader(title: t("screenTitle"), testID: "emergency", onBack: { modal = .leave })
                 ScrollView {
                     VStack(alignment: .leading, spacing: Space.lg) {
                         timerCard
@@ -104,8 +108,10 @@ struct EmergencyView: View {
                                 .background(RoundedRectangle(cornerRadius: Radius.lg).fill(Color(argb: Secondary.c100)))
                                 .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(Color(argb: Secondary.c300), lineWidth: 1))
                         }
-                        if showWearing { wearingCard }
                         actionButtons
+                        // The checklist is the guided task, so it starts in view: what they're wearing
+                        // is asked for after its first step (in `checklist`), not between the actions
+                        // and the checklist, where it pushed the steps below the fold.
                         checklist
                         tipsCard
                         Color.clear.frame(height: Space.xxl)
@@ -114,6 +120,7 @@ struct EmergencyView: View {
                 }
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
+                .scrollStopsAtSafeArea()
             }
             .accessibilityElement(children: .contain)
             .accessibilityIdentifier("emergency-screen")
@@ -293,10 +300,10 @@ struct EmergencyView: View {
                 RNText(t("loadFailed.title"), Typography.title.spec, color: colors.text, align: .center)
                 RNText(t("loadFailed.message"), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
                 Button { Task { await load() } } label: {
-                    RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: Color(argb: Light.textOnPrimary))
+                    RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                         .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                         .padding(.vertical, Space.md).padding(.horizontal, Space.lg)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primary))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.pressable)
@@ -315,111 +322,149 @@ struct EmergencyView: View {
         let progress = steps.isEmpty ? 0 : CGFloat(checked.count) / CGFloat(steps.count)
         return VStack(spacing: Space.xs) {
             RNText((expired ? t("timer.labelExpired", ["emergencyNumber": emergencyNumber]) : t("timer.labelActive")).uppercased(),
-                   Typography.caption.spec.weight(600).spacing(1), color: .white.opacity(0.75))
+                   // 14pt and full white at least: smaller or tinted text faded into the card's purple.
+                   Typography.label.spec.spacing(1), color: white)
                 .accessibilityIdentifier("emergency-timer-label")
-            RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 60, lineHeight: 72, weight: 700, letterSpacing: 2), color: white)
+            // Already display-size, so it doesn't grow with Dynamic Type: at large text the
+            // countdown pushed the checklist below the fold. The text around it still scales.
+            RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), TextSpec(size: 56, lineHeight: 64, weight: 700, letterSpacing: 2), color: white)
+                .dynamicTypeSize(.large)
                 .accessibilityIdentifier("emergency-timer")
+            // Body size at medium weight: the calming line is read in a panic, so it isn't a caption.
             RNText(expired ? t("timer.hintExpired", ["emergencyNumber": emergencyNumber]) : t("timer.hintActive"),
-                   Typography.body.spec, color: .white.opacity(0.9), align: .center)
+                   Typography.body.spec.weight(500), color: white, align: .center)
                 .padding(.top, Space.xs)
             VStack(spacing: Space.xs) {
+                // A 10pt track that reads at arm's length. The unfilled part is a darker inset
+                // (black over the card) and the filled part solid white, so done and to-do differ
+                // in lightness, not only in a white tint that faded into the card.
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.25))
+                        Capsule().fill(Color.black.opacity(timerTrackShadeOpacity))
                         Capsule().fill(white).frame(width: geo.size.width * progress)
                     }
+                    .overlay(Capsule().strokeBorder(white.opacity(0.5), lineWidth: 1))
                 }
-                .frame(height: 6)
+                .frame(height: 10)
                 let progressText = t("timer.stepsProgress", ["checked": checked.count, "total": steps.count])
-                RNText(progressText, Typography.caption.spec, color: .white.opacity(0.9), align: .center)
+                RNText(progressText, Typography.body.spec.weight(500), color: white, align: .center)
                     .frame(maxWidth: .infinity)
                     .rnID("emergency-progress", label: progressText)
             }
-            .padding(.top, Space.md)
+            .padding(.top, Space.sm)
         }
         .frame(maxWidth: .infinity)
-        .padding(Space.xl)
-        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.error) : Color(argb: Primary.c700)))
+        .padding(.horizontal, Space.xl).padding(.vertical, Space.lg)
+        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(expired ? Color(argb: Semantic.errorDark) : colors.timer))
         .rnShadow(.md, dark: colors.isDark)
     }
 
+    /// What they're wearing, as one row in the checklist: at rest a single line (the question, a
+    /// shirt icon, a close button) so it doesn't sit as a large input in the middle of the urgent
+    /// flow; tapped, it opens into a text area with the 911 hint under it. Once something is
+    /// written it stays open, showing what was written. The field is always there (tapping the
+    /// row is tapping it), so `emergency-wearing-input` holds the text in both states.
     private var wearingCard: some View {
-        VStack(alignment: .leading, spacing: Space.sm) {
-            RNText(t("wearing.label"), Typography.bodyBold.spec, color: colors.text)
-            RNText(t("wearing.hint", ["emergencyNumber": emergencyNumber]), Typography.caption.spec, color: colors.textSecondary)
-                .padding(.top, -Space.xs)
-            RNTextInput(
-                text: $wearing, placeholder: t("wearing.placeholder"), testID: "emergency-wearing-input",
-                font: .systemFont(ofSize: 16 * fontMultiplier), textColor: UIColor(colors.text),
-                placeholderColor: UIColor(Color(argb: Neutral.c400)), tint: UIColor(colors.tint),
-                insets: UIEdgeInsets(top: Space.sm - 1, left: Space.md, bottom: Space.sm - 1, right: Space.md),
-                multiline: true, lineHeight: 20 * fontMultiplier, minHeight: 62, maxHeight: 118
-            )
-            .padding(1)
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.isDark ? Color(argb: Neutral.c800) : Color(argb: Neutral.c50)))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.inputBorder, lineWidth: 1))
+        let expanded = wearingFocused || !wearing.isEmpty
+        let m = fontMultiplier
+        return HStack(alignment: expanded ? .top : .center, spacing: Space.sm) {
+            SFIcon("tshirt.fill", 20, colors.primaryText)
+                .padding(.top, expanded ? Space.md : 0)
+            VStack(alignment: .leading, spacing: 0) {
+                if expanded {
+                    RNText(t("wearing.label"), Typography.label.spec.spacing(0), color: colors.text)
+                }
+                // At rest the question is the row's text; open, an example of an answer.
+                RNTextInput(
+                    text: $wearing, placeholder: expanded ? t("wearing.placeholder") : t("wearing.label"),
+                    testID: "emergency-wearing-input",
+                    font: .systemFont(ofSize: 16 * m, weight: expanded ? .regular : .semibold), textColor: UIColor(colors.text),
+                    placeholderColor: UIColor(expanded ? colors.inputPlaceholder : colors.text), tint: UIColor(colors.tint),
+                    insets: UIEdgeInsets(top: Space.sm, left: 0, bottom: Space.sm, right: 0),
+                    multiline: true, lineHeight: 22 * m, minHeight: 48, maxHeight: 140,
+                    onFocus: { wearingFocused = $0 }
+                )
+                if expanded {
+                    RNText(t("wearing.hint", ["emergencyNumber": emergencyNumber]), Typography.caption.spec, color: colors.textSecondary)
+                }
+            }
+            .padding(.vertical, expanded ? Space.sm : 0)
+            // A 48pt close button, labelled for VoiceOver, at the row's end in both states, so it's
+            // never pushed below the edge at large text as the old Dismiss button was.
             Button { showWearing = false } label: {
-                RNText(t("wearing.dismiss"), Typography.caption.spec, color: colors.textSecondary).padding(.vertical, Space.xs)
-                    .contentShape(Rectangle()).accessibilityElement(children: .combine)
+                SFIcon("xmark", 20, colors.textSecondary).frame(width: 48, height: 48).contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
+            .accessibilityLabel(t("wearing.dismiss"))
             .accessibilityIdentifier("emergency-wearing-dismiss")
-            .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .padding(Space.lg + 1)
+        .padding(.leading, Space.md)
         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg)
+            .strokeBorder(wearingFocused ? colors.borderFocused : colors.inputBorder, lineWidth: wearingFocused ? 2 : 1))
     }
 
     @Environment(\.dynamicTypeSize) private var dynamicType
     private var fontMultiplier: CGFloat { rnFontMultiplier(dynamicType) }
 
+    /// Calling for help is the most urgent action: it comes first and is the largest, raised red
+    /// control with headline type. Found — Safe ends the search, so it is a solid green button too
+    /// (an outline vanished in dark mode, a pale tonal fill read as disabled), but shorter, flat and
+    /// with smaller type, so it never outranks Call 911. White on semantic success passes 4.5:1.
     private var actionButtons: some View {
-        let expired = secondsLeft == 0
         let white = Color(argb: Light.textOnPrimary)
-        let error = Color(argb: Semantic.error)
-        let large = Typography.bodyBold.spec.size(18)
-        return VStack(spacing: Space.sm) {
-            Button(action: found) {
-                HStack(spacing: Space.sm) {
-                    SFIcon("checkmark.circle.fill", 22, white)
-                    RNText(t("actions.foundSafe"), large, color: white)
-                }
-                .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
-                .padding(.vertical, Space.lg).padding(.horizontal, Space.xl)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(Color(argb: Semantic.success)))
-                .rnShadow(.sm, dark: colors.isDark)
-            }
-            .buttonStyle(.pressable)
-            .accessibilityIdentifier("emergency-found")
+        let emergencyRed = Color(argb: Semantic.errorDark)
+        let shape = RoundedRectangle(cornerRadius: Radius.lg)
+        return VStack(spacing: Space.md) {
             Button(action: call911) {
-                RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), large, color: expired ? white : error)
-                    .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
-                    .padding(.vertical, Space.lg + (expired ? 0 : 2)).padding(.horizontal, Space.xl)
-                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(expired ? error : .clear))
-                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(error, lineWidth: expired ? 0 : 2))
-                    .rnShadow(.sm, dark: colors.isDark && expired)
-                    .contentShape(Rectangle())
+                HStack(spacing: Space.md) {
+                    SFIcon("phone.fill", 28, white)
+                    RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), Typography.headline.spec, color: white)
+                }
+                .frame(maxWidth: .infinity, minHeight: 72 - 2 * Space.lg)
+                .padding(.vertical, Space.lg).padding(.horizontal, Space.xl)
+                .background(shape.fill(emergencyRed))
+                .rnShadow(.lg, dark: colors.isDark)
+                .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
             .accessibilityIdentifier("emergency-call-911")
+            Button(action: found) {
+                HStack(spacing: Space.sm) {
+                    SFIcon("checkmark.circle.fill", 22, white)
+                    RNText(t("actions.foundSafe"), Typography.bodyBold.spec.size(18), color: white)
+                }
+                .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.md)
+                .padding(.vertical, Space.md).padding(.horizontal, Space.xl)
+                .background(shape.fill(Color(argb: Semantic.success)))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityIdentifier("emergency-found")
             HStack(spacing: Space.sm) {
-                secondaryAction(t("actions.infoSheet"), "emergency-readout") {
+                secondaryAction(t("actions.infoSheet"), "emergency-readout", icon: "doc.text.fill") {
                     Analytics.shared.track(event: .screenViewed, properties: ["screen": "readout", "source": "emergency"])
                     model.path.append(.readout)
                 }
-                secondaryAction(t("actions.alertCircle"), "emergency-alert-contacts", action: alertContacts)
+                secondaryAction(t("actions.alertCircle"), "emergency-alert-contacts", icon: "bell.fill", action: alertContacts)
             }
+            // One height for the pair when one label wraps ("Emergency Info" at large text).
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    private func secondaryAction(_ label: String, _ testID: String, action: @escaping () -> Void) -> some View {
+    /// Icon above label, centred, at one height for the pair: beside a label that wrapped
+    /// ("Emergency Info" at large text) a small icon looked detached and the two unequal.
+    private func secondaryAction(_ label: String, _ testID: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: colors.text)
-                .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2)
-                .padding(Space.md + 1)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
-                .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
+            VStack(spacing: Space.xs) {
+                SFIcon(icon, 24, colors.primaryText)
+                RNText(label, Typography.bodyBold.spec, color: colors.text, align: .center)
+            }
+            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2, maxHeight: .infinity)
+            .padding(Space.md + 1)
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
@@ -441,7 +486,7 @@ struct EmergencyView: View {
                 Button { toggle(step.id) } label: {
                     HStack(alignment: .top, spacing: Space.md) {
                         ZStack {
-                            Circle().fill(isChecked ? Color(argb: Primary.c600)
+                            Circle().fill(isChecked ? Color(argb: Semantic.success)
                                 : step.urgent ? error.opacity(0x18 / 255.0)
                                 : Color(argb: colors.isDark ? Neutral.c700 : Neutral.c200))
                             if urgentOpen { Circle().strokeBorder(error, lineWidth: 1.5) }
@@ -456,9 +501,9 @@ struct EmergencyView: View {
                         .padding(.top, 2)
                         VStack(alignment: .leading, spacing: Space.xs) {
                             HStack(spacing: Space.sm) {
-                                RNText(step.title, Typography.bodyBold.spec, color: colors.text)
+                                // Done reads as done (struck through, secondary ink) yet stays legible.
+                                RNText(step.title, Typography.bodyBold.spec, color: isChecked ? colors.textSecondary : colors.text)
                                     .strikethrough(isChecked)
-                                    .opacity(isChecked ? 0.6 : 1)
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 if urgentOpen {
                                     RNText(t("checklist.priority"), Typography.small.spec.weight(700).spacing(0.5), color: Color(argb: Light.textOnPrimary))
@@ -468,7 +513,13 @@ struct EmergencyView: View {
                             }
                             RNText(step.description_, TextSpec(size: 16, lineHeight: 20), color: colors.textSecondary)
                             if let hint = step.hint {
-                                RNText("💡 \(hint)", Typography.caption.spec.italic(), color: Color(argb: Primary.c600))
+                                // Useful advice, so at body size, upright and in ink, not the smallest
+                                // text on the screen; the lightbulb alone marks it as a tip.
+                                HStack(alignment: .top, spacing: Space.sm) {
+                                    SFIcon("lightbulb.fill", 18, colors.primaryText).padding(.top, 3)
+                                    RNText(hint, Typography.body.spec, color: colors.text)
+                                }
+                                .padding(.top, Space.xxs)
                             }
                             if step.id == "familiar_places", !destinations.isEmpty, !isChecked {
                                 Rectangle().fill(colors.border).frame(height: 1).padding(.top, Space.sm)
@@ -476,20 +527,23 @@ struct EmergencyView: View {
                                     RNText(t("checklist.savedPlaces").uppercased(), Typography.small.spec.weight(600).spacing(0.4), color: colors.textSecondary)
                                         .padding(.bottom, Space.xxs)
                                     RNText(destinations.prefix(5).map(\.name).joined(separator: " • ") + (destinations.count > 5 ? " +\(destinations.count - 5)" : ""),
-                                           Typography.caption.spec, color: Color(argb: Primary.c600), lines: 2)
+                                           Typography.caption.spec, color: colors.primaryText, lines: 2)
                                 }
                                 .padding(.top, Space.sm - Space.xs)
                             }
                         }
                     }
                     .padding(Space.md + border)
-                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? Color(argb: colors.isDark ? Primary.c900 : Primary.c50) : colors.card))
+                    // A done step steps back: the quiet surface tone, the plain border and secondary
+                    // text, so the steps still to do are the loudest cards (a purple done card
+                    // outshone them in dark mode). The green check says it is done.
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(isChecked ? colors.surface : colors.card))
                     .overlay(RoundedRectangle(cornerRadius: Radius.lg)
-                        .strokeBorder(urgentOpen ? error : isChecked ? Color(argb: Primary.c300) : colors.border, lineWidth: border))
-                    .opacity(isChecked ? 0.75 : 1)
+                        .strokeBorder(urgentOpen ? error : colors.border, lineWidth: border))
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("emergency-step-\(step.id)")
+                if step.id == steps.first?.id, showWearing { wearingCard }
             }
         }
     }
@@ -512,14 +566,13 @@ struct EmergencyView: View {
         let success = Color(argb: Semantic.success)
         func title(_ key: String) -> some View { RNText(t(key), Typography.title.spec, color: colors.text, align: .center) }
         func message(_ key: String) -> some View { RNText(t(key), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center) }
-        func button(_ label: String, _ testID: String, _ bg: Color, _ textColor: Color, outline: Bool = false, rowItem: Bool = false, _ action: @escaping () -> Void) -> some View {
+        func button(_ label: String, _ testID: String, _ bg: Color, _ textColor: Color, outline: Bool = false, _ action: @escaping () -> Void) -> some View {
             Button(action: action) {
-                RNText(label, Typography.bodyBold.spec, color: textColor)
+                RNText(label, Typography.bodyBold.spec, color: textColor, align: .center)
                     .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
                     .padding(.vertical, Space.md + (outline ? 1 : 0)).padding(.horizontal, Space.lg + (outline ? 1 : 0))
-                    .frame(maxHeight: outline || rowItem ? .infinity : nil)
-                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(bg))
-                    .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(outline ? colors.border : .clear, lineWidth: 1))
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(bg))
+                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(outline ? colors.inputBorder : .clear, lineWidth: 1))
                     .contentShape(Rectangle())
             }
             .buttonStyle(.pressable)
@@ -542,7 +595,7 @@ struct EmergencyView: View {
                     message("modal.leave.message")
                     if notificationsDenied {
                         // The message promises the timer goes on; with notifications off its alerts won't come.
-                        RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: Color(argb: Semantic.error), align: .center)
+                        RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: colors.error, align: .center)
                             .accessibilityIdentifier("emergency-modal-leave-notifications-off")
                         Button {
                             if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
@@ -556,15 +609,20 @@ struct EmergencyView: View {
                         .buttonStyle(.pressable)
                         .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
                     }
-                    HStack(spacing: Space.md) {
-                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", .clear, colors.text, outline: true) { modal = nil }
-                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", colors.primary, white, rowItem: true) {
+                    // Two choices, then a third set apart. Keep Searching is the safe one, so it
+                    // is the only filled button. Leaving is a text action that says what happens
+                    // (the timer keeps running), so the two can't be read as the same choice. End
+                    // Emergency is the destructive one: below a rule, edged and washed in red.
+                    VStack(spacing: Space.xs) {
+                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, colors.textOnPrimary) { modal = nil }
+                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.primaryText) {
                             Analytics.shared.track(event: .emergencyLeave, properties: [:])
                             leave()
                         }
                     }
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, Space.xs)
+                    Rectangle().fill(colors.border).frame(height: 1)
                     Button {
                         Analytics.shared.track(event: .emergencyCancelled, properties: endedProperties())
                         // Ended without an outcome: stamp the end time, keep the outcome as it was.
@@ -574,24 +632,30 @@ struct EmergencyView: View {
                             leave()
                         }
                     } label: {
-                        RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: Color(argb: Semantic.error))
-                            .padding(.vertical, Space.md)
-                            .contentShape(Rectangle()).accessibilityElement(children: .combine)
+                        HStack(spacing: Space.sm) {
+                            SFIcon("xmark.circle.fill", 20, colors.errorText)
+                            RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.errorText)
+                        }
+                        .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
+                        .padding(.vertical, Space.md)
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.error.opacity(dangerFillOpacity)))
+                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1.5))
+                        .contentShape(Rectangle()).accessibilityElement(children: .combine)
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("emergency-modal-leave-end")
-                    .padding(.top, Space.xs)
                 case .catchUpWarning, .catchUpExpired:
                     let key = which == .catchUpWarning ? "warning" : "expired"
                     let number = ["emergencyNumber": emergencyNumber]
                     RNText(t("alerts.\(key).title", number), Typography.title.spec, color: colors.text, align: .center)
                     RNText(t("alerts.\(key).body", number), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
                     button(tCommon("ok"), "emergency-modal-catchup-ok",
-                           which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary, white) { modal = nil }
+                           which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary,
+                           which == .catchUpExpired ? white : colors.textOnPrimary) { modal = nil }
                 case .noContacts, .smsError:
                     title(which == .noContacts ? "modal.noContacts.title" : "modal.smsError.title")
                     message(which == .noContacts ? "modal.noContacts.message" : "modal.smsError.message")
-                    button(tCommon("ok"), "emergency-modal-info-ok", colors.primary, white) { modal = nil }
+                    button(tCommon("ok"), "emergency-modal-info-ok", colors.primary, colors.textOnPrimary) { modal = nil }
                 }
             }
             .padding(Space.xl)

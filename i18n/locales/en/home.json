@@ -7,22 +7,39 @@
     "activeTitle": "Emergency In Progress",
     "timerExpiredTitle": "Timer Expired — Call {{emergencyNumber}}",
     "timerExpiredSubtitle": "Tap to continue search protocol",
-    "remaining": "{{time}} remaining · {{checked}}/{{total}} steps"
+    "remaining": "{{time}} remaining · {{checked}}/{{total}} steps",
+    "timeLeft": "left",
+    "stepsDone": "{{checked}}/{{total}} steps done"
   },
   "quickActions": {
     "contacts": "Contacts",
     "contactsNone": "None added",
     "contactsSaved": "{{count}} saved",
     "places": "Places",
-    "placesSubtitle": "Likely spots"
+    "placesSubtitle": "Likely spots",
+    "placesNone": "None added",
+    "placesSaved": "{{count}} saved"
   },
   "emergencyInfo": {
     "title": "Emergency Info",
-    "script911": "911 Script",
+    "script911": "911 call script and details",
     "healthNotes": "Health Notes",
     "medications": "Routine Medications (optional)",
     "cognitiveStatus": "Cognitive Status",
     "deescalation": "De-escalation"
   },
-  "settingsLink": "Settings"
+  "settingsLink": "Settings",
+  "editProfile": "Edit profile",
+  "readiness": {
+    "title": "Ready for an emergency",
+    "summary": "{{done}} of {{total}} ready",
+    "add": "Add",
+    "done": "Done",
+    "items": {
+      "photo": "Recent photo",
+      "description": "Physical description",
+      "contacts": "Emergency contacts",
+      "places": "Likely places"
+    }
+  }
 }

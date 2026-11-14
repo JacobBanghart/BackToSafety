@@ -7,22 +7,39 @@
     "activeTitle": "Emergencia en curso",
     "timerExpiredTitle": "Tiempo agotado: llama al {{emergencyNumber}}",
     "timerExpiredSubtitle": "Toca para continuar con el protocolo de búsqueda",
-    "remaining": "Quedan {{time}} · {{checked}}/{{total}} pasos"
+    "remaining": "Quedan {{time}} · {{checked}}/{{total}} pasos",
+    "timeLeft": "restantes",
+    "stepsDone": "{{checked}}/{{total}} pasos hechos"
   },
   "quickActions": {
     "contacts": "Contactos",
     "contactsNone": "Ninguno agregado",
     "contactsSaved": "{{count}} guardados",
     "places": "Lugares",
-    "placesSubtitle": "Lugares probables"
+    "placesSubtitle": "Lugares probables",
+    "placesNone": "Ninguno agregado",
+    "placesSaved": "{{count}} guardados"
   },
   "emergencyInfo": {
     "title": "Información de emergencia",
-    "script911": "Guion para el 911",
+    "script911": "Guion de llamada al 911 y datos",
     "healthNotes": "Notas de salud",
     "medications": "Medicamentos habituales (opcional)",
     "cognitiveStatus": "Estado cognitivo",
     "deescalation": "Cómo calmarle"
   },
-  "settingsLink": "Configuración"
+  "settingsLink": "Configuración",
+  "editProfile": "Editar perfil",
+  "readiness": {
+    "title": "Preparación para una emergencia",
+    "summary": "{{done}} de {{total}} listos",
+    "add": "Agregar",
+    "done": "Listo",
+    "items": {
+      "photo": "Foto reciente",
+      "description": "Descripción física",
+      "contacts": "Contactos de emergencia",
+      "places": "Lugares probables"
+    }
+  }
 }

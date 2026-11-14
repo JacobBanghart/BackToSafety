@@ -2,6 +2,7 @@
   "screenTitle": "Places to Check",
   "loading": "Loading...",
   "addDestination": "Add Location",
+  "editName": "Edit {{name}}",
   "noDestinations": {
     "title": "No Saved Places",
     "body": "Add locations where {{name}} might go. These appear during an emergency search.",
@@ -31,7 +32,6 @@
     "notes": "Notes"
   },
   "form": {
-    "newTitle": "New Location",
     "editTitle": "Edit Location",
     "hint": "Add places they might go. These show up during an emergency search.",
     "nameLabel": "Location Name",

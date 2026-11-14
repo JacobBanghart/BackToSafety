@@ -58,15 +58,7 @@ struct ProfileView: View {
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: t("screenTitle"), testID: "profile", onBack: back) {
-                Button(action: save) {
-                    RNText(t(saving ? "saving" : "save"), Typography.bodyBold.spec, color: white, lines: 1)
-                        .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
-                        .frame(minWidth: 72)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
-                }
-                .buttonStyle(.pressable)
-                .disabled(saving)
-                .accessibilityIdentifier("profile-save")
+                HeaderSaveButton(label: t(saving ? "saving" : "save"), testID: "profile-save", enabled: !saving, action: save)
             }
             if form != nil { content } else { Spacer() }
         }
@@ -188,11 +180,11 @@ struct ProfileView: View {
                                 let selected = f.dominantHand == hand
                                 Button { form?.dominantHand = hand } label: {
                                     RNText(t("fields.dominantHand\(hand.prefix(1).uppercased() + hand.dropFirst())"),
-                                           Typography.body.spec.weight(500), color: selected ? white : colors.text)
+                                           Typography.body.spec.weight(500), color: selected ? colors.textOnPrimary : colors.text)
                                         .frame(maxWidth: .infinity)
                                         .padding(.vertical, Space.sm + 1)
-                                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? colors.tint : .clear))
-                                        .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
+                                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? colors.primary : .clear))
+                                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(selected ? colors.primary : colors.border, lineWidth: 1))
                                         .contentShape(Rectangle())
                                 }
                                 .buttonStyle(.pressable)
@@ -213,10 +205,10 @@ struct ProfileView: View {
                                     }
                                 } label: {
                                     RNText(t(MobilityKt.MOBILITY_OPTION_KEYS[option] ?? option), Typography.body.spec.weight(500),
-                                           color: selected ? white : colors.text)
+                                           color: selected ? colors.textOnPrimary : colors.text)
                                         .padding(.horizontal, Space.md + 1).padding(.vertical, Space.xs + 1)
-                                        .background(Capsule().fill(selected ? colors.tint : .clear))
-                                        .overlay(Capsule().strokeBorder(selected ? colors.tint : colors.border, lineWidth: 1))
+                                        .background(Capsule().fill(selected ? colors.primary : .clear))
+                                        .overlay(Capsule().strokeBorder(selected ? colors.primary : colors.border, lineWidth: 1))
                                 }
                                 .buttonStyle(.pressable)
                                 .accessibilityIdentifier("profile-mobility-\(slug(option))")
@@ -251,6 +243,7 @@ struct ProfileView: View {
             .padding(Space.lg)
         }
         .scrollDismissesKeyboard(.interactively)
+        .scrollStopsAtSafeArea()
     }
 
     private func photoSection(_ photoUri: String) -> some View {
@@ -260,16 +253,19 @@ struct ProfileView: View {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 120, height: 120).clipShape(Circle())
                         .accessibilityIdentifier("profile-photo")
                 } else {
-                    SFIcon("camera.fill", 38, colors.textSecondary)
+                    // An empty photo slot: a tinted fill and a dashed tint outline, visible on a dark
+                    // background as well as a light one.
+                    SFIcon("camera.fill", 38, colors.primaryText)
                         .frame(width: 120, height: 120)
-                        .background(Circle().fill(colors.card))
-                        .overlay(Circle().inset(by: 1).stroke(colors.border, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
+                        .background(Circle().fill(colors.primaryLight))
+                        .overlay(Circle().inset(by: 1).stroke(colors.tint, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
                 }
             }
             .padding(.bottom, Space.md)
-            HStack(spacing: Space.md) {
-                photoButton(t("takePhoto"), "profile-photo-take", colors.tint, action: takePhoto)
-                photoButton(t("choosePhoto"), "profile-photo-library", colors.primary) {
+            // Side by side while they fit inside the screen's margins, stacked at large text.
+            ButtonRowOrStack(gap: Space.md) {
+                photoButton(t("takePhoto"), "profile-photo-take", "camera.fill", action: takePhoto)
+                photoButton(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle") {
                     Analytics.shared.track(event: .profilePhotoChosen, properties: [:])
                     picker = .library
                 }
@@ -279,11 +275,18 @@ struct ProfileView: View {
         .padding(.bottom, Space.xl)
     }
 
-    private func photoButton(_ label: String, _ testID: String, _ bg: Color, action: @escaping () -> Void) -> some View {
+    /// Two equal, secondary choices: outlined in the primary ink with its icon, 48pt tall, as on
+    /// the onboarding photo step, so they don't weigh as much as Save.
+    private func photoButton(_ label: String, _ testID: String, _ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: white)
-                .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
-                .background(RoundedRectangle(cornerRadius: Radius.md).fill(bg))
+            HStack(spacing: Space.sm) {
+                SFIcon(icon, 18, colors.primaryText)
+                RNText(label, Typography.bodyBold.spec, color: colors.primaryText)
+            }
+            .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primaryText, lineWidth: 1))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
@@ -293,7 +296,7 @@ struct ProfileView: View {
         VStack(alignment: .leading, spacing: 0) {
             Button { expanded = expanded == key ? nil : key } label: {
                 HStack(spacing: Space.md) {
-                    SFIcon(icon, 16, colors.primary).frame(width: 36, height: 36).background(Circle().fill(colors.primaryLight))
+                    SFIcon(icon, 16, colors.primaryText).frame(width: 36, height: 36).background(Circle().fill(colors.iconContainer))
                     RNText(title, Typography.bodyBold.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
                     SFIcon(expanded == key ? "chevron.up" : "chevron.down", 16, colors.textSecondary)
                 }
@@ -323,7 +326,7 @@ struct ProfileView: View {
         .padding(.bottom, Space.lg)
     }
 
-    /// The profile's input: body text, 1pt border, radius md, padding md; 44pt single-line or
+    /// The profile's input: body text, 1pt border, radius md, padding md; 48pt single-line or
     /// a text area from 80pt (padding 10).
     private func input(_ text: Binding<String>, _ testID: String, _ placeholder: String, multiline: Bool = false,
                        keyboard: UIKeyboardType = .default, capitalization: UITextAutocapitalizationType = .sentences,
@@ -336,10 +339,10 @@ struct ProfileView: View {
                                  right: multiline ? Space.md : Space.md - 1),
             multiline: multiline, keyboard: keyboard, capitalization: capitalization, minHeight: 78, format: format
         )
-        .frame(height: multiline ? nil : 42)
+        .frame(height: multiline ? nil : 46)
         .padding(1)
-        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
-        .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
     }
 
     private func field(_ field: ProfileField) -> some View {
@@ -351,7 +354,7 @@ struct ProfileView: View {
     }
 
     /// The date of birth: typed as MM/DD/YYYY, or picked in a spinner sheet. As in RN, a
-    /// bordered row (padding md) holds the 44pt input and the calendar button beside it.
+    /// bordered row (padding md) holds the 48pt input and the 48pt calendar button beside it.
     private func dateOfBirth(_ label: String) -> some View {
         group(label) {
             HStack(spacing: 0) {
@@ -361,21 +364,22 @@ struct ProfileView: View {
                     placeholderColor: UIColor(colors.inputPlaceholder), tint: UIColor(colors.tint), insets: .zero,
                     keyboard: .numberPad, maxLength: 10, format: { ProfileField.dateOfBirth.formatInput(value: $0) }
                 )
-                .frame(height: 44)
+                .frame(height: 48)
                 Button {
                     pendingDob = AgeKt.parseDob(value: form?[.dateOfBirth] ?? "").map(toDate) ?? toDate(Kotlinx_datetimeLocalDate(year: 1940, month: 1, day: 1))
                     datePicking = true
                 } label: {
-                    SFIcon("calendar", 18, colors.textSecondary).frame(minWidth: 44 - Space.sm, minHeight: 44).padding(.leading, Space.sm).contentShape(Rectangle())
+                    SFIcon("calendar", 20, colors.textSecondary).frame(minWidth: 48 - Space.sm, minHeight: 48).padding(.leading, Space.sm).contentShape(Rectangle())
                 }
                 .buttonStyle(.pressable)
+                .accessibilityLabel(t("fields.dateOfBirthPicker"))
                 .accessibilityIdentifier("profile-dob-calendar")
             }
             .padding(.horizontal, Space.md - 1)
-            .frame(minHeight: 42)
+            .frame(minHeight: 46)
             .padding(1)
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
         }
     }
 
@@ -398,7 +402,7 @@ struct ProfileView: View {
                     Button { datePicking = false } label: {
                         RNText(t("dateModal.cancel"), Typography.bodyBold.spec, color: colors.textSecondary)
                             .padding(.horizontal, Space.md).frame(minWidth: 88, minHeight: 40)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
@@ -408,9 +412,9 @@ struct ProfileView: View {
                         form?[.dateOfBirth] = AgeKt.formatDob(date: Kotlinx_datetimeLocalDate(year: Int32(c.year!), month: Int32(c.month!), day: Int32(c.day!)))
                         datePicking = false
                     } label: {
-                        RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: white)
+                        RNText(t("dateModal.apply"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                             .padding(.horizontal, Space.md).frame(minWidth: 88, minHeight: 40)
-                            .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("profile-date-apply")

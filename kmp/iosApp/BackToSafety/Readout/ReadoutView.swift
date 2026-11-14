@@ -2,6 +2,18 @@ import Shared
 import SwiftUI
 import UIKit
 
+/// The "Add for stronger script" callout is a light amber wash. A script blank is the same warm
+/// family but a solid container with its own ink (tertiaryContainer): an opacity of amber over the
+/// dark card turned a muddy olive that read as an error.
+private let calloutFillOpacity = 0.12
+
+/// The clock time as the locale says it, without seconds ("9:00 AM", "9:00"): for speech.
+func localeClock(_ ms: Int64) -> String {
+    let f = DateFormatter()
+    f.setLocalizedDateFormatFromTemplate("jm")
+    return f.string(from: Date(timeIntervalSince1970: Double(ms) / 1000))
+}
+
 /// JS Date.toLocaleString() as Hermes formats it on iOS: the locale's "yMdjms" skeleton.
 func localeDateTime(_ ms: Int64) -> String {
     let f = DateFormatter()
@@ -21,9 +33,11 @@ struct ReadoutView: View {
     @State private var expanded = false
     @State private var copied: String?
 
+    // Fills (white on top). Text and icons on the page use the theme's success/warning/error,
+    // which are darker in light mode and lighter in dark mode so small labels stay legible.
     private var warning: Color { Color(argb: Semantic.warning) }
     private var success: Color { Color(argb: Semantic.success) }
-    private var error: Color { Color(argb: Semantic.error) }
+    private var emergencyRed: Color { Color(argb: Semantic.errorDark) }
     private var white: Color { Color(argb: Light.textOnPrimary) }
     private var emergencyNumber: String { tCommon("emergencyNumber") }
 
@@ -47,8 +61,12 @@ struct ReadoutView: View {
 
     private func sheet(_ p: Profile) -> some View {
         let lastSeen = lastSeenMs.map(localeDateTime)
-        let input = ReadoutInput(profile: p, lastSeenTime: lastSeen, today: AppClock.shared.today())
+        let input = ReadoutInput(
+            profile: p, lastSeenTime: lastSeen, today: AppClock.shared.today(),
+            lastSeenClock: lastSeenMs.map(localeClock), lastSeenDate: lastSeenMs.map { AppClock.shared.dateOf(epochMs: $0) }
+        )
         let script = ReadoutKt.buildScript(input: input, t: t.lookup)
+        let parts = ReadoutKt.buildScriptParts(input: input, t: t.lookup).map { (text: $0.text, marked: $0.blank) }
         let missing = ReadoutKt.missingScriptDetails(input: input, t: t.lookup)
         let hand = p.dominantHand.flatMap { $0.isEmpty || $0 == "unknown" ? nil : $0 }
         return ScrollView {
@@ -57,11 +75,15 @@ struct ReadoutView: View {
                     Analytics.shared.track(event: .readout911Called, properties: [:])
                     dial(emergencyNumber, .emergency)
                 } label: {
-                    RNText(t("callButton"), Typography.bodyLarge.spec.weight(700), color: white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, Space.lg)
-                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(error))
-                        .rnShadow(.sm, dark: colors.isDark)
+                    // The most prominent action, the same solid red as on the search screen.
+                    HStack(spacing: Space.sm) {
+                        SFIcon("phone.fill", 22, white)
+                        RNText(t("callButton"), Typography.bodyLarge.spec.weight(700), color: white)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
+                    .padding(.vertical, Space.lg)
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(emergencyRed))
+                    .rnShadow(.sm, dark: colors.isDark)
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("readout-call-911")
@@ -69,10 +91,11 @@ struct ReadoutView: View {
                 card {
                     Button { expanded.toggle() } label: {
                         HStack {
-                            sectionLabel("phone.connection.fill", t("sections.script.label"), success)
+                            sectionLabel("phone.connection.fill", t("sections.script.label"), colors.primaryText)
                             Spacer()
                             SFIcon(expanded ? "chevron.up" : "chevron.down", 16, colors.textSecondary)
                         }
+                        .frame(minHeight: 48)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
@@ -80,15 +103,30 @@ struct ReadoutView: View {
                     if expanded {
                         RNText(t("sections.script.hint"), Typography.caption.spec, color: colors.textSecondary)
                             .padding(.top, Space.xxs).padding(.bottom, Space.xs)
-                        RNText(script, TextSpec(size: 16, lineHeight: 22), color: colors.text)
+                        // What is read to the dispatcher: large, comfortable reading size.
+                        // Blanks (the location, an unknown time) are gaps the caller fills in aloud.
+                        // Each is a filled chip, said by its shape and its brackets rather than by
+                        // colour: bold "[fill in location]" in the tertiary container's own ink (orange
+                        // underlined text read as a link). VoiceOver and the copy get the plain
+                        // script, its blanks in brackets (as on Android).
+                        RNText(runs: parts, accessibilityText: script, Typography.bodyLarge.spec, color: colors.text,
+                               highlight: colors.tertiaryContainer, mark: colors.onTertiaryContainer)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .rnID("readout-script-text", label: script)
                         if !missing.isEmpty {
                             let note = t("sections.script.missingDetails", ["details": missing.joined(separator: ", ")])
-                            RNText(note, Typography.caption.spec.lineHeight(18), color: warning)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .rnID("readout-script-missing", label: note)
-                                .padding(.top, Space.sm)
+                            // The one prompt that improves the script, so a callout at body size with an
+                            // amber tint and icon, not a caption that reads as a footnote.
+                            HStack(alignment: .top, spacing: Space.sm) {
+                                SFIcon("lightbulb.fill", 18, colors.warning).padding(.top, 3)
+                                RNText(note, Typography.body.spec.weight(500), color: colors.text)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .rnID("readout-script-missing", label: note)
+                            }
+                            .padding(Space.md)
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.warning.opacity(calloutFillOpacity)))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.warning.opacity(0.5), lineWidth: 1))
+                            .padding(.top, Space.md)
                         }
                     } else {
                         RNText(t("sections.script.collapsed"), Typography.caption.spec, color: colors.textSecondary)
@@ -96,11 +134,21 @@ struct ReadoutView: View {
                     }
                 }
 
+                // The people to call come straight after the script, before who is missing: a call
+                // button is the most urgent thing here, and under the identity card it fell below
+                // the fold at large text.
+                if !contacts.isEmpty {
+                    card {
+                        sectionLabel("phone.fill", t("contacts.title"), colors.primaryText)
+                        ForEach(Array(contacts.enumerated()), id: \.offset) { index, c in contactRow(c, index) }
+                    }
+                }
+
                 identityCard(p)
 
                 if let lastSeen {
                     card {
-                        sectionLabel("clock.fill", t("sections.location.title"), colors.primary)
+                        sectionLabel("clock.fill", t("sections.location.title"), colors.primaryText)
                         infoRow(t("sections.location.time"), lastSeen)
                     }
                 }
@@ -108,7 +156,7 @@ struct ReadoutView: View {
                 // Mobility and dominant hand live here too, so they alone must show the card (F-26).
                 if [p.height, p.weight, p.hairColor, p.eyeColor, p.identifyingMarks, hand, p.mobilityLevel].contains(where: { !($0 ?? "").isEmpty }) {
                     card {
-                        sectionLabel("eye.fill", t("sections.appearance.title"), colors.primary)
+                        sectionLabel("eye.fill", t("sections.appearance.title"), colors.primaryText)
                         FlowLayout(spacing: Space.sm) {
                             if let v = nonEmpty(p.height) { chip(t("sections.appearance.height"), v) }
                             if let v = nonEmpty(p.weight) { chip(t("sections.appearance.weight"), v) }
@@ -127,24 +175,17 @@ struct ReadoutView: View {
 
                 warnNote(t("wearingCard"), 16)
 
-                section("cross.fill", t("sections.medical.title"), error, [
+                section("cross.fill", t("sections.medical.title"), colors.error, [
                     ("sections.medical.conditions", p.medicalConditions), ("sections.medical.medications", p.medications),
                     ("sections.medical.allergies", p.allergies), ("sections.medical.cognitiveStatus", p.cognitiveStatus),
                 ])
-                section("bubble.left.fill", t("sections.communication.title"), colors.primary, [
+                section("bubble.left.fill", t("sections.communication.title"), colors.primaryText, [
                     ("sections.communication.communication", p.communicationPreference), ("sections.communication.approach", p.approachGuidance),
                     ("sections.communication.escalation", p.escalationSigns), ("sections.communication.deescalation", p.deescalationTechniques),
                     ("sections.communication.likes", p.likes), ("sections.communication.triggers", p.dislikesTriggers),
                     ("sections.communication.safeWord", p.safeWord),
                 ])
                 devices(p)
-
-                if !contacts.isEmpty {
-                    card {
-                        sectionLabel("phone.fill", t("contacts.title"), success)
-                        ForEach(Array(contacts.enumerated()), id: \.offset) { index, c in contactRow(c, index) }
-                    }
-                }
 
                 VStack(spacing: Space.sm) {
                     copyButton(script: true, label: copied == "script" ? t("copiedScriptButton") : t("copyScriptButton"),
@@ -170,6 +211,7 @@ struct ReadoutView: View {
             .padding(Space.lg)
         }
         .scrollIndicators(.hidden)
+        .scrollStopsAtSafeArea()
     }
 
     private func nonEmpty(_ s: String?) -> String? { (s ?? "").isEmpty ? nil : s }
@@ -195,11 +237,13 @@ struct ReadoutView: View {
             .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: hairline))
     }
 
-    private func sectionLabel(_ icon: String, _ text: String, _ color: Color) -> some View {
+    private func sectionLabel(_ icon: String, _ text: String, _ iconColor: Color) -> some View {
         HStack(spacing: Space.xs) {
-            SFIcon(icon, 14, color)
-            // bodyBold with fontSize 12: the 24 line height stays.
-            RNText(text.uppercased(), TextSpec(size: 12, lineHeight: 24, weight: 600, letterSpacing: 0.5), color: color)
+            SFIcon(icon, 16, iconColor)
+            // The label style (14, semibold) on the 24 line height: at 12 the headings read as fine print.
+            // The words are ink; only the icon carries the section's accent. Green is kept for status
+            // (Found, a copied script, call buttons), so a green heading read as one of those.
+            RNText(text.uppercased(), Typography.label.spec.lineHeight(CGFloat(Typography.bodyBold.lineHeight)), color: colors.text)
         }
         .padding(.bottom, Space.xs)
     }
@@ -228,7 +272,7 @@ struct ReadoutView: View {
 
     private func warnNote(_ text: String, _ iconSize: CGFloat) -> some View {
         HStack(alignment: .top, spacing: Space.sm) {
-            SFIcon("exclamationmark.triangle.fill", iconSize, warning)
+            SFIcon("exclamationmark.triangle.fill", iconSize, colors.warning)
             RNText(text, TextSpec(size: 16, lineHeight: 20), color: Color(argb: colors.isDark ? Secondary.c100 : Neutral.c700))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -255,7 +299,7 @@ struct ReadoutView: View {
         let hotline = nonEmpty(p.medicAlertHotline)
         if !rows.isEmpty || hotline != nil {
             card {
-                sectionLabel("location.fill", t("sections.devices.title"), colors.primary)
+                sectionLabel("location.fill", t("sections.devices.title"), colors.primaryText)
                 ForEach(rows, id: \.0) { key, value in infoRow(t(key), value) }
                 if let hotline {
                     Button {
@@ -275,7 +319,7 @@ struct ReadoutView: View {
                 if let image = loadPhoto(p.photoUri) {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 80, height: 80).clipShape(RoundedRectangle(cornerRadius: Radius.md))
                 } else {
-                    SFIcon("person.fill", 36, colors.primary)
+                    SFIcon("person.fill", 36, colors.primaryText)
                         .frame(width: 80, height: 80)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.primaryLight))
                 }
@@ -297,46 +341,63 @@ struct ReadoutView: View {
         }
     }
 
+    /// A contact with their call button: side by side while the name and role fit whole beside
+    /// it, otherwise the button goes under them at full width. At large text the button
+    /// squeezed the name column and cut "Primary Caregiver" short. Mirrors Android `BesideOrUnder`.
     private func contactRow(_ c: ContactEntity, _ index: Int) -> some View {
         let hairline = 1 / UIScreen.main.scale
         let role = nonEmpty(c.relationship) ?? c.role.map { t("roles.\($0)", ["ns": "contacts", "defaultValue": $0]) } ?? ""
+        let who = VStack(alignment: .leading, spacing: 2) {
+            RNText(c.name, Typography.bodyBold.spec, color: colors.text)
+            RNText(role, Typography.caption.spec, color: colors.textSecondary)
+        }
         return VStack(spacing: 0) {
             Rectangle().fill(colors.border).frame(height: hairline)
-            HStack(spacing: Space.md) {
-                VStack(alignment: .leading, spacing: 2) {
-                    RNText(c.name, Typography.bodyBold.spec, color: colors.text, lines: 1)
-                    RNText(role, Typography.caption.spec, color: colors.textSecondary, lines: 1)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: Space.md) {
+                    who.fixedSize(horizontal: true, vertical: false)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    callButton(c, index, fullWidth: false)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                Button {
-                    Analytics.shared.track(event: .readoutContactCalled, properties: [:])
-                    dial(c.phone, .contact)
-                } label: {
-                    HStack(spacing: Space.xs) {
-                        SFIcon("phone.fill", 14, white)
-                        RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyBold.spec, color: white)
-                    }
-                    .fixedSize()
-                    .padding(.horizontal, Space.md).padding(.vertical, Space.sm)
-                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(success))
+                VStack(alignment: .leading, spacing: Space.sm) {
+                    who.frame(maxWidth: .infinity, alignment: .leading)
+                    callButton(c, index, fullWidth: true)
                 }
-                .buttonStyle(.pressable)
-                .accessibilityIdentifier("readout-contact-\(index)-call")
             }
             .padding(.top, Space.sm)
         }
     }
 
+    /// Calling the family is a key action under stress, so it is a full-size button (56pt, 18pt
+    /// bold, a 20pt phone icon) like the body's primary buttons, not a chip.
+    private func callButton(_ c: ContactEntity, _ index: Int, fullWidth: Bool) -> some View {
+        Button {
+            Analytics.shared.track(event: .readoutContactCalled, properties: [:])
+            dial(c.phone, .contact)
+        } label: {
+            HStack(spacing: Space.sm) {
+                SFIcon("phone.fill", 20, white)
+                RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyLarge.spec.weight(700), color: white)
+            }
+            .fixedSize()
+            .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
+            .frame(maxWidth: fullWidth ? .infinity : nil, minHeight: 56)
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(success))
+        }
+        .buttonStyle(.pressable)
+        .accessibilityIdentifier("readout-contact-\(index)-call")
+    }
+
     private func copyButton(script: Bool, label: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, script ? white : (copied == "all" ? success : colors.text))
+                SFIcon(icon, 18, script ? colors.textOnPrimary : (copied == "all" ? colors.success : colors.text))
                 RNText(label, Typography.body.spec, color: script ? colors.textOnPrimary : colors.text)
             }
             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
             .padding(.vertical, Space.md + (script ? 0 : 1))
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(script ? colors.primary : colors.card))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(script ? .clear : colors.border, lineWidth: 1))
+            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(script ? colors.primary : colors.card))
+            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(script ? .clear : colors.border, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(script ? "readout-copy-script" : "readout-copy-all")

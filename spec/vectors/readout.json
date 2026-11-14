@@ -138,6 +138,124 @@
           }
         ],
         "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. Photo available. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/6/2026, 9:00:00 AM",
+            "lastSeenClock": "9:00 AM",
+            "lastSeenDate": "2026-10-06",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 9:00 AM today. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/5/2026, 11:50:00 PM",
+            "lastSeenClock": "11:50 PM",
+            "lastSeenDate": "2026-10-05",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 11:50 PM yesterday. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/3/2026, 9:00:00 AM",
+            "lastSeenClock": "9:00 AM",
+            "lastSeenDate": "2026-10-03",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 10/3/2026, 9:00:00 AM. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "es",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "6/10/2026, 9:00:00",
+            "lastSeenClock": "9:00",
+            "lastSeenDate": "2026-10-06",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Búsqueda iniciada: hoy, 9:00. Última ubicación conocida: [completar ubicación]. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+      }
+    ],
+    "buildScriptParts": [
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": [
+          {
+            "text": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: "
+          },
+          {
+            "text": "fill in time",
+            "blank": true
+          },
+          {
+            "text": ". Last known location: "
+          },
+          {
+            "text": "fill in location",
+            "blank": true
+          },
+          {
+            "text": ". Please advise about issuing a local Silver/Purple Alert."
+          }
+        ]
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/6/2026, 9:00:00 AM",
+            "lastSeenClock": "9:00 AM",
+            "lastSeenDate": "2026-10-06",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": [
+          {
+            "text": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 9:00 AM today. Last known location: "
+          },
+          {
+            "text": "fill in location",
+            "blank": true
+          },
+          {
+            "text": ". Please advise about issuing a local Silver/Purple Alert."
+          }
+        ]
       }
     ],
     "buildCopyBlock": [

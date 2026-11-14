@@ -23,7 +23,6 @@
       "auto": "Auto"
     },
     "languageLabel": "Choose your language",
-    "scrollHint": "↓ Scroll for more",
     "getStarted": "Get Started",
     "privacy": "Your information never leaves this device."
   },
@@ -75,9 +74,9 @@
     "title": "Physical description",
     "subtitle": "This helps 911 and searchers identify them.",
     "heightLabel": "Height",
-    "heightPlaceholder": "5'6\"",
+    "heightPlaceholder": "e.g., 5'6\"",
     "weightLabel": "Weight",
-    "weightPlaceholder": "150 lbs",
+    "weightPlaceholder": "e.g., 150 lbs",
     "hairLabel": "Hair Color",
     "hairPlaceholder": "Gray, short",
     "eyeLabel": "Eye Color",
