@@ -29,7 +29,7 @@
     "nameLabel": "Name",
     "namePlaceholder": "Contact name",
     "phoneLabel": "Phone Number",
-    "phonePlaceholder": "(555) 123-4567",
+    "phonePlaceholder": "e.g., (555) 123-4567",
     "relationshipLabel": "Relationship",
     "relationshipPlaceholder": "e.g., Daughter, Next-door neighbor",
     "addressLabel": "Address",

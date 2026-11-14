@@ -43,7 +43,7 @@
     "allergies": "Allergies",
     "allergiesPlaceholder": "Drug allergies, food allergies, environmental...",
     "cognitiveStatus": "Cognitive Status",
-    "cognitiveStatusPlaceholder": "Moderate dementia; may be disoriented; responds to first name",
+    "cognitiveStatusPlaceholder": "e.g., Moderate dementia; may be disoriented; responds to first name",
     "cognitiveStatusHint": "Describe how they present and what responders should expect.",
     "dominantHand": "Dominant Hand",
     "dominantHandHint": "People often veer in the direction of their dominant hand when lost",
@@ -80,7 +80,7 @@
     "medicAlertId": "MedicAlert Member ID",
     "medicAlertIdPlaceholder": "Member ID number",
     "medicAlertHotline": "MedicAlert Hotline",
-    "medicAlertHotlinePlaceholder": "1-800-432-5378",
+    "medicAlertHotlinePlaceholder": "e.g., 1-800-432-5378",
     "medicAlertHotlineHint": "The MedicAlert Foundation 24/7 emergency line. First responders call it to access medical records."
   },
   "mobilityOptions": {

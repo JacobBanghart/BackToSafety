@@ -43,7 +43,7 @@
     "allergies": "Alergias",
     "allergiesPlaceholder": "Alergias a medicamentos, alimentos, del ambiente...",
     "cognitiveStatus": "Estado cognitivo",
-    "cognitiveStatusPlaceholder": "Demencia moderada; puede estar desorientado/a; responde a su nombre",
+    "cognitiveStatusPlaceholder": "p. ej., Demencia moderada; puede estar desorientado/a; responde a su nombre",
     "cognitiveStatusHint": "Describe cómo se comporta y qué deben esperar los rescatistas.",
     "dominantHand": "Mano dominante",
     "dominantHandHint": "Cuando se pierden, las personas suelen desviarse hacia el lado de su mano dominante",
@@ -80,7 +80,7 @@
     "medicAlertId": "ID de miembro de MedicAlert",
     "medicAlertIdPlaceholder": "Número de miembro",
     "medicAlertHotline": "Línea de MedicAlert",
-    "medicAlertHotlinePlaceholder": "1-800-432-5378",
+    "medicAlertHotlinePlaceholder": "p. ej., 1-800-432-5378",
     "medicAlertHotlineHint": "Línea de emergencia de MedicAlert Foundation, 24/7. Los rescatistas llaman ahí para consultar el historial médico."
   },
   "mobilityOptions": {
