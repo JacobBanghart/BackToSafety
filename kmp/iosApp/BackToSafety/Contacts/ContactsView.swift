@@ -296,7 +296,6 @@ struct ContactsView: View {
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
         }
         .buttonStyle(.pressable)
-        .accessibilityLabel(label)
         .accessibilityIdentifier(testID)
     }
 
@@ -399,7 +398,8 @@ struct ContactsView: View {
         .padding(.bottom, Space.md)
     }
 
-    private func circleAction(_ testID: String, _ fill: Color, _ tint: Color, _ icon: String, label _: String, border: Color = .clear,
+    /// An icon-only round button, named for VoiceOver by `label` ("Call Ana"): the glyph says nothing.
+    private func circleAction(_ testID: String, _ fill: Color, _ tint: Color, _ icon: String, label: String, border: Color = .clear,
                               action: @escaping () -> Void) -> some View {
         Button(action: action) {
             SFIcon(icon, 18, tint).frame(width: 48, height: 48)
@@ -408,6 +408,7 @@ struct ContactsView: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.pressable)
+        .accessibilityLabel(label)
         .accessibilityIdentifier(testID)
     }
 
