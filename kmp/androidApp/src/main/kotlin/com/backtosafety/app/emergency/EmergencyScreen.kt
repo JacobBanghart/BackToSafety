@@ -398,12 +398,10 @@ fun EmergencyScreen(
                     },
                 )
 
-                // The checklist is the guided task, so it starts in view: what they're wearing is
-                // asked for after its first step (searching the home, while it can be checked),
-                // not between the actions and the checklist, where it pushed the steps below the fold.
-                Checklist(t, steps, destinations, ::toggle) {
-                    if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
-                }
+                // What they're wearing is asked for before the checklist, where 911 will want it
+                // early; kept to one compact row so the first step still starts in view.
+                if (showWearing) WearingCard(t, emergencyNumber, wearing, { wearing = it }) { showWearing = false }
+                Checklist(t, steps, destinations, ::toggle)
                 TipsCard(t, profile)
                 Box(Modifier.height(space.xxl.udp))
             }
@@ -536,30 +534,34 @@ private fun TimerCard(t: Translate, expired: Boolean, secondsLeft: Int, checked:
 }
 
 /**
- * What they're wearing, as one row in the checklist: at rest a single line (the question, a
- * shirt icon, a close button) so it doesn't sit as a large input in the middle of the urgent
- * flow; tapped, it opens into a text area with the 911 hint under it. Once something is
- * written it stays open, showing what was written. The field is always there (tapping the row
- * is tapping it), so `emergency-wearing-input` holds the text in both states.
+ * What they're wearing, asked right after the actions and before the checklist. Compact: at rest
+ * a single line (a shirt icon and the question) with the 911 hint always under it, so it's clear
+ * why it's asked; tapped, it opens into a text area. Once something is written it stays open,
+ * showing what was written. The field is always there (tapping the row is tapping it), so
+ * `emergency-wearing-input` holds the text in both states, and it is named by the question for
+ * TalkBack whatever it shows. Hide is offered only while it's empty: what was written for 911
+ * can't be hidden away.
  */
 @Composable
-private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, onChange: (String) -> Unit, onDismiss: () -> Unit) {
+private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, onChange: (String) -> Unit, onHide: () -> Unit) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
     var focused by remember { mutableStateOf(false) }
     val expanded = focused || wearing.isNotEmpty()
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    val label = t("wearing.label")
     Row(
         Modifier.fillMaxWidth().clip(shape).background(colors.card)
             .rnBorder(if (focused) 2.udp else 1.udp, if (focused) colors.borderFocused else colors.inputBorder, shape)
-            .padding(start = space.md.udp),
+            .padding(start = space.md.udp, end = if (wearing.isEmpty()) 0.udp else space.md.udp),
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
-        verticalAlignment = if (expanded) Alignment.Top else Alignment.CenterVertically,
+        verticalAlignment = Alignment.Top,
     ) {
-        Icon("tshirt.fill", 20f, colors.primaryText, if (expanded) Modifier.padding(top = space.md.udp) else Modifier)
-        Column(Modifier.weight(1f).padding(vertical = if (expanded) space.sm.udp else 0.udp)) {
-            if (expanded) Text(t("wearing.label"), style = type.label.style(letterSpacing = 0f), color = colors.text)
+        // Level with the first line: the label when open, the 48dp field's centre at rest.
+        Icon("tshirt.fill", 20f, colors.primaryText, Modifier.padding(top = if (expanded) space.md.udp else 14.udp))
+        Column(Modifier.weight(1f).padding(top = if (expanded) space.sm.udp else 0.udp, bottom = space.sm.udp)) {
+            if (expanded) Text(label, style = type.label.style(letterSpacing = 0f), color = colors.text)
             val input = if (expanded) rnTextStyle(16f, 22f) else type.bodyBold.style()
             BasicTextField(
                 wearing, onChange,
@@ -570,6 +572,7 @@ private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, 
                     .fillMaxWidth()
                     .heightIn(min = 48.udp)
                     .testTag("emergency-wearing-input")
+                    .semantics { contentDescription = label }
                     .onFocusChanged { focused = it.isFocused },
                 decorationBox = { field ->
                     Box(Modifier.padding(vertical = space.sm.udp), contentAlignment = Alignment.CenterStart) {
@@ -578,28 +581,27 @@ private fun WearingCard(t: Translate, emergencyNumber: String, wearing: String, 
                             if (expanded) {
                                 Text(t("wearing.placeholder"), style = input, color = colors.inputPlaceholder)
                             } else {
-                                Text(t("wearing.label"), style = input, color = colors.text)
+                                Text(label, style = input, color = colors.text)
                             }
                         }
                         field()
                     }
                 },
             )
-            if (expanded) {
-                Text(
-                    t("wearing.hint", mapOf("emergencyNumber" to emergencyNumber)),
-                    style = type.caption.style(), color = colors.textSecondary,
-                )
-            }
+            Text(
+                t("wearing.hint", mapOf("emergencyNumber" to emergencyNumber)),
+                style = type.caption.style(), color = colors.textSecondary,
+            )
         }
-        // A 48dp close button, labelled for TalkBack, at the row's end in both states, so it's
-        // never pushed below the edge at large text as the old Dismiss button was.
-        Box(
-            Modifier.testTag("emergency-wearing-dismiss").size(48.udp).clip(CircleShape)
-                .clickable(role = Role.Button, onClick = onDismiss)
-                .semantics { contentDescription = t("wearing.dismiss") },
-            contentAlignment = Alignment.Center,
-        ) { Icon("xmark", 20f, colors.textSecondary) }
+        if (wearing.isEmpty()) {
+            // A labelled text button, 48dp tall, at the row's end, so it's never pushed below the
+            // edge at large text and doesn't read as closing the screen as an X did.
+            Box(
+                Modifier.testTag("emergency-wearing-dismiss").heightIn(min = 48.udp).widthIn(min = 48.udp).clip(shape)
+                    .clickable(role = Role.Button, onClick = onHide).padding(horizontal = space.md.udp),
+                contentAlignment = Alignment.Center,
+            ) { Text(t("wearing.hide"), style = type.bodyBold.style(), color = colors.primaryText) }
+        }
     }
 }
 
@@ -668,7 +670,6 @@ private data class SecondaryAction(val label: String, val tag: String, val icon:
 @Composable
 private fun Checklist(
     t: Translate, steps: List<ChecklistStep>, destinations: List<DestinationEntity>, onToggle: (String) -> Unit,
-    afterFirst: @Composable () -> Unit = {},
 ) {
     val colors = LocalAppColors.current
     val space = DesignTokens.Spacing
@@ -680,7 +681,7 @@ private fun Checklist(
             Text(t("checklist.title"), style = type.title.style(), color = colors.text, modifier = Modifier.weight(1f))
             Text("${steps.count { it.checked }}/${steps.size}", style = type.bodyBold.style(), color = colors.textSecondary)
         }
-        for ((index, step) in steps.withIndex()) {
+        for (step in steps) {
             val urgentOpen = step.urgent && !step.checked
             val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
             Row(
@@ -767,7 +768,6 @@ private fun Checklist(
                     }
                 }
             }
-            if (index == 0) afterFirst()
         }
     }
 }

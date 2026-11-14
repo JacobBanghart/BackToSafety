@@ -109,9 +109,9 @@ struct EmergencyView: View {
                                 .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(Color(argb: Secondary.c300), lineWidth: 1))
                         }
                         actionButtons
-                        // The checklist is the guided task, so it starts in view: what they're wearing
-                        // is asked for after its first step (in `checklist`), not between the actions
-                        // and the checklist, where it pushed the steps below the fold.
+                        // What they're wearing is asked for before the checklist, where 911 will want
+                        // it early; kept to one compact row so the first step still starts in view.
+                        if showWearing { wearingCard }
                         checklist
                         tipsCard
                         Color.clear.frame(height: Space.xxl)
@@ -359,17 +359,20 @@ struct EmergencyView: View {
         .rnShadow(.md, dark: colors.isDark)
     }
 
-    /// What they're wearing, as one row in the checklist: at rest a single line (the question, a
-    /// shirt icon, a close button) so it doesn't sit as a large input in the middle of the urgent
-    /// flow; tapped, it opens into a text area with the 911 hint under it. Once something is
-    /// written it stays open, showing what was written. The field is always there (tapping the
-    /// row is tapping it), so `emergency-wearing-input` holds the text in both states.
+    /// What they're wearing, asked right after the actions and before the checklist. Compact: at
+    /// rest a single line (a shirt icon and the question) with the 911 hint always under it, so
+    /// it's clear why it's asked; tapped, it opens into a text area. Once something is written it
+    /// stays open, showing what was written. The field is always there (tapping the row is
+    /// tapping it), so `emergency-wearing-input` holds the text in both states, and it is named by
+    /// the question for VoiceOver whatever it shows. Hide is offered only while it's empty: what
+    /// was written for 911 can't be hidden away.
     private var wearingCard: some View {
         let expanded = wearingFocused || !wearing.isEmpty
         let m = fontMultiplier
-        return HStack(alignment: expanded ? .top : .center, spacing: Space.sm) {
+        return HStack(alignment: .top, spacing: Space.sm) {
+            // Level with the first line: the label when open, the 48pt field's centre at rest.
             SFIcon("tshirt.fill", 20, colors.primaryText)
-                .padding(.top, expanded ? Space.md : 0)
+                .padding(.top, expanded ? Space.md : 14)
             VStack(alignment: .leading, spacing: 0) {
                 if expanded {
                     RNText(t("wearing.label"), Typography.label.spec.spacing(0), color: colors.text)
@@ -382,23 +385,28 @@ struct EmergencyView: View {
                     placeholderColor: UIColor(expanded ? colors.inputPlaceholder : colors.text), tint: UIColor(colors.tint),
                     insets: UIEdgeInsets(top: Space.sm, left: 0, bottom: Space.sm, right: 0),
                     multiline: true, lineHeight: 22 * m, minHeight: 48, maxHeight: 140,
-                    onFocus: { wearingFocused = $0 }
+                    onFocus: { wearingFocused = $0 },
+                    accessibilityLabel: t("wearing.label")
                 )
-                if expanded {
-                    RNText(t("wearing.hint", ["emergencyNumber": emergencyNumber]), Typography.caption.spec, color: colors.textSecondary)
+                RNText(t("wearing.hint", ["emergencyNumber": emergencyNumber]), Typography.caption.spec, color: colors.textSecondary)
+            }
+            .padding(.top, expanded ? Space.sm : 0)
+            .padding(.bottom, Space.sm)
+            if wearing.isEmpty {
+                // A labelled text button, 48pt tall, at the row's end, so it's never pushed below
+                // the edge at large text and doesn't read as closing the screen as an X did.
+                Button { showWearing = false } label: {
+                    RNText(t("wearing.hide"), Typography.bodyBold.spec, color: colors.primaryText)
+                        .padding(.horizontal, Space.md)
+                        .frame(minWidth: 48, minHeight: 48)
+                        .contentShape(Rectangle())
                 }
+                .buttonStyle(.pressable)
+                .accessibilityIdentifier("emergency-wearing-dismiss")
             }
-            .padding(.vertical, expanded ? Space.sm : 0)
-            // A 48pt close button, labelled for VoiceOver, at the row's end in both states, so it's
-            // never pushed below the edge at large text as the old Dismiss button was.
-            Button { showWearing = false } label: {
-                SFIcon("xmark", 20, colors.textSecondary).frame(width: 48, height: 48).contentShape(Rectangle())
-            }
-            .buttonStyle(.pressable)
-            .accessibilityLabel(t("wearing.dismiss"))
-            .accessibilityIdentifier("emergency-wearing-dismiss")
         }
         .padding(.leading, Space.md)
+        .padding(.trailing, wearing.isEmpty ? 0 : Space.md)
         .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
         .overlay(RoundedRectangle(cornerRadius: Radius.lg)
             .strokeBorder(wearingFocused ? colors.borderFocused : colors.inputBorder, lineWidth: wearingFocused ? 2 : 1))
@@ -543,7 +551,6 @@ struct EmergencyView: View {
                 }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier("emergency-step-\(step.id)")
-                if step.id == steps.first?.id, showWearing { wearingCard }
             }
         }
     }

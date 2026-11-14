@@ -5,6 +5,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
 import androidx.room.Room
@@ -36,9 +37,9 @@ import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
 /**
- * The search checklist is the guided task, so at large text its first step is on screen when the
- * emergency opens, even with the direction hint showing: the countdown doesn't grow with the font
- * scale, and the clothing prompt comes after the first step rather than before the checklist.
+ * The search checklist is the guided task, so at large text its first step's title is on screen
+ * when the emergency opens, even with the direction hint and the clothing prompt above it: the
+ * countdown doesn't grow with the font scale, and the clothing prompt is one compact row.
  */
 @RunWith(RobolectricTestRunner::class)
 // Native graphics, so text is measured with real fonts (the legacy mode measures it as empty).
@@ -86,7 +87,7 @@ class EmergencyLayoutTest {
     }
 
     @Test
-    fun theFirstStepIsOnScreenAtLargeTextAndTheClothingPromptFollowsIt() {
+    fun theFirstStepsTitleIsOnScreenAtLargeTextBelowTheClothingPrompt() {
         val t = translations.translator("en", "emergency")
         compose.setContent {
             val density = LocalDensity.current
@@ -101,9 +102,12 @@ class EmergencyLayoutTest {
         }
         compose.waitForIdle()
         val screen = compose.onRoot().getUnclippedBoundsInRoot()
-        val first = compose.onNodeWithTag("emergency-step-${buildInitialSteps(t, "911").first().id}").getUnclippedBoundsInRoot()
-        assertTrue("the first step starts at ${first.top}, below the screen (${screen.bottom})", first.top < screen.bottom)
+        val firstStep = buildInitialSteps(t, "911").first()
+        // The title's own text, not the row it's merged into: all of it, not just its top edge.
+        val title = compose.onNodeWithText(firstStep.title, useUnmergedTree = true).getUnclippedBoundsInRoot()
+        assertTrue("the first step's title (${title.top}..${title.bottom}) isn't wholly on the screen (${screen.bottom})", title.top >= screen.top && title.bottom <= screen.bottom)
+        val first = compose.onNodeWithTag("emergency-step-${firstStep.id}").getUnclippedBoundsInRoot()
         val wearing = compose.onNodeWithTag("emergency-wearing-input").getUnclippedBoundsInRoot()
-        assertTrue("the clothing prompt (${wearing.top}) comes before the first step (${first.bottom})", wearing.top > first.bottom)
+        assertTrue("the clothing prompt (${wearing.bottom}) isn't above the first step (${first.top})", wearing.bottom < first.top)
     }
 }
