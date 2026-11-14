@@ -22,9 +22,11 @@ import kotlin.test.Test
 import kotlin.test.fail
 
 /**
- * Runs every JSON file in spec/vectors against the Kotlin core: the twin of
- * spec/vectors.test.ts, which holds the RN app to the same input→output pairs.
- * Every case must have a blessed `expected` (blessing happens on the RN side).
+ * Runs every JSON file in spec/vectors against the Kotlin core, which both apps share. Every case
+ * must have a blessed `expected`. Blessing: a new case may omit it, and
+ * `VECTORS_BLESS=1 ./gradlew :shared:jvmTest --tests '*VectorsTest'` writes the code's output
+ * into those cases only (existing expectations are never rewritten). Read what it wrote before
+ * committing it: a blessed value is the contract from then on.
  */
 class VectorsTest {
     private val root = File(System.getProperty("repoRoot") ?: error("repoRoot system property not set"))
@@ -174,11 +176,53 @@ class VectorsTest {
         },
     )
 
+    private val bless = System.getProperty("vectorsBless") == "1"
+
+    /** The vector files' own layout (two-space indent, UTF-8 as is), so a bless adds only its values. */
+    @OptIn(kotlinx.serialization.ExperimentalSerializationApi::class)
+    private val writer = Json {
+        prettyPrint = true
+        prettyPrintIndent = "  "
+    }
+
+    /** Fills in `expected` from the code wherever a case has none (VECTORS_BLESS=1), and saves the file. */
+    private fun blessed(file: File): Int {
+        var added = 0
+        val doc = Json.parseToJsonElement(file.readText()).jsonObject
+        val functions = doc["functions"]!!.jsonObject
+        val updated = JsonObject(
+            doc.toMutableMap().apply {
+                put(
+                    "functions",
+                    JsonObject(
+                        functions.mapValues { (fn, list) ->
+                            val adapter = adapters[fn] ?: return@mapValues list
+                            JsonArray(
+                                list.jsonArray.map { case ->
+                                    val c = case.jsonObject
+                                    if ("expected" in c) {
+                                        case
+                                    } else {
+                                        added++
+                                        JsonObject(c + ("expected" to adapter(c["args"]!!.jsonArray)))
+                                    }
+                                },
+                            )
+                        },
+                    ),
+                )
+            },
+        )
+        if (added > 0) file.writeText(writer.encodeToString(JsonObject.serializer(), updated) + "\n")
+        return added
+    }
+
     @Test
     fun everyVectorMatches() {
         val failures = mutableListOf<String>()
         var cases = 0
         val files = File(root, "spec/vectors").listFiles()!!.filter { it.extension == "json" }.sortedBy { it.name }
+        if (bless) files.forEach { file -> blessed(file).takeIf { it > 0 }?.let { println("blessed $it case(s) in ${file.name}") } }
         for (file in files) {
             val functions = Json.parseToJsonElement(file.readText()).jsonObject["functions"]!!.jsonObject
             for ((fn, list) in functions) {
@@ -191,7 +235,7 @@ class VectorsTest {
                     cases++
                     val c = case.jsonObject
                     val expected = c["expected"] ?: run {
-                        failures += "${file.name} $fn[$i]: no expected value (bless on the RN side)"
+                        failures += "${file.name} $fn[$i]: no expected value (VECTORS_BLESS=1 writes the code's, to review)"
                         return@forEachIndexed
                     }
                     val actual = runCatching { adapter(c["args"]!!.jsonArray) }

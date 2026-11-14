@@ -7,7 +7,8 @@
 - spec/features.json: unique IDs, every vector and flow reference resolves, and
   maxWithoutFlows matches the features still without a Maestro flow (it may only go down;
   maestro/sync_features.py lowers it).
-- i18n/locales: every locale has English's keys, no empty strings, the same placeholders.
+- i18n/locales: every locale has English's keys, no empty strings, the same placeholders, and
+  the script's unknown time and place lines one {{blank}} each.
 
 Exits non-zero with a list of problems.
 """
@@ -146,9 +147,22 @@ def check_locales() -> None:
                 problems.append(f"locales: {locale}/{ns}: placeholders differ: {mismatched}")
 
 
+def check_script_blanks() -> None:
+    """The 911 script's unknown time and place each carry exactly one {{blank}}: buildScriptParts
+    splits the line there to highlight the blank on screen, and a second or a missing one would
+    leave the gap the caller reads aloud unmarked or doubled."""
+    for locale_dir in sorted(d for d in (ROOT / "i18n/locales").iterdir() if d.is_dir()):
+        script = json.loads((locale_dir / "readout.json").read_text()).get("script", {})
+        for key in ("lastSeenUnknown", "locationUnknown"):
+            count = len(re.findall(r"\{\{\s*blank\s*\}\}", script.get(key, "")))
+            if count != 1:
+                problems.append(f"locales: {locale_dir.name}/readout.json script.{key} has {count} {{{{blank}}}}, not exactly one")
+
+
 check_testids()
 check_features()
 check_locales()
+check_script_blanks()
 for p in problems:
     print(p)
 print("spec contracts ok" if not problems else f"{len(problems)} problem(s)")

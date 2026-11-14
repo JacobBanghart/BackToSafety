@@ -198,6 +198,21 @@
           }
         ],
         "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Búsqueda iniciada: hoy, 9:00. Última ubicación conocida: [completar ubicación]. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+      },
+      {
+        "args": [
+          "es",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "5/10/2026, 23:50:00",
+            "lastSeenClock": "23:50",
+            "lastSeenDate": "2026-10-05",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Búsqueda iniciada: ayer, 23:50. Última ubicación conocida: [completar ubicación]. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
       }
     ],
     "buildScriptParts": [
@@ -254,6 +269,36 @@
           },
           {
             "text": ". Please advise about issuing a local Silver/Purple Alert."
+          }
+        ]
+      },
+      {
+        "args": [
+          "es",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": [
+          {
+            "text": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Visto/a por última vez: "
+          },
+          {
+            "text": "completar hora",
+            "blank": true
+          },
+          {
+            "text": ". Última ubicación conocida: "
+          },
+          {
+            "text": "completar ubicación",
+            "blank": true
+          },
+          {
+            "text": ". Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
           }
         ]
       }
