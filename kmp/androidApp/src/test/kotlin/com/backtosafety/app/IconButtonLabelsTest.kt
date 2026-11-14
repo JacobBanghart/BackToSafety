@@ -11,6 +11,7 @@ import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertWidthIsAtLeast
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
@@ -26,6 +27,7 @@ import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.contacts.ContactsScreen
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.home.HomeScreen
+import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translate
@@ -172,6 +174,14 @@ class IconButtonLabelsTest {
         // One place is saved (setUp): the tile says so, not the generic "Lugares probables".
         compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Lugares probables").assertDoesNotExist()
+    }
+
+    @Test
+    fun theEmergencyInfoCallButtonIsNamedForTheContact() {
+        runBlocking { store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margarita")) }
+        compose.setContent { AppTheme(dark = false) { ReadoutScreen(t("readout"), t("common"), store) {} } }
+        compose.waitUntil(5_000) { compose.onAllNodesWithContentDescription("Llamar a Ana").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithContentDescription("Llamar a Ana").assert(isButton).assertHasClickAction()
     }
 
     @Test

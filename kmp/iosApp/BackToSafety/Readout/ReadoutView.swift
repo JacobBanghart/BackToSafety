@@ -385,6 +385,8 @@ struct ReadoutView: View {
             .background(RoundedRectangle(cornerRadius: Radius.lg).fill(success))
         }
         .buttonStyle(.pressable)
+        // Named for whom it calls, as on Contacts: the number alone didn't say who answers.
+        .accessibilityLabel(t("actions.callName", ["name": c.name, "ns": "contacts"]))
         .accessibilityIdentifier("readout-contact-\(index)-call")
     }
 

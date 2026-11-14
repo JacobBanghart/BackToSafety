@@ -50,6 +50,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -536,6 +538,8 @@ private fun ContactRow(t: Translate, c: ContactEntity, index: Int, onCall: () ->
         Row(
             Modifier.testTag("readout-contact-$index-call").heightIn(min = 56.udp).clip(shape)
                 .clickable(role = Role.Button, onClick = onCall).background(success)
+                // Named for whom it calls, as on Contacts: the number alone didn't say who answers.
+                .semantics { contentDescription = t("actions.callName", mapOf("name" to c.name, "ns" to "contacts")) }
                 .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
             verticalAlignment = Alignment.CenterVertically,
