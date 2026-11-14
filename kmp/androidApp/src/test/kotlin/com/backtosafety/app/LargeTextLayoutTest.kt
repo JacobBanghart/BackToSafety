@@ -1,5 +1,6 @@
 package com.backtosafety.app
 
+import android.app.NotificationManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
@@ -7,18 +8,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertHasClickAction
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
@@ -27,6 +37,7 @@ import androidx.room.Room
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.contacts.ContactsScreen
+import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.readout.BesideOrUnder
 import com.backtosafety.app.ui.AppTheme
@@ -35,12 +46,16 @@ import com.backtosafety.app.ui.ChipGrid
 import com.backtosafety.app.ui.ListItem
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OptionChip
+import com.backtosafety.core.AlertScheduler
 import com.backtosafety.core.DesignTokens
+import com.backtosafety.core.EmergencyAway
+import com.backtosafety.core.ScheduledAlert
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.invoke
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -49,6 +64,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
@@ -156,6 +172,45 @@ class LargeTextLayoutTest {
             // The pill starts under the name; its text follows the 8dp padding, 16dp check and 4dp gap.
             assertEquals("the badge doesn't line up with the name", name.left.value + 28f, badge.left.value, 1f)
             assertTrue("the badge wrapped to more than one line (${badge.height})", badge.height.value < 2 * DesignTokens.Typography.caption.lineHeight * 2f)
+        } finally {
+            db.close()
+        }
+    }
+
+    private object NoScheduler : AlertScheduler {
+        override fun schedule(alerts: List<ScheduledAlert>) {}
+        override fun cancelAll() {}
+    }
+
+    @Test
+    // A small phone (a 5" screen): on the 914dp one the card only just fits, before the system bars.
+    @Config(qualifiers = "w360dp-h640dp-xxhdpi")
+    fun endEmergencyCanBeReachedInTheLeaveDialogAtTheLargestTextInSpanishWithNotificationsOff() {
+        // The notifications warning and Open Settings make the card taller than the screen at 2x
+        // in Spanish: it scrolls, so End Emergency at its foot can still be reached and tapped.
+        val db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
+            .setDriver(AndroidSQLiteDriver()).setQueryCoroutineContext(Dispatchers.Unconfined).allowMainThreadQueries().build()
+        try {
+            val store = Store(db)
+            runBlocking { store.seed() }
+            largeText(2f) {
+                val context = LocalContext.current
+                remember { shadowOf(context.getSystemService(NotificationManager::class.java)).setNotificationsEnabled(false) }
+                EmergencyScreen(
+                    translations.translator("es", "emergency"), translations.translator("es", "common"), store,
+                    EmergencyAway(store, NoScheduler), CoroutineScope(Dispatchers.Unconfined), {}, {},
+                )
+            }
+            compose.waitUntil(5_000) { compose.onAllNodesWithTag("emergency-back").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithTag("emergency-back").performClick()
+            compose.waitForIdle()
+            compose.onNodeWithTag("emergency-modal-leave-notifications-off").assertExists()
+            val screen = compose.onRoot().getUnclippedBoundsInRoot()
+            compose.onNodeWithTag("emergency-modal-leave-end").performScrollTo().assertIsDisplayed().assertHasClickAction()
+            // Whole and on the screen: a card that didn't scroll squeezed it to a sliver at the foot.
+            val end = compose.onNodeWithTag("emergency-modal-leave-end").getBoundsInRoot()
+            assertTrue("End Emergency is off the screen (${end.bottom} > ${screen.bottom})", end.bottom <= screen.bottom)
+            assertTrue("End Emergency is cut to ${end.height}", end.height >= 48.dp)
         } finally {
             db.close()
         }

@@ -79,7 +79,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import com.backtosafety.app.BuildConfig
-import com.backtosafety.app.ui.DANGER_FILL_ALPHA
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
@@ -811,12 +810,16 @@ private fun EmergencyModal(
         Modifier.fillMaxSize().background(Color(if (colors.isDark) DesignTokens.Dark.overlay else DesignTokens.Light.overlay))
             // Modal: touches outside the card must not reach the screen underneath.
             .pointerInput(Unit) { detectTapGestures { } }
+            .windowInsetsPadding(WindowInsets.safeDrawing)
             .padding(space.xl.udp),
         contentAlignment = Alignment.Center,
     ) {
+        // The card scrolls when it's taller than the screen (the largest text in Spanish, with
+        // the notifications warning): End Emergency at its foot must stay reachable.
         Column(
             Modifier.widthIn(max = 340.udp).fillMaxWidth().shadow(8.udp, RoundedCornerShape(DesignTokens.Radius.xl.dp))
-                .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp)).background(colors.card).padding(space.xl.udp),
+                .clip(RoundedCornerShape(DesignTokens.Radius.xl.dp)).background(colors.card)
+                .verticalScroll(rememberScrollState()).padding(space.xl.udp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(space.md.udp),
         ) {
@@ -860,10 +863,11 @@ private fun EmergencyModal(
                         )
                     }
                     // Two choices, then a third set apart. Keep Searching is the safe one, so it
-                    // is the only filled button. Leaving is a text action that says what happens
-                    // (the timer keeps running), so the two can't be read as the same choice. End
-                    // Emergency is the destructive one: below a rule, edged and washed in red.
-                    Column(Modifier.fillMaxWidth().padding(top = space.xs.udp), verticalArrangement = Arrangement.spacedBy(space.xs.udp)) {
+                    // is the only filled button. Leaving is outlined, the same size, and says what
+                    // happens (the timer keeps running), so the two can't be read as the same
+                    // choice. End Emergency is the destructive one: a red link below a rule, small
+                    // enough not to be taken for either, still one tap and a 48dp target.
+                    Column(Modifier.fillMaxWidth().padding(top = space.xs.udp), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         Box(
                             Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-stay").clip(buttonShape)
                                 .background(colors.primary).clickable(role = Role.Button, onClick = onDismiss)
@@ -872,23 +876,18 @@ private fun EmergencyModal(
                         ) { Text(t("modal.leave.stay"), style = buttonText, color = colors.textOnPrimary, textAlign = TextAlign.Center) }
                         Box(
                             Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-leave").clip(buttonShape)
-                                .clickable(role = Role.Button, onClick = onLeave)
+                                .clickable(role = Role.Button, onClick = onLeave).rnBorder(1.udp, colors.inputBorder, buttonShape)
                                 .padding(vertical = space.md.udp, horizontal = space.lg.udp),
                             contentAlignment = Alignment.Center,
                         ) { Text(t("modal.leave.leave"), style = buttonText, color = colors.primaryText, textAlign = TextAlign.Center) }
                     }
                     Box(Modifier.fillMaxWidth().height(1.udp).background(colors.border))
-                    Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("emergency-modal-leave-end")
-                            .clip(buttonShape).background(colors.error.copy(alpha = DANGER_FILL_ALPHA))
-                            .clickable(role = Role.Button, onClick = onEnd).rnBorder(1.5f.udp, colors.error, buttonShape)
-                            .padding(vertical = space.md.udp, horizontal = space.lg.udp),
-                        horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon("xmark.circle.fill", 20f, colors.errorText)
-                        Text(t("modal.leave.end"), style = buttonText, color = colors.errorText)
-                    }
+                    Box(
+                        Modifier.heightIn(min = 48.udp).widthIn(min = 48.udp).testTag("emergency-modal-leave-end")
+                            .clip(buttonShape).clickable(role = Role.Button, onClick = onEnd)
+                            .padding(vertical = space.md.udp, horizontal = space.md.udp),
+                        contentAlignment = Alignment.Center,
+                    ) { Text(t("modal.leave.end"), style = buttonText, color = colors.errorText, textAlign = TextAlign.Center) }
                 }
                 Modal.CATCH_UP_WARNING, Modal.CATCH_UP_EXPIRED -> {
                     val key = modal.catchUp!!.key

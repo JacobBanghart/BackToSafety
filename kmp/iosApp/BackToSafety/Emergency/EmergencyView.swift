@@ -578,92 +578,105 @@ struct EmergencyView: View {
             .buttonStyle(.pressable)
             .accessibilityIdentifier(testID)
         }
-        return ZStack {
-            colors.overlay.ignoresSafeArea()
-            VStack(spacing: Space.md) {
-                switch which {
-                case .found:
-                    SFIcon("checkmark.circle.fill", 40, success)
-                        .frame(width: 72, height: 72)
-                        .background(Circle().fill(success.opacity(0x20 / 255.0)))
-                        .padding(.bottom, Space.xs)
-                    title("modal.found.title")
-                    message("modal.found.message")
-                    button(tCommon("ok"), "emergency-modal-found-ok", success, white) { leave() }
-                case .leave:
-                    title("modal.leave.title")
-                    message("modal.leave.message")
-                    if notificationsDenied {
-                        // The message promises the timer goes on; with notifications off its alerts won't come.
-                        RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: colors.error, align: .center)
-                            .accessibilityIdentifier("emergency-modal-leave-notifications-off")
-                        Button {
-                            if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
-                        } label: {
-                            RNText(tCommon("openSettings"), Typography.bodyBold.spec, color: colors.tint)
-                                .underline()
-                                .frame(minHeight: 48 - 2 * Space.md)
-                                .padding(.vertical, Space.md)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.pressable)
-                        .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
-                    }
-                    // Two choices, then a third set apart. Keep Searching is the safe one, so it
-                    // is the only filled button. Leaving is a text action that says what happens
-                    // (the timer keeps running), so the two can't be read as the same choice. End
-                    // Emergency is the destructive one: below a rule, edged and washed in red.
-                    VStack(spacing: Space.xs) {
-                        button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, colors.textOnPrimary) { modal = nil }
-                        button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.primaryText) {
-                            Analytics.shared.track(event: .emergencyLeave, properties: [:])
-                            leave()
-                        }
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, Space.xs)
-                    Rectangle().fill(colors.border).frame(height: 1)
+        let card = VStack(spacing: Space.md) {
+            switch which {
+            case .found:
+                SFIcon("checkmark.circle.fill", 40, success)
+                    .frame(width: 72, height: 72)
+                    .background(Circle().fill(success.opacity(0x20 / 255.0)))
+                    .padding(.bottom, Space.xs)
+                title("modal.found.title")
+                message("modal.found.message")
+                button(tCommon("ok"), "emergency-modal-found-ok", success, white) { leave() }
+            case .leave:
+                title("modal.leave.title")
+                message("modal.leave.message")
+                if notificationsDenied {
+                    // The message promises the timer goes on; with notifications off its alerts won't come.
+                    RNText(t("modal.leave.notificationsOff"), TextSpec(size: 16, lineHeight: 22), color: colors.error, align: .center)
+                        .accessibilityIdentifier("emergency-modal-leave-notifications-off")
                     Button {
-                        Analytics.shared.track(event: .emergencyCancelled, properties: endedProperties())
-                        // Ended without an outcome: stamp the end time, keep the outcome as it was.
-                        record(ended: true)
-                        Task {
-                            _ = try? await model.store.clearActiveEmergency()
-                            leave()
-                        }
+                        if let url = URL(string: UIApplication.openNotificationSettingsURLString) { UIApplication.shared.open(url) }
                     } label: {
-                        HStack(spacing: Space.sm) {
-                            SFIcon("xmark.circle.fill", 20, colors.errorText)
-                            RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.errorText)
-                        }
-                        .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
-                        .padding(.vertical, Space.md)
-                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.error.opacity(dangerFillOpacity)))
-                        .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1.5))
-                        .contentShape(Rectangle()).accessibilityElement(children: .combine)
+                        RNText(tCommon("openSettings"), Typography.bodyBold.spec, color: colors.tint)
+                            .underline()
+                            .frame(minHeight: 48 - 2 * Space.md)
+                            .padding(.vertical, Space.md)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
-                    .accessibilityIdentifier("emergency-modal-leave-end")
-                case .catchUpWarning, .catchUpExpired:
-                    let key = which == .catchUpWarning ? "warning" : "expired"
-                    let number = ["emergencyNumber": emergencyNumber]
-                    RNText(t("alerts.\(key).title", number), Typography.title.spec, color: colors.text, align: .center)
-                    RNText(t("alerts.\(key).body", number), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
-                    button(tCommon("ok"), "emergency-modal-catchup-ok",
-                           which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary,
-                           which == .catchUpExpired ? white : colors.textOnPrimary) { modal = nil }
-                case .noContacts, .smsError:
-                    title(which == .noContacts ? "modal.noContacts.title" : "modal.smsError.title")
-                    message(which == .noContacts ? "modal.noContacts.message" : "modal.smsError.message")
-                    button(tCommon("ok"), "emergency-modal-info-ok", colors.primary, colors.textOnPrimary) { modal = nil }
+                    .accessibilityIdentifier("emergency-modal-leave-notifications-settings")
                 }
+                // Two choices, then a third set apart. Keep Searching is the safe one, so it
+                // is the only filled button. Leaving is outlined, the same size, and says what
+                // happens (the timer keeps running), so the two can't be read as the same
+                // choice. End Emergency is the destructive one: a red link below a rule, small
+                // enough not to be taken for either, still one tap and a 44pt target.
+                VStack(spacing: Space.sm) {
+                    button(t("modal.leave.stay"), "emergency-modal-leave-stay", colors.primary, colors.textOnPrimary) { modal = nil }
+                    button(t("modal.leave.leave"), "emergency-modal-leave-leave", .clear, colors.primaryText, outline: true) {
+                        Analytics.shared.track(event: .emergencyLeave, properties: [:])
+                        leave()
+                    }
+                }
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, Space.xs)
+                Rectangle().fill(colors.border).frame(height: 1)
+                Button {
+                    Analytics.shared.track(event: .emergencyCancelled, properties: endedProperties())
+                    // Ended without an outcome: stamp the end time, keep the outcome as it was.
+                    record(ended: true)
+                    Task {
+                        _ = try? await model.store.clearActiveEmergency()
+                        leave()
+                    }
+                } label: {
+                    RNText(t("modal.leave.end"), Typography.bodyBold.spec, color: colors.errorText, align: .center)
+                        .padding(.vertical, Space.md).padding(.horizontal, Space.md)
+                        .frame(minWidth: 48, minHeight: 48)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.pressable)
+                .accessibilityIdentifier("emergency-modal-leave-end")
+            case .catchUpWarning, .catchUpExpired:
+                let key = which == .catchUpWarning ? "warning" : "expired"
+                let number = ["emergencyNumber": emergencyNumber]
+                RNText(t("alerts.\(key).title", number), Typography.title.spec, color: colors.text, align: .center)
+                RNText(t("alerts.\(key).body", number), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
+                button(tCommon("ok"), "emergency-modal-catchup-ok",
+                       which == .catchUpExpired ? Color(argb: Semantic.error) : colors.primary,
+                       which == .catchUpExpired ? white : colors.textOnPrimary) { modal = nil }
+            case .noContacts, .smsError:
+                title(which == .noContacts ? "modal.noContacts.title" : "modal.smsError.title")
+                message(which == .noContacts ? "modal.noContacts.message" : "modal.smsError.message")
+                button(tCommon("ok"), "emergency-modal-info-ok", colors.primary, colors.textOnPrimary) { modal = nil }
             }
-            .padding(Space.xl)
-            .frame(maxWidth: 340)
-            .background(RoundedRectangle(cornerRadius: Radius.xl).fill(colors.card))
-            .rnShadow(.lg, dark: colors.isDark)
-            .padding(Space.xl)
         }
+        .padding(Space.xl)
+        .frame(maxWidth: 340)
+        .background(RoundedRectangle(cornerRadius: Radius.xl).fill(colors.card))
+        .rnShadow(.lg, dark: colors.isDark)
+        .padding(Space.xl)
+        return ZStack {
+            colors.overlay.ignoresSafeArea()
+            // The card scrolls when it's taller than the screen (the largest text in Spanish,
+            // with the notifications warning): End Emergency at its foot must stay reachable.
+            ViewThatFits(in: .vertical) {
+                card
+                ScrollView { card }
+                    .scrollBounceBehavior(.basedOnSize)
+            }
+            // The modal is laid out over the whole screen, so it doesn't see the safe area: a card
+            // tall enough to scroll keeps clear of the status bar and home indicator, by the same
+            // amount above and below so a short one stays centred.
+            .padding(.vertical, max(windowSafeArea.top, windowSafeArea.bottom))
+        }
+    }
+
+    /// The window's safe area, which a view laid out over the whole screen no longer sees.
+    private var windowSafeArea: UIEdgeInsets {
+        let scene = UIApplication.shared.connectedScenes.first { $0.activationState == .foregroundActive } as? UIWindowScene
+        return scene?.keyWindow?.safeAreaInsets ?? .zero
     }
 }
 
