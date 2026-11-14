@@ -101,7 +101,7 @@ This lets the protocol survive app termination, phone calls, and when the user b
 
 ## 6. clothing / Appearance Input
 
-A "What were they wearing?" card captures clothing details. The value is persisted to the active emergency's `wearing` and surfaced in the 911 readout.
+A "What are they wearing?" card, right after the action buttons and before the checklist, captures clothing details, with "You'll need this for 911" always under it. While it's empty it can be hidden (Hide); once something is written it stays. The value is persisted to the active emergency's `wearing` and surfaced in the 911 readout.
 
 ---
 
@@ -136,9 +136,9 @@ When the caregiver reaches the `familiar_places` step, saved destinations are su
 - Opens the system message composer (Android: an `smsto:` intent; iOS: `MFMessageComposeViewController`).
 - Includes the missing person's name, the time the search started, and a request to help search.
 
-### Info Sheet
+### Emergency Info
 
-- Navigates to `/readout` for a pre-written 911 script and full details.
+- The "Emergency Info" button opens the Emergency Info screen (`readout`): a pre-written 911 script and full details.
 
 ### Found — Safe
 
@@ -167,7 +167,7 @@ The app has no incident-history or insights screen.
 
 ## 11. Search Started
 
-The 911 call script, the full details and the Emergency Info screen give the time the search started: when the active emergency started (the caregiver pressed Start), not when the person was last seen. The text to contacts gives it too ("Search started at ..."). Where the person was last seen is left to the caregiver to say on the call (the script has a "Last known location: [fill in location]" blank).
+The 911 call script, the full details and the Emergency Info screen give the time the search started: when the active emergency started (the caregiver pressed Start), not when the person was last seen. The text to contacts gives it too ("Search started at ..."). Where the person was last seen is left to the caregiver to say on the call: on screen the script shows "Last known location:" followed by a highlighted "fill in location" blank, and the copied text has "[fill in location]" in its place.
 
 ---
 
