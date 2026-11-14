@@ -44,7 +44,6 @@ struct DetailRow: View {
             Button(action: onPress) { row.frame(minHeight: 48).contentShape(Rectangle()) }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier(testID ?? "")
-                .accessibilityHint(action?.label ?? "")
         } else {
             row.frame(minHeight: 40)
         }
@@ -66,16 +65,13 @@ struct DetailRow: View {
 }
 
 /// components/ListItem.tsx: a caption label over a body value, with a 1pt rule below that
-/// takes space. Pressable rows carry testID; the value carries <testID>-value.
-///
-/// A row with an `action` (an icon and what it does, such as copying) shows the icon at its end,
-/// keeps the value to one line, and is a 48pt button announced by that action.
+/// takes space. Pressable rows carry testID; the value carries <testID>-value. (A row with a
+/// copy action is a `DetailRow`.)
 struct ListItem: View {
     let label: String
     let value: String
     var testID: String?
     var ruleColor: Color?
-    var action: (icon: String, label: String)?
     var onPress: (() -> Void)?
     @Environment(\.appColors) private var colors
 
@@ -84,7 +80,6 @@ struct ListItem: View {
             Button(action: onPress) { row.frame(minHeight: 48).contentShape(Rectangle()) }
                 .buttonStyle(.pressable)
                 .accessibilityIdentifier(testID ?? "")
-                .accessibilityHint(action?.label ?? "")
         } else {
             row
         }
@@ -94,11 +89,10 @@ struct ListItem: View {
         HStack(spacing: Space.md) {
             VStack(alignment: .leading, spacing: 0) {
                 RNText(label, Typography.caption.spec, color: colors.textSecondary).padding(.bottom, 2)
-                RNText(value, Typography.body.spec, color: colors.text, lines: action == nil ? nil : 1)
+                RNText(value, Typography.body.spec, color: colors.text)
                     .accessibilityIdentifier(testID.map { "\($0)-value" } ?? "")
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if let action { SFIcon(action.icon, 20, colors.primaryText) }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.vertical, Space.sm)

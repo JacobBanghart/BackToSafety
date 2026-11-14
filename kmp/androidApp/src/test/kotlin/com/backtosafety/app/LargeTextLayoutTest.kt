@@ -45,7 +45,7 @@ import com.backtosafety.app.readout.BesideOrUnder
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.ButtonRowOrStack
 import com.backtosafety.app.ui.ChipGrid
-import com.backtosafety.app.ui.ListItem
+import com.backtosafety.app.ui.DetailRow
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OptionChip
 import com.backtosafety.core.AlertScheduler
@@ -283,17 +283,18 @@ class LargeTextLayoutTest {
 
     @Test
     fun aRowWithACopyActionKeepsALongValueToOneLineAndSaysWhatTappingDoes() {
+        // Settings' Device ID row, as Settings renders it: a DetailRow with a copy action.
         largeText {
             Box(Modifier.width(240.dp)) {
-                ListItem(
+                DetailRow(
                     "Device ID", "3f2a9c1b-7d4e-4b2a-9c1d-0a5e6f7b41ef", testID = "id",
                     action = "doc.on.clipboard.fill" to "Copy Device ID",
                 ) {}
             }
         }
-        // One body line at 130% is about 31dp; the raw UUID wrapped onto two or three.
+        // One label line at 130% is about 26dp; the raw UUID wrapped onto two or three.
         val value = compose.onNodeWithTag("id-value", useUnmergedTree = true).getUnclippedBoundsInRoot()
-        assertTrue("the value wrapped (${value.height})", value.height < 40.dp)
+        assertTrue("the value wrapped (${value.height})", value.height < 36.dp)
         compose.onNodeWithTag("id").assert(
             SemanticsMatcher("clicks to copy") { it.config.getOrNull(SemanticsActions.OnClick)?.label == "Copy Device ID" },
         )
