@@ -18,7 +18,8 @@
     "places": "Lugares",
     "placesSubtitle": "Lugares probables",
     "placesNone": "Ninguno agregado",
-    "placesSaved": "{{count}} guardados"
+    "placesSaved": "{{count}} guardados",
+    "contactsSubtitle": "Personas a quien llamar"
   },
   "emergencyInfo": {
     "title": "Información de emergencia",
@@ -39,7 +40,9 @@
       "photo": "Foto reciente",
       "description": "Descripción física",
       "contacts": "Contactos de emergencia",
-      "places": "Lugares probables"
-    }
+      "places": "Lugares probables",
+      "contactsNoAlertCircle": "Nadie en el Círculo de Alerta"
+    },
+    "turnOn": "Activar"
   }
 }

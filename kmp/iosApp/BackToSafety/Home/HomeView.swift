@@ -17,10 +17,12 @@ struct HomeView: View {
     @EnvironmentObject private var model: AppModel
     @Environment(\.appColors) private var colors
     @State private var profile: Profile?
-    @State private var contactCount = 0
     @State private var emergency: ActiveEmergency?
-    /// Nil until read, and stays nil if the read fails: then the readiness card isn't shown,
-    /// rather than telling the user to add places they already have.
+    /// Each nil until read, and stays nil if its read fails (the profile: profileRead stays
+    /// false, since no profile is a real answer). The readiness card is shown only when all three
+    /// were read, rather than telling the user to add what they already have.
+    @State private var profileRead = false
+    @State private var contacts: [ContactEntity]?
     @State private var placeCount: Int?
     @State private var secondsLeft: Int32 = 0
     private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -33,9 +35,7 @@ struct HomeView: View {
                 header(hasProfile)
                 emergencyButton(expired)
                 HStack(spacing: Space.md) {
-                    quickAction("phone.fill", t("quickActions.contacts"),
-                                contactCount == 0 ? t("quickActions.contactsNone") : t("quickActions.contactsSaved", ["count": contactCount]),
-                                "home-contacts") {
+                    quickAction("phone.fill", t("quickActions.contacts"), contactsSubtitle, "home-contacts") {
                         Analytics.shared.track(event: .screenViewed, properties: ["screen": "contacts", "source": "home"])
                         model.path.append(.contacts)
                     }
@@ -46,8 +46,11 @@ struct HomeView: View {
                 }
                 .padding(.bottom, Space.lg)
                 if hasProfile, let profile { infoCard(profile) }
-                if let placeCount {
-                    readinessCard(ReadinessKt.readinessChecklist(profile: profile, contacts: Int32(contactCount), places: Int32(placeCount)))
+                if profileRead, let contacts, let placeCount {
+                    readinessCard(ReadinessKt.readinessChecklist(
+                        profile: profile, contacts: Int32(contacts.count),
+                        inAlertCircle: Int32(contacts.filter(\.notifyOnEmergency).count), places: Int32(placeCount)
+                    ))
                 }
                 settingsRow
             }
@@ -64,8 +67,13 @@ struct HomeView: View {
             Analytics.shared.screen(path: "home", properties: [:])
             // The active emergency first: nothing optional delays the Start/Resume button's state.
             emergency = try? await model.store.activeEmergency()
-            profile = try? await model.store.profile()
-            contactCount = ((try? await model.store.contacts()) ?? []).count
+            do {
+                profile = try await model.store.profile()
+                profileRead = true
+            } catch {
+                // Not read is not "no profile": profileRead stays false and the card stays hidden.
+            }
+            contacts = try? await model.store.contacts()
             placeCount = (try? await model.store.destinations())?.count
             updateCountdown()
         }
@@ -76,6 +84,12 @@ struct HomeView: View {
     private func updateCountdown() {
         guard let started = emergency?.startedAtMs?.int64Value else { return }
         secondsLeft = EmergencyKt.secondsRemaining(startedAtMs: started, nowMs: AppClock.shared.nowMs())
+    }
+
+    /// Until it's read (or if it fails) the plain subtitle, not "None added".
+    private var contactsSubtitle: String {
+        guard let contacts else { return t("quickActions.contactsSubtitle") }
+        return contacts.isEmpty ? t("quickActions.contactsNone") : t("quickActions.contactsSaved", ["count": contacts.count])
     }
 
     /// The real count, as Contacts shows: "Likely spots" with none saved contradicted the
@@ -284,8 +298,8 @@ struct HomeView: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
             ForEach(checks, id: \.item.key) { check in
-                let label = t("readiness.items.\(check.item.key)")
-                let state = t(check.done ? "readiness.done" : "readiness.add")
+                let label = t("readiness.items.\(check.labelKey)")
+                let state = t("readiness.\(check.actionKey)")
                 Button { openReadiness(check.item) } label: {
                     HStack(spacing: Space.md) {
                         // To do is a plus in a circle (an empty circle read as a radio button),

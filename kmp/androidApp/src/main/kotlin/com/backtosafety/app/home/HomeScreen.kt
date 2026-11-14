@@ -68,6 +68,7 @@ import com.backtosafety.core.ReadinessItem
 import com.backtosafety.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
+import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.formatCountdown
 import com.backtosafety.core.invoke
 import com.backtosafety.core.readinessChecklist
@@ -90,11 +91,13 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
     var profile by remember { mutableStateOf<Profile?>(null) }
-    var contactCount by remember { mutableIntStateOf(0) }
     var emergency by remember { mutableStateOf<ActiveEmergency?>(null) }
 
-    // Null until read, and stays null if the read fails: then the readiness card isn't shown,
-    // rather than telling the user to add places they already have.
+    // Each null until read, and stays null if its read fails (the profile: profileRead stays
+    // false, since no profile is a real answer). The readiness card is shown only when all three
+    // were read, rather than telling the user to add what they already have.
+    var profileRead by remember { mutableStateOf(false) }
+    var contacts by remember { mutableStateOf<List<ContactEntity>?>(null) }
     var placeCount by remember { mutableStateOf<Int?>(null) }
     var secondsLeft by remember { mutableIntStateOf(0) }
 
@@ -103,8 +106,11 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
         Analytics.screen("home")
         // The active emergency first: nothing optional delays the Start/Resume button's state.
         emergency = store.activeEmergency()
-        profile = store.profile()
-        contactCount = store.contacts().size
+        runCatchingCancellable { store.profile() }.onSuccess {
+            profile = it
+            profileRead = true
+        }
+        contacts = runCatchingCancellable { store.contacts() }.getOrNull()
         placeCount = runCatchingCancellable { store.destinations().size }.getOrNull()
     }
     // Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
@@ -216,11 +222,13 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
 
         // Quick actions
         Row(Modifier.padding(bottom = space.lg.udp), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-            QuickAction(
-                "phone.fill", t("quickActions.contacts"),
-                if (contactCount == 0) t("quickActions.contactsNone") else t("quickActions.contactsSaved", mapOf("count" to contactCount)),
-                "home-contacts", Modifier.weight(1f),
-            ) {
+            // Until it's read (or if it fails) the plain subtitle, not "None added".
+            val contactsSubtitle = when (val n = contacts?.size) {
+                null -> t("quickActions.contactsSubtitle")
+                0 -> t("quickActions.contactsNone")
+                else -> t("quickActions.contactsSaved", mapOf("count" to n))
+            }
+            QuickAction("phone.fill", t("quickActions.contacts"), contactsSubtitle, "home-contacts", Modifier.weight(1f)) {
                 Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "contacts", "source" to "home"))
                 navigate("contacts")
             }
@@ -245,9 +253,11 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
             }
         }
 
-        placeCount?.let { places ->
+        val saved = contacts
+        val places = placeCount
+        if (profileRead && saved != null && places != null) {
             // Each line reports what its home shortcut reports (avatar, Contacts tile, Places tile).
-            ReadinessCard(t, readinessChecklist(p, contactCount, places)) { item ->
+            ReadinessCard(t, readinessChecklist(p, saved.size, saved.count { it.notifyOnEmergency }, places)) { item ->
                 when (item) {
                     ReadinessItem.PHOTO, ReadinessItem.DESCRIPTION -> {
                         Analytics.track(AnalyticsEvent.SCREEN_VIEWED, mapOf("screen" to "profile", "source" to "home"))
@@ -407,8 +417,8 @@ private fun ReadinessCard(t: Translate, checks: List<ReadinessCheck>, onOpen: (R
             )
         }
         for (check in checks) {
-            val label = t("readiness.items.${check.item.key}")
-            val state = t(if (check.done) "readiness.done" else "readiness.add")
+            val label = t("readiness.items.${check.labelKey}")
+            val state = t("readiness.${check.actionKey}")
             Row(
                 Modifier
                     .fillMaxWidth()

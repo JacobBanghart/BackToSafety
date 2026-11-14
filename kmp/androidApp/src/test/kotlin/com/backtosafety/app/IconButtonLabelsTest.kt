@@ -19,6 +19,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
+import androidx.room.useWriterConnection
 import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.contacts.ContactsScreen
@@ -32,6 +33,7 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.AppDatabase
 import com.backtosafety.core.db.ContactEntity
 import com.backtosafety.core.db.DestinationEntity
+import com.backtosafety.core.invoke
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -109,6 +111,46 @@ class IconButtonLabelsTest {
         compose.onNodeWithContentDescription("Contactos de emergencia, Listo").performScrollTo().performClick()
         assertEquals(listOf("profile", "destinations", "contacts"), opened)
         compose.onNodeWithText("2 de 4 listos").assertExists()
+    }
+
+    @Test
+    fun contactsWithNoOneInTheAlertCircleAreNotReadyAndTheLineOpensContacts() {
+        // Ana (setUp) is the only contact; out of the Alert Circle, a search's alert texts no one.
+        runBlocking {
+            store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margarita"))
+            store.updateContact(store.contacts().single().copy(notifyOnEmergency = false))
+        }
+        val opened = mutableListOf<String>()
+        compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) { opened += it } } }
+        compose.onNodeWithContentDescription("Nadie en el Círculo de Alerta, Activar").assert(isButton).performScrollTo().performClick()
+        assertEquals(listOf("contacts"), opened)
+        compose.onNodeWithContentDescription("Contactos de emergencia, Listo").assertDoesNotExist()
+        compose.onNodeWithText("1 de 4 listos").assertExists()
+    }
+
+    /** Renames [table] away, so every read of it fails as a broken database would. */
+    private fun breakTable(table: String) = runBlocking {
+        db.useWriterConnection { it.usePrepared("ALTER TABLE $table RENAME TO ${table}_away") { statement -> statement.step() } }
+    }
+
+    @Test
+    fun theReadinessCardIsHiddenWhenTheContactsCantBeRead() {
+        // A failed read isn't "no contacts": the card would tell them to add the contacts they have.
+        runBlocking { store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margarita")) }
+        breakTable("contacts")
+        compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) {} } }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(t("home")("readiness.title")).assertDoesNotExist()
+        compose.onNodeWithText(t("home")("quickActions.contactsNone")).assertDoesNotExist()
+        compose.onNodeWithText(t("home")("quickActions.contactsSubtitle")).assertExists()
+    }
+
+    @Test
+    fun theReadinessCardIsHiddenWhenTheProfileCantBeRead() {
+        breakTable("profile")
+        compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) {} } }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText(t("home")("readiness.title")).assertDoesNotExist()
     }
 
     @Test

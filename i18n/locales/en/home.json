@@ -18,7 +18,8 @@
     "places": "Places",
     "placesSubtitle": "Likely spots",
     "placesNone": "None added",
-    "placesSaved": "{{count}} saved"
+    "placesSaved": "{{count}} saved",
+    "contactsSubtitle": "People to call"
   },
   "emergencyInfo": {
     "title": "Emergency Info",
@@ -39,7 +40,9 @@
       "photo": "Recent photo",
       "description": "Physical description",
       "contacts": "Emergency contacts",
-      "places": "Likely places"
-    }
+      "places": "Likely places",
+      "contactsNoAlertCircle": "No one in Alert Circle"
+    },
+    "turnOn": "Turn on"
   }
 }
