@@ -550,6 +550,9 @@ struct EmergencyView: View {
                         .strokeBorder(urgentOpen ? error : colors.border, lineWidth: border))
                 }
                 .buttonStyle(.pressable)
+                // Announced as done or not done, as Android's checkbox role says it.
+                .accessibilityAddTraits(isChecked ? .isSelected : [])
+                .accessibilityValue(t(isChecked ? "checklist.done" : "checklist.notDone"))
                 .accessibilityIdentifier("emergency-step-\(step.id)")
             }
         }

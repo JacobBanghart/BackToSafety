@@ -33,7 +33,9 @@
     "title": "Search Protocol",
     "priority": "PRIORITY",
     "savedPlaces": "Saved places to check:",
-    "morePlaces": "+{{count}} more in Places"
+    "morePlaces": "+{{count}} more in Places",
+    "done": "Done",
+    "notDone": "Not done"
   },
   "steps": {
     "home_search": {

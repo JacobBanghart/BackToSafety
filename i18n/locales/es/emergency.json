@@ -33,7 +33,9 @@
     "title": "Protocolo de búsqueda",
     "priority": "PRIORIDAD",
     "savedPlaces": "Lugares guardados para revisar:",
-    "morePlaces": "+{{count}} más en Lugares"
+    "morePlaces": "+{{count}} más en Lugares",
+    "done": "Hecho",
+    "notDone": "Pendiente"
   },
   "steps": {
     "home_search": {

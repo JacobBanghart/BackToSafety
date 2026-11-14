@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
@@ -67,6 +68,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
@@ -689,7 +691,10 @@ private fun Checklist(
                     .fillMaxWidth()
                     .testTag("emergency-step-${step.id}")
                     .clip(shape)
-                    .clickable { onToggle(step.id) }
+                    // A checkbox to TalkBack, so each step is announced as done or not done, in
+                    // the app's words as VoiceOver says them.
+                    .toggleable(value = step.checked, role = Role.Checkbox) { onToggle(step.id) }
+                    .semantics { stateDescription = t(if (step.checked) "checklist.done" else "checklist.notDone") }
                     // A done step steps back: the quiet surface tone, the plain border and secondary
                     // text, so the steps still to do are the loudest cards (a purple done card
                     // outshone them in dark mode). The green check says it is done.
