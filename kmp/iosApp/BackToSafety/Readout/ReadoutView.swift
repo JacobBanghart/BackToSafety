@@ -77,7 +77,7 @@ struct ReadoutView: View {
                 } label: {
                     // The most prominent action, the same solid red as on the search screen.
                     HStack(spacing: Space.sm) {
-                        SFIcon("phone.fill", 22, white)
+                        SFIcon("phone.fill", 22, white).accessibilityHidden(true)
                         RNText(t("callButton"), Typography.bodyLarge.spec.weight(700), color: white)
                     }
                     .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.lg)
@@ -376,7 +376,7 @@ struct ReadoutView: View {
             dial(c.phone, .contact)
         } label: {
             HStack(spacing: Space.sm) {
-                SFIcon("phone.fill", 20, white)
+                SFIcon("phone.fill", 20, white).accessibilityHidden(true)
                 RNText(PhoneKt.formatPhoneNumber(phone: c.phone), Typography.bodyLarge.spec.weight(700), color: white)
             }
             .fixedSize()

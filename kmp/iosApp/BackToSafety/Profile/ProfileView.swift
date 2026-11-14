@@ -280,7 +280,7 @@ struct ProfileView: View {
     private func photoButton(_ label: String, _ testID: String, _ icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: Space.sm) {
-                SFIcon(icon, 18, colors.primaryText)
+                SFIcon(icon, 18, colors.primaryText).accessibilityHidden(true)
                 RNText(label, Typography.bodyBold.spec, color: colors.primaryText)
             }
             .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)

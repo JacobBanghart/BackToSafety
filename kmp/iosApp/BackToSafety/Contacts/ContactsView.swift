@@ -454,7 +454,9 @@ struct ContactsView: View {
                 .buttonStyle(.pressable)
                 // Read as the switch it looks like: its label, role and on/off state.
                 .accessibilityRepresentation {
+                    // The hint says what the switch does (Alert Circle), as the caption under it does.
                     Toggle(t("notifyInEmergency"), isOn: $form.notifyOnEmergency)
+                        .accessibilityHint(t("notifyHint"))
                 }
                 .accessibilityIdentifier("contacts-form-notify")
                 .padding(.bottom, Space.lg)

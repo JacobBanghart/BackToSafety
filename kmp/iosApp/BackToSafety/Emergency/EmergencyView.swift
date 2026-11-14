@@ -426,7 +426,7 @@ struct EmergencyView: View {
         return VStack(spacing: Space.md) {
             Button(action: call911) {
                 HStack(spacing: Space.md) {
-                    SFIcon("phone.fill", 28, white)
+                    SFIcon("phone.fill", 28, white).accessibilityHidden(true)
                     RNText(t("actions.call911", ["emergencyNumber": emergencyNumber]), Typography.headline.spec, color: white)
                 }
                 .frame(maxWidth: .infinity, minHeight: 72 - 2 * Space.lg)
@@ -439,7 +439,7 @@ struct EmergencyView: View {
             .accessibilityIdentifier("emergency-call-911")
             Button(action: found) {
                 HStack(spacing: Space.sm) {
-                    SFIcon("checkmark.circle.fill", 22, white)
+                    SFIcon("checkmark.circle.fill", 22, white).accessibilityHidden(true)
                     RNText(t("actions.foundSafe"), Typography.bodyBold.spec.size(18), color: white)
                 }
                 .frame(maxWidth: .infinity, minHeight: 56 - 2 * Space.md)
@@ -466,7 +466,7 @@ struct EmergencyView: View {
     private func secondaryAction(_ label: String, _ testID: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: Space.xs) {
-                SFIcon(icon, 24, colors.primaryText)
+                SFIcon(icon, 24, colors.primaryText).accessibilityHidden(true)
                 RNText(label, Typography.bodyBold.spec, color: colors.text, align: .center)
             }
             .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md - 2, maxHeight: .infinity)
