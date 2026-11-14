@@ -17,6 +17,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
 import androidx.room.Room
 import androidx.room.useWriterConnection
@@ -100,15 +101,27 @@ class IconButtonLabelsTest {
     }
 
     @Test
+    fun theStartEmergencyButtonIsOneButtonTalkBackCanActivate() {
+        val opened = mutableListOf<String>()
+        compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) { opened += it } } }
+        val start = compose.onNodeWithTag("home-start-emergency")
+        start.assert(isButton).assertHasClickAction()
+        // Through the semantics action, as TalkBack's double tap does, not a touch.
+        start.performSemanticsAction(SemanticsActions.OnClick)
+        assertEquals(listOf("emergency"), opened)
+    }
+
+    @Test
     fun eachReadinessLineIsAButtonThatSaysItsStateAndOpensItsScreen() {
         runBlocking { store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margarita")) }
         val opened = mutableListOf<String>()
         compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) { opened += it } } }
         // No photo yet: said as missing, by the word and not only the empty circle.
-        compose.onNodeWithContentDescription("Foto reciente, Agregar").assert(isButton).performScrollTo().performClick()
+        // Each has the click action TalkBack activates, not only a touch target.
+        compose.onNodeWithContentDescription("Foto reciente, Agregar").assert(isButton).assertHasClickAction().performScrollTo().performClick()
         // A place is saved (setUp), so the places line says it's done and still opens the list.
-        compose.onNodeWithContentDescription("Lugares probables, Listo").assert(isButton).performScrollTo().performClick()
-        compose.onNodeWithContentDescription("Contactos de emergencia, Listo").performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Lugares probables, Listo").assert(isButton).assertHasClickAction().performScrollTo().performClick()
+        compose.onNodeWithContentDescription("Contactos de emergencia, Listo").assertHasClickAction().performScrollTo().performClick()
         assertEquals(listOf("profile", "destinations", "contacts"), opened)
         compose.onNodeWithText("2 de 4 listos").assertExists()
     }

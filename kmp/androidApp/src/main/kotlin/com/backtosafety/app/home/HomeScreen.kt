@@ -193,8 +193,9 @@ fun HomeScreen(t: Translate, emergencyNumber: String, store: Store, navigate: (S
                 .background(if (active != null) EMERGENCY_ACTIVE_BG else EMERGENCY_IDLE_BG)
                 .testTag("home-start-emergency")
                 // One accessible element, read as its texts, like RN's touchable (Maestro matches it).
-                .clearAndSetSemantics { contentDescription = "$title, $subtitle"; role = Role.Button }
-                .clickable { navigate("emergency") },
+                // The clear sits inside the clickable: outside it, it dropped the click action too.
+                .clickable(role = Role.Button) { navigate("emergency") }
+                .clearAndSetSemantics { contentDescription = "$title, $subtitle" },
         ) {
             if (running) {
                 val elapsed = (SEARCH_WINDOW_SECONDS - secondsLeft).toFloat() / SEARCH_WINDOW_SECONDS
@@ -423,8 +424,9 @@ private fun ReadinessCard(t: Translate, checks: List<ReadinessCheck>, onOpen: (R
                 Modifier
                     .fillMaxWidth()
                     .heightIn(min = 48.udp)
-                    .clearAndSetSemantics { contentDescription = "$label, $state"; role = Role.Button }
-                    .clickable { onOpen(check.item) }
+                    // The clear sits inside the clickable: outside it, it dropped the click action too.
+                    .clickable(role = Role.Button) { onOpen(check.item) }
+                    .clearAndSetSemantics { contentDescription = "$label, $state" }
                     .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
                 horizontalArrangement = Arrangement.spacedBy(space.md.udp),
                 verticalAlignment = Alignment.CenterVertically,
