@@ -121,6 +121,9 @@ internal suspend fun Store.savedLanguage(): String = when (runCatchingCancellabl
     else -> "en"
 }
 
+/** The scrim behind white system-bar icons on a light screen where they can't turn dark (API < 26). */
+private val LIGHT_SCREEN_DARK_SCRIM = AndroidColor.argb(0x80, 0x1b, 0x1b, 0x1b)
+
 /**
  * The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). The
  * database and the rest of [services] outlive this composition (BackToSafetyApp).
@@ -181,7 +184,10 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
             val style = if (dark) {
                 SystemBarStyle.dark(AndroidColor.TRANSPARENT)
             } else {
-                SystemBarStyle.light(AndroidColor.TRANSPARENT, AndroidColor.TRANSPARENT)
+                // The second colour is the scrim used where the system can't draw dark icons
+                // (below API 26 for the navigation bar, minSdk is 24): a transparent one left
+                // white icons on the light screen there. This dark one is enableEdgeToEdge's own.
+                SystemBarStyle.light(AndroidColor.TRANSPARENT, LIGHT_SCREEN_DARK_SCRIM)
             }
             component.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
         }
