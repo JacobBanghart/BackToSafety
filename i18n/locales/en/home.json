@@ -14,12 +14,14 @@
   "quickActions": {
     "contacts": "Contacts",
     "contactsNone": "None added",
-    "contactsSaved": "{{count}} saved",
     "places": "Places",
     "placesSubtitle": "Likely spots",
     "placesNone": "None added",
-    "placesSaved": "{{count}} saved",
-    "contactsSubtitle": "People to call"
+    "contactsSubtitle": "People to call",
+    "contactsSaved_one": "{{count}} saved",
+    "contactsSaved_other": "{{count}} saved",
+    "placesSaved_one": "{{count}} saved",
+    "placesSaved_other": "{{count}} saved"
   },
   "emergencyInfo": {
     "title": "Emergency Info",

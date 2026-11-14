@@ -154,7 +154,7 @@ class IconButtonLabelsTest {
         runBlocking { store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margarita")) }
         breakTable("contacts")
         compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) {} } }
-        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardado").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText(t("home")("readiness.title")).assertDoesNotExist()
         compose.onNodeWithText(t("home")("quickActions.contactsNone")).assertDoesNotExist()
         compose.onNodeWithText(t("home")("quickActions.contactsSubtitle")).assertExists()
@@ -164,7 +164,7 @@ class IconButtonLabelsTest {
     fun theReadinessCardIsHiddenWhenTheProfileCantBeRead() {
         breakTable("profile")
         compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) {} } }
-        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardado").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText(t("home")("readiness.title")).assertDoesNotExist()
     }
 
@@ -172,7 +172,7 @@ class IconButtonLabelsTest {
     fun thePlacesTileShowsHowManyPlacesAreSaved() {
         compose.setContent { AppTheme(dark = false) { HomeScreen(t("home"), "911", store) {} } }
         // One place is saved (setUp): the tile says so, not the generic "Lugares probables".
-        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardados").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithText("1 guardado").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Lugares probables").assertDoesNotExist()
     }
 
