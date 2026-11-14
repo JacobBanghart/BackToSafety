@@ -29,6 +29,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
@@ -38,6 +39,7 @@ import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.contacts.ContactsScreen
 import com.backtosafety.app.emergency.EmergencyScreen
+import com.backtosafety.app.home.RunningEmergency
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.readout.BesideOrUnder
 import com.backtosafety.app.ui.AppTheme
@@ -214,6 +216,20 @@ class LargeTextLayoutTest {
         } finally {
             db.close()
         }
+    }
+
+    @Test
+    fun homesRunningCountdownKeepsLeftOnOneLineAtTheLargestTextInSpanish() {
+        // Home's button on a narrow (344dp) phone, less its 16dp margins: at 2x the countdown grew
+        // so wide that "restantes" broke mid-word beside it.
+        val t = translations.translator("es", "home")
+        largeText(2f) {
+            Box(Modifier.width(312.dp)) { RunningEmergency(t, secondsLeft = 14 * 60 + 59, checked = 2) }
+        }
+        val left = compose.onNodeWithText(t("emergencyButton.timeLeft")).fetchSemanticsNode()
+        val layouts = mutableListOf<TextLayoutResult>()
+        left.config[SemanticsActions.GetTextLayoutResult].action!!(layouts)
+        assertEquals("\"${t("emergencyButton.timeLeft")}\" wrapped", 1, layouts.single().lineCount)
     }
 
     @Test

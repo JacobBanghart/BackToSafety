@@ -203,7 +203,10 @@ struct HomeView: View {
                     RNText(t("emergencyButton.activeTitle").uppercased(), Typography.label.spec.spacing(1), color: white)
                 }
                 HStack(alignment: .bottom, spacing: Space.sm) {
+                    // Already display-size, so it doesn't grow with Dynamic Type, as on the search
+                    // screen's timer: at large text it pushed "left" ("restantes") to break mid-word.
                     RNText(EmergencyKt.formatCountdown(seconds: secondsLeft), Typography.display.spec, color: white)
+                        .dynamicTypeSize(.large)
                     // Title size, so "left" reads as part of the countdown rather than a footnote to it.
                     RNText(t("emergencyButton.timeLeft"), Typography.title.spec, color: white).padding(.bottom, Space.xxs)
                 }

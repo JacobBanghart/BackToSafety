@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -39,6 +40,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -47,6 +49,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.backtosafety.app.ui.Icon
@@ -457,7 +460,7 @@ private fun ReadinessCard(t: Translate, checks: List<ReadinessCheck>, onOpen: (R
  * as the headline (display size, so it reads from arm's length), then the steps done.
  */
 @Composable
-private fun RunningEmergency(t: Translate, secondsLeft: Int, checked: Int) {
+internal fun RunningEmergency(t: Translate, secondsLeft: Int, checked: Int) {
     val space = DesignTokens.Spacing
     val type = DesignTokens.Typography
     val white = Color(DesignTokens.Light.textOnPrimary)
@@ -468,7 +471,12 @@ private fun RunningEmergency(t: Translate, secondsLeft: Int, checked: Int) {
                 Text(t("emergencyButton.activeTitle").uppercase(), style = type.label.style(letterSpacing = 1f), color = white)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.Bottom) {
-                Text(formatCountdown(secondsLeft), style = type.display.style(), color = white)
+                // Already display-size, so it doesn't grow with the font scale, as on the search
+                // screen's timer: at large text it pushed "left" ("restantes") to break mid-word.
+                val density = LocalDensity.current
+                CompositionLocalProvider(LocalDensity provides Density(density.density, 1f)) {
+                    Text(formatCountdown(secondsLeft), style = type.display.style(), color = white)
+                }
                 // Title size, so "left" reads as part of the countdown rather than a footnote to it.
                 Text(t("emergencyButton.timeLeft"), style = type.title.style(), color = white, modifier = Modifier.padding(bottom = space.xxs.udp))
             }
