@@ -13,6 +13,7 @@ import com.backtosafety.app.contacts.ContactsScreen
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.home.HomeScreen
+import com.backtosafety.app.onboarding.CompleteScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.readout.ReadoutScreen
@@ -136,6 +137,9 @@ class ScreenSnapshotTest(private val mode: String) {
     @Test fun welcome() = snapshot("welcome") { WelcomeScreen(t("onboarding"), "system", {}, {}) }
 
     @Test fun home() = snapshot("home") { HomeScreen(t("home"), "911", store) {} }
+
+    /** The end of onboarding: its white check on a green that holds 4.5:1 in the dark theme too. */
+    @Test fun onboardingComplete() = snapshot("onboarding-complete") { CompleteScreen(t("onboarding"), store) {} }
 
     /** Home while a search runs: the countdown is the headline, so it can't pass for Start. */
     @Test fun homeActive() {

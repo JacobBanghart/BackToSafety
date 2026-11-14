@@ -60,7 +60,9 @@ fun CompleteScreen(t: Translate, store: Store, onFinish: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                Modifier.padding(bottom = space.xxl.udp).size(100.udp).clip(CircleShape).background(colors.success),
+                // The fixed success fill in both themes: white on the dark theme's light green
+                // (#4ade80) was 1.74:1; on this one it passes 4.5:1.
+                Modifier.padding(bottom = space.xxl.udp).size(100.udp).clip(CircleShape).background(Color(DesignTokens.Semantic.success)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(t("complete.icon"), style = rnTextStyle(48f, 56f), color = Color(DesignTokens.Light.textOnPrimary))

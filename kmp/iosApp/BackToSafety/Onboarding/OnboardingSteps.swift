@@ -293,7 +293,9 @@ struct CompleteView: View {
                 VStack(spacing: 0) {
                     RNText(t("complete.icon"), TextSpec(size: 48, lineHeight: 56), color: Color(argb: Light.textOnPrimary))
                         .frame(width: 100, height: 100)
-                        .background(Circle().fill(colors.success))
+                        // The fixed success fill in both themes: white on the dark theme's light green
+                        // (#4ade80) was 1.74:1; on this one it passes 4.5:1.
+                        .background(Circle().fill(Color(argb: Semantic.success)))
                         .padding(.bottom, Space.xxl)
                     RNText(t("complete.title"), Typography.display.spec, color: colors.text, align: .center).padding(.bottom, Space.lg)
                     RNText(t("complete.description"), Typography.body.spec, color: colors.textSecondary, align: .center).padding(.bottom, Space.xxl)
