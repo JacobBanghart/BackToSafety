@@ -43,9 +43,9 @@
   ],
   "emergency-step-home_search": [
     16.0,
-    676.2,
+    805.7,
     395.4,
-    863.6
+    890.3
   ],
   "emergency-timer": [
     129.5,
@@ -65,10 +65,10 @@
     257.9,
     98.3
   ],
-  "emergency-wearing-dismiss": [
-    346.3,
-    872.8,
-    394.3,
-    890.3
+  "emergency-wearing-input": [
+    57.5,
+    668.2,
+    382.1,
+    716.2
   ]
 }
