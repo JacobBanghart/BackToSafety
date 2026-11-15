@@ -84,27 +84,67 @@ pub(crate) fn migrate_1_2(c: &Connection) -> rusqlite::Result<()> {
     record_identity(c)
 }
 
+/// The RN app's data tables: what [`migrate_1_2`] copies.
+const RN_TABLES: [&str; 7] = [
+    "profile",
+    "contacts",
+    "destinations",
+    "incidents",
+    "safety_checks",
+    "settings",
+    "onboarding",
+];
+
+fn has_table(c: &Connection, table: &str) -> rusqlite::Result<bool> {
+    c.query_row(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type = 'table' AND name = ?1",
+        [table],
+        |r| r.get(0),
+    )
+}
+
+/// Whether the file has any table of its own (not SQLite's, nor Android's `android_metadata`).
+pub(crate) fn has_user_tables(c: &Connection) -> rusqlite::Result<bool> {
+    c.query_row(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type = 'table' \
+         AND name NOT LIKE 'sqlite_%' AND name != 'android_metadata'",
+        [],
+        |r| r.get(0),
+    )
+}
+
 /// An RN-created nijii.db has user_version 0 (expo-sqlite tracks versions in its own
 /// schema_version table). Treating 0 as a brand-new database would be wrong, so mark it as
 /// version 1 and let the migration bring it to Room's shape. Returns the schema version now on
-/// disk (1 for an RN database), or None when there's no file yet.
+/// disk (1 for an RN database), or None when there's no file yet or it can't be read at all
+/// (the open goes ahead, and the first call meets the failure).
+///
+/// What makes a file the RN app's is its tables, since those are what the migration copies, not
+/// the schema_version row. The RN app created schema_version and every table in one transaction,
+/// so a half-created file shouldn't exist, but if one does (schema_version and none of the data
+/// tables) there's nothing in it to keep and nothing to migrate: schema_version is dropped, which
+/// leaves an empty file that is created afresh instead of failing "no such table" on every
+/// launch. A file with only some of the tables is left alone, so no rows are ever dropped.
 pub fn adopt_rn_database(path: &std::path::Path) -> Option<i32> {
     if !path.exists() {
         return None;
     }
     let c = Connection::open_with_flags(path, rusqlite::OpenFlags::SQLITE_OPEN_READ_WRITE).ok()?;
     let user_version: i64 = c.query_row("PRAGMA user_version", [], |r| r.get(0)).ok()?;
-    let is_rn: i64 = c
-        .query_row(
-            "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'schema_version'",
-            [],
-            |r| r.get(0),
-        )
-        .ok()?;
-    if user_version == 0 && is_rn > 0 {
+    if user_version != 0 || !has_table(&c, "schema_version").ok()? {
+        return Some(user_version as i32);
+    }
+    let mut present = 0;
+    for table in RN_TABLES {
+        present += usize::from(has_table(&c, table).ok()?);
+    }
+    if present == RN_TABLES.len() {
         c.execute_batch("PRAGMA user_version = 1").ok()?;
         Some(1)
     } else {
-        Some(user_version as i32)
+        if present == 0 {
+            c.execute_batch("DROP TABLE `schema_version`").ok()?;
+        }
+        Some(0)
     }
 }

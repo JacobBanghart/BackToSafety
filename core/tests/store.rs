@@ -1,9 +1,11 @@
 //! The twin of kmp/shared's StoreTest.
 
 use nijii_core::emergency::ActiveEmergency;
-use nijii_core::store::{ContactEntity, DATABASE_NAME, DestinationEntity, Store};
+use nijii_core::profile::ProfileField;
+use nijii_core::store::{ContactEntity, DATABASE_NAME, DestinationEntity, Store, StoreError};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("..")
@@ -240,7 +242,7 @@ fn delete_account_empties_everything_and_restarts_onboarding() {
         store.complete_step(step).unwrap();
     }
     store
-        .update_profile(&[("name", Some("Margaret Smith"))])
+        .update_profile(&[(ProfileField::FullName, Some("Margaret Smith".into()))])
         .unwrap();
     store
         .add_contact(ContactEntity::new("John Smith", "5551234567"), None)
@@ -268,9 +270,9 @@ fn readiness_counts_what_is_stored() {
     );
     store
         .update_profile(&[
-            ("name", Some("Margaret Smith")),
-            ("medicalConditions", Some("Dementia")),
-            ("likes", Some("Gardening")),
+            (ProfileField::FullName, Some("Margaret Smith".into())),
+            (ProfileField::MedicalConditions, Some("Dementia".into())),
+            (ProfileField::Likes, Some("Gardening".into())),
         ])
         .unwrap();
     store
@@ -462,28 +464,20 @@ fn update_profile_sets_given_fields_and_keeps_the_rest() {
     let store = fresh_store();
     store
         .update_profile(&[
-            ("name", Some("Margaret Smith")),
-            ("nickname", Some("Maggie")),
+            (ProfileField::FullName, Some("Margaret Smith".into())),
+            (ProfileField::Nickname, Some("Maggie".into())),
         ])
         .unwrap();
     store
-        .update_profile(&[("height", Some("5'6\"")), ("nickname", None)])
+        .update_profile(&[
+            (ProfileField::Height, Some("5'6\"".into())),
+            (ProfileField::Nickname, None),
+        ])
         .unwrap();
     let profile = store.profile().unwrap().unwrap();
     assert_eq!(profile.name, "Margaret Smith");
     assert_eq!(profile.nickname, None);
     assert_eq!(profile.height.as_deref(), Some("5'6\""));
-}
-
-#[test]
-fn update_profile_rejects_an_unknown_field_without_writing() {
-    let store = fresh_store();
-    assert!(
-        store
-            .update_profile(&[("name", Some("Ana")), ("shoeSize", Some("7"))])
-            .is_err()
-    );
-    assert_eq!(store.profile().unwrap(), None);
 }
 
 #[test]
@@ -499,4 +493,323 @@ fn settings_round_trip_and_replace() {
             .as_deref(),
         Some("en")
     );
+}
+
+/// The photo cleaner's calls, as the URIs it was told to keep.
+fn record_cleaning(store: &Store) -> Arc<Mutex<Vec<Option<String>>>> {
+    let cleaned = Arc::new(Mutex::new(Vec::new()));
+    let c = cleaned.clone();
+    store.set_photo_cleaner(Some(Box::new(move |keeping: Option<&str>| {
+        c.lock().unwrap().push(keeping.map(str::to_string))
+    })));
+    cleaned
+}
+
+/// Makes the database refuse `event` on `table` (when `condition` holds), as a full disk would.
+fn fail_on(store: &Store, event: &str, table: &str, condition: &str) {
+    store
+        .execute_sql(&format!(
+            "CREATE TRIGGER refuse BEFORE {event} ON {table} WHEN {condition} \
+             BEGIN SELECT RAISE(ABORT, 'refused'); END"
+        ))
+        .unwrap();
+}
+
+fn photo(field_value: &str) -> [(ProfileField, Option<String>); 1] {
+    [(ProfileField::PhotoUri, Some(field_value.to_string()))]
+}
+
+#[test]
+fn delete_account_forgets_the_device_id_and_removes_the_photos() {
+    let store = fresh_store();
+    let cleaned = record_cleaning(&store);
+    store.seed().unwrap();
+    let before = store.device_id().unwrap();
+    store
+        .update_profile(&photo("file:///files/profile_photo_1.jpg"))
+        .unwrap();
+    cleaned.lock().unwrap().clear();
+
+    store.clear_all_data().unwrap();
+    assert_eq!(*cleaned.lock().unwrap(), vec![None]);
+    assert_ne!(
+        before,
+        store.device_id().unwrap(),
+        "the cached ID outlived the settings row it came from"
+    );
+}
+
+#[test]
+fn delete_account_failing_half_way_changes_nothing_and_keeps_the_photos() {
+    let store = fresh_store();
+    let cleaned = record_cleaning(&store);
+    store.seed().unwrap();
+    for step in Store::ONBOARDING_STEPS {
+        store.complete_step(step).unwrap();
+    }
+    store
+        .update_profile(&[(ProfileField::FullName, Some("Margaret Smith".into()))])
+        .unwrap();
+    store
+        .add_contact(ContactEntity::new("John Smith", "5551234567"), None)
+        .unwrap();
+    store.put_setting(Store::THEME_PREFERENCE, "dark").unwrap();
+    // The profile, contacts and the rest are deleted before the settings are.
+    fail_on(&store, "DELETE", "settings", "1");
+
+    assert!(store.clear_all_data().is_err());
+    assert!(cleaned.lock().unwrap().is_empty());
+    assert_eq!(store.profile().unwrap().unwrap().name, "Margaret Smith");
+    assert_eq!(store.contacts().unwrap()[0].name, "John Smith");
+    assert_eq!(
+        store.setting(Store::THEME_PREFERENCE).unwrap().as_deref(),
+        Some("dark")
+    );
+    assert!(store.is_onboarded().unwrap());
+}
+
+#[test]
+fn saving_a_new_photo_cleans_up_only_when_the_photo_changed() {
+    let store = fresh_store();
+    let cleaned = record_cleaning(&store);
+    store.seed().unwrap();
+    store
+        .save_profile(|mut p| {
+            p.name = "Margaret Smith".into();
+            p
+        })
+        .unwrap();
+    assert!(
+        cleaned.lock().unwrap().is_empty(),
+        "a save that leaves the photo alone has nothing to clean"
+    );
+    store
+        .update_profile(&photo("file:///files/profile_photo_1.jpg"))
+        .unwrap();
+    store
+        .update_profile(&[(ProfileField::Nickname, Some("Peggy".into()))])
+        .unwrap();
+    store
+        .update_profile(&photo("file:///files/profile_photo_2.jpg"))
+        .unwrap();
+    store
+        .update_profile(&[(ProfileField::PhotoUri, None)])
+        .unwrap();
+    assert_eq!(
+        *cleaned.lock().unwrap(),
+        vec![
+            Some("file:///files/profile_photo_1.jpg".to_string()),
+            Some("file:///files/profile_photo_2.jpg".to_string()),
+            None
+        ]
+    );
+}
+
+#[test]
+fn a_failed_profile_save_keeps_the_previous_photo() {
+    let store = fresh_store();
+    let cleaned = record_cleaning(&store);
+    store.seed().unwrap();
+    store
+        .update_profile(&photo("file:///files/profile_photo_1.jpg"))
+        .unwrap();
+    cleaned.lock().unwrap().clear();
+    fail_on(&store, "INSERT", "profile", "1");
+
+    assert!(
+        store
+            .update_profile(&photo("file:///files/profile_photo_2.jpg"))
+            .is_err()
+    );
+    assert!(cleaned.lock().unwrap().is_empty());
+    assert_eq!(
+        store.profile().unwrap().unwrap().photo_uri.as_deref(),
+        Some("file:///files/profile_photo_1.jpg")
+    );
+}
+
+#[test]
+fn a_cleaner_that_fails_does_not_fail_the_write() {
+    let store = fresh_store();
+    store.set_photo_cleaner(Some(Box::new(|_: Option<&str>| panic!("disk gone"))));
+    store.seed().unwrap();
+    store
+        .update_profile(&photo("file:///files/profile_photo_1.jpg"))
+        .unwrap();
+    store.clear_all_data().unwrap();
+    assert_eq!(store.profile().unwrap(), None);
+}
+
+#[test]
+fn clearing_the_emergency_failing_half_way_keeps_both_settings() {
+    let store = fresh_store();
+    store
+        .save_active_emergency(&ActiveEmergency {
+            started_at: "2026-10-06T16:00:00.000Z".into(),
+            wearing: String::new(),
+            checked_steps: vec![],
+            incident_id: None,
+        })
+        .unwrap();
+    store
+        .put_setting(Store::EMERGENCY_AWAY_FROM, "1000")
+        .unwrap();
+    fail_on(
+        &store,
+        "INSERT",
+        "settings",
+        &format!("NEW.key = '{}'", Store::EMERGENCY_AWAY_FROM),
+    );
+
+    assert!(store.clear_active_emergency().is_err());
+    assert!(store.active_emergency().unwrap().is_some());
+    assert_eq!(
+        store
+            .setting(Store::EMERGENCY_AWAY_FROM)
+            .unwrap()
+            .as_deref(),
+        Some("1000")
+    );
+}
+
+#[test]
+fn reorder_failing_half_way_keeps_the_old_order() {
+    let store = fresh_store();
+    for name in ["Ana", "Bo", "Cy"] {
+        store
+            .add_contact(ContactEntity::new(name, "1"), None)
+            .unwrap();
+    }
+    for name in ["Park", "Church", "Shop"] {
+        store
+            .add_destination(DestinationEntity::new(name), None)
+            .unwrap();
+    }
+    // Reversed, the first row moves to 0 and the last to 2: the move to 2 is refused.
+    fail_on(&store, "UPDATE", "contacts", "NEW.sort_order = 2");
+    let mut reversed = store.contacts().unwrap();
+    reversed.reverse();
+    assert!(store.reorder_contacts(&reversed).is_err());
+    let order: Vec<_> = store
+        .contacts()
+        .unwrap()
+        .into_iter()
+        .map(|c| (c.name, c.sort_order))
+        .collect();
+    assert_eq!(
+        order,
+        vec![("Ana".into(), 0), ("Bo".into(), 1), ("Cy".into(), 2)]
+    );
+
+    store.execute_sql("DROP TRIGGER refuse").unwrap();
+    fail_on(&store, "UPDATE", "destinations", "NEW.sort_order = 2");
+    let mut reversed = store.destinations().unwrap();
+    reversed.reverse();
+    assert!(store.reorder_destinations(&reversed).is_err());
+    let order: Vec<_> = store
+        .destinations()
+        .unwrap()
+        .into_iter()
+        .map(|d| (d.name, d.sort_order))
+        .collect();
+    assert_eq!(
+        order,
+        vec![("Park".into(), 0), ("Church".into(), 1), ("Shop".into(), 2)]
+    );
+}
+
+#[test]
+fn concurrent_adds_get_distinct_sort_orders() {
+    let store = Arc::new(Store::open(temp_db()).unwrap());
+    let threads: Vec<_> = (0..25)
+        .map(|i| {
+            let store = store.clone();
+            std::thread::spawn(move || {
+                store
+                    .add_contact(ContactEntity::new(format!("Contact {i}"), "1"), None)
+                    .unwrap();
+                store
+                    .add_destination(DestinationEntity::new(format!("Place {i}")), None)
+                    .unwrap();
+            })
+        })
+        .collect();
+    threads.into_iter().for_each(|t| t.join().unwrap());
+    let mut contacts: Vec<_> = store
+        .contacts()
+        .unwrap()
+        .iter()
+        .map(|c| c.sort_order)
+        .collect();
+    contacts.sort();
+    let mut places: Vec<_> = store
+        .destinations()
+        .unwrap()
+        .iter()
+        .map(|d| d.sort_order)
+        .collect();
+    places.sort();
+    assert_eq!(contacts, (0..25).collect::<Vec<_>>());
+    assert_eq!(places, (0..25).collect::<Vec<_>>());
+}
+
+#[test]
+fn concurrent_profile_saves_keep_each_others_fields() {
+    let store = Arc::new(Store::open(temp_db()).unwrap());
+    let fields = [
+        ProfileField::Nickname,
+        ProfileField::Height,
+        ProfileField::Weight,
+        ProfileField::HairColor,
+        ProfileField::EyeColor,
+        ProfileField::Likes,
+        ProfileField::Allergies,
+        ProfileField::SafeWord,
+    ];
+    let threads: Vec<_> = fields
+        .into_iter()
+        .map(|field| {
+            let store = store.clone();
+            std::thread::spawn(move || {
+                store
+                    .update_profile(&[(field, Some("set".into()))])
+                    .unwrap()
+            })
+        })
+        .collect();
+    threads.into_iter().for_each(|t| t.join().unwrap());
+    let profile = store.profile().unwrap().unwrap();
+    for field in fields {
+        assert_eq!(profile.field(field), Some("set"), "{field:?}");
+    }
+}
+
+#[test]
+fn a_closed_store_fails_every_call() {
+    let store = fresh_store();
+    store.seed().unwrap();
+    store.close();
+    assert!(matches!(store.profile(), Err(StoreError::Closed)));
+    assert!(matches!(store.seed(), Err(StoreError::Closed)));
+    assert!(matches!(
+        store.put_setting(Store::THEME_PREFERENCE, "dark"),
+        Err(StoreError::Closed)
+    ));
+}
+
+#[test]
+fn a_renamed_table_fails_its_calls_until_it_is_back() {
+    let store = fresh_store();
+    store
+        .update_profile(&[(ProfileField::FullName, Some("Ana".into()))])
+        .unwrap();
+    store
+        .execute_sql("ALTER TABLE profile RENAME TO profile_gone")
+        .unwrap();
+    assert!(store.profile().is_err());
+    assert!(store.contacts().is_ok(), "the other tables still work");
+    store
+        .execute_sql("ALTER TABLE profile_gone RENAME TO profile")
+        .unwrap();
+    assert_eq!(store.profile().unwrap().unwrap().name, "Ana");
 }

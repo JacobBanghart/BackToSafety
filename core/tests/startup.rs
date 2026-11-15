@@ -2,6 +2,7 @@
 
 use nijii_core::alerts::Properties;
 use nijii_core::analytics::Analytics;
+use nijii_core::profile::ProfileField;
 use nijii_core::startup::*;
 use nijii_core::store::{DATABASE_NAME, Store, StoreError};
 use rusqlite::Connection;
@@ -15,6 +16,7 @@ static SINK_LOCK: Mutex<()> = Mutex::new(());
 struct Sink {
     _serial: MutexGuard<'static, ()>,
     tracked: Arc<Mutex<Vec<(String, Properties)>>>,
+    flushes: Arc<Mutex<usize>>,
 }
 
 impl Sink {
@@ -25,10 +27,18 @@ impl Sink {
         Analytics::set_sink(move |name, props| {
             t.lock().unwrap().push((name.to_string(), props.clone()))
         });
+        let flushes = Arc::new(Mutex::new(0));
+        let f = flushes.clone();
+        Analytics::set_flusher(move || *f.lock().unwrap() += 1);
         Sink {
             _serial: serial,
             tracked,
+            flushes,
         }
+    }
+
+    fn flushes(&self) -> usize {
+        *self.flushes.lock().unwrap()
     }
 
     fn events(&self) -> Vec<(String, Properties)> {
@@ -99,8 +109,8 @@ fn app_ready_is_reported_once_with_what_is_stored() {
     let store = Store::open_in_memory().unwrap();
     store
         .update_profile(&[
-            ("name", Some("Ana")),
-            ("medicalConditions", Some("Dementia")),
+            (ProfileField::FullName, Some("Ana".into())),
+            (ProfileField::MedicalConditions, Some("Dementia".into())),
         ])
         .unwrap();
     let ready = AppReady::new();
@@ -143,11 +153,12 @@ fn data_migrated_reports_what_came_through() {
 fn data_migrated_reports_a_failure_after_the_migration() {
     let sink = Sink::new();
     let store = Store::open(rn_fixture_copy()).unwrap();
-    report_data_migration(&store, &Err(StoreError::UnknownProfileField("x".into())));
+    report_data_migration(&store, &Err(StoreError::Closed));
     let p = &sink.events()[0].1;
     assert_eq!(p["ok"], false);
     assert_eq!(p["from_version"], 1);
-    assert_eq!(p["error"], "UnknownProfileField");
+    assert_eq!(p["error"], "Closed");
+    assert_eq!(sink.flushes(), 1, "a failure is sent at once");
 }
 
 #[test]
@@ -163,30 +174,76 @@ fn nothing_is_reported_when_nothing_migrated() {
 }
 
 #[test]
-fn a_migration_that_cannot_open_is_reported_as_failed() {
+fn a_failed_migration_opens_and_is_reported_and_flushed_at_the_first_call() {
     let sink = Sink::new();
     let path = rn_fixture_copy();
-    // Damage the RN database so the migration can't copy its contacts.
+    // Damage the RN database so the migration can't copy its contacts: every table is there
+    // (so it's adopted), but contacts lacks a column the migration copies.
     Connection::open(&path)
         .unwrap()
-        .execute_batch("DROP TABLE contacts")
+        .execute_batch(
+            "DROP TABLE contacts; CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT)",
+        )
         .unwrap();
-    let error = Store::open(&path).err().expect("the migration fails");
-    report_open_failure(&path, &error, 7);
+    let store = Store::open(&path).expect("opening doesn't run the migration");
+    assert_eq!(store.migrated_from(), Some(1));
+    assert!(seed_and_report_migration(&store).is_err());
     let events = sink.events();
     assert_eq!(events.len(), 1);
+    let mut p = events[0].1.clone();
+    assert!(p.remove("duration_ms").is_some());
     assert_eq!(
-        events[0].1,
-        props(
-            json!({"from_version": 1, "to_version": 2, "ok": false, "duration_ms": 7, "error": "SqliteError"})
-        )
+        p,
+        props(json!({"from_version": 1, "to_version": 2, "ok": false, "error": "SqliteError"}))
     );
-    // The failed migration left the data as it was (rolled back), still at version 1.
+    assert_eq!(sink.flushes(), 1, "a failure is sent at once");
+    // The failed migration left the data as it was (rolled back), still at version 1, and the
+    // next call tries again.
+    assert!(store.profile().is_err());
+    drop(store);
     let version: i64 = Connection::open(&path)
         .unwrap()
         .query_row("PRAGMA user_version", [], |r| r.get(0))
         .unwrap();
     assert_eq!(version, 1);
+}
+
+#[test]
+fn a_migration_that_works_is_reported_without_a_flush() {
+    let sink = Sink::new();
+    let store = Store::open(rn_fixture_copy()).unwrap();
+    seed_and_report_migration(&store).unwrap();
+    let events = sink.events();
+    assert_eq!(events.len(), 1);
+    assert_eq!(events[0].1["ok"], true);
+    assert_eq!(sink.flushes(), 0);
+}
+
+#[test]
+fn a_failure_without_a_migration_reports_nothing() {
+    let sink = Sink::new();
+    let store = Store::open(temp_dir().join(DATABASE_NAME)).unwrap();
+    seed_and_report_migration(&store).unwrap();
+    store.close();
+    assert!(seed_and_report_migration(&store).is_err());
+    assert!(sink.events().is_empty());
+    assert_eq!(sink.flushes(), 0);
+}
+
+#[test]
+fn an_open_failure_of_an_rn_database_is_reported_and_flushed() {
+    let sink = Sink::new();
+    let path = rn_fixture_copy();
+    report_open_failure(&path, &StoreError::Io(std::io::Error::other("disk")), 7);
+    let events = sink.events();
+    assert_eq!(events.len(), 1);
+    assert_eq!(
+        events[0].1,
+        props(
+            json!({"from_version": 1, "to_version": 2, "ok": false, "duration_ms": 7, "error": "IoError"})
+        )
+    );
+    assert_eq!(sink.flushes(), 1);
 }
 
 #[test]
@@ -197,8 +254,7 @@ fn an_open_failure_that_is_not_a_migration_reports_nothing() {
         .unwrap()
         .execute_batch("PRAGMA user_version = 3")
         .unwrap();
-    let error = Store::open(&path).err().unwrap();
-    report_open_failure(&path, &error, 1);
+    report_open_failure(&path, &StoreError::NewerDatabase(3), 1);
     assert!(sink.events().is_empty());
 }
 

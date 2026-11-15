@@ -6,11 +6,12 @@
 //!
 //! Both apps drive this from the screen's lifecycle and do nothing but deliver what it decides,
 //! so they can't drift apart. The time away starts at the last tick, not at leaving: an alert
-//! due between that tick and leaving is caught up instead of lost.
+//! due between that tick and leaving is caught up instead of lost. Once the countdown has
+//! expired the ticks stop mattering, and it starts at leaving.
 
 use crate::alerts::{
-    AlertDelivery, ScheduledAlert, alerts_to_schedule, catch_up_alert, countdown_alert_properties,
-    emergency_resumed_properties,
+    AlertDelivery, ScheduledAlert, alert_due_at_ms, alerts_to_schedule, catch_up_alert,
+    countdown_alert_properties, emergency_resumed_properties,
 };
 use crate::analytics::{Analytics, AnalyticsEvent};
 use crate::emergency::{CountdownAlert, countdown_alerts};
@@ -18,8 +19,9 @@ use crate::store::{Result, Store};
 use serde_json::json;
 use std::sync::{Arc, Mutex};
 
-/// Puts countdown alerts on the phone as local notifications. Each app has one: AlarmManager
-/// on Android, UNUserNotificationCenter on iOS.
+/// Puts countdown alerts on the phone as local notifications. Each app has one: on Android a
+/// timer under the emergency's foreground service, with alarms as the backstop; on iOS,
+/// UNUserNotificationCenter.
 #[uniffi::export(with_foreign)]
 pub trait AlertScheduler: Send + Sync {
     /// Replaces whatever is scheduled with `alerts`.
@@ -93,9 +95,15 @@ impl EmergencyAway {
             .setting(Store::EMERGENCY_AWAY_FROM)?
             .is_none_or(|v| v.is_empty())
         {
+            // The apps stop ticking at expiry, so a tick from then or later says nothing about
+            // when the screen was left: the expiry alert was already shown in-app, and nothing
+            // is left to catch up.
+            let tick_before_expiry = self
+                .last_tick()
+                .filter(|&tick| tick < alert_due_at_ms(CountdownAlert::Expired, started));
             self.store.put_setting(
                 Store::EMERGENCY_AWAY_FROM,
-                &self.last_tick().unwrap_or(now_ms).to_string(),
+                &tick_before_expiry.unwrap_or(now_ms).to_string(),
             )?;
         }
         self.scheduler.schedule(alerts_to_schedule(started, now_ms));
@@ -134,6 +142,40 @@ impl EmergencyAway {
             );
         }
         Ok(alert)
+    }
+
+    /// The phone restarted at `now_ms` (Android's boot receiver): the scheduled alerts and the
+    /// notifications already shown went with it, and the screen isn't showing. Schedules the
+    /// alerts still to come, as [`EmergencyAway::left`] does, and returns the one to post now:
+    /// the most serious that came due while away, as [`EmergencyAway::shown`] would catch it up
+    /// (it still will, on returning).
+    ///
+    /// Without a time away the screen was showing when the phone went off, at a moment nobody
+    /// noted, so the time away counts from the emergency's start: an alert given twice beats a
+    /// call-911 alert that never came.
+    pub fn restarted(&self, now_ms: i64) -> Result<Option<CountdownAlert>> {
+        let _guard = self.lock();
+        let Some(started) = self
+            .store
+            .active_emergency()?
+            .and_then(|e| e.started_at_ms())
+        else {
+            return Ok(None);
+        };
+        let away_from = match self
+            .store
+            .setting(Store::EMERGENCY_AWAY_FROM)?
+            .and_then(|v| v.parse::<i64>().ok())
+        {
+            Some(away_from) => away_from,
+            None => {
+                self.store
+                    .put_setting(Store::EMERGENCY_AWAY_FROM, &started.to_string())?;
+                started
+            }
+        };
+        self.scheduler.schedule(alerts_to_schedule(started, now_ms));
+        Ok(catch_up_alert(started, away_from, now_ms))
     }
 
     /// The emergency ended (found, ended, or the account deleted): nothing more to deliver.

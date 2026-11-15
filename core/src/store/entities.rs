@@ -2,7 +2,7 @@
 //! Column names are unchanged, so MIGRATION_1_2 copies RN rows straight across. Enum columns
 //! (role, category, risk_level, outcome, dominant_hand) are plain TEXT.
 
-use crate::profile::Profile;
+use crate::profile::{Profile, ProfileField};
 use rusqlite::{Row, params};
 
 #[derive(Clone, Debug, PartialEq, uniffi::Record)]
@@ -219,40 +219,42 @@ impl ProfileEntity {
         }
     }
 
-    /// Sets one field by its Profile property name (camelCase), as `Store::update_profile`
-    /// does. None clears it (the name becomes empty). Errors on an unknown field.
-    pub(crate) fn set_field(&mut self, field: &str, value: Option<&str>) -> Result<(), String> {
-        let v = value.map(str::to_string);
+    /// Sets `field` to `value` (None clears it; the name is NOT NULL, so it becomes empty).
+    pub fn set(&mut self, field: ProfileField, value: Option<String>) {
         match field {
-            "name" => self.name = v.unwrap_or_default(),
-            "nickname" => self.nickname = v,
-            "dateOfBirth" => self.date_of_birth = v,
-            "photoUri" => self.photo_uri = v,
-            "height" => self.height = v,
-            "weight" => self.weight = v,
-            "hairColor" => self.hair_color = v,
-            "eyeColor" => self.eye_color = v,
-            "identifyingMarks" => self.identifying_marks = v,
-            "medicalConditions" => self.medical_conditions = v,
-            "medications" => self.medications = v,
-            "allergies" => self.allergies = v,
-            "cognitiveStatus" => self.cognitive_status = v,
-            "dominantHand" => self.dominant_hand = v,
-            "mobilityLevel" => self.mobility_level = v,
-            "communicationPreference" => self.communication_preference = v,
-            "escalationSigns" => self.escalation_signs = v,
-            "deescalationTechniques" => self.deescalation_techniques = v,
-            "approachGuidance" => self.approach_guidance = v,
-            "likes" => self.likes = v,
-            "dislikesTriggers" => self.dislikes_triggers = v,
-            "safeWord" => self.safe_word = v,
-            "locativeDeviceInfo" => self.locative_device_info = v,
-            "idBracelets" => self.id_bracelets = v,
-            "medicAlertId" => self.medic_alert_id = v,
-            "medicAlertHotline" => self.medic_alert_hotline = v,
-            other => return Err(other.to_string()),
+            ProfileField::FullName => self.name = value.unwrap_or_default(),
+            ProfileField::Nickname => self.nickname = value,
+            ProfileField::DateOfBirth => self.date_of_birth = value,
+            ProfileField::PhotoUri => self.photo_uri = value,
+            ProfileField::Height => self.height = value,
+            ProfileField::Weight => self.weight = value,
+            ProfileField::HairColor => self.hair_color = value,
+            ProfileField::EyeColor => self.eye_color = value,
+            ProfileField::IdentifyingMarks => self.identifying_marks = value,
+            ProfileField::MedicalConditions => self.medical_conditions = value,
+            ProfileField::Medications => self.medications = value,
+            ProfileField::Allergies => self.allergies = value,
+            ProfileField::CognitiveStatus => self.cognitive_status = value,
+            ProfileField::DominantHand => self.dominant_hand = value,
+            ProfileField::MobilityLevel => self.mobility_level = value,
+            ProfileField::CommunicationPreference => self.communication_preference = value,
+            ProfileField::EscalationSigns => self.escalation_signs = value,
+            ProfileField::DeescalationTechniques => self.deescalation_techniques = value,
+            ProfileField::ApproachGuidance => self.approach_guidance = value,
+            ProfileField::Likes => self.likes = value,
+            ProfileField::DislikesTriggers => self.dislikes_triggers = value,
+            ProfileField::SafeWord => self.safe_word = value,
+            ProfileField::LocativeDeviceInfo => self.locative_device_info = value,
+            ProfileField::IdBracelets => self.id_bracelets = value,
+            ProfileField::MedicAlertId => self.medic_alert_id = value,
+            ProfileField::MedicAlertHotline => self.medic_alert_hotline = value,
         }
-        Ok(())
+    }
+
+    /// The row with `field` set to `value` (see [`ProfileEntity::set`]).
+    pub fn with(mut self, field: ProfileField, value: Option<String>) -> Self {
+        self.set(field, value);
+        self
     }
 }
 

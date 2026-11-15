@@ -8,7 +8,7 @@ use nijii_core::emergency::{ActiveEmergency, CountdownAlert};
 use nijii_core::emergency_away::{AlertScheduler, EmergencyAway};
 use nijii_core::ffi::*;
 use nijii_core::i18n::Translations;
-use nijii_core::profile::Profile;
+use nijii_core::profile::{Profile, ProfileField};
 use nijii_core::store::{ContactEntity, ProfileEntity, Store};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -30,6 +30,18 @@ struct Recorder(Mutex<Vec<(String, HashMap<String, PropValue>)>>);
 impl AnalyticsSink for Recorder {
     fn on_event(&self, name: String, properties: HashMap<String, PropValue>) {
         self.0.lock().unwrap().push((name, properties));
+    }
+    fn flush(&self) {
+        self.0
+            .lock()
+            .unwrap()
+            .push(("<flush>".into(), HashMap::new()));
+    }
+    fn reset(&self) {
+        self.0
+            .lock()
+            .unwrap()
+            .push(("<reset>".into(), HashMap::new()));
     }
 }
 
@@ -179,8 +191,8 @@ fn the_store_works_through_the_ffi_shapes() {
     assert!(first.created_at.is_some() && first.updated_at.is_some());
     store
         .ffi_update_profile(HashMap::from([
-            ("nickname".to_string(), Some("Nan".to_string())),
-            ("height".to_string(), None),
+            (ProfileField::Nickname, Some("Nan".to_string())),
+            (ProfileField::Height, None),
         ]))
         .unwrap();
     let p: Profile = store.ffi_profile().unwrap().unwrap();
@@ -188,8 +200,8 @@ fn the_store_works_through_the_ffi_shapes() {
         (p.name.as_str(), p.nickname.as_deref()),
         ("Ana", Some("Nan"))
     );
-    let bad = store.ffi_update_profile(HashMap::from([("nope".to_string(), None)]));
-    assert!(matches!(bad, Err(StoreFailure::UnknownProfileField { field }) if field == "nope"));
+    assert_eq!(p.get(ProfileField::Nickname).as_deref(), Some("Nan"));
+    assert_eq!(p.get(ProfileField::FullName).as_deref(), Some("Ana"));
 
     let id = store
         .ffi_add_contact(ContactEntity::new("Bo", "5551234567"), None)

@@ -14,6 +14,7 @@ pub mod mobility;
 pub mod phone;
 pub mod photo;
 pub mod profile;
+pub mod readiness;
 pub mod readout;
 pub mod startup;
 pub mod store;
