@@ -24,6 +24,7 @@ import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translations
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.AppDatabase
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -108,7 +109,7 @@ class ProfileScreenTest {
 
     private val screen = @Composable {
         AppTheme(dark = false) {
-            ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, { left++ }, { saved++ })
+            ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, CoroutineScope(Dispatchers.Unconfined), { left++ }, { saved++ })
         }
     }
 

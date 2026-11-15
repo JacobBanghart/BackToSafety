@@ -257,7 +257,7 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
                     )
                 }
                 composable("name") { NameScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("photo") } }
-                composable("photo") { PhotoScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("appearance") } }
+                composable("photo") { PhotoScreen(onboarding, common, store, services.scope, onBack = { nav.popBackStack() }) { nav.navigate("appearance") } }
                 composable("appearance") { AppearanceScreen(onboarding, store, onBack = { nav.popBackStack() }) { nav.navigate("contact") } }
                 composable("contact") { ContactScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("complete") } }
                 composable("complete") {
@@ -300,7 +300,7 @@ fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<
                 composable("readout") { ReadoutScreen(readout, common, store) { nav.popBackStack() } }
                 composable("profile") {
                     ProfileScreen(
-                        translations.translator(language, "profile"), common, store,
+                        translations.translator(language, "profile"), common, store, services.scope,
                         onBack = { nav.popBackStack() },
                         onSaved = { nav.navigate("home") { popUpTo("home") { inclusive = true } } },
                     )

@@ -158,7 +158,7 @@ class ScreenSnapshotTest(private val mode: String) {
 
     @Test fun places() = snapshot("places") { DestinationsScreen(t("destinations"), t("common"), store) {} }
 
-    @Test fun profile() = snapshot("profile") { ProfileScreen(t("profile"), t("common"), store, {}, {}) }
+    @Test fun profile() = snapshot("profile") { ProfileScreen(t("profile"), t("common"), store, CoroutineScope(Dispatchers.Unconfined), {}, {}) }
 
     @Test fun emergency() = snapshot("emergency") {
         EmergencyScreen(t("emergency"), t("common"), store, EmergencyAway(store, NoScheduler), CoroutineScope(Dispatchers.Unconfined), {}, {})

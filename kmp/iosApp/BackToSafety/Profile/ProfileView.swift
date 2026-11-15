@@ -50,6 +50,8 @@ struct ProfileView: View {
     @State private var saving = false
     @State private var alert: AppAlert?
     @State private var picker: PickerSource?
+    /// The picked photo failed to save; said once the picker has gone, so the alert can show.
+    @State private var photoFailed = false
     @State private var datePicking = false
     @State private var pendingDob = Date()
     /// Reading the saved profile failed (not: there is none), so no form was built.
@@ -69,8 +71,10 @@ struct ProfileView: View {
         .backGuard(unsaved && !saving)
         .task { await load() }
         .appAlert($alert, ok: tCommon("ok"))
-        .sheet(item: $picker) { source in
-            ImagePicker(source: source.uiSource) { form?[.photoUri] = $0 }.ignoresSafeArea()
+        .sheet(item: $picker, onDismiss: showPhotoFailed) { source in
+            // A photo that failed to save leaves the form's photo as it was.
+            ImagePicker(source: source.uiSource, screen: "profile", onPhoto: { form?[.photoUri] = $0 }, onFailed: { photoFailed = true })
+                .ignoresSafeArea()
         }
         .overlay { if datePicking { dateModal.transition(.opacity) } }
         .animation(.easeInOut(duration: 0.2), value: datePicking)
@@ -135,6 +139,12 @@ struct ProfileView: View {
                 saving = false
             }
         }
+    }
+
+    private func showPhotoFailed() {
+        guard photoFailed else { return }
+        photoFailed = false
+        alert = AppAlert(title: tCommon("error"), message: t("errors.photoSaveFailed"))
     }
 
     private func back() {
