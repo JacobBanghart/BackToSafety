@@ -12,12 +12,15 @@ import androidx.activity.result.ActivityResultRegistryOwner
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextReplacement
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.FileProvider
 import androidx.room.Room
@@ -49,8 +52,8 @@ import java.io.File
 
 /**
  * A photo survives the app being recreated mid-flow. The system can reclaim the app while the
- * cropper has the screen, and the cropped photo then arrives before Profile has reloaded its
- * form. It can also reclaim the app while the camera has the screen, so the picker must
+ * cropper has the screen, and the cropped photo then arrives as Profile is recreated, into the
+ * form restored with it (alongside any unsaved typing). It can also reclaim the app while the camera has the screen, so the picker must
  * remember across process death where the camera writes, or the shot never reaches the crop
  * screen. Onboarding keeps a picked photo when its screen is recreated (process death, or a
  * font-size change; rotation doesn't recreate MainActivity). Found reproducing issue #3.
@@ -163,8 +166,8 @@ class PhotoRecreationTest {
         val cropRequest = checkNotNull(registry.cropRequest) { "the crop screen opened" }
 
         // The app is reclaimed with the crop screen open. When it comes back, the cropper's result
-        // is waiting and is handed over as soon as the screen asks for it, before Profile has
-        // read the store.
+        // is waiting and is handed over as soon as the screen asks for it, into Profile's
+        // restored form.
         val saved = Bundle().also(registry::onSaveInstanceState)
         registry = Registry().apply {
             onRestoreInstanceState(saved)
@@ -180,6 +183,42 @@ class PhotoRecreationTest {
         compose.onNodeWithTag("profile-save").performClick()
         compose.waitUntil(5_000) { savedPhoto() != null }
         assertIsSavedPhoto(savedPhoto())
+    }
+
+    @Test
+    fun typingAndAPhotoCroppedAfterTheAppWasReclaimedBothReachTheProfile() {
+        var registry = Registry(holdCrop = true)
+        var left = 0
+        val tester = StateRestorationTester(compose)
+        tester.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(registry)) {
+                AppTheme(dark = false) {
+                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, { left++ }, {})
+                }
+            }
+        }
+        compose.onNodeWithTag("profile-field-name").performTextReplacement("Maggie Smith")
+        compose.onNodeWithTag("profile-photo-take").performClick()
+        val cropRequest = checkNotNull(registry.cropRequest) { "the crop screen opened" }
+
+        // The app is reclaimed with the crop screen open, and the crop is done when it comes back.
+        val saved = Bundle().also(registry::onSaveInstanceState)
+        registry = Registry().apply {
+            onRestoreInstanceState(saved)
+            dispatchResult(cropRequest, Activity.RESULT_OK, cropped())
+        }
+        tester.emulateSavedInstanceStateRestore()
+
+        // Neither the typing nor the photo is lost, and both are unsaved: Back asks first.
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("profile-field-name").assert(hasText("Maggie Smith"))
+        compose.onNodeWithTag("profile-back").performClick()
+        assertEquals(0, left)
+
+        compose.onNodeWithTag("profile-save").performClick()
+        compose.waitUntil(5_000) { savedPhoto() != null }
+        assertIsSavedPhoto(savedPhoto())
+        assertEquals("Maggie Smith", runBlocking { store.profile()?.name })
     }
 
     @Test
