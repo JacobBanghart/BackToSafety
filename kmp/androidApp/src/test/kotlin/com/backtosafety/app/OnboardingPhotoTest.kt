@@ -14,7 +14,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -32,7 +34,10 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.AppDatabase
 import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageContract
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -71,6 +76,7 @@ class OnboardingPhotoTest {
 
     private lateinit var db: AppDatabase
     private lateinit var store: Store
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var continued = 0
 
     /** What the screen reported, in order. */
@@ -120,7 +126,7 @@ class OnboardingPhotoTest {
         compose.setContent {
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(Registry())) {
                 AppTheme(dark = false) {
-                    PhotoScreen(translations.translator("en", "onboarding"), translations.translator("en", "common"), store, {}) { continued++ }
+                    PhotoScreen(translations.translator("en", "onboarding"), translations.translator("en", "common"), store, appScope, {}) { continued++ }
                 }
             }
         }
@@ -129,6 +135,7 @@ class OnboardingPhotoTest {
     @After
     fun tearDown() {
         Analytics.sink = { _, _ -> }
+        appScope.cancel()
         db.close()
     }
 
@@ -139,7 +146,8 @@ class OnboardingPhotoTest {
 
     private fun pickPhoto() {
         compose.onNodeWithTag("onboarding-photo-library").performClick()
-        compose.onNodeWithTag("onboarding-photo-continue").assertIsEnabled()
+        // The photo is saved off the main thread, so it arrives a moment after the crop.
+        compose.waitUntil(5_000) { compose.onAllNodes(hasTestTag("onboarding-photo-continue") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
     }
 
     private fun tap(tag: String) {

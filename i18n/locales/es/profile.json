@@ -106,6 +106,7 @@
   },
   "cameraUnavailableTitle": "Cámara no disponible",
   "errors": {
-    "nameRequired": "El nombre es obligatorio."
+    "nameRequired": "El nombre es obligatorio.",
+    "photoSaveFailed": "No se pudo guardar la foto. Por favor, inténtalo de nuevo."
   }
 }

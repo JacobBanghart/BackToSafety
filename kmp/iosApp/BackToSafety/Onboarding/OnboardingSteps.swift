@@ -58,6 +58,8 @@ struct PhotoView: View {
     @State private var saving = false
     @State private var picker: PickerSource?
     @State private var alert: AppAlert?
+    /// The picked photo failed to save; said once the picker has gone, so the alert can show.
+    @State private var photoFailed = false
 
     var body: some View {
         OnboardingScaffold {
@@ -130,10 +132,18 @@ struct PhotoView: View {
             }
         }
         .appAlert($alert, ok: tCommon("ok"))
-        .sheet(item: $picker) { source in
-            ImagePicker(source: source.uiSource) { photoUri = $0 }.ignoresSafeArea()
+        .sheet(item: $picker, onDismiss: showPhotoFailed) { source in
+            // A photo that failed to save leaves the step's photo as it was.
+            ImagePicker(source: source.uiSource, screen: "onboarding_photo", onPhoto: { photoUri = $0 }, onFailed: { photoFailed = true })
+                .ignoresSafeArea()
         }
         .trackStepViewed("profile_photo")
+    }
+
+    private func showPhotoFailed() {
+        guard photoFailed else { return }
+        photoFailed = false
+        alert = AppAlert(title: tCommon("error"), message: t("photo.saveFailed"))
     }
 
     private func outlineButton(_ label: String, _ testID: String, action: @escaping () -> Void) -> some View {

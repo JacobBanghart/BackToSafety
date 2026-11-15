@@ -60,12 +60,21 @@ import com.backtosafety.core.ProfileField
 import com.backtosafety.core.Translate
 import com.backtosafety.core.data.Store
 import com.backtosafety.core.invoke
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 
 /** Port of app/onboarding/photo.tsx. */
 @Composable
-fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onContinue: () -> Unit) {
+fun PhotoScreen(
+    t: Translate,
+    tCommon: Translate,
+    store: Store,
+    /** Outlives the screen, for saving a picked photo. */
+    appScope: CoroutineScope,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+) {
     TrackStepViewed("profile_photo")
     val colors = LocalAppColors.current
     val type = DesignTokens.Typography
@@ -77,7 +86,11 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
 
-    val picker = rememberPhotoPicker { photoUri = it }
+    // A photo that failed to save leaves the step's photo as it was.
+    val picker = rememberPhotoPicker(
+        appScope, "onboarding_photo",
+        onFailed = { showAlert(context, tCommon("error"), t("photo.saveFailed"), confirm = tCommon("ok") to {}) },
+    ) { photoUri = it }
 
     OnboardingScaffold(
         footer = {

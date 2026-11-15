@@ -14,7 +14,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isEnabled
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -36,7 +38,10 @@ import com.backtosafety.core.db.AppDatabase
 import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -75,6 +80,7 @@ class PhotoRecreationTest {
 
     private lateinit var db: AppDatabase
     private lateinit var store: Store
+    private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
     /**
      * Stands in for the activity's registry. The library, the camera and the cropper answer at
@@ -138,6 +144,7 @@ class PhotoRecreationTest {
 
     @After
     fun tearDown() {
+        appScope.cancel()
         db.close()
     }
 
@@ -158,7 +165,7 @@ class PhotoRecreationTest {
         tester.setContent {
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(registry)) {
                 AppTheme(dark = false) {
-                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, { left++ }, {})
+                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, appScope, { left++ }, {})
                 }
             }
         }
@@ -175,8 +182,10 @@ class PhotoRecreationTest {
         }
         tester.emulateSavedInstanceStateRestore()
 
-        // The photo is an unsaved edit: Back asks before discarding it rather than leaving.
+        // The photo is an unsaved edit: Back asks before discarding it rather than leaving. It is
+        // saved off the main thread, so it shows a moment after the form.
         compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo-take").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("profile-back").performClick()
         assertEquals(0, left)
 
@@ -193,7 +202,7 @@ class PhotoRecreationTest {
         tester.setContent {
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(registry)) {
                 AppTheme(dark = false) {
-                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, { left++ }, {})
+                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, appScope, { left++ }, {})
                 }
             }
         }
@@ -228,7 +237,7 @@ class PhotoRecreationTest {
         tester.setContent {
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(registry)) {
                 AppTheme(dark = false) {
-                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, {}, {})
+                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, appScope, {}, {})
                 }
             }
         }
@@ -267,12 +276,13 @@ class PhotoRecreationTest {
         tester.setContent {
             CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(Registry())) {
                 AppTheme(dark = false) {
-                    PhotoScreen(translations.translator("en", "onboarding"), translations.translator("en", "common"), store, {}) { continued++ }
+                    PhotoScreen(translations.translator("en", "onboarding"), translations.translator("en", "common"), store, appScope, {}) { continued++ }
                 }
             }
         }
         compose.onNodeWithTag("onboarding-photo-library").performClick()
-        compose.onNodeWithTag("onboarding-photo-continue").assertIsEnabled()
+        // The photo is saved off the main thread, so it arrives a moment after the crop.
+        compose.waitUntil(5_000) { compose.onAllNodes(hasTestTag("onboarding-photo-continue") and isEnabled()).fetchSemanticsNodes().isNotEmpty() }
 
         tester.emulateSavedInstanceStateRestore()
 

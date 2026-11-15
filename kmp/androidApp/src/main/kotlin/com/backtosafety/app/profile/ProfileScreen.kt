@@ -87,6 +87,7 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.formatDob
 import com.backtosafety.core.invoke
 import com.backtosafety.core.parseDob
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
@@ -139,7 +140,15 @@ internal val ProfileFormSaver = Saver<ProfileForm?, List<Any>>(
 
 /** Port of app/profile.tsx: the full profile editor, in four collapsible sections. */
 @Composable
-fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onSaved: () -> Unit) {
+fun ProfileScreen(
+    t: Translate,
+    tCommon: Translate,
+    store: Store,
+    /** Outlives the screen, for saving a picked photo. */
+    appScope: CoroutineScope,
+    onBack: () -> Unit,
+    onSaved: () -> Unit,
+) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -241,8 +250,12 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
 
     // A photo can't arrive before the form exists: the photo buttons only show once the form has
     // loaded, and after recreation that form is restored before the picker's launchers deliver a
-    // result. The photo is an edit, so it shows as unsaved until Save.
-    val picker = rememberPhotoPicker { uri -> form = form?.with(ProfileField.PHOTO_URI, uri) }
+    // result. The photo is an edit, so it shows as unsaved until Save. A photo that failed to save
+    // leaves the form's photo as it was.
+    val picker = rememberPhotoPicker(
+        appScope, "profile",
+        onFailed = { showAlert(context, tCommon("error"), t("errors.photoSaveFailed"), confirm = tCommon("ok") to {}) },
+    ) { uri -> form = form?.with(ProfileField.PHOTO_URI, uri) }
 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {

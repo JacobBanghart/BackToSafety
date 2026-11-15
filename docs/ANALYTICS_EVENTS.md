@@ -95,7 +95,7 @@ strings, numbers, booleans or null.
 | Event         | Properties                                          | Description |
 | ------------- | --------------------------------------------------- | ----------- |
 | `dial_failed` | `target: string`, `screen: string`                  | The device couldn't place a call (no phone app: tablets, iPads) and showed the number instead. `target`: `emergency`, `contact` or `medicalert`. |
-| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error; also reading the saved emergency (`screen` `emergency`, `action` `load`), which the emergency screen reports with Retry instead of starting a new emergency; and reading the saved profile (`screen` `profile`, `action` `load`), which the profile screen reports with Retry instead of loading an empty form that Save would write over the profile. `error` is the error's type name, never its message. |
+| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error; also reading the saved emergency (`screen` `emergency`, `action` `load`), which the emergency screen reports with Retry instead of starting a new emergency; and reading the saved profile (`screen` `profile`, `action` `load`), which the profile screen reports with Retry instead of loading an empty form that Save would write over the profile; and saving a picked photo (`screen` `profile` or `onboarding_photo`, `action` `photo`), which leaves the photo on screen as it was. `error` is the error's type name, never its message. |
 
 Crashes and uncaught exceptions arrive as PostHog `$exception` events (error tracking autocapture, both apps).
 

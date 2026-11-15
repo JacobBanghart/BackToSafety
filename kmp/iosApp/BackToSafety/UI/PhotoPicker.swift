@@ -7,9 +7,17 @@ import UIKit
 /// with its square editing step, then the image (at most `maxPhotoSide` px on a side, so a
 /// camera original doesn't stay a 50 MP file) saved as <Documents>/profile_photo_<epochMs>.jpg.
 /// `onPhoto` gets its file:// URI, the form the RN app stores (spec/storage.md).
+///
+/// Resizing, encoding and writing the photo are image and disk work, so `savePickedPhoto` does
+/// them off the main actor; the picker stays up until it's done. A failed save reports
+/// save_failed (`screen`, action `photo`) and `onFailed` has the screen show it once the picker
+/// has gone. Both callbacks run on the main actor, before the picker dismisses.
 struct ImagePicker: UIViewControllerRepresentable {
     let source: UIImagePickerController.SourceType
+    /// The calling screen, as save_failed reports it.
+    let screen: String
     let onPhoto: (String) -> Void
+    let onFailed: () -> Void
     @Environment(\.dismiss) private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -31,17 +39,54 @@ struct ImagePicker: UIViewControllerRepresentable {
 
         func imagePickerController(_: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
-            if let data = image?.fitting(maxSide: maxPhotoSide).jpegData(compressionQuality: 0.8) {
-                let file = documentsDirectory.appendingPathComponent("\(photoFilePrefix)\(Int64(Date().timeIntervalSince1970 * 1000)).jpg")
-                if (try? data.write(to: file)) != nil {
-                    excludeFromBackup(file)
-                    parent.onPhoto(file.absoluteString)
+            let parent = parent
+            Task.detached(priority: .userInitiated) {
+                let saved = Result { try savePickedPhoto(image, screen: parent.screen) }
+                await MainActor.run {
+                    switch saved {
+                    case let .success(uri): parent.onPhoto(uri)
+                    case .failure: parent.onFailed()
+                    }
+                    parent.dismiss()
                 }
             }
-            parent.dismiss()
         }
 
         func imagePickerControllerDidCancel(_: UIImagePickerController) { parent.dismiss() }
+    }
+}
+
+/// Why a picked photo couldn't be saved, when nothing more specific was thrown.
+enum PhotoSaveError: Error {
+    /// The picker handed back no image.
+    case noImage
+    /// The image wouldn't encode as a JPEG.
+    case notEncodable
+}
+
+/// Saves a picked photo as <Documents>/profile_photo_<epochMs>.jpg (at most `maxPhotoSide` px on
+/// a side, JPEG quality 0.8, kept out of backups) and returns its file:// URI. Blocking image
+/// and disk work: call it off the main actor. A failure (no image, one that won't encode, a write
+/// that throws, a full disk) reports save_failed for `screen` with action `photo`, leaves no
+/// file, and is thrown on for the screen to show. `write` is the disk write, so a test can make
+/// it fail.
+func savePickedPhoto(_ image: UIImage?, screen: String, write: (Data, URL) throws -> Void = { try $0.write(to: $1) }) throws -> String {
+    do {
+        guard let image else { throw PhotoSaveError.noImage }
+        guard let data = image.fitting(maxSide: maxPhotoSide).jpegData(compressionQuality: 0.8) else { throw PhotoSaveError.notEncodable }
+        let file = documentsDirectory.appendingPathComponent("\(photoFilePrefix)\(Int64(Date().timeIntervalSince1970 * 1000)).jpg")
+        do {
+            try write(data, file)
+        } catch {
+            // A write cut off partway (a full disk) mustn't leave half a photo behind.
+            try? FileManager.default.removeItem(at: file)
+            throw error
+        }
+        excludeFromBackup(file)
+        return file.absoluteString
+    } catch {
+        reportSaveFailed(screen: screen, action: "photo", error: error)
+        throw error
     }
 }
 
