@@ -57,6 +57,7 @@ struct PhotoView: View {
     @State private var photoUri: String?
     @State private var saving = false
     @State private var picker: PickerSource?
+    @State private var alert: AppAlert?
 
     var body: some View {
         OnboardingScaffold {
@@ -94,24 +95,41 @@ struct PhotoView: View {
                 .frame(maxWidth: .infinity)
         } footer: {
             SkipButton(label: t("photo.skip"), testID: "onboarding-photo-skip") {
-                trackStep(false, "profile_photo")
+                guard !saving else { return }
+                saving = true
                 Task {
-                    _ = try? await model.store.completeStep(step: "profile_photo")
-                    model.path.append(.appearance)
+                    defer { saving = false }
+                    do {
+                        try await model.store.completeStep(step: "profile_photo")
+                        trackStep(false, "profile_photo")
+                        model.path.append(.appearance)
+                    } catch {
+                        // A failed skip keeps the user on the step and says so, so they can skip again.
+                        reportSaveFailed(screen: "onboarding_photo", action: "skip", error: error)
+                        alert = AppAlert(title: tCommon("error"), message: tCommon("saveFailed"))
+                    }
                 }
             }
             PrimaryButton(label: saving ? tCommon("saving") : t("photo.continue"), testID: "onboarding-photo-continue",
                           enabled: photoUri != nil && !saving) {
+                guard !saving else { return }
                 saving = true
                 Task {
-                    _ = try? await model.store.updateProfile(values: [.photoUri: photoUri])
-                    _ = try? await model.store.completeStep(step: "profile_photo")
-                    trackStep(true, "profile_photo")
-                    saving = false
-                    model.path.append(.appearance)
+                    defer { saving = false }
+                    do {
+                        try await model.store.updateProfile(values: [.photoUri: photoUri])
+                        try await model.store.completeStep(step: "profile_photo")
+                        trackStep(true, "profile_photo")
+                        model.path.append(.appearance)
+                    } catch {
+                        // A failed save keeps the user on the step with the photo they picked, so they can retry.
+                        reportSaveFailed(screen: "onboarding_photo", action: "save", error: error)
+                        alert = AppAlert(title: tCommon("error"), message: tCommon("saveFailed"))
+                    }
                 }
             }
         }
+        .appAlert($alert, ok: tCommon("ok"))
         .sheet(item: $picker) { source in
             ImagePicker(source: source.uiSource) { photoUri = $0 }.ignoresSafeArea()
         }
