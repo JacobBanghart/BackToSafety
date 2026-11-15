@@ -36,6 +36,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -93,7 +94,7 @@ private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
 private val white = Color(DesignTokens.Light.textOnPrimary)
 
-private data class ProfileForm(
+internal data class ProfileForm(
     val text: Map<ProfileField, String> = PROFILE_TEXT_FIELDS.associateWith { "" },
     val dominantHand: String = "unknown",
     val mobility: List<String> = emptyList(),
@@ -108,26 +109,58 @@ private data class ProfileForm(
             .joinToString(", ")
 }
 
+/**
+ * Keeps a form across the activity being recreated (a font-size change, process death). It goes
+ * into the saved-state Bundle, so it holds only what the form needs, as strings and lists of
+ * strings: the text fields as key and value pairs (empty ones left out, to keep the Bundle small),
+ * then the hand, the mobility options and the Other text. A null form isn't saved.
+ */
+internal val ProfileFormSaver = Saver<ProfileForm?, List<Any>>(
+    save = { form ->
+        form?.let {
+            arrayListOf(
+                ArrayList(it.text.filterValues(String::isNotEmpty).flatMap { (field, value) -> listOf(field.key, value) }),
+                it.dominantHand,
+                ArrayList(it.mobility),
+                it.mobilityOther,
+            )
+        }
+    },
+    restore = { saved ->
+        val text = (saved[0] as List<*>).map { it as String }.chunked(2).associate { (key, value) -> key to value }
+        ProfileForm(
+            text = PROFILE_TEXT_FIELDS.associateWith { text[it.key].orEmpty() },
+            dominantHand = saved[1] as String,
+            mobility = (saved[2] as List<*>).map { it as String },
+            mobilityOther = saved[3] as String,
+        )
+    },
+)
+
 /** Port of app/profile.tsx: the full profile editor, in four collapsible sections. */
 @Composable
 fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onSaved: () -> Unit) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var form by remember { mutableStateOf<ProfileForm?>(null) }
-    var initial by remember { mutableStateOf<ProfileForm?>(null) }
-    var expanded by remember { mutableStateOf<String?>("personal") }
+    // The form being edited, the loaded profile it's compared with to tell unsaved edits, and the
+    // open section survive the activity being recreated, so typed edits aren't thrown away.
+    var form by rememberSaveable(stateSaver = ProfileFormSaver) { mutableStateOf<ProfileForm?>(null) }
+    var initial by rememberSaveable(stateSaver = ProfileFormSaver) { mutableStateOf<ProfileForm?>(null) }
+    var expanded by rememberSaveable { mutableStateOf<String?>("personal") }
     var saving by remember { mutableStateOf(false) }
-    // A photo that comes back before the form has loaded waits here for it. After the system
-    // reclaims the app during the cropper, the cropped photo is handed over the moment this
-    // screen is recreated, before the store has been read.
-    var pendingPhoto by rememberSaveable { mutableStateOf<String?>(null) }
 
     // Reading the saved profile failed (not: there is none), so no form was built.
     var loadFailed by remember { mutableStateOf(false) }
     var loadAttempt by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(loadAttempt) {
+    // A restored form is the user's unsaved work and must not be overwritten by a reload, so only
+    // a screen that starts without one reads the store: a first open, or one recreated while the
+    // form was still loading or had failed to load. Decided once, as the screen starts.
+    val restored = remember { form != null }
+
+    LaunchedEffect(loadAttempt, restored) {
+        if (restored) return@LaunchedEffect
         loadFailed = false
         // A failed read is not an empty profile: Save would write the empty form over the stored
         // one (name, medical details, photo). Say so and offer to try again instead.
@@ -146,11 +179,8 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             mobility = if (custom.isNotEmpty()) known + "Other" else known,
             mobilityOther = custom.joinToString(", "),
         )
-        // Read once, as the form loads (not a key: a new photo after this goes straight to the
-        // form). The photo is an edit, so it shows as unsaved until Save.
-        form = pendingPhoto?.let { loaded.with(ProfileField.PHOTO_URI, it) } ?: loaded
+        form = loaded
         initial = loaded
-        pendingPhoto = null
     }
 
     val f = form
@@ -209,10 +239,10 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         onDiscard = {}, onLeave = onBack,
     )
 
-    val picker = rememberPhotoPicker { uri ->
-        val current = form
-        if (current != null) form = current.with(ProfileField.PHOTO_URI, uri) else pendingPhoto = uri
-    }
+    // A photo can't arrive before the form exists: the photo buttons only show once the form has
+    // loaded, and after recreation that form is restored before the picker's launchers deliver a
+    // result. The photo is an edit, so it shows as unsaved until Save.
+    val picker = rememberPhotoPicker { uri -> form = form?.with(ProfileField.PHOTO_URI, uri) }
 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
