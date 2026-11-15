@@ -49,7 +49,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Age approximately 86. Last seen: 10/6/2026, 3:15:00 PM. Last known location: [fill in location]. Appearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses. Additional context: Moderate Alzheimer's. Allergies: Penicillin. MedicAlert ID: AB12-CD34. Please advise about issuing a local Silver/Purple Alert."
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Age approximately 86. Search started: 10/6/2026, 3:15:00 PM. Last known location: [fill in location]. Appearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses. Additional context: Moderate Alzheimer's. Allergies: Penicillin. MedicAlert ID: AB12-CD34. Please advise about issuing a local Silver/Purple Alert."
       },
       {
         "args": [
@@ -85,7 +85,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Edad aproximada: 86 años. Visto/a por última vez: 10/6/2026, 3:15:00 PM. Última ubicación conocida: [completar ubicación]. Apariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses. Contexto adicional: Moderate Alzheimer's. Alergias: Penicillin. ID de MedicAlert: AB12-CD34. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Edad aproximada: 86 años. Búsqueda iniciada: 10/6/2026, 3:15:00 PM. Última ubicación conocida: [completar ubicación]. Apariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses. Contexto adicional: Moderate Alzheimer's. Alergias: Penicillin. ID de MedicAlert: AB12-CD34. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
       },
       {
         "args": [
@@ -138,6 +138,169 @@
           }
         ],
         "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: [fill in time]. Last known location: [fill in location]. Photo available. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/6/2026, 9:00:00 AM",
+            "lastSeenClock": "9:00 AM",
+            "lastSeenDate": "2026-10-06",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 9:00 AM today. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/5/2026, 11:50:00 PM",
+            "lastSeenClock": "11:50 PM",
+            "lastSeenDate": "2026-10-05",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 11:50 PM yesterday. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/3/2026, 9:00:00 AM",
+            "lastSeenClock": "9:00 AM",
+            "lastSeenDate": "2026-10-03",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 10/3/2026, 9:00:00 AM. Last known location: [fill in location]. Please advise about issuing a local Silver/Purple Alert."
+      },
+      {
+        "args": [
+          "es",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "6/10/2026, 9:00:00",
+            "lastSeenClock": "9:00",
+            "lastSeenDate": "2026-10-06",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Búsqueda iniciada: hoy, 9:00. Última ubicación conocida: [completar ubicación]. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+      },
+      {
+        "args": [
+          "es",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "5/10/2026, 23:50:00",
+            "lastSeenClock": "23:50",
+            "lastSeenDate": "2026-10-05",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Búsqueda iniciada: ayer, 23:50. Última ubicación conocida: [completar ubicación]. Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+      }
+    ],
+    "buildScriptParts": [
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": [
+          {
+            "text": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Last seen: "
+          },
+          {
+            "text": "fill in time",
+            "blank": true
+          },
+          {
+            "text": ". Last known location: "
+          },
+          {
+            "text": "fill in location",
+            "blank": true
+          },
+          {
+            "text": ". Please advise about issuing a local Silver/Purple Alert."
+          }
+        ]
+      },
+      {
+        "args": [
+          "en",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "lastSeenTime": "10/6/2026, 9:00:00 AM",
+            "lastSeenClock": "9:00 AM",
+            "lastSeenDate": "2026-10-06",
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": [
+          {
+            "text": "I'm reporting a missing vulnerable adult who may be disoriented or at risk. Name: Margaret Smith. Search started: 9:00 AM today. Last known location: "
+          },
+          {
+            "text": "fill in location",
+            "blank": true
+          },
+          {
+            "text": ". Please advise about issuing a local Silver/Purple Alert."
+          }
+        ]
+      },
+      {
+        "args": [
+          "es",
+          {
+            "profile": {
+              "name": "Margaret Smith"
+            },
+            "today": "2026-10-06"
+          }
+        ],
+        "expected": [
+          {
+            "text": "Quiero reportar la desaparición de un adulto vulnerable que puede estar desorientado o en peligro. Nombre: Margaret Smith. Visto/a por última vez: "
+          },
+          {
+            "text": "completar hora",
+            "blank": true
+          },
+          {
+            "text": ". Última ubicación conocida: "
+          },
+          {
+            "text": "completar ubicación",
+            "blank": true
+          },
+          {
+            "text": ". Por favor, indíquenme si se puede emitir una Alerta Plateada o Morada local."
+          }
+        ]
       }
     ],
     "buildCopyBlock": [
@@ -151,7 +314,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "Name: Margaret Smith\nLast seen: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
+        "expected": "Name: Margaret Smith\nSearch started: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
       },
       {
         "args": [
@@ -187,7 +350,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nDOB: 03/15/1940\nAppearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses\nImportant Details: Moderate Alzheimer's. Allergies: Penicillin\nRoutine Medications (optional): Donepezil 10mg\nCognitive Status: Disoriented to time and place\nMobility: Uses cane\n⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel\nCommunication: Speaks slowly; responds to Maggie\nSigns of Escalation: Pacing\nTriggers/Dislikes: Loud noises\nDe-escalation: Calm voice, offer tea\nLikes/Soothers: Gardening, Frank Sinatra\nHow to Approach: Approach from the front\nFamily Safe Word: Sunflower\nLast seen: 10/6/2026, 3:15:00 PM\nCoordinates: Unknown\nPersonal Locator: AirTag in purse\nID Bracelet: MedicAlert bracelet\nMedicAlert ID: AB12-CD34\nMedicAlert Hotline: 1-800-432-5378\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
+        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nDOB: 03/15/1940\nAppearance: 5'6\", 140, Gray, short hair, Blue eyes, Hearing aids, glasses\nImportant Details: Moderate Alzheimer's. Allergies: Penicillin\nRoutine Medications (optional): Donepezil 10mg\nCognitive Status: Disoriented to time and place\nMobility: Uses cane\n⚠️ Check nearby for their mobility aid or vehicle — may indicate direction of travel\nCommunication: Speaks slowly; responds to Maggie\nSigns of Escalation: Pacing\nTriggers/Dislikes: Loud noises\nDe-escalation: Calm voice, offer tea\nLikes/Soothers: Gardening, Frank Sinatra\nHow to Approach: Approach from the front\nFamily Safe Word: Sunflower\nSearch started: 10/6/2026, 3:15:00 PM\nCoordinates: Unknown\nPersonal Locator: AirTag in purse\nID Bracelet: MedicAlert bracelet\nMedicAlert ID: AB12-CD34\nMedicAlert Hotline: 1-800-432-5378\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
       },
       {
         "args": [
@@ -223,7 +386,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "Nombre: Margaret Smith (le dicen \"Maggie\")\nFecha de nacimiento: 03/15/1940\nApariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses\nDatos importantes: Moderate Alzheimer's. Alergias: Penicillin\nMedicamentos habituales (opcional): Donepezil 10mg\nEstado cognitivo: Disoriented to time and place\nMovilidad: Usa bastón\n⚠️ Revisa si su ayuda de movilidad o vehículo está cerca: puede indicar hacia dónde se fue\nComunicación: Speaks slowly; responds to Maggie\nSeñales de alteración: Pacing\nDetonantes / Lo que le molesta: Loud noises\nCómo calmarle: Calm voice, offer tea\nGustos / Lo que le calma: Gardening, Frank Sinatra\nCómo acercarse: Approach from the front\nPalabra clave familiar: Sunflower\nVisto/a por última vez: 10/6/2026, 3:15:00 PM\nCoordenadas: Desconocido\nLocalizador personal: AirTag in purse\nPulsera de identificación: MedicAlert bracelet\nID de MedicAlert: AB12-CD34\nLínea de MedicAlert: 1-800-432-5378\n\n⚠️ COMPLETAR: ¿Qué ropa llevaba puesta? (Camisa, chaqueta, pantalón, zapatos, gorra)"
+        "expected": "Nombre: Margaret Smith (le dicen \"Maggie\")\nFecha de nacimiento: 03/15/1940\nApariencia: 5'6\", 140, cabello Gray, short, ojos Blue, Hearing aids, glasses\nDatos importantes: Moderate Alzheimer's. Alergias: Penicillin\nMedicamentos habituales (opcional): Donepezil 10mg\nEstado cognitivo: Disoriented to time and place\nMovilidad: Usa bastón\n⚠️ Revisa si su ayuda de movilidad o vehículo está cerca: puede indicar hacia dónde se fue\nComunicación: Speaks slowly; responds to Maggie\nSeñales de alteración: Pacing\nDetonantes / Lo que le molesta: Loud noises\nCómo calmarle: Calm voice, offer tea\nGustos / Lo que le calma: Gardening, Frank Sinatra\nCómo acercarse: Approach from the front\nPalabra clave familiar: Sunflower\nBúsqueda iniciada: 10/6/2026, 3:15:00 PM\nCoordenadas: Desconocido\nLocalizador personal: AirTag in purse\nPulsera de identificación: MedicAlert bracelet\nID de MedicAlert: AB12-CD34\nLínea de MedicAlert: 1-800-432-5378\n\n⚠️ COMPLETAR: ¿Qué ropa llevaba puesta? (Camisa, chaqueta, pantalón, zapatos, gorra)"
       },
       {
         "args": [
@@ -236,7 +399,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nLast seen: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
+        "expected": "Name: Margaret Smith (goes by \"Maggie\")\nSearch started: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
       },
       {
         "args": [
@@ -249,7 +412,7 @@
             "today": "2026-10-06"
           }
         ],
-        "expected": "Name: Margaret Smith\nMobility: Walks independently\nLast seen: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
+        "expected": "Name: Margaret Smith\nMobility: Walks independently\nSearch started: Unknown\nCoordinates: Unknown\n\n⚠️ FILL IN: What were they wearing? (Shirt, jacket, pants, shoes, hat)"
       }
     ],
     "missingScriptDetails": [

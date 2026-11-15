@@ -23,7 +23,6 @@
       "auto": "Auto"
     },
     "languageLabel": "Choose your language",
-    "scrollHint": "↓ Scroll for more",
     "getStarted": "Get Started",
     "privacy": "Your information never leaves this device."
   },
@@ -75,13 +74,13 @@
     "title": "Physical description",
     "subtitle": "This helps 911 and searchers identify them.",
     "heightLabel": "Height",
-    "heightPlaceholder": "5'6\"",
+    "heightPlaceholder": "e.g., 5'6\"",
     "weightLabel": "Weight",
-    "weightPlaceholder": "150 lbs",
+    "weightPlaceholder": "e.g., 150 lbs",
     "hairLabel": "Hair Color",
-    "hairPlaceholder": "Gray, short",
+    "hairPlaceholder": "e.g., Gray, short",
     "eyeLabel": "Eye Color",
-    "eyePlaceholder": "Blue",
+    "eyePlaceholder": "e.g., Blue",
     "marksLabel": "Identifying Marks",
     "marksPlaceholder": "Tattoos, scars, birthmarks, glasses, hearing aids...",
     "skip": "Skip for now",
@@ -93,16 +92,17 @@
     "nameLabel": "Contact Name *",
     "namePlaceholder": "e.g., John Smith",
     "phoneLabel": "Phone Number *",
-    "phonePlaceholder": "(555) 123-4567",
+    "phonePlaceholder": "e.g., (555) 123-4567",
     "relationshipLabel": "Relationship",
     "relationshipPlaceholder": "e.g., Son, Daughter, Neighbor",
     "infoBox": {
       "title": "How alerts work",
-      "body": "• You'll have a one-tap button to text this contact\n• The text says who is missing, when they were last seen, and what they're wearing\n• You can add neighbors and family later"
+      "body": "• You'll have a one-tap button to text this contact\n• The text says who is missing, when the search started, and what they're wearing\n• You can add neighbors and family later"
     },
     "skip": "Skip for now",
     "continue": "Continue",
-    "required": "Name and phone number are required"
+    "required": "Name and phone number are required",
+    "phoneInvalid": "Enter a phone number with at least 3 digits"
   },
   "complete": {
     "icon": "✓",

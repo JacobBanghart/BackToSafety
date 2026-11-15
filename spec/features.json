@@ -60,7 +60,8 @@
       "description": "First emergency contact (name, phone, relationship); skippable.",
       "coverage": {
         "vectors": [
-          "phone.json#formatPhoneInput"
+          "phone.json#formatPhoneInput",
+          "phone.json#isUsablePhone"
         ],
         "flows": [
           "maestro/flows/onboarding.yaml"
@@ -170,7 +171,7 @@
     },
     {
       "id": "emergency.alerts-away",
-      "description": "Off the emergency screen (another screen, or the app in the background) the 5-minute warning and the expiry arrive as notifications, in the app's language; tapping one opens the emergency. Notification permission is asked once, on home.",
+      "description": "Off the emergency screen (another screen, or the app in the background) the 5-minute warning and the expiry arrive as notifications, in the app's language; tapping one opens the emergency. Notification permission is asked once, on home. If notifications are off, the Leave modal says the alerts won't come and links to the system notification settings.",
       "coverage": {
         "vectors": [
           "alerts.json#alertDueAt",
@@ -178,7 +179,19 @@
         ],
         "flows": []
       },
-      "flowExempt": "Notifications are system UI and test builds don't ask for the permission. Covered by EmergencyAwayTest (shared rules), CountdownNotificationsTest (Android, Robolectric) and CountdownNotificationsTests (iOS, XCTest)."
+      "flowExempt": "Notifications are system UI and test builds don't ask for the permission. Covered by EmergencyAwayTest (shared rules), CountdownNotificationsTest and EmergencyScreenTest (Android, Robolectric) and CountdownNotificationsTests (iOS, XCTest)."
+    },
+    {
+      "id": "emergency.ongoing-countdown",
+      "description": "Android: while an emergency runs, an ongoing silent notification (a foreground service) counts down to the expiry, on the lock screen too, then says to call 911; tapping it opens the emergency. It keeps the warning and expiry alerts on time in Doze. After the phone restarts mid-emergency, the alert that came due is posted, the rest are scheduled again and the countdown shows again.",
+      "coverage": {
+        "vectors": [
+          "alerts.json#alertsToSchedule",
+          "alerts.json#catchUpAlert"
+        ],
+        "flows": []
+      },
+      "flowExempt": "Notifications are system UI, test builds don't ask for the permission, and a flow can't restart the phone. Covered by CountdownServiceTest, CountdownNotificationsTest, BootReceiverTest and EmergencyScreenTest (Android, Robolectric) and EmergencyAwayTest (shared restart rule)."
     },
     {
       "id": "emergency.catch-up",
@@ -238,14 +251,16 @@
     },
     {
       "id": "emergency.call-911",
-      "description": "Call button dials the emergency number and marks the step.",
+      "description": "Call button dials the emergency number and, once the phone app opened, marks the step and records the call; a device that can't call records nothing.",
       "coverage": {
-        "vectors": [],
+        "vectors": [
+          "alerts.json#emergency911CalledProperties"
+        ],
         "flows": [
           "maestro/flows/emergency-outcomes.yaml"
         ]
       },
-      "notes": "F-15, F-17."
+      "notes": "F-15, F-17. EmergencyScreenTest covers a device with no phone app."
     },
     {
       "id": "calls.unavailable",
@@ -264,6 +279,7 @@
       "coverage": {
         "vectors": [
           "emergency.json#buildAlertSms",
+          "alerts.json#contactsAlerted",
           "phone.json#normalizeUniqueSmsRecipients",
           "phone.json#normalizeSmsRecipient"
         ],
@@ -458,7 +474,8 @@
       "coverage": {
         "vectors": [
           "phone.json#formatPhoneInput",
-          "phone.json#formatPhoneNumber"
+          "phone.json#formatPhoneNumber",
+          "phone.json#isUsablePhone"
         ],
         "flows": [
           "maestro/flows/contacts.yaml"
@@ -499,7 +516,9 @@
       "id": "contacts.call",
       "description": "Call a contact.",
       "coverage": {
-        "vectors": [],
+        "vectors": [
+          "phone.json#dialString"
+        ],
         "flows": [
           "maestro/flows/alerts-and-calls.yaml"
         ]

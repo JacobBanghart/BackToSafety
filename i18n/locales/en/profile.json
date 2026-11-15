@@ -7,6 +7,11 @@
   "webCameraUnavailable": "Taking a photo is only available in the mobile app. Please use \"Choose Photo\" on web.",
   "photoLibraryPermission": "We need photo library access to update the photo.",
   "cameraPermission": "We need camera access to take a photo.",
+  "loadFailed": {
+    "title": "Couldn't Load the Profile",
+    "message": "The saved profile couldn't be read, so nothing was changed. Try again.",
+    "retry": "Retry"
+  },
   "unsavedChanges": {
     "title": "Unsaved Changes",
     "message": "You have unsaved changes. If you leave now, your edits will be lost.",
@@ -24,14 +29,15 @@
     "nickname": "Nickname / Preferred Name",
     "nicknamePlaceholder": "What they prefer to be called",
     "dateOfBirth": "Date of Birth",
+    "dateOfBirthPicker": "Choose date of birth",
     "height": "Height",
-    "heightPlaceholder": "5'6\"",
+    "heightPlaceholder": "e.g., 5'6\"",
     "weight": "Weight",
-    "weightPlaceholder": "150 lbs",
+    "weightPlaceholder": "e.g., 150 lbs",
     "hairColor": "Hair Color",
-    "hairColorPlaceholder": "Gray, short",
+    "hairColorPlaceholder": "e.g., Gray, short",
     "eyeColor": "Eye Color",
-    "eyeColorPlaceholder": "Blue",
+    "eyeColorPlaceholder": "e.g., Blue",
     "identifyingMarks": "Identifying Marks",
     "identifyingMarksPlaceholder": "Tattoos, scars, birthmarks, glasses, hearing aids...",
     "identifyingMarksHint": "Anything that would help identify them",
@@ -42,7 +48,7 @@
     "allergies": "Allergies",
     "allergiesPlaceholder": "Drug allergies, food allergies, environmental...",
     "cognitiveStatus": "Cognitive Status",
-    "cognitiveStatusPlaceholder": "Moderate dementia; may be disoriented; responds to first name",
+    "cognitiveStatusPlaceholder": "e.g., Moderate dementia; may be disoriented; responds to first name",
     "cognitiveStatusHint": "Describe how they present and what responders should expect.",
     "dominantHand": "Dominant Hand",
     "dominantHandHint": "People often veer in the direction of their dominant hand when lost",
@@ -79,7 +85,7 @@
     "medicAlertId": "MedicAlert Member ID",
     "medicAlertIdPlaceholder": "Member ID number",
     "medicAlertHotline": "MedicAlert Hotline",
-    "medicAlertHotlinePlaceholder": "1-800-432-5378",
+    "medicAlertHotlinePlaceholder": "e.g., 1-800-432-5378",
     "medicAlertHotlineHint": "The MedicAlert Foundation 24/7 emergency line. First responders call it to access medical records."
   },
   "mobilityOptions": {
@@ -100,6 +106,7 @@
   },
   "cameraUnavailableTitle": "Camera Not Available",
   "errors": {
-    "nameRequired": "Name is required."
+    "nameRequired": "Name is required.",
+    "photoSaveFailed": "Failed to save photo. Please try again."
   }
 }
