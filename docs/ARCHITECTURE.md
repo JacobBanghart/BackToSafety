@@ -4,7 +4,7 @@ Back to Safety is two native UIs on one Rust core:
 
 | Part | Where | What |
 | --- | --- | --- |
-| Rust core | `core/` | Models, the SQLite store (rusqlite, the Room v2 schema), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, EmergencyAway, AppClock. No UI and no platform code: the apps implement its foreign traits (`AlertScheduler`, `AnalyticsSink`). `core/uniffi-bindgen` generates the bindings. Why Rust: `docs/decisions/rust-core.md`. |
+| Rust core | `core/` | Models, the SQLite store (rusqlite, the Room v2 schema), migrations, the emergency protocol, readout text, formatters, i18n, analytics events, EmergencyAway, AppClock. No UI and no platform code: the apps implement its foreign traits (`AlertScheduler`, `AnalyticsSink`, `PhotoCleaner`). `core/uniffi-bindgen` generates the bindings. Why Rust: `docs/decisions/rust-core.md`. |
 | Android app | `android/` | Jetpack Compose UI (the `app` module). Gradle builds the core with cargo-ndk (arm64-v8a, armeabi-v7a, x86_64, x86), generates the Kotlin bindings (`com.backtosafety.core.ffi`) and reaches it through JNA; thin adapters in `app/core` keep the UI call sites (`Translate`, `Store`, `Analytics`, `AppClock`). |
 | iOS app | `ios/` | SwiftUI UI. `mise run ios:core` builds the core into an XCFramework with the Swift bindings; adapters in `Core/`. `project.yml` generates the Xcode project (`xcodegen generate`). |
 | Contracts | `spec/` | What both apps must agree on: design tokens, analytics events, testIDs, the DB schema and seed rows, logic vectors, the feature inventory, screenshot goldens and fidelity marks. |
