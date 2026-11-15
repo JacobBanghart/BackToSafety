@@ -27,4 +27,12 @@ demo notifications -e visible false
 "$ADB" shell settings put secure autofill_service null
 "$ADB" shell settings put secure spell_checker_enabled 0
 
+# The system keyboard, whatever the image was left with. Flows dismiss the keyboard with a
+# back press, so an input method that never shows (a test-helper IME made default on the
+# shared AVD on 2026-11-14) turns that press into "leave the screen" and every flow fails.
+LATIN=com.google.android.inputmethod.latin/com.android.inputmethod.latin.LatinIME
+if "$ADB" shell ime list -s | grep -qx "$LATIN"; then
+  "$ADB" shell ime set "$LATIN" >/dev/null
+fi
+
 echo "device prepared"
