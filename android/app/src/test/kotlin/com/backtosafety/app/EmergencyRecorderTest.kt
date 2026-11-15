@@ -1,12 +1,9 @@
 package com.backtosafety.app
 
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.Store
 import com.backtosafety.app.emergency.EmergencyRecorder
 import com.backtosafety.core.ffi.ActiveEmergency
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -23,25 +20,20 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class EmergencyRecorderTest {
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
     private lateinit var recorder: EmergencyRecorder
     private val startedAt = "2026-10-06T16:00:00Z"
 
     @Before
     fun setUp() {
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         recorder = EmergencyRecorder(store)
     }
 
     @After
     fun tearDown() {
-        db.close()
+        store.closeDatabase()
     }
 
     @Test

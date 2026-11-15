@@ -2,9 +2,9 @@ package com.backtosafety.app
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import com.backtosafety.app.core.Analytics
 import com.backtosafety.app.core.Translations
-import android.net.Uri
 import com.backtosafety.app.ui.dial
 import com.backtosafety.core.ffi.DialTarget
 import org.junit.After

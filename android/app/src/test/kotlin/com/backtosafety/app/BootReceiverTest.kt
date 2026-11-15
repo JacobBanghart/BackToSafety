@@ -7,21 +7,18 @@ import android.app.NotificationManager
 import android.content.Intent
 import android.os.Looper
 import android.os.SystemClock
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.emergency.BootReceiver
 import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.app.emergency.CountdownService
 import com.backtosafety.app.emergency.OngoingCountdown
 import com.backtosafety.app.emergency.resumeAfterRestart
 import com.backtosafety.core.ffi.ActiveEmergency
-import com.backtosafety.app.core.AppClock
 import com.backtosafety.core.ffi.CountdownAlert
-import com.backtosafety.app.core.EmergencyAway
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -57,7 +54,6 @@ class BootReceiverTest {
     private var language = "en"
     private val notificationManager = shadowOf(context.getSystemService(NotificationManager::class.java))
     private val alarms = shadowOf(context.getSystemService(AlarmManager::class.java))
-    private lateinit var db: AppDatabase
     private lateinit var services: AppServices
 
     /** The app clock at 2026-10-06 16:00 UTC. */
@@ -68,12 +64,8 @@ class BootReceiverTest {
         AppClock.testSeamsEnabled = true
         AppClock.freeze(now)
         shadowOf(context).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(context)
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        val store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        val store = Store.inMemory()
         val emergencyT = { translations.translator(language, "emergency") }
         val notifications = CountdownNotifications(context, emergencyT) { "911" }
         services = AppServices(
@@ -85,7 +77,7 @@ class BootReceiverTest {
 
     @After
     fun tearDown() {
-        db.close()
+        services.store.closeDatabase()
     }
 
     /** An emergency started [minutesAgo] minutes ago, left for another screen at minute 2. */

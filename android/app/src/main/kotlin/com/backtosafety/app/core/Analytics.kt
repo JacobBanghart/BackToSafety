@@ -3,6 +3,8 @@ package com.backtosafety.app.core
 import com.backtosafety.core.ffi.AnalyticsEvent
 import com.backtosafety.core.ffi.AnalyticsSink
 import com.backtosafety.core.ffi.PropValue
+import com.backtosafety.core.ffi.analyticsFlush
+import com.backtosafety.core.ffi.analyticsReset
 import com.backtosafety.core.ffi.analyticsScreen
 import com.backtosafety.core.ffi.analyticsScreenEventName
 import com.backtosafety.core.ffi.analyticsSetSink
@@ -17,12 +19,33 @@ object Analytics {
     var sink: ((name: String, properties: Map<String, Any?>) -> Unit)? = null
         set(value) {
             field = value
-            analyticsSetSink(value?.let { forward -> Forwarder(forward) })
+            analyticsSetSink(value?.let { Forwarder })
         }
 
-    private class Forwarder(val forward: (String, Map<String, Any?>) -> Unit) : AnalyticsSink {
-        override fun onEvent(name: String, properties: Map<String, PropValue>) = forward(name, properties.toAnys())
+    /** Sends what the sink has queued now, not at its next batch (PostHog's flush). */
+    var flusher: () -> Unit = {}
+
+    /** Forgets who the sink has been reporting as (PostHog's reset). */
+    var resetter: () -> Unit = {}
+
+    private object Forwarder : AnalyticsSink {
+        override fun onEvent(name: String, properties: Map<String, PropValue>) {
+            sink?.invoke(name, properties.toAnys())
+        }
+
+        override fun flush() = flusher()
+
+        override fun reset() = resetter()
     }
+
+    /** Sends what's queued now. */
+    fun flush() = analyticsFlush()
+
+    /**
+     * Delete Account: later events start from a fresh anonymous identity, not the deleted
+     * device ID. What's queued is sent first; those events already carry the old identity.
+     */
+    fun reset() = analyticsReset()
 
     fun track(event: AnalyticsEvent, properties: Map<String, Any?> = emptyMap()) = analyticsTrack(event, properties.toPropValues())
 

@@ -30,7 +30,11 @@ fn camel(wire: &str) -> String {
 }
 
 fn main() {
-    let spec = Path::new(env!("CARGO_MANIFEST_DIR")).join("../spec/analytics-events.json");
+    // Read at run time, not with env!(): every worktree shares one CARGO_TARGET_DIR, and cargo
+    // reuses this script's binary for the same source, so a path compiled in would point at
+    // whichever worktree built it first (and break once that worktree is gone).
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").unwrap();
+    let spec = Path::new(&manifest_dir).join("../spec/analytics-events.json");
     println!("cargo:rerun-if-changed={}", spec.display());
     println!("cargo:rerun-if-changed=build.rs");
     let json: serde_json::Value =

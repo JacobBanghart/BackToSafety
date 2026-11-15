@@ -4,9 +4,10 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.compose.runtime.saveable.SaverScope
+import com.backtosafety.app.core.PROFILE_TEXT_FIELDS
+import com.backtosafety.app.core.key
 import com.backtosafety.app.profile.ProfileForm
 import com.backtosafety.app.profile.ProfileFormSaver
-import com.backtosafety.core.ffi.PROFILE_TEXT_FIELDS
 import com.backtosafety.core.ffi.ProfileField
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull

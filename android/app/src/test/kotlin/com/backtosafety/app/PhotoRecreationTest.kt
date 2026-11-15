@@ -25,16 +25,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.FileProvider
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.onboarding.PhotoScreen
 import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.core.ffi.ProfileField
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
@@ -77,8 +74,6 @@ class PhotoRecreationTest {
         )
     }
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
 
@@ -130,12 +125,8 @@ class PhotoRecreationTest {
         // FileProvider caches its roots in a static map, and Robolectric gives each test a new
         // data directory: a root cached by an earlier test refuses this test's cache files.
         FileProvider::class.java.getDeclaredField("sCache").apply { isAccessible = true }.let { (it.get(null) as MutableMap<*, *>).clear() }
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(context)
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         runBlocking {
             store.seed()
             store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margaret Smith"))
@@ -145,7 +136,7 @@ class PhotoRecreationTest {
     @After
     fun tearDown() {
         appScope.cancel()
-        db.close()
+        store.closeDatabase()
     }
 
     private fun savedPhoto(): String? = runBlocking { store.profile()?.photoUri }

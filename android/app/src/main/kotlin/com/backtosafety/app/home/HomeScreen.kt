@@ -55,10 +55,12 @@ import androidx.compose.ui.unit.sp
 import com.backtosafety.app.core.Analytics
 import com.backtosafety.app.core.AppClock
 import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.EMERGENCY_STEP_COUNT
 import com.backtosafety.app.core.SEARCH_WINDOW_SECONDS
 import com.backtosafety.app.core.Store
 import com.backtosafety.app.core.Translate
 import com.backtosafety.app.core.invoke
+import com.backtosafety.app.core.startedAtMs
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.rememberPhoto
@@ -68,21 +70,13 @@ import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ffi.ActiveEmergency
 import com.backtosafety.core.ffi.AnalyticsEvent
+import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.Profile
-import com.backtosafety.core.ffi.formatCountdown
-import com.backtosafety.core.ffi.secondsRemaining
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.core.ffi.EMERGENCY_STEP_COUNT
 import com.backtosafety.core.ffi.ReadinessCheck
 import com.backtosafety.core.ffi.ReadinessItem
-import com.backtosafety.app.core.SEARCH_WINDOW_SECONDS
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.ContactEntity
-import com.backtosafety.app.core.invoke
+import com.backtosafety.core.ffi.formatCountdown
 import com.backtosafety.core.ffi.readinessChecklist
+import com.backtosafety.core.ffi.secondsRemaining
 import kotlinx.coroutines.delay
 
 // Starting a search and a search under way are both the deep red of Call 911: an emergency in

@@ -34,10 +34,13 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.compose.ui.unit.width
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.contacts.ContactsScreen
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.home.RunningEmergency
 import com.backtosafety.app.onboarding.WelcomeScreen
@@ -49,14 +52,8 @@ import com.backtosafety.app.ui.DetailRow
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OptionChip
 import com.backtosafety.core.ffi.AlertScheduler
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.app.core.EmergencyAway
-import com.backtosafety.core.ffi.ScheduledAlert
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import com.backtosafety.core.ffi.ContactEntity
-import com.backtosafety.app.core.invoke
+import com.backtosafety.core.ffi.ScheduledAlert
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -155,10 +152,9 @@ class LargeTextLayoutTest {
     fun theAlertCircleBadgeTakesItsOwnRowUnderTheRoleAtTheLargestText() {
         // Squeezed between the name and the call/edit buttons, "IN ALERT CIRCLE" wrapped to two
         // lines of caps at 2x and crowded the buttons.
-        val db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver()).setQueryCoroutineContext(Dispatchers.Unconfined).allowMainThreadQueries().build()
+        Store.dispatcher = Dispatchers.Unconfined
+        val store = Store.inMemory()
         try {
-            val store = Store(db)
             runBlocking {
                 store.seed()
                 store.addContact(ContactEntity(name = "Ana", phone = "(555) 123-4567", role = "primary_caregiver", notifyOnEmergency = true))
@@ -175,7 +171,7 @@ class LargeTextLayoutTest {
             assertEquals("the badge doesn't line up with the name", name.left.value + 28f, badge.left.value, 1f)
             assertTrue("the badge wrapped to more than one line (${badge.height})", badge.height.value < 2 * DesignTokens.Typography.caption.lineHeight * 2f)
         } finally {
-            db.close()
+            store.closeDatabase()
         }
     }
 
@@ -190,10 +186,9 @@ class LargeTextLayoutTest {
     fun endEmergencyCanBeReachedInTheLeaveDialogAtTheLargestTextInSpanishWithNotificationsOff() {
         // The notifications warning and Open Settings make the card taller than the screen at 2x
         // in Spanish: it scrolls, so End Emergency at its foot can still be reached and tapped.
-        val db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver()).setQueryCoroutineContext(Dispatchers.Unconfined).allowMainThreadQueries().build()
+        Store.dispatcher = Dispatchers.Unconfined
+        val store = Store.inMemory()
         try {
-            val store = Store(db)
             runBlocking { store.seed() }
             largeText(2f) {
                 val context = LocalContext.current
@@ -214,7 +209,7 @@ class LargeTextLayoutTest {
             assertTrue("End Emergency is off the screen (${end.bottom} > ${screen.bottom})", end.bottom <= screen.bottom)
             assertTrue("End Emergency is cut to ${end.height}", end.height >= 48.dp)
         } finally {
-            db.close()
+            store.closeDatabase()
         }
     }
 

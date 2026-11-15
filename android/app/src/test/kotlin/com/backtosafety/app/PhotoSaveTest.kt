@@ -22,16 +22,13 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.core.app.ActivityOptionsCompat
 import androidx.core.content.FileProvider
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.onboarding.PhotoScreen
 import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.ui.AppTheme
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageContract
 import com.canhub.cropper.CropImageContractOptions
@@ -76,8 +73,6 @@ class PhotoSaveTest {
         )
     }
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
-
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var left = 0
@@ -129,12 +124,8 @@ class PhotoSaveTest {
         // data directory: a root cached by an earlier test refuses this test's cache files.
         FileProvider::class.java.getDeclaredField("sCache").apply { isAccessible = true }.let { (it.get(null) as MutableMap<*, *>).clear() }
         Analytics.sink = { event, properties -> tracked += event to properties }
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(context)
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         runBlocking { store.seed() }
     }
 
@@ -142,7 +133,7 @@ class PhotoSaveTest {
     fun tearDown() {
         Analytics.sink = { _, _ -> }
         appScope.cancel()
-        db.close()
+        store.closeDatabase()
     }
 
     private fun show(unreadable: Boolean, screen: @Composable () -> Unit) {

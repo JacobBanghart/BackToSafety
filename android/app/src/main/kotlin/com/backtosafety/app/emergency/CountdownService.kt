@@ -19,10 +19,11 @@ import androidx.core.content.ContextCompat
 import com.backtosafety.app.MainActivity
 import com.backtosafety.app.R
 import com.backtosafety.app.core.AppClock
-import com.backtosafety.core.ffi.CountdownAlert
 import com.backtosafety.app.core.Translate
-import com.backtosafety.core.ffi.alertDueAtMs
 import com.backtosafety.app.core.invoke
+import com.backtosafety.app.core.startedAtMs
+import com.backtosafety.core.ffi.CountdownAlert
+import com.backtosafety.core.ffi.alertDueAtMs
 import kotlin.time.Instant
 
 private const val TAG = "BackToSafety"

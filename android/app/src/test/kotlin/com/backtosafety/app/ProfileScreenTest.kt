@@ -13,17 +13,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
-import androidx.room.Room
-import androidx.room.useWriterConnection
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.ui.AppTheme
-import com.backtosafety.app.core.Analytics
 import com.backtosafety.core.ffi.ProfileField
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -65,8 +61,6 @@ class ProfileScreenTest {
 
     private val name = "Margaret Smith"
     private val condition = "Alzheimer's, moderate"
-
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
     private var left = 0
     private var saved = 0
@@ -79,19 +73,15 @@ class ProfileScreenTest {
     @Before
     fun setUp() {
         Analytics.sink = { event, properties -> tracked += event to properties }
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         runBlocking { store.seed() }
     }
 
     @After
     fun tearDown() {
         Analytics.sink = { _, _ -> }
-        db.close()
+        store.closeDatabase()
     }
 
     private fun seedProfile() = runBlocking {
@@ -104,7 +94,7 @@ class ProfileScreenTest {
     private fun fixProfile() = renameProfile("profile_away", "profile")
 
     private fun renameProfile(from: String, to: String) = runBlocking {
-        db.useWriterConnection { it.usePrepared("ALTER TABLE $from RENAME TO $to") { statement -> statement.step() } }
+        store.executeSql("ALTER TABLE $from RENAME TO $to")
     }
 
     private val screen = @Composable {

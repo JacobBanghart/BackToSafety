@@ -20,23 +20,19 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.room.Room
-import androidx.room.useWriterConnection
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.emergency.CountdownService
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.emergency.OngoingCountdown
 import com.backtosafety.core.ffi.ActiveEmergency
 import com.backtosafety.core.ffi.AlertScheduler
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.EmergencyAway
 import com.backtosafety.core.ffi.ScheduledAlert
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -111,7 +107,6 @@ class EmergencyScreenTest {
     private val now = 1_791_302_400_000L
     private val startedAt = Instant.fromEpochMilliseconds(now - 60_000L).toString()
     private val gate = GatedDispatcher()
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
     private lateinit var appScope: CoroutineScope
 
@@ -128,12 +123,8 @@ class EmergencyScreenTest {
         Analytics.sink = { name, properties -> tracked += name to properties }
         AppClock.testSeamsEnabled = true
         AppClock.freeze(now)
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(gate)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = gate
+        store = Store.inMemory()
         appScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
         runBlocking { store.seed() }
     }
@@ -142,7 +133,8 @@ class EmergencyScreenTest {
     fun tearDown() {
         Analytics.sink = { _, _ -> }
         appScope.cancel()
-        db.close()
+        store.closeDatabase()
+        Store.dispatcher = Dispatchers.IO
     }
 
     /** The countdown outside the app, which the screen starts and stops. */
@@ -301,7 +293,8 @@ class EmergencyScreenTest {
         showScreen(ActiveEmergency(startedAt, "", listOf("home_search"), incidentId = id))
         tap("emergency-call-911")
         assertEquals(Intent.ACTION_DIAL, shadowOf(compose.activity).nextStartedActivity.action)
-        assertEquals(listOf(mapOf<String, Any?>("seconds_elapsed" to 60L, "checked_count" to 1)), events("emergency_911_called"))
+        // The core sends every whole number as a Long.
+        assertEquals(listOf(mapOf<String, Any?>("seconds_elapsed" to 60L, "checked_count" to 1L)), events("emergency_911_called"))
         assertEquals(listOf("home_search", "call_911"), read { store.activeEmergency() }!!.checkedSteps)
         assertEquals("911_called", read { store.incidents() }.single().outcome)
         assertTrue(events("dial_failed").isEmpty())
@@ -313,7 +306,7 @@ class EmergencyScreenTest {
         val late = Instant.fromEpochMilliseconds(now - 20 * 60_000L).toString()
         showScreen(ActiveEmergency(late, "", emptyList(), incidentId = runBlocking { store.createIncident(late) }))
         tap("emergency-call-911")
-        assertEquals(listOf(mapOf<String, Any?>("seconds_elapsed" to 1200L, "checked_count" to 0)), events("emergency_911_called"))
+        assertEquals(listOf(mapOf<String, Any?>("seconds_elapsed" to 1200L, "checked_count" to 0L)), events("emergency_911_called"))
     }
 
     @Test
@@ -339,7 +332,7 @@ class EmergencyScreenTest {
     }
 
     private fun renameSettings(from: String, to: String) = runBlocking {
-        db.useWriterConnection { it.usePrepared("ALTER TABLE $from RENAME TO $to") { statement -> statement.step() } }
+        store.executeSql("ALTER TABLE $from RENAME TO $to")
     }
 
     @Test

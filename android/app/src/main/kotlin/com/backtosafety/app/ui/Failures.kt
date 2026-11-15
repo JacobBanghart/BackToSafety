@@ -11,9 +11,9 @@ import com.backtosafety.app.core.invoke
 import com.backtosafety.core.ffi.AnalyticsEvent
 import com.backtosafety.core.ffi.DialTarget
 import com.backtosafety.core.ffi.dialFailedProperties
+import com.backtosafety.core.ffi.dialString
 import com.backtosafety.core.ffi.formatPhoneNumber
 import com.backtosafety.core.ffi.saveFailedProperties
-import com.backtosafety.core.ffi.dialString
 import kotlin.coroutines.cancellation.CancellationException
 
 /**

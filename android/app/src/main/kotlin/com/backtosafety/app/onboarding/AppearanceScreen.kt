@@ -29,13 +29,9 @@ import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
+import com.backtosafety.core.ffi.ProfileField
 import com.backtosafety.core.ffi.formatHeightInput
 import com.backtosafety.core.ffi.formatWeightInput
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.core.ffi.ProfileField
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 /** Port of app/onboarding/appearance.tsx. */

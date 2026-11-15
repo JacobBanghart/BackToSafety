@@ -71,10 +71,12 @@ import com.backtosafety.app.core.Store
 import com.backtosafety.app.core.Translate
 import com.backtosafety.app.core.buildCopyBlock
 import com.backtosafety.app.core.buildScript
+import com.backtosafety.app.core.buildScriptParts
 import com.backtosafety.app.core.describeMobility
 import com.backtosafety.app.core.invoke
 import com.backtosafety.app.core.key
 import com.backtosafety.app.core.missingScriptDetails
+import com.backtosafety.app.core.startedAtMs
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.ScreenHeader
@@ -95,18 +97,6 @@ import com.backtosafety.core.ffi.formatPhoneNumber
 import com.backtosafety.core.ffi.needsVehicleCheck
 import com.backtosafety.core.ffi.stripPhoneFormatting
 import com.backtosafety.core.ffi.vehicleCheckKind
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.app.core.ReadoutInput
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.buildCopyBlock
-import com.backtosafety.app.core.buildScript
-import com.backtosafety.core.ffi.buildScriptParts
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.describeMobility
-import com.backtosafety.app.core.invoke
-import com.backtosafety.app.core.missingScriptDetails
 import kotlinx.coroutines.delay
 
 private val space = DesignTokens.Spacing

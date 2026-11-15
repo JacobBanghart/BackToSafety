@@ -128,6 +128,12 @@ android {
             // The Rust core for this machine, which JNA loads in the JVM.
             it.systemProperty("jna.library.path", "$cargoTargetDir/debug")
             it.dependsOn(buildRustHost)
+            // One JVM per test class. Robolectric loads the UniFFI bindings again in each of its
+            // sandboxes (one per SDK and graphics mode), but the native library, loaded once per
+            // JVM, keeps the callback table of the last one: a sink or scheduler set from another
+            // sandbox then fails with "UniffiHandleMap: Invalid handle".
+            it.forkEvery = 1
+            it.maxParallelForks = 3
             val record = project.hasProperty("record")
             it.systemProperty("roborazzi.test.record", record.toString())
             it.systemProperty("roborazzi.test.verify", (!record).toString())

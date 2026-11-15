@@ -8,12 +8,12 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.FormTextInput
 import com.backtosafety.app.ui.LocalBackLabel
 import com.backtosafety.app.ui.ScreenHeader
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.invoke
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

@@ -8,20 +8,17 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.unit.Density
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.buildInitialSteps
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.core.ffi.AlertScheduler
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.EmergencyAway
 import com.backtosafety.core.ffi.ProfileField
 import com.backtosafety.core.ffi.ScheduledAlert
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.buildInitialSteps
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -61,20 +58,14 @@ class EmergencyLayoutTest {
             },
         )
     }
-
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
 
     @Before
     fun setUp() {
         AppClock.testSeamsEnabled = true
         AppClock.freeze(1_791_302_400_000L)
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         runBlocking {
             store.seed()
             store.updateProfile(mapOf(ProfileField.FULL_NAME to "Margaret Smith", ProfileField.DOMINANT_HAND to "left"))
@@ -83,7 +74,7 @@ class EmergencyLayoutTest {
 
     @After
     fun tearDown() {
-        db.close()
+        store.closeDatabase()
     }
 
     @Test

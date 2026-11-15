@@ -22,6 +22,12 @@ class EmergencyAway(store: Store, scheduler: AlertScheduler) {
     /** The emergency screen is showing at [nowMs]; returns the alert to catch up on, if one came due. */
     suspend fun shown(nowMs: Long): CountdownAlert? = io { core.shown(nowMs) }
 
+    /**
+     * The phone restarted with an emergency under way: schedules what's still to come and
+     * returns the alert that came due while it was off, if one did.
+     */
+    suspend fun restarted(nowMs: Long): CountdownAlert? = io { core.restarted(nowMs) }
+
     /** The emergency ended: nothing more to deliver. */
     suspend fun ended() = io { core.ended() }
 

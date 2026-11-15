@@ -6,9 +6,9 @@ import android.content.Intent
 import android.util.Log
 import com.backtosafety.app.AppServices
 import com.backtosafety.app.BackToSafetyApp
+import com.backtosafety.app.core.AppClock
 import com.backtosafety.app.savedLanguage
 import com.backtosafety.app.ui.runCatchingCancellable
-import com.backtosafety.app.core.AppClock
 
 /**
  * After the phone restarts (once it's unlocked), picks up an emergency that was under way:

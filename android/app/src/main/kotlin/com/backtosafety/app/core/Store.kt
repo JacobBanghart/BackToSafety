@@ -4,8 +4,10 @@ import com.backtosafety.core.ffi.ActiveEmergency
 import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.DestinationEntity
 import com.backtosafety.core.ffi.IncidentEntity
+import com.backtosafety.core.ffi.PhotoCleaner
 import com.backtosafety.core.ffi.Profile
 import com.backtosafety.core.ffi.ProfileEntity
+import com.backtosafety.core.ffi.ProfileField
 import com.backtosafety.core.ffi.seedAndReportMigration
 import com.backtosafety.core.ffi.settingKeys
 import kotlinx.coroutines.CoroutineDispatcher
@@ -34,8 +36,28 @@ class Store(internal val core: CoreStore) {
         core.saveProfileEntity(change(core.profileEntity() ?: ProfileEntity(name = "")))
     }
 
-    /** A partial profile save by field name (the Profile property names): given fields are set (null clears), the rest kept. */
-    suspend fun updateProfile(values: Map<String, String?>) = io { core.updateProfile(values) }
+    /** A partial profile save: given fields are set (null clears), the rest kept; in one transaction. */
+    suspend fun updateProfile(values: Map<ProfileField, String?>) = io { core.updateProfile(values) }
+
+    /**
+     * Removes the photo files other than the one kept ([PhotoFiles.clean]): the core calls it
+     * after a save that changed the photo, and after Delete Account (keeping none).
+     */
+    var photoCleaner: ((keeping: String?) -> Unit)? = null
+        set(value) {
+            field = value
+            core.setPhotoCleaner(value?.let(::Cleaner))
+        }
+
+    private class Cleaner(val remove: (String?) -> Unit) : PhotoCleaner {
+        override fun clean(keeping: String?) = remove(keeping)
+    }
+
+    /** Test seam: every later call fails, as on a database that won't open. */
+    fun closeDatabase() = core.closeDatabase()
+
+    /** Test seam: raw SQL, to break one table (and mend it) under a screen. */
+    fun executeSql(sql: String) = core.executeSql(sql)
 
     suspend fun addContact(contact: ContactEntity, sortOrder: Int? = null): Long = io { core.addContact(contact, sortOrder) }
 

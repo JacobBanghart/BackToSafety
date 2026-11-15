@@ -14,8 +14,6 @@ import com.backtosafety.app.emergency.CountdownAlertReceiver
 import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.core.ffi.CountdownAlert
 import com.backtosafety.core.ffi.ScheduledAlert
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.Translations
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

@@ -1,7 +1,7 @@
 package com.backtosafety.app.emergency
 
-import com.backtosafety.core.ffi.ActiveEmergency
 import com.backtosafety.app.core.Store
+import com.backtosafety.core.ffi.ActiveEmergency
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock

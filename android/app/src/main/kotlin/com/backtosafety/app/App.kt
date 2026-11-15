@@ -70,9 +70,6 @@ import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.ffi.AnalyticsEvent
 import com.posthog.PostHog
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 import android.graphics.Color as AndroidColor
 

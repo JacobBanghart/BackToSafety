@@ -93,13 +93,8 @@ import com.backtosafety.core.ffi.AnalyticsEvent
 import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.DialTarget
 import com.backtosafety.core.ffi.formatPhoneInput
-import com.backtosafety.core.ffi.normalizeSmsRecipient
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Store
-import com.backtosafety.app.core.invoke
 import com.backtosafety.core.ffi.isUsablePhone
+import com.backtosafety.core.ffi.normalizeSmsRecipient
 import kotlinx.coroutines.launch
 
 private val space = DesignTokens.Spacing

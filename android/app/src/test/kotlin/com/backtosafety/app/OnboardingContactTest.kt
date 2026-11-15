@@ -4,14 +4,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.room.Room
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.onboarding.ContactScreen
 import com.backtosafety.app.ui.AppTheme
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -38,19 +35,13 @@ class OnboardingContactTest {
             },
         )
     }
-
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
     private var continued = 0
 
     @Before
     fun setUp() {
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         runBlocking { store.seed() }
         compose.setContent {
             AppTheme(dark = false) {
@@ -61,7 +52,7 @@ class OnboardingContactTest {
 
     @After
     fun tearDown() {
-        db.close()
+        store.closeDatabase()
     }
 
     private fun type(tag: String, text: String) = compose.onNodeWithTag(tag).performTextInput(text)

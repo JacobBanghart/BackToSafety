@@ -7,11 +7,11 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.Translations
 import com.backtosafety.app.emergency.CountdownNotifications
 import com.backtosafety.app.emergency.CountdownService
 import com.backtosafety.app.emergency.OngoingCountdown
-import com.backtosafety.app.core.AppClock
-import com.backtosafety.app.core.Translations
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull

@@ -20,23 +20,19 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.unit.dp
-import androidx.room.Room
-import androidx.room.useWriterConnection
-import androidx.sqlite.driver.AndroidSQLiteDriver
 import androidx.test.core.app.ApplicationProvider
 import com.backtosafety.app.contacts.ContactsScreen
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.invoke
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.home.HomeScreen
 import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.ui.AppTheme
-import com.backtosafety.core.ffi.ProfileField
-import com.backtosafety.app.core.Translate
-import com.backtosafety.app.core.Translations
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.AppDatabase
 import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.DestinationEntity
-import com.backtosafety.app.core.invoke
+import com.backtosafety.core.ffi.ProfileField
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -68,18 +64,12 @@ class IconButtonLabelsTest {
         )
     }
     private fun t(namespace: String): Translate = translations.translator("es", namespace)
-
-    private lateinit var db: AppDatabase
     private lateinit var store: Store
 
     @Before
     fun setUp() {
-        db = Room.inMemoryDatabaseBuilder<AppDatabase>(ApplicationProvider.getApplicationContext())
-            .setDriver(AndroidSQLiteDriver())
-            .setQueryCoroutineContext(Dispatchers.Unconfined)
-            .allowMainThreadQueries()
-            .build()
-        store = Store(db)
+        Store.dispatcher = Dispatchers.Unconfined
+        store = Store.inMemory()
         runBlocking {
             store.seed()
             store.addContact(ContactEntity(name = "Ana", phone = "(555) 123-4567", role = "primary_caregiver"))
@@ -89,7 +79,7 @@ class IconButtonLabelsTest {
 
     @After
     fun tearDown() {
-        db.close()
+        store.closeDatabase()
     }
 
     private val isButton = SemanticsMatcher("role is Button") { SemanticsProperties.Role in it.config && it.config[SemanticsProperties.Role] == Role.Button }
@@ -145,7 +135,7 @@ class IconButtonLabelsTest {
 
     /** Renames [table] away, so every read of it fails as a broken database would. */
     private fun breakTable(table: String) = runBlocking {
-        db.useWriterConnection { it.usePrepared("ALTER TABLE $table RENAME TO ${table}_away") { statement -> statement.step() } }
+        store.executeSql("ALTER TABLE $table RENAME TO ${table}_away")
     }
 
     @Test

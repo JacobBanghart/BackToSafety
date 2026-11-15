@@ -100,7 +100,8 @@ class BackToSafetyApp : Application() {
      * the core-startup thread.
      */
     private fun open(): AppServices {
-        AppClock.testSeamsEnabled = BuildConfig.TEST_SEAMS
+        // Only ever turned on, never off: a test that turned the seams on must not race this thread.
+        if (BuildConfig.TEST_SEAMS) AppClock.testSeamsEnabled = true
         // Where the RN app's expo-sqlite kept nijii.db, and the KMP app after it (spec/storage.md).
         val store = Store.open(File(filesDir, "SQLite/nijii.db").absolutePath)
         store.photoCleaner = { keeping -> PhotoFiles.clean(filesDir, cacheDir, keeping) }

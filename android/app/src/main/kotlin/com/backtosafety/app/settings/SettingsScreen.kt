@@ -47,6 +47,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.BuildConfig
 import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DATABASE_VERSION
 import com.backtosafety.app.core.DesignTokens
 import com.backtosafety.app.core.Store
 import com.backtosafety.app.core.Translate
@@ -66,13 +67,7 @@ import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ffi.AnalyticsEvent
-import com.backtosafety.app.core.Analytics
-import com.backtosafety.app.core.DesignTokens
-import com.backtosafety.app.core.Translate
 import com.backtosafety.core.ffi.abbreviateId
-import com.backtosafety.app.core.Store
-import com.backtosafety.core.ffi.DATABASE_VERSION
-import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 private const val TAPS_TO_UNLOCK = 7
