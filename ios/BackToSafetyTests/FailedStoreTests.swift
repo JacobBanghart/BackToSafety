@@ -2,14 +2,14 @@
 import SQLite3
 import XCTest
 
-/// A database the core can't open (not a database, or from a newer app) must not turn into a
-/// store that accepts saves and forgets them: every call throws the open error, so the screens
-/// show their save-failed errors, as the KMP app's Room did when it failed on every query.
+/// A database the core can't use (not a database, or from a newer app) must not turn into a
+/// store that accepts saves and forgets them. Opening goes through (so the app starts, as on
+/// Android) and every call throws, so the screens show their save-failed errors, as the KMP
+/// app's Room did when it failed on every query.
 final class FailedStoreTests: XCTestCase {
     private func tempPath() -> String { NSTemporaryDirectory() + "failed-store-\(UUID().uuidString).db" }
 
     private func assertEverySaveThrows(_ store: AppStore, file: StaticString = #filePath, line: UInt = #line) async {
-        XCTAssertNotNil(store.openError, file: file, line: line)
         do {
             try await store.updateProfile(values: [.fullName: "Margaret"])
             XCTFail("updateProfile succeeded on a store that failed to open", file: file, line: line)
@@ -50,8 +50,11 @@ final class FailedStoreTests: XCTestCase {
         XCTAssertEqual(sqlite3_exec(db, "CREATE TABLE t (x INTEGER); PRAGMA user_version = 999;", nil, nil, nil), SQLITE_OK)
         sqlite3_close(db)
         let store = AppStore.open(path: path)
-        guard case .NewerDatabase = store.openError as? StoreFailure else {
-            return XCTFail("expected NewerDatabase, got \(String(describing: store.openError))")
+        do {
+            _ = try await store.profile()
+            XCTFail("a database from a newer app was read")
+        } catch {
+            guard case .NewerDatabase = error as? StoreFailure else { return XCTFail("expected NewerDatabase, got \(error)") }
         }
         await assertEverySaveThrows(store)
     }
