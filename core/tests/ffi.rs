@@ -258,7 +258,7 @@ fn the_readout_takes_a_date_and_a_translator() {
         "en".to_string(),
         HashMap::from([(
             "readout".to_string(),
-            r#"{"script":{"opening":"Hi.","name":"Name {{name}}.","age":"Age {{age}}.","lastSeenUnknown":"?","locationUnknown":"??","silverAlert":"S"}}"#.to_string(),
+            r#"{"script":{"opening":"Hi.","name":"Name {{name}}.","age":"Age {{age}}.","lastSeenTime":"Seen {{time}}.","timeToday":"{{time}} today","lastSeenUnknown":"Seen {{blank}}.","blankTime":"when","locationUnknown":"At {{blank}}.","blankLocation":"where","silverAlert":"S"}}"#.to_string(),
         )]),
     )]));
     let t = tr.ffi_translator("en".into(), "readout".into());
@@ -274,6 +274,36 @@ fn the_readout_takes_a_date_and_a_translator() {
             month: 10,
             day: 1,
         },
+        last_seen_clock: None,
+        last_seen_date: None,
     };
-    assert_eq!(build_script(input, t), "Hi. Name Ana. Age 36. ? ?? S");
+    assert_eq!(
+        build_script(input.clone(), t.clone()),
+        "Hi. Name Ana. Age 36. Seen [when]. At [where]. S"
+    );
+    let part = |text: &str, blank: bool| nijii_core::readout::ScriptPart {
+        text: text.into(),
+        blank,
+    };
+    assert_eq!(
+        build_script_parts(input.clone(), t.clone()),
+        vec![
+            part("Hi. Name Ana. Age 36. Seen ", false),
+            part("when", true),
+            part(". At ", false),
+            part("where", true),
+            part(". S", false),
+        ]
+    );
+    // The search started today: said as the clock time and "today".
+    let started = ReadoutInput {
+        last_seen_time: Some("10/1/2026, 9:00:00 AM".into()),
+        last_seen_clock: Some("9:00 AM".into()),
+        last_seen_date: Some(input.today),
+        ..input
+    };
+    assert_eq!(
+        build_script(started, t),
+        "Hi. Name Ana. Age 36. Seen 9:00 AM today. At [where]. S"
+    );
 }

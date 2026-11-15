@@ -1,10 +1,15 @@
 //! Runs every JSON file in spec/vectors against the Rust core: the twin of kmp/shared's
-//! VectorsTest. Every case must have a blessed `expected`.
+//! VectorsTest. Every case must have a blessed `expected`. Blessing: a new case may omit it, and
+//! `VECTORS_BLESS=1 cargo test --test vectors` writes the code's output into those cases only
+//! (existing expectations are never rewritten). Read what it wrote before committing it: a
+//! blessed value is the contract from then on.
 
 use chrono::{DateTime, NaiveDate, SecondsFormat, Utc};
 use nijii_core::alerts::*;
 use nijii_core::emergency::*;
+use nijii_core::profile::ProfileField;
 use nijii_core::readout::*;
+use nijii_core::store::ProfileEntity;
 use nijii_core::{Profile, Translations, Translator, age, formatters as f, mobility, phone, photo};
 use serde_json::{Map, Value, json};
 use std::path::{Path, PathBuf};
@@ -59,8 +64,24 @@ fn iso(ms: i64) -> Value {
 fn alert(key: &str) -> CountdownAlert {
     CountdownAlert::from_key(key).unwrap()
 }
+/// The vector's profile: its keys are the [`ProfileField`] keys.
 fn profile(v: &Value) -> Profile {
-    serde_json::from_value(v.clone()).unwrap()
+    let o = v.as_object().unwrap();
+    assert!(
+        o.keys().all(|k| ProfileField::from_key(k).is_some()),
+        "unknown profile key in {v}"
+    );
+    ProfileField::ALL
+        .into_iter()
+        .fold(ProfileEntity::new(""), |e, field| {
+            e.with(
+                field,
+                o.get(field.as_key())
+                    .and_then(Value::as_str)
+                    .map(str::to_string),
+            )
+        })
+        .to_profile()
 }
 fn readout_input(v: &Value) -> ReadoutInput {
     ReadoutInput {
@@ -70,7 +91,16 @@ fn readout_input(v: &Value) -> ReadoutInput {
             .and_then(Value::as_str)
             .map(str::to_string),
         today: date(v["today"].as_str().unwrap()),
+        last_seen_clock: v
+            .get("lastSeenClock")
+            .and_then(Value::as_str)
+            .map(str::to_string),
+        last_seen_date: v.get("lastSeenDate").and_then(Value::as_str).map(date),
     }
+}
+
+fn sms_result(key: &str) -> SmsResult {
+    SmsResult::ALL.into_iter().find(|r| r.key() == key).unwrap()
 }
 
 fn run(fun: &str, a: &[Value], tr: &Arc<Translations>) -> Option<Value> {
@@ -87,6 +117,8 @@ fn run(fun: &str, a: &[Value], tr: &Arc<Translations>) -> Option<Value> {
         "formatPhoneNumber" => json!(phone::format_phone_number(s(a, 0))),
         "formatPhoneInput" => json!(phone::format_phone_input(s(a, 0))),
         "stripPhoneFormatting" => json!(phone::strip_phone_formatting(s(a, 0))),
+        "isUsablePhone" => json!(phone::is_usable_phone(s(a, 0))),
+        "dialString" => json!(phone::dial_string(s(a, 0))),
         "normalizeSmsRecipient" => json!(phone::normalize_sms_recipient(s(a, 0))),
         "normalizeUniqueSmsRecipients" => {
             let phones: Vec<String> = serde_json::from_value(a[0].clone()).unwrap();
@@ -97,6 +129,19 @@ fn run(fun: &str, a: &[Value], tr: &Arc<Translations>) -> Option<Value> {
         "needsVehicleCheck" => json!(needs_vehicle_check(a[0].as_str())),
         "vehicleCheckKind" => json!(vehicle_check_kind(s(a, 0)).key()),
         "buildScript" => json!(build_script(&readout_input(&a[1]), &rt())),
+        "buildScriptParts" => Value::Array(
+            build_script_parts(&readout_input(&a[1]), &rt())
+                .into_iter()
+                .map(|part| {
+                    let mut o = Map::new();
+                    o.insert("text".into(), json!(part.text));
+                    if part.blank {
+                        o.insert("blank".into(), json!(true));
+                    }
+                    Value::Object(o)
+                })
+                .collect(),
+        ),
         "buildCopyBlock" => json!(build_copy_block(&readout_input(&a[1]), &rt())),
         "missingScriptDetails" => json!(missing_script_details(&readout_input(&a[1]), &rt())),
         "buildInitialSteps" => Value::Array(
@@ -164,6 +209,12 @@ fn run(fun: &str, a: &[Value], tr: &Arc<Translations>) -> Option<Value> {
             ms(s(a, 1)),
             int(a, 2) as usize,
         )),
+        "emergency911CalledProperties" => Value::Object(emergency_911_called_properties(
+            ms(s(a, 0)),
+            ms(s(a, 1)),
+            int(a, 2) as usize,
+        )),
+        "contactsAlerted" => json!(contacts_alerted(sms_result(s(a, 0)))),
         "readinessProperties" => {
             let p = a[0].is_object().then(|| profile(&a[0]));
             Value::Object(readiness_properties(
@@ -173,13 +224,10 @@ fn run(fun: &str, a: &[Value], tr: &Arc<Translations>) -> Option<Value> {
                 int(a, 3) as usize,
             ))
         }
-        "smsResultProperties" => {
-            let r = SmsResult::ALL
-                .into_iter()
-                .find(|r| r.key() == s(a, 0))
-                .unwrap();
-            Value::Object(sms_result_properties(r, int(a, 1) as usize))
-        }
+        "smsResultProperties" => Value::Object(sms_result_properties(
+            sms_result(s(a, 0)),
+            int(a, 1) as usize,
+        )),
         "saveFailedProperties" => {
             Value::Object(save_failed_properties(s(a, 0), s(a, 1), a[2].as_str()))
         }
@@ -222,6 +270,30 @@ fn same(a: &Value, b: &Value) -> bool {
     }
 }
 
+/// Fills in `expected` from the code wherever a case has none (VECTORS_BLESS=1), and saves the
+/// file in its own layout (two-space indent, UTF-8 as is, key order kept). Returns how many.
+fn bless(file: &Path, tr: &Arc<Translations>) -> usize {
+    let mut doc: Value = serde_json::from_str(&std::fs::read_to_string(file).unwrap()).unwrap();
+    let mut added = 0;
+    for (fun, list) in doc["functions"].as_object_mut().unwrap() {
+        for case in list.as_array_mut().unwrap() {
+            let case = case.as_object_mut().unwrap();
+            if case.contains_key("expected") {
+                continue;
+            }
+            let args = case["args"].as_array().unwrap().clone();
+            if let Some(actual) = run(fun, &args, tr) {
+                case.insert("expected".into(), actual);
+                added += 1;
+            }
+        }
+    }
+    if added > 0 {
+        std::fs::write(file, serde_json::to_string_pretty(&doc).unwrap() + "\n").unwrap();
+    }
+    added
+}
+
 #[test]
 fn every_vector_matches() {
     let tr = translations();
@@ -233,6 +305,17 @@ fn every_vector_matches() {
         .map(|e| e.path())
         .collect();
     files.sort();
+    if std::env::var("VECTORS_BLESS").as_deref() == Ok("1") {
+        for file in files
+            .iter()
+            .filter(|p| p.extension().is_some_and(|e| e == "json"))
+        {
+            let added = bless(file, &tr);
+            if added > 0 {
+                println!("blessed {added} case(s) in {}", file.display());
+            }
+        }
+    }
     for file in files
         .iter()
         .filter(|p| p.extension().is_some_and(|e| e == "json"))
@@ -244,7 +327,9 @@ fn every_vector_matches() {
                 cases += 1;
                 let args = case["args"].as_array().unwrap();
                 let Some(expected) = case.get("expected") else {
-                    failures.push(format!("{name} {fun}[{i}]: no expected value"));
+                    failures.push(format!(
+                        "{name} {fun}[{i}]: no expected value (VECTORS_BLESS=1 writes the code's, to review)"
+                    ));
                     continue;
                 };
                 let actual = std::panic::catch_unwind(|| run(fun, args, &tr));

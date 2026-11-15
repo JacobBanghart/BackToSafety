@@ -27,7 +27,7 @@ use crate::photo;
 use crate::profile::Profile;
 use crate::profile::{PROFILE_TEXT_FIELDS, ProfileField};
 use crate::readiness::{self, ReadinessCheck};
-use crate::readout::{self, VehicleCheckKind};
+use crate::readout::{self, ScriptPart, VehicleCheckKind};
 use crate::startup::{self, AppReady};
 use crate::store::{
     self, ContactEntity, DestinationEntity, IncidentEntity, OnboardingStepEntity, ProfileEntity,
@@ -510,14 +510,21 @@ pub fn describe_mobility(stored: String, t: Arc<Translator>) -> String {
     mobility::describe_mobility(&stored, &t)
 }
 
-/// What the info sheet is built from; `last_seen_time` arrives already formatted.
+/// What the info sheet is built from. `last_seen_time` is when the search started (the
+/// emergency's start), formatted for display; `last_seen_clock` the same start's clock time as
+/// the locale says it, without seconds ("9:00 AM"), and `last_seen_date` its day where the device
+/// is (`app_clock_date_of`), so the spoken script can say "9:00 AM today".
 #[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct ReadoutInput {
     pub profile: Profile,
     #[uniffi(default = None)]
     pub last_seen_time: Option<String>,
-    /// For the age line; screens pass the current date.
+    /// For the age line; screens pass the current date (`app_clock_today`).
     pub today: Date,
+    #[uniffi(default = None)]
+    pub last_seen_clock: Option<String>,
+    #[uniffi(default = None)]
+    pub last_seen_date: Option<Date>,
 }
 
 impl ReadoutInput {
@@ -530,6 +537,8 @@ impl ReadoutInput {
                 .today
                 .to_naive()
                 .unwrap_or(NaiveDate::from_ymd_opt(1970, 1, 1).expect("valid")),
+            last_seen_clock: self.last_seen_clock.clone(),
+            last_seen_date: self.last_seen_date.and_then(Date::to_naive),
         }
     }
 }
@@ -568,6 +577,13 @@ pub fn build_copy_block(input: ReadoutInput, t: Arc<Translator>) -> String {
 #[uniffi::export]
 pub fn build_script(input: ReadoutInput, t: Arc<Translator>) -> String {
     readout::build_script(&input.to_core(), &t)
+}
+
+/// The 911 script in pieces: words to read out, and blanks the caller fills in aloud (shown as
+/// highlighted gaps). `build_script` is the same text with each blank in square brackets.
+#[uniffi::export]
+pub fn build_script_parts(input: ReadoutInput, t: Arc<Translator>) -> Vec<ScriptPart> {
+    readout::build_script_parts(&input.to_core(), &t)
 }
 
 #[uniffi::export]
