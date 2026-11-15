@@ -13,6 +13,12 @@ appId: com.backtosafety.app
 
 - tapOn:
     id: home-start-emergency
+# An expired emergency is caught up with "Time to Call 911" when its screen opens after the app
+# counted as restarted: Android 15+ sends BOOT_COMPLETED to an app leaving the stopped state
+# (the force-stop before this launch), and BootReceiver notes the time away from the start.
+- tapOn:
+    id: emergency-modal-catchup-ok
+    optional: true
 - assertVisible:
     id: emergency-progress
     text: 2/11 steps complete
