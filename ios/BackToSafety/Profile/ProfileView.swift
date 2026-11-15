@@ -5,7 +5,7 @@ import UIKit
 private let white = Color(argb: Light.textOnPrimary)
 
 private struct ProfileForm: Equatable {
-    var text: [ProfileField: String] = Dictionary(uniqueKeysWithValues: ProfileFieldKt.PROFILE_TEXT_FIELDS.map { ($0, "") })
+    var text: [ProfileField: String] = Dictionary(uniqueKeysWithValues: PROFILE_TEXT_FIELDS.map { ($0, "") })
     var dominantHand = "unknown"
     var mobility: [String] = []
     var mobilityOther = ""
@@ -22,7 +22,7 @@ private struct ProfileForm: Equatable {
     }
 
     /// What would be saved (RN compares the form plus resolved mobility).
-    var snapshot: [String] { ProfileFieldKt.PROFILE_TEXT_FIELDS.map { self[$0] } + [dominantHand, resolvedMobility] }
+    var snapshot: [String] { PROFILE_TEXT_FIELDS.map { self[$0] } + [dominantHand, resolvedMobility] }
 }
 
 /// A mobility option's testID suffix: "Uses cane" -> "uses-cane".
@@ -96,7 +96,7 @@ struct ProfileView: View {
         let known = tokens.filter { options.contains($0) }
         let custom = tokens.filter { !options.contains($0) }
         var loaded = ProfileForm()
-        for field in ProfileFieldKt.PROFILE_TEXT_FIELDS { loaded[field] = p?.get(field: field) ?? "" }
+        for field in PROFILE_TEXT_FIELDS { loaded[field] = p?.get(field: field) ?? "" }
         if let hand = p?.dominantHand, !hand.isEmpty { loaded.dominantHand = hand }
         loaded.mobility = custom.isEmpty ? known : known + ["Other"]
         loaded.mobilityOther = custom.joined(separator: ", ")
@@ -117,12 +117,12 @@ struct ProfileView: View {
                 let s = x[field].trimmingCharacters(in: .whitespacesAndNewlines)
                 return s.isEmpty ? nil : s
             }
-            // A nil must stay in the map (as NSNull, which Kotlin reads as null) so the field clears.
-            var values: [ProfileField: Any] = [:]
-            for field in ProfileFieldKt.PROFILE_TEXT_FIELDS where field != .photoUri { values[field] = v(field) as Any }
-            values[.photoUri] = (x[.photoUri].isEmpty ? nil : x[.photoUri]) as Any
-            values[.dominantHand] = x.dominantHand
-            values[.mobilityLevel] = (x.resolvedMobility.isEmpty ? nil : x.resolvedMobility) as Any
+            // A nil must stay in the map so the field clears.
+            var values: [ProfileField: String?] = [:]
+            for field in PROFILE_TEXT_FIELDS where field != .photoUri { values[field] = .some(v(field)) }
+            values[.photoUri] = .some(x[.photoUri].isEmpty ? nil : x[.photoUri])
+            values[.dominantHand] = .some(x.dominantHand)
+            values[.mobilityLevel] = .some(x.resolvedMobility.isEmpty ? nil : x.resolvedMobility)
             do {
                 try await model.store.updateProfile(values: values)
                 Analytics.shared.track(event: .profileSaved, properties: [
@@ -388,9 +388,9 @@ struct ProfileView: View {
     }
 
     private func field(_ field: ProfileField) -> some View {
-        group(t("fields.\(field.key)"), field.hasHint ? t("fields.\(field.key)Hint") : nil) {
-            input(binding(field), "profile-field-\(field.key)", t("fields.\(field.key)Placeholder"), multiline: field.multiline,
-                  keyboard: field.keyboard.ui, capitalization: field.capitalizeWords ? .words : .sentences,
+        group(t("fields.\(field.key())"), field.hasHint() ? t("fields.\(field.key())Hint") : nil) {
+            input(binding(field), "profile-field-\(field.key())", t("fields.\(field.key())Placeholder"), multiline: field.multiline(),
+                  keyboard: field.keyboard().ui, capitalization: field.capitalizeWords() ? .words : .sentences,
                   format: { field.formatInput(value: $0) })
         }
     }

@@ -79,7 +79,7 @@ struct EmergencyView: View {
                     case .cancelled: .cancelled
                     default: .failed
                     }
-                    EmergencyAlertsKt.trackSmsResult(result: outcome, recipients: Int32(draft.recipients.count))
+                    trackSmsResult(result: outcome, recipients: Int32(draft.recipients.count))
                 }
                 .ignoresSafeArea()
             }
@@ -263,7 +263,7 @@ struct EmergencyView: View {
         // device that can't call shows the number instead) is what records it, not the tap.
         dial(emergencyNumber, target: .emergency, screen: "emergency", tCommon: tCommon) {
             let started = state.flatMap { parseISO($0.startedAt) }?.epochMs ?? AppClock.shared.nowMs()
-            Analytics.shared.track(event: .emergency911Called, properties: EmergencyAlertsKt.emergency911CalledProperties(
+            Analytics.shared.track(event: .emergency911Called, properties: emergency911CalledProperties(
                 startedAtMs: started, nowMs: AppClock.shared.nowMs(), checkedCount: Int32(checked.count)
             ))
             // Calling always marks the step done; a second call must not un-check it (F-17).

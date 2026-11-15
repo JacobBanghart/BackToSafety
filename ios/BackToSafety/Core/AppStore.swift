@@ -3,10 +3,18 @@ import os
 
 /// Where the RN app's expo-sqlite kept nijii.db on iOS, and where the KMP app kept it:
 /// <Documents>/SQLite/ (spec/storage.md). The core opens the same file, so an update keeps data.
+/// The directory is kept out of iCloud and computer backups, as Android's backup rules leave the
+/// database out ("Your information never leaves this device"). Done on every call, so a
+/// directory the RN app already had backed up is excluded too; on a directory it covers what's
+/// created inside later (the database's -wal and -shm).
 func databasePath() -> String {
     let documents = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first!
     let dir = documents + "/SQLite"
     try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+    var url = URL(fileURLWithPath: dir, isDirectory: true)
+    var values = URLResourceValues()
+    values.isExcludedFromBackup = true
+    try? url.setResourceValues(values)
     return dir + "/nijii.db"
 }
 
@@ -100,5 +108,24 @@ final class AppStore: Sendable {
     func setting(key: String) async throws -> String? { try await onQueue { try $0.setting(key: key) } }
     func updateContact(contact: ContactEntity) async throws { try await onQueue { try $0.updateContact(contact: contact) } }
     func updateDestination(destination: DestinationEntity) async throws { try await onQueue { try $0.updateDestination(destination: destination) } }
-    func updateProfile(values: [String: String?]) async throws { try await onQueue { try $0.updateProfile(values: values) } }
+    /// A partial profile save: given fields are set (nil clears), the rest kept; in one transaction.
+    func updateProfile(values: [ProfileField: String?]) async throws { try await onQueue { try $0.updateProfile(values: values) } }
+
+    /// Removes the photo files other than the one kept: the core calls it after a save that
+    /// changed the photo, and after Delete Account (keeping none).
+    func setPhotoCleaner(_ clean: @escaping @Sendable (String?) -> Void) {
+        try? core.get().setPhotoCleaner(cleaner: ClosureCleaner(clean))
+    }
+
+    /// Test seam: every later call fails, as on a database that won't open.
+    func closeDatabase() { try? core.get().closeDatabase() }
+
+    /// Test seam: raw SQL, to break one table (and mend it) under a screen.
+    func executeSql(_ sql: String) async throws { try await onQueue { try $0.executeSql(sql: sql) } }
+}
+
+private final class ClosureCleaner: PhotoCleaner {
+    private let body: @Sendable (String?) -> Void
+    init(_ body: @escaping @Sendable (String?) -> Void) { self.body = body }
+    func clean(keeping: String?) throws { body(keeping) }
 }

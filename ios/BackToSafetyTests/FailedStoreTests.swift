@@ -11,7 +11,7 @@ final class FailedStoreTests: XCTestCase {
     private func assertEverySaveThrows(_ store: AppStore, file: StaticString = #filePath, line: UInt = #line) async {
         XCTAssertNotNil(store.openError, file: file, line: line)
         do {
-            try await store.updateProfile(values: ["name": "Margaret"])
+            try await store.updateProfile(values: [.fullName: "Margaret"])
             XCTFail("updateProfile succeeded on a store that failed to open", file: file, line: line)
         } catch {}
         do {
@@ -60,7 +60,7 @@ final class FailedStoreTests: XCTestCase {
         let store = AppStore.open(path: tempPath())
         XCTAssertNil(store.openError)
         try await store.seed()
-        try await store.updateProfile(values: ["name": "Margaret"])
+        try await store.updateProfile(values: [.fullName: "Margaret"])
         let profile = try await store.profile()
         XCTAssertEqual(profile?.name, "Margaret")
     }

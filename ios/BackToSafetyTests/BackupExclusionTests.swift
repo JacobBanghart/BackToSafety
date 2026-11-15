@@ -1,5 +1,4 @@
 @testable import BackToSafety
-import Shared
 import XCTest
 
 /// The database and the profile photos stay out of iCloud and computer backups, as Android's
@@ -29,7 +28,7 @@ final class BackupExclusionTests: XCTestCase {
         try setExcluded(false, directory)
         XCTAssertEqual(isExcluded(directory), false)
 
-        let path = DatabaseBuilder_iosKt.databasePath()
+        let path = databasePath()
 
         XCTAssertEqual(path, directory.appendingPathComponent("nijii.db").path)
         XCTAssertEqual(isExcluded(directory), true)

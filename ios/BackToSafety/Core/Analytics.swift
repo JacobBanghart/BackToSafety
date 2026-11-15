@@ -14,7 +14,20 @@ final class Analytics: @unchecked Sendable {
         }
     }
 
+    /// Sends what the sink has queued now, not at its next batch (PostHog's flush).
+    var flusher: () -> Void = {}
+
+    /// Forgets who the sink has been reporting as (PostHog's reset).
+    var resetter: () -> Void = {}
+
     let SCREEN = analyticsScreenEventName()
+
+    /// Sends what's queued now: a failure that a crash may follow can't wait for the batch.
+    func flush() { analyticsFlush() }
+
+    /// Delete Account: later events start from a fresh anonymous identity, not the deleted
+    /// device ID. What's queued is sent first; those events already carry the old identity.
+    func reset() { analyticsReset() }
 
     func track(event: AnalyticsEvent, properties: [String: Any] = [:]) {
         analyticsTrack(event: event, properties: propValues(properties))
@@ -32,4 +45,8 @@ private final class ClosureSink: AnalyticsSink {
     func onEvent(name: String, properties: [String: PropValue]) {
         body(name, anyProperties(properties))
     }
+
+    func flush() { Analytics.shared.flusher() }
+
+    func reset() { Analytics.shared.resetter() }
 }

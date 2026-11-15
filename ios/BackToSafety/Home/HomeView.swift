@@ -46,7 +46,7 @@ struct HomeView: View {
                 .padding(.bottom, Space.lg)
                 if hasProfile, let profile { infoCard(profile) }
                 if profileRead, let contacts, let placeCount {
-                    readinessCard(ReadinessKt.readinessChecklist(
+                    readinessCard(readinessChecklist(
                         profile: profile, contacts: Int32(contacts.count),
                         inAlertCircle: Int32(contacts.filter(\.notifyOnEmergency).count), places: Int32(placeCount)
                     ))
@@ -81,7 +81,7 @@ struct HomeView: View {
 
     /// Re-derived from the start time every tick; counting ticks drifts in the background (F-16).
     private func updateCountdown() {
-        guard let started = emergency?.startedAtMs?.int64Value else { return }
+        guard let started = emergency?.startedAtMs else { return }
         secondsLeft = secondsRemaining(startedAtMs: started, nowMs: AppClock.shared.nowMs())
     }
 
@@ -144,7 +144,7 @@ struct HomeView: View {
             (t("emergencyButton.timerExpiredTitle", ["emergencyNumber": emergencyNumber]), t("emergencyButton.timerExpiredSubtitle"))
         } else {
             (t("emergencyButton.activeTitle"), t("emergencyButton.remaining", [
-                "time": formatCountdown(seconds: secondsLeft), "checked": emergency?.checkedSteps.count ?? 0, "total": EmergencyKt.EMERGENCY_STEP_COUNT,
+                "time": formatCountdown(seconds: secondsLeft), "checked": emergency?.checkedSteps.count ?? 0, "total": EMERGENCY_STEP_COUNT,
             ]))
         }
         let running = emergency != nil && !expired
@@ -209,7 +209,7 @@ struct HomeView: View {
                     // Title size, so "left" reads as part of the countdown rather than a footnote to it.
                     RNText(t("emergencyButton.timeLeft"), Typography.title.spec, color: white).padding(.bottom, Space.xxs)
                 }
-                RNText(t("emergencyButton.stepsDone", ["checked": checked, "total": EmergencyKt.EMERGENCY_STEP_COUNT]),
+                RNText(t("emergencyButton.stepsDone", ["checked": checked, "total": EMERGENCY_STEP_COUNT]),
                        Typography.body.spec.weight(500), color: white)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -299,7 +299,7 @@ struct HomeView: View {
             .padding(.horizontal, Space.lg).padding(.vertical, Space.sm)
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
-            ForEach(checks, id: \.item.key) { check in
+            ForEach(checks, id: \.item) { check in
                 let label = t("readiness.items.\(check.labelKey)")
                 let state = t("readiness.\(check.actionKey)")
                 Button { openReadiness(check.item) } label: {

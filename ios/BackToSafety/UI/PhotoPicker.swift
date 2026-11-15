@@ -1,5 +1,4 @@
 import ImageIO
-import Shared
 import SwiftUI
 import UIKit
 
@@ -130,7 +129,7 @@ private let photoCache = NSCache<NSString, UIImage>()
 func loadPhoto(_ uri: String?, maxPixel: Int = 600) -> UIImage? {
     guard let uri, let url = URL(string: uri) else { return nil }
     return downsampledImage(atPath: url.path, maxPixel: maxPixel)
-        ?? PhotoPathKt.photoFileName(uri: uri).flatMap {
+        ?? photoFileName(uri: uri).flatMap {
             downsampledImage(atPath: documentsDirectory.appendingPathComponent($0).path, maxPixel: maxPixel)
         }
 }
@@ -176,7 +175,7 @@ func excludePhotosFromBackup() {
 /// `keeping` (none, if nil). Delete Account passes nil. Best effort.
 func cleanPhotos(keeping: String?) {
     photoCache.removeAllObjects()
-    let keep = keeping.flatMap { PhotoPathKt.photoFileName(uri: $0) }
+    let keep = keeping.flatMap { photoFileName(uri: $0) }
     let names = (try? FileManager.default.contentsOfDirectory(atPath: documentsDirectory.path)) ?? []
     for name in names where name.hasPrefix(photoFilePrefix) && name != keep {
         try? FileManager.default.removeItem(at: documentsDirectory.appendingPathComponent(name))

@@ -13,6 +13,15 @@ final class AppClock: @unchecked Sendable {
 
     func nowMs() -> Int64 { appClockNowMs() }
 
+    /// Today in the device's time zone, by this clock.
+    func today() -> CalendarDate { dateOf(epochMs: nowMs()) }
+
+    /// The day `epochMs` falls on in the device's time zone (the core has no zone database).
+    func dateOf(epochMs: Int64) -> CalendarDate {
+        let offset = TimeZone.current.secondsFromGMT(for: Date(timeIntervalSince1970: Double(epochMs) / 1000))
+        return appClockDateOf(epochMs: epochMs, utcOffsetSeconds: Int32(offset))
+    }
+
     /// Moves the clock forward (or back), frozen or not. Ignored without test seams.
     func advance(ms: Int64) { appClockAdvance(ms: ms) }
 

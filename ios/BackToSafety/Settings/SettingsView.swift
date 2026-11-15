@@ -72,10 +72,10 @@ struct SettingsView: View {
                             .accessibilityAddTraits(.isHeader)
                         DetailRow(label: t("sections.about.platform"), value: t("sections.about.platformIos"))
                         DetailRow(label: t("sections.about.theme"), value: t(colors.isDark ? "themeOptions.dark" : "themeOptions.light"))
-                        if devMode { DetailRow(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
+                        if devMode { DetailRow(label: t("sections.about.dbSchema"), value: String(DATABASE_VERSION)) }
                         // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
                         // text, and support needs it pasted, not read out. The copy is the full ID.
-                        DetailRow(label: t("sections.about.deviceId"), value: deviceId.map { FormattersKt.abbreviateId(id: $0, head: 8, tail: 4) } ?? "—",
+                        DetailRow(label: t("sections.about.deviceId"), value: deviceId.map { abbreviateId(id: $0, head: 8, tail: 4) } ?? "—",
                                   testID: "settings-device-id",
                                   action: (icon: "doc.on.clipboard.fill", label: t("sections.about.copyDeviceId"))) {
                             guard let deviceId else { return }

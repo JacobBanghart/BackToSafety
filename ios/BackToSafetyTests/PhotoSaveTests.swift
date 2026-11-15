@@ -1,5 +1,4 @@
 @testable import BackToSafety
-import Shared
 import UIKit
 import XCTest
 

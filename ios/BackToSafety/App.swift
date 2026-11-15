@@ -26,7 +26,7 @@ final class AppModel: ObservableObject {
 
     init(store: AppStore = AppStore.open()) {
         self.store = store
-        store.photoCleaner = { cleanPhotos(keeping: $0) }
+        store.setPhotoCleaner { cleanPhotos(keeping: $0) }
         excludePhotosFromBackup()
     }
 
@@ -40,9 +40,9 @@ final class AppModel: ObservableObject {
         try? await store.seedAndReportMigration()
         // The device is the analytics identity (as on Android).
         if let deviceId = try? await store.deviceId() { identifyAnalytics(deviceId) }
-        themePreference = (try? await store.setting(key: Store.companion.THEME_PREFERENCE)) ?? "system"
+        themePreference = (try? await store.setting(key: settingKey.themePreference)) ?? "system"
         // Spanish only in debug builds until it ships.
-        let saved = try? await store.setting(key: Store.companion.LANGUAGE_PREFERENCE)
+        let saved = try? await store.setting(key: settingKey.languagePreference)
         language = saved == "es" && (isDebug || shippedLanguages.contains("es")) ? "es" : "en"
         onboarded = (try? await store.isOnboarded()) ?? false
     }
@@ -76,12 +76,12 @@ final class AppModel: ObservableObject {
 
     func setLanguage(_ value: String) {
         language = value
-        Task { try? await store.putSetting(key: Store.companion.LANGUAGE_PREFERENCE, value: value) }
+        Task { try? await store.putSetting(key: settingKey.languagePreference, value: value) }
     }
 
     func setTheme(_ value: String) {
         themePreference = value
-        Task { try? await store.putSetting(key: Store.companion.THEME_PREFERENCE, value: value) }
+        Task { try? await store.putSetting(key: settingKey.themePreference, value: value) }
     }
 
     /// The RN app's locale JSON, bundled as locales/<locale>/<namespace>.json.

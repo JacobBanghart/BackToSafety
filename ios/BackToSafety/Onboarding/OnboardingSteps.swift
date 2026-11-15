@@ -275,7 +275,7 @@ struct ContactStepView: View {
             PrimaryButton(label: t("contact.continue"), testID: "onboarding-contact-continue", dimmed: missing) {
                 if saving { return }
                 if missing { error = t("contact.required"); return }
-                if !PhoneKt.isUsablePhone(phone: phone) { error = t("contact.phoneInvalid"); return }
+                if !isUsablePhone(phone: phone) { error = t("contact.phoneInvalid"); return }
                 saving = true
                 Task {
                     defer { saving = false }
@@ -289,9 +289,9 @@ struct ContactStepView: View {
                         // Back from the next screen and Continue again edits this contact
                         // rather than adding a second one.
                         if savedId != nil {
-                            try await model.store.updateContact(c: contact)
+                            try await model.store.updateContact(contact: contact)
                         } else {
-                            savedId = try await model.store.addContact(contact: contact, sortOrder: nil).int64Value
+                            savedId = try await model.store.addContact(contact: contact, sortOrder: nil)
                         }
                         try await model.store.completeStep(step: "emergency_contact")
                         trackStep(true, "emergency_contact")

@@ -10,7 +10,7 @@ import UIKit
 func dial(_ number: String, target: DialTarget, screen: String, tCommon: Translate, onOpened: @escaping @MainActor () -> Void = {}) {
     var components = URLComponents()
     components.scheme = "tel"
-    components.path = PhoneKt.dialString(phone: number)
+    components.path = dialString(phone: number)
     guard let url = components.url else { return }
     UIApplication.shared.open(url) { opened in
         Task { @MainActor in
@@ -36,7 +36,8 @@ func errorType(_ error: Error) -> String {
     switch error as? StoreFailure {
     case .Sqlite: "SqliteError"
     case .Io: "IoError"
-    case .UnknownProfileField: "UnknownProfileField"
+    case .UnrecognizedDatabase: "UnrecognizedDatabase"
+    case .Closed: "Closed"
     case .NewerDatabase: "NewerDatabase"
     case nil: String(describing: type(of: error))
     }
