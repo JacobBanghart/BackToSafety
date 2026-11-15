@@ -1,4 +1,4 @@
-//! Phone display formatting, as-you-type formatting and SMS recipient normalization.
+//! Phone display formatting, as-you-type formatting, dialing and SMS recipient normalization.
 //! Held to spec/vectors/phone.json.
 
 use crate::formatters::digits;
@@ -8,7 +8,7 @@ fn is_space(c: char) -> bool {
 }
 
 /// The extension at the end of `phone`: where it starts (including the space before it) and its
-/// digits. The pattern `(?i)[ \t\n\r]*(?:ext\.?|x|#)[ \t\n\r]*([0-9]+)[ \t\n\r]*$`, by hand: the
+/// digits. The pattern `(?i)[ \t\n\r]*(?:extension|ext\.?|x|#)[ \t\n\r]*([0-9]+)[ \t\n\r]*$`, by hand: the
 /// regex crate cost 500 KB of the library. Leftmost match, so the longest keyword wins.
 #[doc(hidden)]
 pub fn find_extension(phone: &str) -> Option<(usize, &str)> {
@@ -22,7 +22,9 @@ pub fn find_extension(phone: &str) -> Option<(usize, &str)> {
     }
     let before_digits = phone[..digits_start].trim_end_matches(is_space);
     let lower = before_digits.to_ascii_lowercase();
-    let keyword_len = if lower.ends_with("ext.") {
+    let keyword_len = if lower.ends_with("extension") {
+        9
+    } else if lower.ends_with("ext.") {
         4
     } else if lower.ends_with("ext") {
         3
@@ -38,12 +40,18 @@ pub fn find_extension(phone: &str) -> Option<(usize, &str)> {
     ))
 }
 
+/// `phone` split into the number and its trailing extension ("ext. 9", "x9", "#9"), if it has one.
+fn split_extension(phone: &str) -> (&str, Option<&str>) {
+    match find_extension(phone) {
+        Some((start, ext)) if start > 0 => (&phone[..start], Some(ext)),
+        _ => (phone, None),
+    }
+}
+
 pub fn format_phone_number(phone: &str) -> String {
     // Keep an extension readable instead of folding it into the number (F-4).
-    if let Some((start, ext)) = find_extension(phone) {
-        if start > 0 {
-            return format!("{} ext. {}", format_phone_number(&phone[..start]), ext);
-        }
+    if let (number, Some(ext)) = split_extension(phone) {
+        return format!("{} ext. {}", format_phone_number(number), ext);
     }
     let d = digits(phone);
     // Non-US international numbers have their own grouping; show them as entered (F-1).
@@ -106,8 +114,52 @@ pub fn strip_phone_formatting(phone: &str) -> String {
     digits(phone)
 }
 
+/// What to hand the system dialer for a stored `phone`: its digits, a leading `+`, and `*` / `#`
+/// only where the number starts with one (a service code such as `*67`; anywhere else they're
+/// noise). An extension ("ext. 12", "extension 12", "x12", "#12") becomes a `,` pause then its
+/// digits, so `555-123-4567 #12` dials `5551234567,12`. Both the Android dialer and iOS's honor
+/// `,` (a two-second pause) in a `tel:` number and tone out the digits after it once the call
+/// connects; `;` (wait for the user to confirm) isn't uniformly supported, and a raw `#` would
+/// start the URI's fragment. Callers still have to percent-encode the result into the `tel:` URI
+/// (`Uri.fromParts` on Android, URLComponents on iOS), since it can hold `#`, `*` and `+`.
+/// Returns "" for a number with no digits.
+pub fn dial_string(phone: &str) -> String {
+    let (number, extension) = split_extension(phone);
+    let trimmed = number.trim();
+    let service_code = trimmed.starts_with('*') || trimmed.starts_with('#');
+    let dialable: String = trimmed
+        .chars()
+        .enumerate()
+        .filter(|&(i, c)| {
+            c.is_ascii_digit() || (c == '+' && i == 0) || (service_code && (c == '*' || c == '#'))
+        })
+        .map(|(_, c)| c)
+        .collect();
+    if !dialable.chars().any(|c| c.is_ascii_digit()) {
+        return String::new();
+    }
+    match extension {
+        Some(ext) => format!("{dialable},{ext}"),
+        None => dialable,
+    }
+}
+
+/// Whether `phone` can be saved as a contact's number: its number (an extension doesn't count)
+/// has at least three digits. A "+", a few punctuation marks or a lone digit would be saved and
+/// then dropped from the emergency text, and nothing could dial it. Three is the shortest real
+/// number, an emergency or service code such as 911 or 112, so the rule stays out of the way of
+/// numbers from anywhere; the as-you-type format already does the rest of the shaping.
+pub fn is_usable_phone(phone: &str) -> bool {
+    normalize_sms_recipient(phone)
+        .chars()
+        .filter(char::is_ascii_digit)
+        .count()
+        >= 3
+}
+
 pub fn normalize_sms_recipient(phone: &str) -> String {
-    let trimmed = phone.trim();
+    // A text goes to the number, not the extension (which would otherwise fold into it).
+    let trimmed = split_extension(phone).0.trim();
     let d = digits(trimmed);
     if d.is_empty() {
         return String::new();

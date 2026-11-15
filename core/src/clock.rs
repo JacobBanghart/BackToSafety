@@ -5,6 +5,7 @@
 //! nothing.
 
 use crate::emergency::parse_instant_ms;
+use chrono::{DateTime, NaiveDate};
 use std::sync::Mutex;
 
 struct State {
@@ -34,6 +35,25 @@ impl AppClock {
         let s = state();
         s.frozen_at_ms
             .unwrap_or_else(|| chrono::Utc::now().timestamp_millis() + s.offset_ms)
+    }
+
+    /// Today's date where the device is, `utc_offset_seconds` from UTC at this moment, in the
+    /// Gregorian calendar whatever calendar the user's region prefers. Both apps take "today"
+    /// from here rather than from the platform's calendar (whose year, month and day can be
+    /// Buddhist, Hebrew, Persian and so on), and it follows the debug clock too. The platform
+    /// supplies the offset (its time zone's, at [`AppClock::now_ms`]): the core has no time zone
+    /// database.
+    pub fn today(utc_offset_seconds: i32) -> NaiveDate {
+        Self::date_of(Self::now_ms(), utc_offset_seconds)
+    }
+
+    /// The Gregorian date of `epoch_ms` where the device is, `utc_offset_seconds` from UTC at
+    /// that moment, as [`AppClock::today`] reckons it.
+    pub fn date_of(epoch_ms: i64, utc_offset_seconds: i32) -> NaiveDate {
+        let local_ms = epoch_ms + i64::from(utc_offset_seconds) * 1000;
+        DateTime::from_timestamp_millis(local_ms)
+            .map(|d| d.date_naive())
+            .unwrap_or_default()
     }
 
     /// Moves the clock forward (or back), frozen or not. Ignored without test seams.
@@ -128,6 +148,18 @@ mod tests {
         AppClock::set_test_seams(true);
         AppClock::handle_link("backtosafety://debug/clock?at=2026-10-06T09:00:00-07:00");
         assert_eq!(AppClock::now_ms(), 1_791_302_400_000);
+        // Today is the device's date on the app's clock (AppClockTest), and follows it.
+        let pacific = -7 * 3600;
+        assert_eq!(
+            AppClock::today(pacific),
+            NaiveDate::from_ymd_opt(2026, 10, 6).unwrap()
+        );
+        AppClock::advance(24 * 3_600_000);
+        assert_eq!(
+            AppClock::today(pacific),
+            NaiveDate::from_ymd_opt(2026, 10, 7).unwrap()
+        );
+        AppClock::advance(-24 * 3_600_000);
         AppClock::handle_link("backtosafety://debug/clock?advance=90.5");
         assert_eq!(AppClock::now_ms(), 1_791_302_490_500);
         AppClock::handle_link("backtosafety://debug/clock?at=2026-10-06T16%3A00%3A00%2B00%3A00");
@@ -148,5 +180,22 @@ mod tests {
         assert!((3_600_000..3_605_000).contains(&shifted), "{shifted}");
         AppClock::unfreeze_for_tests();
         AppClock::set_test_seams(false);
+    }
+
+    #[test]
+    fn dates_are_gregorian_where_the_device_is() {
+        // 2026-10-11T12:00Z: noon in UTC, the evening before in UTC-14, the next day in UTC+14.
+        let noon_utc = 1_791_720_000_000;
+        let date = |y, m, d| NaiveDate::from_ymd_opt(y, m, d).unwrap();
+        assert_eq!(AppClock::date_of(noon_utc, 0), date(2026, 10, 11));
+        assert_eq!(
+            AppClock::date_of(noon_utc, -14 * 3600 + 1),
+            date(2026, 10, 10)
+        );
+        assert_eq!(AppClock::date_of(noon_utc, 12 * 3600), date(2026, 10, 12));
+        assert_eq!(
+            AppClock::date_of(noon_utc + 24 * 3_600_000, 0),
+            date(2026, 10, 12)
+        );
     }
 }

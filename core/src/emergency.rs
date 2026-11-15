@@ -32,6 +32,9 @@ pub const STEP_IDS: [&str; 11] = [
     "coordinate",
     "document",
 ];
+/// How many steps the checklist has.
+pub const EMERGENCY_STEP_COUNT: usize = STEP_IDS.len();
+
 const URGENT_STEPS: [&str; 2] = ["high_risk", "call_911"];
 
 pub fn build_initial_steps(t: &Translator, emergency_number: &str) -> Vec<ChecklistStep> {
@@ -151,6 +154,8 @@ pub struct ActiveEmergency {
 }
 
 impl ActiveEmergency {
+    /// `started_at` as epoch ms; None if it isn't an ISO-8601 time ([`parse_active_emergency`]
+    /// never returns such a record).
     pub fn started_at_ms(&self) -> Option<i64> {
         parse_instant_ms(&self.started_at)
     }

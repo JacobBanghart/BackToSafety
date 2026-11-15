@@ -65,3 +65,16 @@ pub fn format_dob_input(value: &str) -> String {
         _ => format!("{}/{}/{}", &d[..2], &d[2..4], &d[4..]),
     }
 }
+
+/// A long identifier shortened for display, its start and end kept ("3f2a9c1b…41ef"): a whole
+/// UUID wrapped mid-string at large text. Whatever is copied or sent is still the full value.
+/// `head` and `tail` count characters (8 and 4 in both apps).
+pub fn abbreviate_id(id: &str, head: usize, tail: usize) -> String {
+    let chars: Vec<char> = id.chars().collect();
+    if chars.len() <= head + tail + 1 {
+        return id.to_string();
+    }
+    let start: String = chars[..head].iter().collect();
+    let end: String = chars[chars.len() - tail..].iter().collect();
+    format!("{start}…{end}")
+}

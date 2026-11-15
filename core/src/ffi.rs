@@ -196,6 +196,22 @@ pub fn app_clock_now_ms() -> i64 {
 }
 
 /// Turns the debug clock seam on; builds without test seams leave it off.
+/// Today's date where the device is, in the Gregorian calendar whatever the region's calendar,
+/// on the app's clock. `utc_offset_seconds` is the device time zone's offset from UTC now
+/// (Android `TimeZone.getDefault().getOffset(nowMs) / 1000`, iOS
+/// `TimeZone.current.secondsFromGMT(for:)`); the core has no time zone database.
+#[uniffi::export]
+pub fn app_clock_today(utc_offset_seconds: i32) -> Date {
+    AppClock::today(utc_offset_seconds).into()
+}
+
+/// The Gregorian date of `epoch_ms` where the device is, as `app_clock_today` reckons it;
+/// `utc_offset_seconds` is the time zone's offset at `epoch_ms`.
+#[uniffi::export]
+pub fn app_clock_date_of(epoch_ms: i64, utc_offset_seconds: i32) -> Date {
+    AppClock::date_of(epoch_ms, utc_offset_seconds).into()
+}
+
 #[uniffi::export]
 pub fn app_clock_set_test_seams(enabled: bool) {
     AppClock::set_test_seams(enabled);
@@ -331,6 +347,13 @@ pub fn format_dob_input(value: String) -> String {
     formatters::format_dob_input(&value)
 }
 
+/// A long identifier shortened for display, its first `head` and last `tail` characters kept
+/// ("3f2a9c1b…41ef"). Whatever is copied or sent is still the full value.
+#[uniffi::export(default(head = 8, tail = 4))]
+pub fn abbreviate_id(id: String, head: i32, tail: i32) -> String {
+    formatters::abbreviate_id(&id, head.max(0) as usize, tail.max(0) as usize)
+}
+
 #[uniffi::export]
 pub fn format_phone_number(phone: String) -> String {
     phone::format_phone_number(&phone)
@@ -344,6 +367,20 @@ pub fn format_phone_input(value: String) -> String {
 #[uniffi::export]
 pub fn strip_phone_formatting(phone: String) -> String {
     phone::strip_phone_formatting(&phone)
+}
+
+/// What to hand the system dialer for a stored number: digits, a leading `+`, a service code's
+/// `*`/`#`, and an extension after a `,` pause. "" when it has no digits. Percent-encode it into
+/// the `tel:` URI.
+#[uniffi::export]
+pub fn dial_string(phone: String) -> String {
+    phone::dial_string(&phone)
+}
+
+/// Whether a contact's number can be saved: at least three digits, the extension aside.
+#[uniffi::export]
+pub fn is_usable_phone(phone: String) -> bool {
+    phone::is_usable_phone(&phone)
 }
 
 #[uniffi::export]
@@ -467,6 +504,12 @@ pub fn search_window_seconds() -> i32 {
 #[uniffi::export]
 pub fn warning_at_seconds() -> i32 {
     emergency::WARNING_AT_SECONDS as i32
+}
+
+/// How many steps the checklist has.
+#[uniffi::export]
+pub fn emergency_step_count() -> i32 {
+    emergency::EMERGENCY_STEP_COUNT as i32
 }
 
 /// `t` is bound to the `emergency` namespace.
