@@ -48,12 +48,12 @@ import org.robolectric.annotation.Config
 import java.io.File
 
 /**
- * A photo survives the app being recreated mid-flow: the system can reclaim the app while the
+ * A photo survives the app being recreated mid-flow. The system can reclaim the app while the
  * cropper has the screen, and the cropped photo then arrives before Profile has reloaded its
- * form; it can reclaim the app while the camera has the screen, and the shot still goes on to
- * the crop screen, so the picker must remember where the camera writes across process death;
- * onboarding keeps a picked photo when its screen is recreated (process death, or a font-size
- * change; rotation doesn't recreate MainActivity). Found reproducing issue #3.
+ * form. It can also reclaim the app while the camera has the screen, so the picker must
+ * remember across process death where the camera writes, or the shot never reaches the crop
+ * screen. Onboarding keeps a picked photo when its screen is recreated (process death, or a
+ * font-size change; rotation doesn't recreate MainActivity). Found reproducing issue #3.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w411dp-h914dp-xxhdpi")
@@ -74,11 +74,10 @@ class PhotoRecreationTest {
     private lateinit var store: Store
 
     /**
-     * Stands in for the activity's registry. The library answers at once; the camera and the
-     * cropper answer at once too unless [holdCamera] or [holdCrop], in which case their request
-     * is kept, as when the app is reclaimed while the camera or the crop screen is open. What
-     * the camera and the cropper were launched with is recorded, so a test can check which
-     * file went where.
+     * Stands in for the activity's registry. The library, the camera and the cropper answer at
+     * once. With [holdCamera] or [holdCrop], that request is kept unanswered instead, as when the
+     * app is reclaimed while the camera or the crop screen is open. What the camera and the
+     * cropper were launched with is recorded, so a test can check which file went where.
      */
     private inner class Registry(private val holdCamera: Boolean = false, private val holdCrop: Boolean = false) : ActivityResultRegistry() {
         var cameraRequest: Int? = null
@@ -213,7 +212,10 @@ class PhotoRecreationTest {
         assertEquals("file", source.scheme)
         assertEquals(File(context.cacheDir, shot), File(source.path!!))
 
-        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-save").fetchSemanticsNodes().isNotEmpty() }
+        // Save does nothing until the form has loaded, and the header's Save button is drawn
+        // before it, so wait for a control that only the loaded form has. The photo then shows.
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo-take").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("profile-save").performClick()
         compose.waitUntil(5_000) { savedPhoto() != null }
         assertIsSavedPhoto(savedPhoto())
