@@ -7,6 +7,11 @@
   "webCameraUnavailable": "Tomar una foto solo está disponible en la app móvil. En la web, usa \"Elegir foto\".",
   "photoLibraryPermission": "Necesitamos acceso a tu galería para actualizar la foto.",
   "cameraPermission": "Necesitamos acceso a la cámara para tomar una foto.",
+  "loadFailed": {
+    "title": "No se pudo cargar el perfil",
+    "message": "No se pudo leer el perfil guardado, así que no se cambió nada. Inténtalo de nuevo.",
+    "retry": "Reintentar"
+  },
   "unsavedChanges": {
     "title": "Cambios sin guardar",
     "message": "Tienes cambios sin guardar. Si sales ahora, se perderán.",

@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -53,6 +54,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.ui.ButtonRowOrStack
 import com.backtosafety.app.ui.HeaderSaveButton
@@ -65,6 +67,7 @@ import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
+import com.backtosafety.app.ui.rnTextStyle
 import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
@@ -120,8 +123,19 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     // screen is recreated, before the store has been read.
     var pendingPhoto by rememberSaveable { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(Unit) {
-        val p = store.profile()
+    // Reading the saved profile failed (not: there is none), so no form was built.
+    var loadFailed by remember { mutableStateOf(false) }
+    var loadAttempt by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(loadAttempt) {
+        loadFailed = false
+        // A failed read is not an empty profile: Save would write the empty form over the stored
+        // one (name, medical details, photo). Say so and offer to try again instead.
+        val p = runCatchingCancellable { store.profile() }.getOrElse { e ->
+            reportSaveFailed("profile", "load", e)
+            loadFailed = true
+            return@LaunchedEffect
+        }
         val tokens = p?.mobilityLevel.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }
         val known = tokens.filter { it in MOBILITY_OPTIONS }
         val custom = tokens.filter { it !in MOBILITY_OPTIONS }
@@ -203,7 +217,11 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
         ScreenHeader(t("screenTitle"), "profile", ::back) {
-            HeaderSaveButton(t(if (saving) "saving" else "save"), "profile-save", !saving, ::save)
+            HeaderSaveButton(t(if (saving) "saving" else "save"), "profile-save", !saving && f != null, ::save)
+        }
+        if (loadFailed) {
+            LoadFailed(t) { loadAttempt++ }
+            return@Column
         }
         if (f == null) return@Column
         // Reads the form at call time, never `f`: fields keep the callback from the composition
@@ -316,6 +334,26 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             }
             Box(Modifier.height(40.udp))
         }
+    }
+}
+
+/** Reading the saved profile failed: said so, with Retry, under the header's Back. */
+@Composable
+private fun ColumnScope.LoadFailed(t: Translate, onRetry: () -> Unit) {
+    val colors = LocalAppColors.current
+    Column(
+        Modifier.weight(1f).fillMaxWidth().padding(space.xl.udp).testTag("profile-load-failed"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(space.md.udp, Alignment.CenterVertically),
+    ) {
+        Text(t("loadFailed.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
+        Text(t("loadFailed.message"), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
+        Box(
+            Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("profile-load-retry")
+                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.primary)
+                .clickable(role = Role.Button, onClick = onRetry).padding(vertical = space.md.udp, horizontal = space.lg.udp),
+            contentAlignment = Alignment.Center,
+        ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = colors.textOnPrimary) }
     }
 }
 

@@ -52,15 +52,17 @@ struct ProfileView: View {
     @State private var picker: PickerSource?
     @State private var datePicking = false
     @State private var pendingDob = Date()
+    /// Reading the saved profile failed (not: there is none), so no form was built.
+    @State private var loadFailed = false
 
     private var unsaved: Bool { form != nil && form?.snapshot != initial?.snapshot }
 
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: t("screenTitle"), testID: "profile", onBack: back) {
-                HeaderSaveButton(label: t(saving ? "saving" : "save"), testID: "profile-save", enabled: !saving, action: save)
+                HeaderSaveButton(label: t(saving ? "saving" : "save"), testID: "profile-save", enabled: !saving && form != nil, action: save)
             }
-            if form != nil { content } else { Spacer() }
+            if loadFailed { loadFailedView } else if form != nil { content } else { Spacer() }
         }
         .background(colors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -75,14 +77,24 @@ struct ProfileView: View {
     }
 
     private func load() async {
-        let p = try? await model.store.profile()
+        loadFailed = false
+        // A failed read is not an empty profile: Save would write the empty form over the stored
+        // one (name, medical details, photo). Say so and offer to try again instead.
+        let p: Profile?
+        do {
+            p = try await model.store.profile()
+        } catch {
+            reportSaveFailed(screen: "profile", action: "load", error: error)
+            loadFailed = true
+            return
+        }
         let options = MobilityKt.MOBILITY_OPTIONS
         let tokens = (p?.mobilityLevel ?? "").split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         let known = tokens.filter { options.contains($0) }
         let custom = tokens.filter { !options.contains($0) }
         var loaded = ProfileForm()
         for field in ProfileFieldKt.PROFILE_TEXT_FIELDS { loaded[field] = p?.get(field: field) ?? "" }
-        loaded.dominantHand = (p?.dominantHand ?? "").isEmpty ? "unknown" : p!.dominantHand!
+        if let hand = p?.dominantHand, !hand.isEmpty { loaded.dominantHand = hand }
         loaded.mobility = custom.isEmpty ? known : known + ["Other"]
         loaded.mobilityOther = custom.joined(separator: ", ")
         form = loaded
@@ -244,6 +256,27 @@ struct ProfileView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .scrollStopsAtSafeArea()
+    }
+
+    /// Reading the saved profile failed: said so, with Retry, under the header's Back.
+    private var loadFailedView: some View {
+        VStack(spacing: Space.md) {
+            RNText(t("loadFailed.title"), Typography.title.spec, color: colors.text, align: .center)
+            RNText(t("loadFailed.message"), TextSpec(size: 16, lineHeight: 22), color: colors.textSecondary, align: .center)
+            Button { Task { await load() } } label: {
+                RNText(t("loadFailed.retry"), Typography.bodyBold.spec, color: colors.textOnPrimary)
+                    .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
+                    .padding(.vertical, Space.md).padding(.horizontal, Space.lg)
+                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.pressable)
+            .accessibilityIdentifier("profile-load-retry")
+        }
+        .padding(Space.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .contain)
+        .accessibilityIdentifier("profile-load-failed")
     }
 
     private func photoSection(_ photoUri: String) -> some View {
