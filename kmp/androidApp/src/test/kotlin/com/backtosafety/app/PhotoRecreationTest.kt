@@ -32,6 +32,7 @@ import com.backtosafety.core.data.Store
 import com.backtosafety.core.db.AppDatabase
 import com.canhub.cropper.CropImage
 import com.canhub.cropper.CropImageContract
+import com.canhub.cropper.CropImageContractOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -47,9 +48,11 @@ import org.robolectric.annotation.Config
 import java.io.File
 
 /**
- * A photo survives the app being recreated mid-flow: the system can reclaim the app while the
+ * A photo survives the app being recreated mid-flow. The system can reclaim the app while the
  * cropper has the screen, and the cropped photo then arrives before Profile has reloaded its
- * form; onboarding keeps a picked photo when its screen is recreated (process death, or a
+ * form. It can also reclaim the app while the camera has the screen, so the picker must
+ * remember across process death where the camera writes, or the shot never reaches the crop
+ * screen. Onboarding keeps a picked photo when its screen is recreated (process death, or a
  * font-size change; rotation doesn't recreate MainActivity). Found reproducing issue #3.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -71,18 +74,28 @@ class PhotoRecreationTest {
     private lateinit var store: Store
 
     /**
-     * Stands in for the activity's registry. The camera and the library answer at once; the
-     * cropper answers at once too unless [holdCrop], in which case its request is kept, as when
-     * the app is reclaimed while the crop screen is open.
+     * Stands in for the activity's registry. The library, the camera and the cropper answer at
+     * once. With [holdCamera] or [holdCrop], that request is kept unanswered instead, as when the
+     * app is reclaimed while the camera or the crop screen is open. What the camera and the
+     * cropper were launched with is recorded, so a test can check which file went where.
      */
-    private inner class Registry(private val holdCrop: Boolean = false) : ActivityResultRegistry() {
+    private inner class Registry(private val holdCamera: Boolean = false, private val holdCrop: Boolean = false) : ActivityResultRegistry() {
+        var cameraRequest: Int? = null
+        var cameraInput: Uri? = null
         var cropRequest: Int? = null
+        var cropInput: Uri? = null
 
         override fun <I, O> onLaunch(requestCode: Int, contract: ActivityResultContract<I, O>, input: I, options: ActivityOptionsCompat?) {
             when (contract) {
-                is ActivityResultContracts.TakePicture -> dispatchResult(requestCode, Activity.RESULT_OK, null)
+                is ActivityResultContracts.TakePicture -> {
+                    cameraInput = input as Uri
+                    if (holdCamera) cameraRequest = requestCode else dispatchResult(requestCode, Activity.RESULT_OK, null)
+                }
                 is ActivityResultContracts.PickVisualMedia -> dispatchResult(requestCode, Activity.RESULT_OK, Intent().setData(Uri.fromFile(jpeg("picked.jpg"))))
-                is CropImageContract -> if (holdCrop) cropRequest = requestCode else dispatchResult(requestCode, Activity.RESULT_OK, cropped())
+                is CropImageContract -> {
+                    cropInput = (input as CropImageContractOptions).uri
+                    if (holdCrop) cropRequest = requestCode else dispatchResult(requestCode, Activity.RESULT_OK, cropped())
+                }
                 else -> error("The photo flow launched an activity this test doesn't stand in for: $contract")
             }
         }
@@ -164,6 +177,45 @@ class PhotoRecreationTest {
         compose.onNodeWithTag("profile-back").performClick()
         assertEquals(0, left)
 
+        compose.onNodeWithTag("profile-save").performClick()
+        compose.waitUntil(5_000) { savedPhoto() != null }
+        assertIsSavedPhoto(savedPhoto())
+    }
+
+    @Test
+    fun aPhotoTakenAfterTheAppWasReclaimedWithTheCameraOpenReachesTheProfile() {
+        var registry = Registry(holdCamera = true)
+        val tester = StateRestorationTester(compose)
+        tester.setContent {
+            CompositionLocalProvider(LocalActivityResultRegistryOwner provides Owner(registry)) {
+                AppTheme(dark = false) {
+                    ProfileScreen(translations.translator("en", "profile"), translations.translator("en", "common"), store, {}, {})
+                }
+            }
+        }
+        compose.onNodeWithTag("profile-photo-take").performClick()
+        val cameraRequest = checkNotNull(registry.cameraRequest) { "the camera opened" }
+        val shot = checkNotNull(registry.cameraInput?.lastPathSegment) { "the camera was given a file to write" }
+        jpeg(shot)
+
+        // The app is reclaimed with the camera open. When it comes back, the camera's result is
+        // waiting, and only the path the picker saved says which file the shot is in.
+        val saved = Bundle().also(registry::onSaveInstanceState)
+        registry = Registry().apply {
+            onRestoreInstanceState(saved)
+            dispatchResult(cameraRequest, Activity.RESULT_OK, null)
+        }
+        tester.emulateSavedInstanceStateRestore()
+
+        compose.waitUntil(5_000) { registry.cropInput != null }
+        val source = checkNotNull(registry.cropInput)
+        assertEquals("file", source.scheme)
+        assertEquals(File(context.cacheDir, shot), File(source.path!!))
+
+        // Save does nothing until the form has loaded, and the header's Save button is drawn
+        // before it, so wait for a control that only the loaded form has. The photo then shows.
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo-take").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5_000) { compose.onAllNodesWithTag("profile-photo").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("profile-save").performClick()
         compose.waitUntil(5_000) { savedPhoto() != null }
         assertIsSavedPhoto(savedPhoto())
