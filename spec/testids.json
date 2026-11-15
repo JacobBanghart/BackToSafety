@@ -185,6 +185,8 @@
       "profile-field-dateOfBirth",
       "profile-field-{field}",
       "profile-hand-{hand}",
+      "profile-load-failed",
+      "profile-load-retry",
       "profile-mobility-other-text",
       "profile-mobility-{mobility}",
       "profile-photo",

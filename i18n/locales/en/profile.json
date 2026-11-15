@@ -7,6 +7,11 @@
   "webCameraUnavailable": "Taking a photo is only available in the mobile app. Please use \"Choose Photo\" on web.",
   "photoLibraryPermission": "We need photo library access to update the photo.",
   "cameraPermission": "We need camera access to take a photo.",
+  "loadFailed": {
+    "title": "Couldn't Load the Profile",
+    "message": "The saved profile couldn't be read, so nothing was changed. Try again.",
+    "retry": "Retry"
+  },
   "unsavedChanges": {
     "title": "Unsaved Changes",
     "message": "You have unsaved changes. If you leave now, your edits will be lost.",
