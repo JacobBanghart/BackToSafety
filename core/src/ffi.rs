@@ -1,7 +1,7 @@
 //! The UniFFI surface: what `android/app` and `ios` use from the core. Records and
 //! enums are derived where they're defined; this module holds what needs a different shape to
 //! cross the boundary (functions with `&[..]`, closures, `usize`, dates, JSON values) and the
-//! foreign traits the apps implement (`AnalyticsSink`, and `AlertScheduler` in
+//! foreign traits the apps implement (`AnalyticsSink`, `PhotoCleaner`, and `AlertScheduler` in
 //! `emergency_away`).
 //!
 //! Rules of the surface, so both platforms can wrap it thinly:
@@ -25,7 +25,9 @@ use crate::mobility;
 use crate::phone;
 use crate::photo;
 use crate::profile::Profile;
-use crate::readout::{self, VehicleCheckKind};
+use crate::profile::{PROFILE_TEXT_FIELDS, ProfileField};
+use crate::readiness::{self, ReadinessCheck};
+use crate::readout::{self, ScriptPart, VehicleCheckKind};
 use crate::startup::{self, AppReady};
 use crate::store::{
     self, ContactEntity, DestinationEntity, IncidentEntity, OnboardingStepEntity, ProfileEntity,
@@ -102,26 +104,27 @@ pub enum StoreFailure {
     Io {
         detail: String,
     },
-    /// `update_profile` was given a field that isn't a Profile property.
-    UnknownProfileField {
-        field: String,
-    },
     /// The file was written by a newer schema than this build knows.
     NewerDatabase {
         version: i32,
     },
+    /// The file has tables of a schema this build can't take over; nothing was written to it.
+    UnrecognizedDatabase,
+    /// The store was closed (`Store.close()`, a test seam).
+    Closed,
 }
 
 impl std::fmt::Display for StoreFailure {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             StoreFailure::Sqlite { detail } | StoreFailure::Io { detail } => f.write_str(detail),
-            StoreFailure::UnknownProfileField { field } => {
-                write!(f, "unknown profile field: {field}")
-            }
             StoreFailure::NewerDatabase { version } => {
                 write!(f, "database is from a newer version ({version})")
             }
+            StoreFailure::UnrecognizedDatabase => {
+                f.write_str("database has tables of an unrecognized schema")
+            }
+            StoreFailure::Closed => f.write_str("the store is closed"),
         }
     }
 }
@@ -135,13 +138,35 @@ impl From<StoreError> for StoreFailure {
             StoreError::Io(_) => StoreFailure::Io {
                 detail: e.to_string(),
             },
-            StoreError::UnknownProfileField(field) => StoreFailure::UnknownProfileField { field },
             StoreError::NewerDatabase(version) => StoreFailure::NewerDatabase { version },
+            StoreError::UnrecognizedDatabase => StoreFailure::UnrecognizedDatabase,
+            StoreError::Closed => StoreFailure::Closed,
         }
     }
 }
 
 type FfiResult<T> = Result<T, StoreFailure>;
+
+/// What a foreign callback that can fail fails with: the app's own exception (or any other it
+/// threw), as text for logs. The core carries on without what the callback was to do.
+#[derive(Debug, uniffi::Error)]
+pub enum CallbackFailure {
+    Failed { detail: String },
+}
+
+impl std::fmt::Display for CallbackFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CallbackFailure::Failed { detail } => f.write_str(detail),
+        }
+    }
+}
+
+impl From<uniffi::UnexpectedUniFFICallbackError> for CallbackFailure {
+    fn from(e: uniffi::UnexpectedUniFFICallbackError) -> Self {
+        CallbackFailure::Failed { detail: e.reason }
+    }
+}
 
 // ---------------------------------------------------------------------------------------------
 // Analytics
@@ -151,17 +176,42 @@ type FfiResult<T> = Result<T, StoreFailure>;
 #[uniffi::export(with_foreign)]
 pub trait AnalyticsSink: Send + Sync {
     fn on_event(&self, name: String, properties: HashMap<String, PropValue>);
+
+    /// Sends what's queued now, not at the next batch (PostHog's flush).
+    fn flush(&self);
+
+    /// Forgets who the events have been reported as (PostHog's reset).
+    fn reset(&self);
 }
 
 /// Replaces the sink; None goes back to dropping everything (no PostHog key).
 #[uniffi::export]
 pub fn analytics_set_sink(sink: Option<Arc<dyn AnalyticsSink>>) {
     match sink {
-        Some(sink) => Analytics::set_sink(move |name, properties| {
-            sink.on_event(name.to_string(), props_out(properties.clone()))
-        }),
+        Some(sink) => {
+            let events = sink.clone();
+            Analytics::set_sink(move |name, properties| {
+                events.on_event(name.to_string(), props_out(properties.clone()))
+            });
+            let flusher = sink.clone();
+            Analytics::set_flusher(move || flusher.flush());
+            Analytics::set_resetter(move || sink.reset());
+        }
         None => Analytics::clear_sink(),
     }
+}
+
+/// Sends what the sink has queued now (a failed migration, before a crash could lose it).
+#[uniffi::export]
+pub fn analytics_flush() {
+    Analytics::flush();
+}
+
+/// Delete Account: flushes, then forgets the identity, so later events start from a fresh
+/// anonymous one rather than the deleted device ID.
+#[uniffi::export]
+pub fn analytics_reset() {
+    Analytics::reset();
 }
 
 #[uniffi::export]
@@ -196,6 +246,22 @@ pub fn app_clock_now_ms() -> i64 {
 }
 
 /// Turns the debug clock seam on; builds without test seams leave it off.
+/// Today's date where the device is, in the Gregorian calendar whatever the region's calendar,
+/// on the app's clock. `utc_offset_seconds` is the device time zone's offset from UTC now
+/// (Android `TimeZone.getDefault().getOffset(nowMs) / 1000`, iOS
+/// `TimeZone.current.secondsFromGMT(for:)`); the core has no time zone database.
+#[uniffi::export]
+pub fn app_clock_today(utc_offset_seconds: i32) -> Date {
+    AppClock::today(utc_offset_seconds).into()
+}
+
+/// The Gregorian date of `epoch_ms` where the device is, as `app_clock_today` reckons it;
+/// `utc_offset_seconds` is the time zone's offset at `epoch_ms`.
+#[uniffi::export]
+pub fn app_clock_date_of(epoch_ms: i64, utc_offset_seconds: i32) -> Date {
+    AppClock::date_of(epoch_ms, utc_offset_seconds).into()
+}
+
 #[uniffi::export]
 pub fn app_clock_set_test_seams(enabled: bool) {
     AppClock::set_test_seams(enabled);
@@ -331,6 +397,13 @@ pub fn format_dob_input(value: String) -> String {
     formatters::format_dob_input(&value)
 }
 
+/// A long identifier shortened for display, its first `head` and last `tail` characters kept
+/// ("3f2a9c1b…41ef"). Whatever is copied or sent is still the full value.
+#[uniffi::export(default(head = 8, tail = 4))]
+pub fn abbreviate_id(id: String, head: i32, tail: i32) -> String {
+    formatters::abbreviate_id(&id, head.max(0) as usize, tail.max(0) as usize)
+}
+
 #[uniffi::export]
 pub fn format_phone_number(phone: String) -> String {
     phone::format_phone_number(&phone)
@@ -344,6 +417,20 @@ pub fn format_phone_input(value: String) -> String {
 #[uniffi::export]
 pub fn strip_phone_formatting(phone: String) -> String {
     phone::strip_phone_formatting(&phone)
+}
+
+/// What to hand the system dialer for a stored number: digits, a leading `+`, a service code's
+/// `*`/`#`, and an extension after a `,` pause. "" when it has no digits. Percent-encode it into
+/// the `tel:` URI.
+#[uniffi::export]
+pub fn dial_string(phone: String) -> String {
+    phone::dial_string(&phone)
+}
+
+/// Whether a contact's number can be saved: at least three digits, the extension aside.
+#[uniffi::export]
+pub fn is_usable_phone(phone: String) -> bool {
+    phone::is_usable_phone(&phone)
 }
 
 #[uniffi::export]
@@ -360,6 +447,39 @@ pub fn normalize_unique_sms_recipients(phones: Vec<String>) -> Vec<String> {
 #[uniffi::export]
 pub fn photo_file_name(uri: String) -> Option<String> {
     photo::photo_file_name(&uri)
+}
+
+// ---------------------------------------------------------------------------------------------
+// Profile fields and readiness
+
+/// Every profile field, in the order the screens show them (the Kotlin core's
+/// `ProfileField.entries`).
+#[uniffi::export]
+pub fn profile_fields() -> Vec<ProfileField> {
+    ProfileField::ALL.to_vec()
+}
+
+/// The fields typed into a text input: all but the dominant hand and mobility, which are chosen.
+#[uniffi::export]
+pub fn profile_text_fields() -> Vec<ProfileField> {
+    PROFILE_TEXT_FIELDS.to_vec()
+}
+
+/// Home's readiness card, in order, from what's stored: `contacts` saved, `in_alert_circle` of
+/// them with notify-on-emergency on, `places` saved.
+#[uniffi::export]
+pub fn readiness_checklist(
+    profile: Option<Profile>,
+    contacts: i32,
+    in_alert_circle: i32,
+    places: i32,
+) -> Vec<ReadinessCheck> {
+    readiness::readiness_checklist(
+        profile.as_ref(),
+        contacts.max(0) as usize,
+        in_alert_circle.max(0) as usize,
+        places.max(0) as usize,
+    )
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -390,14 +510,21 @@ pub fn describe_mobility(stored: String, t: Arc<Translator>) -> String {
     mobility::describe_mobility(&stored, &t)
 }
 
-/// What the info sheet is built from; `last_seen_time` arrives already formatted.
+/// What the info sheet is built from. `last_seen_time` is when the search started (the
+/// emergency's start), formatted for display; `last_seen_clock` the same start's clock time as
+/// the locale says it, without seconds ("9:00 AM"), and `last_seen_date` its day where the device
+/// is (`app_clock_date_of`), so the spoken script can say "9:00 AM today".
 #[derive(Clone, Debug, PartialEq, uniffi::Record)]
 pub struct ReadoutInput {
     pub profile: Profile,
     #[uniffi(default = None)]
     pub last_seen_time: Option<String>,
-    /// For the age line; screens pass the current date.
+    /// For the age line; screens pass the current date (`app_clock_today`).
     pub today: Date,
+    #[uniffi(default = None)]
+    pub last_seen_clock: Option<String>,
+    #[uniffi(default = None)]
+    pub last_seen_date: Option<Date>,
 }
 
 impl ReadoutInput {
@@ -410,6 +537,8 @@ impl ReadoutInput {
                 .today
                 .to_naive()
                 .unwrap_or(NaiveDate::from_ymd_opt(1970, 1, 1).expect("valid")),
+            last_seen_clock: self.last_seen_clock.clone(),
+            last_seen_date: self.last_seen_date.and_then(Date::to_naive),
         }
     }
 }
@@ -450,6 +579,13 @@ pub fn build_script(input: ReadoutInput, t: Arc<Translator>) -> String {
     readout::build_script(&input.to_core(), &t)
 }
 
+/// The 911 script in pieces: words to read out, and blanks the caller fills in aloud (shown as
+/// highlighted gaps). `build_script` is the same text with each blank in square brackets.
+#[uniffi::export]
+pub fn build_script_parts(input: ReadoutInput, t: Arc<Translator>) -> Vec<ScriptPart> {
+    readout::build_script_parts(&input.to_core(), &t)
+}
+
 #[uniffi::export]
 pub fn missing_script_details(input: ReadoutInput, t: Arc<Translator>) -> Vec<String> {
     readout::missing_script_details(&input.to_core(), &t)
@@ -467,6 +603,12 @@ pub fn search_window_seconds() -> i32 {
 #[uniffi::export]
 pub fn warning_at_seconds() -> i32 {
     emergency::WARNING_AT_SECONDS as i32
+}
+
+/// How many steps the checklist has.
+#[uniffi::export]
+pub fn emergency_step_count() -> i32 {
+    emergency::EMERGENCY_STEP_COUNT as i32
 }
 
 /// `t` is bound to the `emergency` namespace.
@@ -594,6 +736,21 @@ pub fn emergency_ended_properties(
     ))
 }
 
+/// emergency_911_called's properties, once the dialer opened at `now_ms`: `seconds_elapsed`
+/// is the real time since the start (past the 15 minutes too).
+#[uniffi::export]
+pub fn emergency_911_called_properties(
+    started_at_ms: i64,
+    now_ms: i64,
+    checked_count: i32,
+) -> HashMap<String, PropValue> {
+    props_out(alerts::emergency_911_called_properties(
+        started_at_ms,
+        now_ms,
+        checked_count.max(0) as usize,
+    ))
+}
+
 #[uniffi::export]
 pub fn readiness_properties(
     profile: Option<Profile>,
@@ -615,6 +772,20 @@ pub fn sms_result_properties(result: SmsResult, recipients: i32) -> HashMap<Stri
         result,
         recipients.max(0) as usize,
     ))
+}
+
+/// Whether the alert text may have reached the contacts (sent, or handed to the messaging app):
+/// what emergency_contacts_alerted means.
+#[uniffi::export]
+pub fn contacts_alerted(result: SmsResult) -> bool {
+    alerts::contacts_alerted(result)
+}
+
+/// Reports what became of the alert text: emergency_contacts_alerted if it reached the
+/// contacts, then emergency_sms_result.
+#[uniffi::export]
+pub fn track_sms_result(result: SmsResult, recipients: i32) {
+    alerts::track_sms_result(result, recipients.max(0) as usize);
 }
 
 #[uniffi::export]
@@ -663,6 +834,21 @@ pub struct SettingKeys {
     pub language_preference: String,
 }
 
+/// The schema version the store keeps the database at (Settings' "DB Schema").
+#[uniffi::export]
+pub fn database_version() -> i32 {
+    store::DATABASE_VERSION
+}
+
+/// Removes the profile photo files the profile no longer points at: every saved profile photo
+/// except the one at `keeping` (none, if None), and on Android the camera's and cropper's temp
+/// files. The store calls it after a save that changed the photo and after Delete Account; what
+/// it throws is ignored (the write has happened).
+#[uniffi::export(with_foreign)]
+pub trait PhotoCleaner: Send + Sync {
+    fn clean(&self, keeping: Option<String>) -> Result<(), CallbackFailure>;
+}
+
 #[uniffi::export]
 pub fn setting_keys() -> SettingKeys {
     SettingKeys {
@@ -685,10 +871,35 @@ impl Store {
         Ok(Arc::new(Store::open(path)?))
     }
 
-    /// A fresh, private database (tests and previews).
+    /// A fresh, private database that lives as long as the Store (tests and previews).
     #[uniffi::constructor(name = "open_in_memory")]
     pub fn ffi_open_in_memory() -> FfiResult<Arc<Store>> {
         Ok(Arc::new(Store::open_in_memory()?))
+    }
+
+    /// Test seam: closes the database, after which every call fails with `StoreFailure.Closed`.
+    /// Not `close`: the Kotlin binding's `close()` is AutoCloseable's, which frees the object.
+    #[uniffi::method(name = "close_database")]
+    pub fn ffi_close_database(&self) {
+        self.close();
+    }
+
+    /// Test seam: runs `sql` (one or more statements) on the store's connection, e.g. `ALTER
+    /// TABLE profile RENAME TO profile_gone` to make the profile's reads and writes fail, and the
+    /// reverse to restore it.
+    #[uniffi::method(name = "execute_sql")]
+    pub fn ffi_execute_sql(&self, sql: String) -> FfiResult<()> {
+        Ok(self.execute_sql(&sql)?)
+    }
+
+    /// Sets (or, with None, removes) what deletes stale profile photo files.
+    #[uniffi::method(name = "set_photo_cleaner")]
+    pub fn ffi_set_photo_cleaner(&self, cleaner: Option<Arc<dyn PhotoCleaner>>) {
+        self.set_photo_cleaner(cleaner.map(|c| -> store::PhotoCleanerFn {
+            Box::new(move |keeping| {
+                let _ = c.clean(keeping.map(str::to_string));
+            })
+        }));
     }
 
     #[uniffi::method(name = "migrated_from")]
@@ -743,14 +954,14 @@ impl Store {
         Ok(self.save_profile_entity(entity)?)
     }
 
-    /// A partial profile save by field name (the Profile property names, camelCase): given
-    /// fields are set (None clears), the rest kept.
+    /// A partial profile save: given fields are set (None clears), the rest kept. If the photo
+    /// changed, the photo cleaner runs after.
     #[uniffi::method(name = "update_profile")]
-    pub fn ffi_update_profile(&self, values: HashMap<String, Option<String>>) -> FfiResult<()> {
-        let values: Vec<(&str, Option<&str>)> = values
-            .iter()
-            .map(|(k, v)| (k.as_str(), v.as_deref()))
-            .collect();
+    pub fn ffi_update_profile(
+        &self,
+        values: HashMap<ProfileField, Option<String>>,
+    ) -> FfiResult<()> {
+        let values: Vec<(ProfileField, Option<String>)> = values.into_iter().collect();
         Ok(self.update_profile(&values)?)
     }
 
@@ -867,7 +1078,8 @@ impl Store {
         )?)
     }
 
-    /// Settings > Delete Account: empties every table, then re-creates the onboarding steps.
+    /// Settings > Delete Account: empties every table, then re-creates the onboarding steps (all
+    /// or nothing), forgets the cached device ID, and runs the photo cleaner keeping nothing.
     #[uniffi::method(name = "clear_all_data")]
     pub fn ffi_clear_all_data(&self) -> FfiResult<()> {
         Ok(self.clear_all_data()?)
@@ -944,6 +1156,13 @@ impl EmergencyAway {
         Ok(self.shown(now_ms)?)
     }
 
+    /// The phone restarted (Android's boot receiver): schedules the alerts still to come and
+    /// returns the one to post now, the most serious that came due while away.
+    #[uniffi::method(name = "restarted")]
+    pub fn ffi_restarted(&self, now_ms: i64) -> FfiResult<Option<CountdownAlert>> {
+        Ok(self.restarted(now_ms)?)
+    }
+
     /// The emergency ended: nothing more to deliver.
     #[uniffi::method(name = "ended")]
     pub fn ffi_ended(&self) -> FfiResult<()> {
@@ -964,8 +1183,10 @@ impl EmergencyAway {
 // ---------------------------------------------------------------------------------------------
 // Startup
 
-/// Seeds the store, and reports data_migrated if opening migrated an older database. Call once
-/// at launch, before the first screen reads.
+/// Seeds the store (the first call, where an older database is migrated), and reports
+/// data_migrated if it migrated one: ok=false, flushed at once, if that failed. Call once at
+/// launch, before the first screen reads; on an error the app carries on (its screens meet the
+/// failure through their own calls).
 #[uniffi::export]
 pub fn seed_and_report_migration(store: Arc<Store>) -> FfiResult<()> {
     Ok(startup::seed_and_report_migration(&store)?)

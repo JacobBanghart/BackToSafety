@@ -258,3 +258,135 @@ fn notification_permission_is_asked_once() {
         )]
     );
 }
+
+#[test]
+fn time_away_after_expiry_starts_at_leaving() {
+    let f = Fixture::new();
+    f.start_emergency();
+    // The countdown expired at minute 15 and the apps stopped ticking; the screen stayed open
+    // until minute 45, then the app went to the background for ten seconds.
+    f.away.in_app_alerts(1, 0, f.at(15, 0));
+    f.away.left(f.at(45, 0)).unwrap();
+    assert!(f.scheduled().is_empty(), "nothing is left to schedule");
+    assert_eq!(
+        f.away.shown(f.at(45, 10)).unwrap(),
+        None,
+        "the expiry alert was already shown in-app"
+    );
+    let resumed: Vec<_> = f
+        .tracked()
+        .into_iter()
+        .filter(|(name, _)| name == "emergency_resumed")
+        .collect();
+    assert_eq!(
+        resumed,
+        vec![(
+            "emergency_resumed".to_string(),
+            props(json!({"away_s": 10, "catch_up": null}))
+        )]
+    );
+}
+
+#[test]
+fn time_away_after_returning_past_expiry_starts_at_leaving() {
+    let f = Fixture::new();
+    f.start_emergency();
+    // Away across the expiry, back (caught up), and away again: the second time away starts
+    // at leaving, not at the return that last set the tick.
+    f.away.left(f.at(5, 0)).unwrap();
+    assert_eq!(
+        f.away.shown(f.at(20, 0)).unwrap(),
+        Some(CountdownAlert::Expired)
+    );
+    f.away.left(f.at(50, 0)).unwrap();
+    assert_eq!(f.away.shown(f.at(50, 10)).unwrap(), None);
+    let last = f
+        .tracked()
+        .into_iter()
+        .rfind(|(name, _)| name == "emergency_resumed")
+        .unwrap();
+    assert_eq!(last.1["away_s"], 10);
+}
+
+#[test]
+fn a_restart_schedules_what_is_to_come_and_posts_what_came_due() {
+    let f = Fixture::new();
+    f.start_emergency();
+    f.away.left(f.at(2, 0)).unwrap();
+    // Off from minute 9 to 11: the warning came due, the expiry is still to come.
+    assert_eq!(
+        f.away.restarted(f.at(11, 0)).unwrap(),
+        Some(CountdownAlert::Warning)
+    );
+    assert_eq!(
+        f.scheduled(),
+        vec![alert(CountdownAlert::Expired, f.at(15, 0))]
+    );
+    // Back on the screen, it's caught up there too, from the same time away.
+    assert_eq!(
+        f.away.shown(f.at(12, 0)).unwrap(),
+        Some(CountdownAlert::Warning)
+    );
+}
+
+#[test]
+fn a_restart_past_expiry_posts_the_expiry() {
+    let f = Fixture::new();
+    f.start_emergency();
+    f.away.left(f.at(2, 0)).unwrap();
+    assert_eq!(
+        f.away.restarted(f.at(30, 0)).unwrap(),
+        Some(CountdownAlert::Expired)
+    );
+    assert!(f.scheduled().is_empty());
+}
+
+#[test]
+fn a_restart_before_anything_came_due_posts_nothing() {
+    let f = Fixture::new();
+    f.start_emergency();
+    f.away.left(f.at(2, 0)).unwrap();
+    assert_eq!(f.away.restarted(f.at(4, 0)).unwrap(), None);
+    assert_eq!(
+        f.scheduled(),
+        vec![
+            alert(CountdownAlert::Warning, f.at(10, 1)),
+            alert(CountdownAlert::Expired, f.at(15, 0))
+        ]
+    );
+    assert!(
+        f.tracked().is_empty(),
+        "a restart reports nothing; the return does"
+    );
+}
+
+#[test]
+fn a_restart_with_the_screen_showing_counts_from_the_start() {
+    let f = Fixture::new();
+    f.start_emergency();
+    // The screen was showing (no time away) when the phone went off.
+    f.away.shown(f.at(1, 0)).unwrap();
+    assert_eq!(
+        f.away.restarted(f.at(20, 0)).unwrap(),
+        Some(CountdownAlert::Expired)
+    );
+    assert_eq!(
+        f.away.shown(f.at(21, 0)).unwrap(),
+        Some(CountdownAlert::Expired),
+        "and the return catches it up too"
+    );
+    let last = f
+        .tracked()
+        .into_iter()
+        .rfind(|(name, _)| name == "emergency_resumed")
+        .unwrap();
+    assert_eq!(last.1["away_s"], 1260);
+}
+
+#[test]
+fn a_restart_without_an_emergency_does_nothing() {
+    let f = Fixture::new();
+    assert_eq!(f.away.restarted(f.at(20, 0)).unwrap(), None);
+    assert!(f.scheduled().is_empty());
+    assert_eq!(f.store.setting(Store::EMERGENCY_AWAY_FROM).unwrap(), None);
+}

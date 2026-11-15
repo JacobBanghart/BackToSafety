@@ -37,11 +37,19 @@ fn strings(alphabet: &[&str], max_len: usize, random: usize) -> Vec<String> {
 
 #[test]
 fn phone_extension() {
-    let re = Regex::new(r"(?i)[ \t\n\r]*(?:ext\.?|x|#)[ \t\n\r]*([0-9]+)[ \t\n\r]*$").unwrap();
+    let re =
+        Regex::new(r"(?i)[ \t\n\r]*(?:extension|ext\.?|x|#)[ \t\n\r]*([0-9]+)[ \t\n\r]*$").unwrap();
     let alphabet = [
         "5", "x", "X", "e", "t", ".", "#", " ", "\t", "\n", "é", "x5",
     ];
-    for s in strings(&alphabet, 6, 20_000) {
+    // The same, with pieces of "extension" (the longest keyword) to assemble it from.
+    let words = [
+        "5", "x", "e", "t", ".", "#", " ", "ext", "ension", "EXTENS", "ion", "é",
+    ];
+    let cases = strings(&alphabet, 6, 20_000)
+        .into_iter()
+        .chain(strings(&words, 5, 20_000));
+    for s in cases {
         let expected = re
             .captures(&s)
             .map(|c| (c.get(0).unwrap().start(), c[1].to_string()));
@@ -57,6 +65,10 @@ fn phone_extension() {
         "123#4",
         "1 ext.",
         "12 e x 3",
+        "555-123-4567 extension 12",
+        "555 EXTENSION12",
+        "555 tension 12",
+        "555 extensionx 12",
     ] {
         let expected = re
             .captures(s)

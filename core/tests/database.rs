@@ -3,7 +3,8 @@
 //! the committed RN fixture, spec/fixtures/upgrade/android/SQLite/nijii.db.
 
 use nijii_core::emergency::parse_active_emergency;
-use nijii_core::store::{DATABASE_NAME, Store};
+use nijii_core::profile::ProfileField;
+use nijii_core::store::{DATABASE_NAME, Store, StoreError, adopt_rn_database};
 use rusqlite::{Connection, types::ValueRef};
 use serde_json::{Value, json};
 use std::path::{Path, PathBuf};
@@ -183,7 +184,9 @@ fn fresh_install_creates_version_two() {
         None,
         "a fresh install isn't a migration"
     );
-    store.update_profile(&[("name", Some("Ana"))]).unwrap();
+    store
+        .update_profile(&[(ProfileField::FullName, Some("Ana".into()))])
+        .unwrap();
     assert_eq!(store.profile().unwrap().unwrap().name, "Ana");
     drop(store);
     assert_eq!(user_version(&path), 2);
@@ -270,7 +273,10 @@ fn a_newer_database_is_refused_not_downgraded() {
         .unwrap()
         .execute_batch("PRAGMA user_version = 3")
         .unwrap();
-    assert!(Store::open(&path).is_err());
+    // The open goes ahead; the first call refuses it.
+    let store = Store::open(&path).unwrap();
+    assert!(matches!(store.profile(), Err(StoreError::NewerDatabase(3))));
+    drop(store);
     assert_eq!(user_version(&path), 3);
 }
 
@@ -306,4 +312,82 @@ fn bundled_sqlite_is_trimmed_to_what_the_store_uses() {
     ] {
         assert!(used(kept), "{kept} should stay");
     }
+}
+
+#[test]
+fn half_created_rn_database_is_started_afresh() {
+    // Only schema_version made it to disk: no profile or contacts tables, so migrating would
+    // fail "no such table" on every launch. Nothing in the file is worth keeping.
+    for version_row in [false, true] {
+        let path = temp_dir().join(DATABASE_NAME);
+        let c = Connection::open(&path).unwrap();
+        c.execute_batch("CREATE TABLE schema_version (version INTEGER PRIMARY KEY, migrated_at TEXT DEFAULT CURRENT_TIMESTAMP)")
+            .unwrap();
+        if version_row {
+            c.execute_batch("INSERT INTO schema_version (version) VALUES (1)")
+                .unwrap();
+        }
+        drop(c);
+        let store = Store::open(&path).unwrap();
+        assert_eq!(
+            store.migrated_from(),
+            None,
+            "nothing to migrate (version row: {version_row})"
+        );
+        store
+            .update_profile(&[(ProfileField::FullName, Some("Ana".into()))])
+            .unwrap();
+        assert_eq!(store.profile().unwrap().unwrap().name, "Ana");
+        drop(store);
+        assert_eq!(user_version(&path), 2);
+    }
+}
+
+#[test]
+fn rn_database_without_its_version_row_still_migrates() {
+    // The tables are the user's data; a missing version row mustn't make the app drop them.
+    let path = rn_fixture_copy();
+    Connection::open(&path)
+        .unwrap()
+        .execute_batch("DELETE FROM schema_version")
+        .unwrap();
+    let store = Store::open(&path).unwrap();
+    assert_eq!(store.migrated_from(), Some(1));
+    assert_eq!(store.profile().unwrap().unwrap().name, "Margaret Smith");
+}
+
+#[test]
+fn partial_rn_database_keeps_its_rows() {
+    // Some tables but not all (which the RN app's single transaction rules out): left alone.
+    let path = temp_dir().join(DATABASE_NAME);
+    Connection::open(&path)
+        .unwrap()
+        .execute_batch(
+            "CREATE TABLE schema_version (version INTEGER PRIMARY KEY);
+             CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT, phone TEXT);
+             INSERT INTO contacts (name, phone) VALUES ('Jo', '555');",
+        )
+        .unwrap();
+    assert_eq!(adopt_rn_database(&path), Some(0));
+    assert_eq!(rows(&path, "contacts").len(), 1);
+    // Nor is the schema created over it (Room refuses such a file too): every call fails.
+    let store = Store::open(&path).unwrap();
+    assert!(matches!(
+        store.contacts(),
+        Err(StoreError::UnrecognizedDatabase)
+    ));
+    drop(store);
+    assert_eq!(rows(&path, "contacts").len(), 1);
+    assert_eq!(user_version(&path), 0);
+}
+
+#[test]
+fn unreadable_file_opens_and_fails_on_first_use() {
+    // Opening doesn't fail and reports nothing to migrate, so the app can start and meet the
+    // failure at its first call like any other (data_migrated is for a known old schema).
+    let path = temp_dir().join(DATABASE_NAME);
+    std::fs::write(&path, "not a database".repeat(100)).unwrap();
+    let store = Store::open(&path).unwrap();
+    assert_eq!(store.migrated_from(), None);
+    assert!(store.profile().is_err(), "the first call fails");
 }

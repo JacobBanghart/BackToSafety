@@ -11,10 +11,25 @@ use serde_json::json;
 
 pub struct ReadoutInput {
     pub profile: Profile,
-    /// Last-seen time, formatted for display.
+    /// When the search started (the emergency's start), formatted for display. Named for the old
+    /// "last seen" label.
     pub last_seen_time: Option<String>,
     /// For the age line; screens pass the current date.
     pub today: NaiveDate,
+    /// The start's clock time as the locale says it, with no seconds ("9:00 AM"), for the
+    /// spoken script.
+    pub last_seen_clock: Option<String>,
+    /// The day the search started, in the device's time zone, so the script can say "today".
+    pub last_seen_date: Option<NaiveDate>,
+}
+
+/// A piece of the 911 script: words to read out, or a blank the caller fills in aloud (the
+/// location, which the app doesn't collect, or an unknown time). The screens show a blank as a
+/// highlighted gap to fill, not as bracketed text to read out to the dispatcher.
+#[derive(Clone, Debug, PartialEq, Eq, uniffi::Record)]
+pub struct ScriptPart {
+    pub text: String,
+    pub blank: bool,
 }
 
 const VEHICLE_MOBILITY_VALUES: [&str; 7] = [
@@ -140,37 +155,109 @@ pub fn build_copy_block(input: &ReadoutInput, t: &Translator) -> String {
     .join("\n")
 }
 
-pub fn build_script(input: &ReadoutInput, t: &Translator) -> String {
+/// When the search started, as it is said on the phone: "9:00 AM today" or "9:00 AM yesterday"
+/// (no date, no seconds), else the full date and time.
+fn spoken_start(input: &ReadoutInput, t: &Translator) -> Option<String> {
+    let clock = set(&input.last_seen_clock);
+    let date = input.last_seen_date;
+    match clock {
+        Some(clock) if date == Some(input.today) => {
+            Some(t.tv("script.timeToday", &[("time", json!(clock))]))
+        }
+        Some(clock) if date.is_some() && date == input.today.pred_opt() => {
+            Some(t.tv("script.timeYesterday", &[("time", json!(clock))]))
+        }
+        _ => set(&input.last_seen_time).map(str::to_string),
+    }
+}
+
+/// Placeholder for a blank while a sentence is translated: the sentence is split around it.
+const BLANK: &str = "\u{0}";
+
+/// The 911 script in pieces, its blanks marked (see [`ScriptPart`]); [`build_script`] is the
+/// same text.
+pub fn build_script_parts(input: &ReadoutInput, t: &Translator) -> Vec<ScriptPart> {
     let p = &input.profile;
     let appearance = describe_appearance(p, t);
     let important = describe_important_details(p, t);
-    let mut parts = vec![
-        t.t("script.opening"),
-        t.tv("script.name", &[("name", json!(p.name))]),
-    ];
+    let words = |text: String| ScriptPart { text, blank: false };
+    let mut sentences: Vec<Vec<ScriptPart>> = Vec::new();
+    let mut say = |text: String| sentences.push(vec![words(text)]);
+
+    say(t.t("script.opening"));
+    say(t.tv("script.name", &[("name", json!(p.name))]));
     if let Some(age) = set(&p.date_of_birth).and_then(|d| age_on(d, input.today)) {
-        parts.push(t.tv("script.age", &[("age", json!(age))]));
+        say(t.tv("script.age", &[("age", json!(age))]));
     }
-    parts.push(match set(&input.last_seen_time) {
-        Some(time) => t.tv("script.lastSeenTime", &[("time", json!(time))]),
-        None => t.t("script.lastSeenUnknown"),
-    });
+    let started = spoken_start(input, t);
+    if let Some(time) = &started {
+        say(t.tv("script.lastSeenTime", &[("time", json!(time))]));
+    }
+    // A sentence with one blank in it: "Last known location: ____."
+    let with_blank = |key: &str, blank_key: &str| -> Vec<ScriptPart> {
+        let sentence = t.tv(key, &[("blank", json!(BLANK))]);
+        let (before, after) = sentence.split_once(BLANK).unwrap_or((&sentence, ""));
+        let mut parts = Vec::new();
+        if !before.is_empty() {
+            parts.push(words(before.to_string()));
+        }
+        parts.push(ScriptPart {
+            text: t.t(blank_key),
+            blank: true,
+        });
+        if !after.is_empty() {
+            parts.push(words(after.to_string()));
+        }
+        parts
+    };
+    if started.is_none() {
+        sentences.push(with_blank("script.lastSeenUnknown", "script.blankTime"));
+    }
     // Location isn't collected (blocked on purpose): the caller fills it in.
-    parts.push(t.t("script.locationUnknown"));
+    sentences.push(with_blank("script.locationUnknown", "script.blankLocation"));
+    let mut say = |text: String| sentences.push(vec![words(text)]);
     if !appearance.is_empty() {
-        parts.push(t.tv("script.appearance", &[("desc", json!(appearance))]));
+        say(t.tv("script.appearance", &[("desc", json!(appearance))]));
     }
     if !important.is_empty() {
-        parts.push(t.tv("script.additionalContext", &[("desc", json!(important))]));
+        say(t.tv("script.additionalContext", &[("desc", json!(important))]));
     }
     if let Some(id) = set(&p.medic_alert_id) {
-        parts.push(t.tv("script.medicAlertId", &[("id", json!(id))]));
+        say(t.tv("script.medicAlertId", &[("id", json!(id))]));
     }
     if set(&p.photo_uri).is_some() {
-        parts.push(t.t("script.photoAvailable"));
+        say(t.t("script.photoAvailable"));
     }
-    parts.push(t.t("script.silverAlert"));
-    parts.join(" ")
+    say(t.t("script.silverAlert"));
+
+    // Sentences are separated by one space; runs of plain words are joined into one part, so
+    // the pieces alternate between words and blanks.
+    let mut out: Vec<ScriptPart> = Vec::new();
+    for (i, sentence) in sentences.into_iter().enumerate() {
+        let separator = (i > 0).then(|| words(" ".to_string()));
+        for part in separator.into_iter().chain(sentence) {
+            match out.last_mut() {
+                Some(last) if !last.blank && !part.blank => last.text += &part.text,
+                _ => out.push(part),
+            }
+        }
+    }
+    out
+}
+
+/// The 911 script as one text, for copying: each blank in square brackets
+/// ("Last known location: [fill in location].") so a pasted copy still shows the gap.
+pub fn build_script(input: &ReadoutInput, t: &Translator) -> String {
+    build_script_parts(input, t)
+        .into_iter()
+        .map(|p| {
+            if p.blank {
+                format!("[{}]", p.text)
+            } else {
+                p.text
+            }
+        })
+        .collect()
 }
 
 /// What's missing for a stronger script, as translated phrases.

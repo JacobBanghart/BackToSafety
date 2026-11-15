@@ -25,8 +25,8 @@ visual change re-records both platforms' snapshots in the same commit (`docs/ARC
 ## The Rust core
 
 - The core stays platform-free. What only a platform can do comes in through foreign traits the
-  apps implement: `AlertScheduler` (AlarmManager / UNUserNotificationCenter) and the analytics
-  sink (each app's PostHog SDK).
+  apps implement: `AlertScheduler` (AlarmManager / UNUserNotificationCenter), the analytics
+  sink (each app's PostHog SDK) and `PhotoCleaner` (the profile photo files).
 - The apps reach it through thin adapters (`android/app/.../app/core/`, `ios/BackToSafety/Core/`)
   over the generated bindings. A core change that the UI uses goes through the adapter, not
   into the screens.

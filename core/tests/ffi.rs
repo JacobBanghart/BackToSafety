@@ -8,7 +8,7 @@ use nijii_core::emergency::{ActiveEmergency, CountdownAlert};
 use nijii_core::emergency_away::{AlertScheduler, EmergencyAway};
 use nijii_core::ffi::*;
 use nijii_core::i18n::Translations;
-use nijii_core::profile::Profile;
+use nijii_core::profile::{Profile, ProfileField};
 use nijii_core::store::{ContactEntity, ProfileEntity, Store};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -30,6 +30,18 @@ struct Recorder(Mutex<Vec<(String, HashMap<String, PropValue>)>>);
 impl AnalyticsSink for Recorder {
     fn on_event(&self, name: String, properties: HashMap<String, PropValue>) {
         self.0.lock().unwrap().push((name, properties));
+    }
+    fn flush(&self) {
+        self.0
+            .lock()
+            .unwrap()
+            .push(("<flush>".into(), HashMap::new()));
+    }
+    fn reset(&self) {
+        self.0
+            .lock()
+            .unwrap()
+            .push(("<reset>".into(), HashMap::new()));
     }
 }
 
@@ -179,8 +191,8 @@ fn the_store_works_through_the_ffi_shapes() {
     assert!(first.created_at.is_some() && first.updated_at.is_some());
     store
         .ffi_update_profile(HashMap::from([
-            ("nickname".to_string(), Some("Nan".to_string())),
-            ("height".to_string(), None),
+            (ProfileField::Nickname, Some("Nan".to_string())),
+            (ProfileField::Height, None),
         ]))
         .unwrap();
     let p: Profile = store.ffi_profile().unwrap().unwrap();
@@ -188,8 +200,8 @@ fn the_store_works_through_the_ffi_shapes() {
         (p.name.as_str(), p.nickname.as_deref()),
         ("Ana", Some("Nan"))
     );
-    let bad = store.ffi_update_profile(HashMap::from([("nope".to_string(), None)]));
-    assert!(matches!(bad, Err(StoreFailure::UnknownProfileField { field }) if field == "nope"));
+    assert_eq!(p.get(ProfileField::Nickname).as_deref(), Some("Nan"));
+    assert_eq!(p.get(ProfileField::FullName).as_deref(), Some("Ana"));
 
     let id = store
         .ffi_add_contact(ContactEntity::new("Bo", "5551234567"), None)
@@ -246,7 +258,7 @@ fn the_readout_takes_a_date_and_a_translator() {
         "en".to_string(),
         HashMap::from([(
             "readout".to_string(),
-            r#"{"script":{"opening":"Hi.","name":"Name {{name}}.","age":"Age {{age}}.","lastSeenUnknown":"?","locationUnknown":"??","silverAlert":"S"}}"#.to_string(),
+            r#"{"script":{"opening":"Hi.","name":"Name {{name}}.","age":"Age {{age}}.","lastSeenTime":"Seen {{time}}.","timeToday":"{{time}} today","lastSeenUnknown":"Seen {{blank}}.","blankTime":"when","locationUnknown":"At {{blank}}.","blankLocation":"where","silverAlert":"S"}}"#.to_string(),
         )]),
     )]));
     let t = tr.ffi_translator("en".into(), "readout".into());
@@ -262,6 +274,36 @@ fn the_readout_takes_a_date_and_a_translator() {
             month: 10,
             day: 1,
         },
+        last_seen_clock: None,
+        last_seen_date: None,
     };
-    assert_eq!(build_script(input, t), "Hi. Name Ana. Age 36. ? ?? S");
+    assert_eq!(
+        build_script(input.clone(), t.clone()),
+        "Hi. Name Ana. Age 36. Seen [when]. At [where]. S"
+    );
+    let part = |text: &str, blank: bool| nijii_core::readout::ScriptPart {
+        text: text.into(),
+        blank,
+    };
+    assert_eq!(
+        build_script_parts(input.clone(), t.clone()),
+        vec![
+            part("Hi. Name Ana. Age 36. Seen ", false),
+            part("when", true),
+            part(". At ", false),
+            part("where", true),
+            part(". S", false),
+        ]
+    );
+    // The search started today: said as the clock time and "today".
+    let started = ReadoutInput {
+        last_seen_time: Some("10/1/2026, 9:00:00 AM".into()),
+        last_seen_clock: Some("9:00 AM".into()),
+        last_seen_date: Some(input.today),
+        ..input
+    };
+    assert_eq!(
+        build_script(started, t),
+        "Hi. Name Ana. Age 36. Seen 9:00 AM today. At [where]. S"
+    );
 }

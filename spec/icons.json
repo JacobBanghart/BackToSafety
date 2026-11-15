@@ -1,5 +1,5 @@
 {
-  "$comment": "SF Symbol name -> Material Icons name. iOS draws the SF Symbol itself; Android draws the Material Icons font glyph, looking the name up here (kmp/androidApp ui/Icon.kt, which reads this file from the app's assets; kmp/buildSrc SyncSharedAssets copies it there). A name missing here draws nothing on Android.",
+  "$comment": "SF Symbol name -> Material Icons name. iOS draws the SF Symbol itself; Android draws the Material Icons font glyph, looking the name up here (android/app ui/Icon.kt, which reads this file from the app's assets; android/buildSrc SyncSharedAssets copies it there). A name missing here draws nothing on Android.",
   "mapping": {
     "house.fill": "home",
     "paperplane.fill": "send",

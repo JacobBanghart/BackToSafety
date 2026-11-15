@@ -3,18 +3,18 @@
 The apps ship under the same package and bundle ID (`com.backtosafety.app`) as the React Native
 app they replaced (removed 2026-10-09) and installed **over** it: they opened its data as-is,
 with no export step and no re-onboarding. This file is the contract for that data.
-`spec/db-schema.json` pins the table shapes (generated from the RN app's schema; the Rust
-core's migration and `core/tests/database.rs` hold the store to it and to the committed fixture).
+`spec/db-schema.json` pins the table shapes (generated from the RN app's schema; the Rust core's
+migration and `core/tests/database.rs` hold the store to it and to the committed fixture).
 
 ## Database
 
 |                         |                                                                                                                                               |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| File                    | `nijii.db`, opened by the Rust core (rusqlite, bundled SQLite) in the Room v2 shape                                                            |
+| File                    | `nijii.db`, opened by the Rust core (rusqlite, bundled SQLite) in Room's schema                                                              |
 | Android path            | `<filesDir>/SQLite/nijii.db` (`/data/data/com.backtosafety.app/files/SQLite/nijii.db`)                                                        |
 | iOS path                | `<Documents>/SQLite/nijii.db`                                                                                                                 |
-| Schema version          | `PRAGMA user_version` (Room); currently `2` (`DATABASE_VERSION`), with Room's identity hash kept. The RN app (version 1) kept it in a `schema_version` table instead and left `user_version` 0 |
-| Migrations              | Migrations in `core/src/store/migrations.rs`, run in order (1 → 2 rebuilds the RN tables in Room's shape). Never edit a shipped migration; add the next number.  |
+| Schema version          | `PRAGMA user_version` (as Room keeps it); currently `2` (`DATABASE_VERSION`). The RN app (version 1) kept it in a `schema_version` table instead and left `user_version` 0 |
+| Migrations              | `core/src/store/migrations.rs`, run in order (`migrate_1_2` rebuilds the RN tables in Room's shape). Never edit a shipped migration; add the next number. |
 | Seeding on every launch | 12 `safety_checks` rows and 6 `onboarding` rows, all `INSERT OR IGNORE`                                                                       |
 
 Conventions: booleans are `INTEGER` 0/1. `created_at`/`updated_at` default to SQLite's

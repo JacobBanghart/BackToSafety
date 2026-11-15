@@ -82,7 +82,8 @@ impl AppReady {
 }
 
 /// After the first query migrated a database the RN app left, reports data_migrated: what came
-/// through when `seeded` succeeded, or why it failed.
+/// through when `seeded` succeeded, or why it failed. A failure is flushed at once, since a
+/// queued event wouldn't survive a crash. Nothing is reported when nothing was migrated.
 pub fn report_data_migration(store: &Store, seeded: &Result<()>) {
     let Some(from) = store.migrated_from() else {
         return;
@@ -97,24 +98,31 @@ pub fn report_data_migration(store: &Store, seeded: &Result<()>) {
         Err(e) => data_migration_failed_properties(from, duration_ms, Some(e.type_name())),
     };
     Analytics::track(AnalyticsEvent::DataMigrated, properties);
+    if seeded.is_err() {
+        Analytics::flush();
+    }
 }
 
-/// Seeds the store (the first query, which is where an older database has migrated before),
-/// then reports data_migrated for it. What the apps call once at launch.
+/// Seeds the store (the first call, which is where an older database is migrated), then reports
+/// data_migrated for it. What the apps call once at launch. If that, or seeding, fails, the app
+/// still starts: its screens meet the failure through their own calls, and the next launch
+/// tries the migration again (it runs in one transaction, so the file is still the RN one).
 pub fn seed_and_report_migration(store: &Store) -> Result<()> {
     let seeded = store.seed();
     report_data_migration(store, &seeded);
     seeded
 }
 
-/// `Store::open` failed at `path` after `duration_ms`. If it was migrating an older database
-/// (the file is left at the older schema version), reports data_migrated as failed.
+/// `Store::open` failed at `path` after `duration_ms` (the migration itself runs on the first
+/// call, so this is a file that can't be opened at all). If it holds an older database, reports
+/// data_migrated as failed, flushed at once.
 pub fn report_open_failure(path: &Path, error: &StoreError, duration_ms: u64) {
     if let Some(from) = adopt_rn_database(path).filter(|v| (1..DATABASE_VERSION).contains(v)) {
         Analytics::track(
             AnalyticsEvent::DataMigrated,
             data_migration_failed_properties(from, duration_ms, Some(error.type_name())),
         );
+        Analytics::flush();
     }
 }
 

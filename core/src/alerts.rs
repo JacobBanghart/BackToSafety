@@ -2,8 +2,9 @@
 //! screen isn't showing, what to catch up on when it shows again, and the properties of the
 //! metrics around them. Held to spec/vectors/alerts.json.
 
+use crate::analytics::{Analytics, AnalyticsEvent};
 use crate::emergency::{CountdownAlert, SEARCH_WINDOW_SECONDS, WARNING_AT_SECONDS};
-use crate::profile::Profile;
+use crate::profile::{Profile, ProfileField};
 use serde_json::{Map, Value, json};
 
 pub type Properties = Map<String, Value>;
@@ -108,45 +109,43 @@ fn filled(v: &Option<String>) -> bool {
     v.as_deref().is_some_and(|s| !s.trim().is_empty())
 }
 
-/// How ready the info sheet is, sent with app_ready.
+/// emergency_911_called's properties: the dialer opened at `now_ms`, `started_at_ms` into the
+/// emergency. `seconds_elapsed` is the real time since the start, so it goes past the 15-minute
+/// window (the countdown stops at zero; this doesn't).
+pub fn emergency_911_called_properties(
+    started_at_ms: i64,
+    now_ms: i64,
+    checked_count: usize,
+) -> Properties {
+    props([
+        (
+            "seconds_elapsed",
+            json!(((now_ms - started_at_ms) / 1000).max(0)),
+        ),
+        ("checked_count", json!(checked_count)),
+    ])
+}
+
+/// How ready the info sheet is, sent with app_ready: what's filled in before anyone needs it.
+/// `contacts_alerted` counts contacts with notify-on-emergency on.
 pub fn readiness_properties(
     profile: Option<&Profile>,
     contacts: usize,
     contacts_alerted: usize,
     places: usize,
 ) -> Properties {
+    // The name is required, so it says nothing about how much is filled in; "unknown" is the
+    // hand's unset value.
     let fields = profile.map_or(0, |p| {
-        let hand = p.dominant_hand.clone().filter(|h| h != "unknown");
-        [
-            &p.nickname,
-            &p.date_of_birth,
-            &p.photo_uri,
-            &p.height,
-            &p.weight,
-            &p.hair_color,
-            &p.eye_color,
-            &p.identifying_marks,
-            &p.medical_conditions,
-            &p.medications,
-            &p.allergies,
-            &p.cognitive_status,
-            &hand,
-            &p.mobility_level,
-            &p.communication_preference,
-            &p.escalation_signs,
-            &p.deescalation_techniques,
-            &p.approach_guidance,
-            &p.likes,
-            &p.dislikes_triggers,
-            &p.safe_word,
-            &p.locative_device_info,
-            &p.id_bracelets,
-            &p.medic_alert_id,
-            &p.medic_alert_hotline,
-        ]
-        .into_iter()
-        .filter(|v| filled(v))
-        .count()
+        ProfileField::ALL
+            .into_iter()
+            .filter(|&field| {
+                let value = p.field(field);
+                field != ProfileField::FullName
+                    && !(field == ProfileField::DominantHand && value == Some("unknown"))
+                    && value.is_some_and(|v| !v.trim().is_empty())
+            })
+            .count()
     });
     props([
         ("has_profile", json!(profile.is_some())),
@@ -197,11 +196,35 @@ impl SmsResult {
     }
 }
 
+/// Whether the alert text may have reached the contacts: what emergency_contacts_alerted means.
+/// True when the composer sent it (iOS) or the messaging app has it (Android, which doesn't say
+/// more); false when the user cancelled, it failed, or the device can't text. Both apps decide
+/// by this, so the event counts the same on each.
+pub fn contacts_alerted(result: SmsResult) -> bool {
+    matches!(result, SmsResult::Sent | SmsResult::HandedOff)
+}
+
+/// emergency_sms_result's properties.
 pub fn sms_result_properties(result: SmsResult, recipients: usize) -> Properties {
     props([
         ("result", json!(result.key())),
         ("recipient_count", json!(recipients)),
     ])
+}
+
+/// Reports what became of the alert text: emergency_contacts_alerted if it [`contacts_alerted`],
+/// then emergency_sms_result with the result itself (which says more than the first does).
+pub fn track_sms_result(result: SmsResult, recipients: usize) {
+    if contacts_alerted(result) {
+        Analytics::track(
+            AnalyticsEvent::EmergencyContactsAlerted,
+            props([("recipient_count", json!(recipients))]),
+        );
+    }
+    Analytics::track(
+        AnalyticsEvent::EmergencySmsResult,
+        sms_result_properties(result, recipients),
+    );
 }
 
 /// Which number a dial was for (dial_failed).
