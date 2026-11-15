@@ -15,6 +15,11 @@ func isoString(_ ms: Int64) -> String {
     return f.string(from: Date(timeIntervalSince1970: Double(ms) / 1000))
 }
 
+/// The calendar for any date that crosses into the shared core or is stored: its `LocalDate` is
+/// always Gregorian, while `Calendar.current` follows the region (Buddhist years, a Hebrew 13th
+/// month, a Persian 31st day) and would crash `LocalDate(...)` or save the wrong year.
+var gregorian: Calendar { Calendar(identifier: .gregorian) }
+
 extension Date {
     var epochMs: Int64 { Int64(timeIntervalSince1970 * 1000) }
 }

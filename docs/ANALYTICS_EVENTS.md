@@ -10,9 +10,10 @@ contract, `spec/analytics-events.json`: the Rust core generates `AnalyticsEvent`
 
 - The key and host come from `POSTHOG_KEY` and `POSTHOG_HOST` at build time (the release
   workflows set them). Without a key, PostHog isn't set up and no events are sent.
-- Session replay is on, with text inputs and images masked.
+- Session replay is off: screens show medical details and contacts' numbers as plain text,
+  which masking inputs and images wouldn't hide.
 - The app's stable device ID (the `device_id` setting) is the PostHog identity (`identify`).
-- Android: `MainActivity.setUpAnalytics`. iOS: `PostHogSetup.swift`.
+- Android: `BackToSafetyApp.setUpAnalytics`. iOS: `PostHogSetup.swift`.
 
 ---
 
@@ -43,8 +44,8 @@ strings, numbers, booleans or null.
 | `emergency_step_completed`   | `step: string`                                     | A protocol step was checked off       |
 | `emergency_completed`        | `checked_count: number`, `duration_s: number`      | User marked "Found — Safe"            |
 | `emergency_cancelled`        | `checked_count: number`, `duration_s: number`      | User cancelled the protocol           |
-| `emergency_911_called`       | `seconds_elapsed: number`, `checked_count: number` | User tapped Call 911 during protocol  |
-| `emergency_contacts_alerted` | `recipient_count: number`                          | User sent SMS alerts                  |
+| `emergency_911_called`       | `seconds_elapsed: number`, `checked_count: number` | The phone app opened to call 911 from the protocol. Not sent when the device can't call (`dial_failed` is). `seconds_elapsed` is the real time since the emergency started, so it passes 900 once the countdown has run out. `checked_count` is the steps done before the call's own. |
+| `emergency_contacts_alerted` | `recipient_count: number`                          | The alert text may have reached the contacts: the iOS composer sent it, or the Android messaging app has it (it doesn't report back). The same as `emergency_sms_result` being `sent` or `handed_off`; not sent for `cancelled`, `failed` or `unavailable`. |
 | `emergency_leave`            | —                                                  | User left the emergency screen        |
 | `emergency_sms_result`       | `result: string`, `recipient_count: number`        | What became of the alert text: `sent`, `cancelled` or `failed` (iOS composer), `handed_off` to the messaging app (Android, which doesn't report back), `unavailable` (the device can't text) |
 | `countdown_alert`            | `kind: string`, `delivery: string`                 | The 5-minute `warning` or the `expired` alert reached the user: `in_app` on the emergency screen, or `catch_up` on returning to it after it came due. (Notifications while away aren't reported; the catch-up shows they were needed.) Sent by the shared core. |
@@ -94,7 +95,7 @@ strings, numbers, booleans or null.
 | Event         | Properties                                          | Description |
 | ------------- | --------------------------------------------------- | ----------- |
 | `dial_failed` | `target: string`, `screen: string`                  | The device couldn't place a call (no phone app: tablets, iPads) and showed the number instead. `target`: `emergency`, `contact` or `medicalert`. |
-| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error. `error` is the error's type name, never its message. |
+| `save_failed` | `screen: string`, `action: string`, `error: string` | A write failed and the user saw an error; also reading the saved emergency (`screen` `emergency`, `action` `load`), which the emergency screen reports with Retry instead of starting a new emergency; and reading the saved profile (`screen` `profile`, `action` `load`), which the profile screen reports with Retry instead of loading an empty form that Save would write over the profile; and saving a picked photo (`screen` `profile` or `onboarding_photo`, `action` `photo`), which leaves the photo on screen as it was. `error` is the error's type name, never its message. |
 
 Crashes and uncaught exceptions arrive as PostHog `$exception` events (error tracking autocapture, both apps).
 
@@ -111,7 +112,7 @@ Crashes and uncaught exceptions arrive as PostHog `$exception` events (error tra
 
 | Event | Properties | Description |
 | --- | --- | --- |
-| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS); readiness: `has_profile`, `has_photo`, `has_medical`, `profile_fields_filled`, `contacts_count`, `alert_contacts_count`, `places_count`, `notifications_enabled`, `exact_alarms` (Android) | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. The readiness properties say how prepared the app is before anyone needs it. |
+| `app_ready` | `startup_ms: number`, `prewarmed: boolean` (iOS); readiness: `has_profile`, `has_photo`, `has_medical`, `profile_fields_filled`, `contacts_count`, `alert_contacts_count`, `places_count`, `notifications_enabled` | Once per cold start: process start to the first frame of the first screen. On iOS, a prewarmed launch measures from app init instead and says so. The readiness properties say how prepared the app is before anyone needs it. (Android sent `exact_alarms` too until its countdown alerts stopped depending on the exact-alarm permission.) |
 | `data_migrated` | `from_version`, `to_version`, `ok: boolean`, `duration_ms`; when ok `has_profile`, `contacts_count`, `places_count`, `incidents_count`; when not, `error` | The first launch after updating from the RN app converted its database. |
 | `notifications_permission` | `granted: boolean` | The answer to the one-time notification permission prompt (on home after onboarding; Android 13 and up, and iOS). Sent by the shared core. |
 

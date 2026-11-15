@@ -26,6 +26,8 @@ final class AppModel: ObservableObject {
 
     init(store: AppStore = AppStore.open()) {
         self.store = store
+        store.photoCleaner = { cleanPhotos(keeping: $0) }
+        excludePhotosFromBackup()
     }
 
     func t(_ namespace: String, in language: String? = nil) -> Translate {
@@ -38,9 +40,9 @@ final class AppModel: ObservableObject {
         try? await store.seedAndReportMigration()
         // The device is the analytics identity (as on Android).
         if let deviceId = try? await store.deviceId() { identifyAnalytics(deviceId) }
-        themePreference = (try? await store.setting(key: "theme_preference")) ?? "system"
+        themePreference = (try? await store.setting(key: Store.companion.THEME_PREFERENCE)) ?? "system"
         // Spanish only in debug builds until it ships.
-        let saved = try? await store.setting(key: "language_preference")
+        let saved = try? await store.setting(key: Store.companion.LANGUAGE_PREFERENCE)
         language = saved == "es" && (isDebug || shippedLanguages.contains("es")) ? "es" : "en"
         onboarded = (try? await store.isOnboarded()) ?? false
     }
@@ -48,7 +50,10 @@ final class AppModel: ObservableObject {
     /// A tapped countdown alert: opens the emergency, if it's still running.
     func openEmergency() {
         Task {
-            guard (try? await store.activeEmergency()) != nil, path.last != .emergency else { return }
+            // A failed read still opens the screen: it says so, with Retry, which is better than a tap that does nothing.
+            let running: Bool
+            do { running = try await store.activeEmergency() != nil } catch { running = true }
+            guard running, path.last != .emergency else { return }
             path = [.emergency]
         }
     }
@@ -71,12 +76,12 @@ final class AppModel: ObservableObject {
 
     func setLanguage(_ value: String) {
         language = value
-        Task { try? await store.putSetting(key: "language_preference", value: value) }
+        Task { try? await store.putSetting(key: Store.companion.LANGUAGE_PREFERENCE, value: value) }
     }
 
     func setTheme(_ value: String) {
         themePreference = value
-        Task { try? await store.putSetting(key: "theme_preference", value: value) }
+        Task { try? await store.putSetting(key: Store.companion.THEME_PREFERENCE, value: value) }
     }
 
     /// The RN app's locale JSON, bundled as locales/<locale>/<namespace>.json.
@@ -182,6 +187,8 @@ struct RootView: View {
             }
         }
         .environment(\.appColors, colors)
+        // Every back control is read as "Back" in the app's language.
+        .environment(\.backLabel, model.t("common")("back"))
         .preferredColorScheme(scheme)
         .task { await model.load() }
     }

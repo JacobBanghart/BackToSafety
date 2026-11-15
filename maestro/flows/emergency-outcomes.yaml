@@ -11,6 +11,8 @@ name: Call 911, the info sheet, leaving, and Found
     id: home-start-emergency
 
 # Call 911 opens the dialer with the number and checks its step (F-17: twice stays checked).
+# Only a call that was placed is recorded: the iOS simulator can't place calls, so there the app
+# shows "Can't Place Calls" and the step stays unchecked.
 - tapOn:
     id: emergency-call-911
 - runFlow: ../subflows/call-unavailable.yaml
@@ -19,18 +21,40 @@ name: Call 911, the info sheet, leaving, and Found
 # Back from the dialer the way a person would: the app is not restarted.
 - launchApp:
     stopApp: false
-- assertVisible:
-    id: emergency-progress
-    text: 1/11 steps complete
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - assertVisible:
+          id: emergency-progress
+          text: 1/11 steps complete
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertVisible:
+          id: emergency-progress
+          text: 0/11 steps complete
 - tapOn:
     id: emergency-call-911
 - runFlow: ../subflows/call-unavailable.yaml
 # Back from the dialer the way a person would: the app is not restarted.
 - launchApp:
     stopApp: false
-- assertVisible:
-    id: emergency-progress
-    text: 1/11 steps complete
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - assertVisible:
+          id: emergency-progress
+          text: 1/11 steps complete
+- runFlow:
+    when:
+      platform: iOS
+    commands:
+      - assertVisible:
+          id: emergency-progress
+          text: 0/11 steps complete
 
 # The info sheet opens from the emergency and comes back.
 - tapOn:

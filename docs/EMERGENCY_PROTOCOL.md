@@ -11,7 +11,7 @@ This document describes the 15-minute guided search protocol: the emergency scre
 When a vulnerable adult goes missing, the app guides the caregiver through a structured search and escalation process. The protocol is designed to:
 
 - Keep the caregiver focused and moving.
-- Capture time-critical information (clothing, last seen).
+- Capture time-critical information (clothing, when the search started).
 - Notify emergency contacts quickly.
 - Surface likely destinations and high-risk areas.
 - Provide a pre-built 911 readout and one-tap dial.
@@ -101,7 +101,7 @@ This lets the protocol survive app termination, phone calls, and when the user b
 
 ## 6. clothing / Appearance Input
 
-A "What were they wearing?" card captures clothing details. The value is persisted to the active emergency's `wearing` and surfaced in the 911 readout.
+A "What are they wearing?" card, right after the action buttons and before the checklist, captures clothing details, with "You'll need this for 911" always under it. While it's empty it can be hidden (Hide); once something is written it stays. The value is persisted to the active emergency's `wearing` and surfaced in the 911 readout.
 
 ---
 
@@ -127,19 +127,18 @@ When the caregiver reaches the `familiar_places` step, saved destinations are su
 ### 911 call
 
 - One-tap button opens the dialer with `tel:911`.
-- Marks the `call_911` step complete.
-- Records an incident with outcome `911_called`.
-- Heavy haptic feedback confirms the action.
+- Once the dialer has opened (on iOS, once the system's open result says so), it marks the `call_911` step complete, records an incident with outcome `911_called` and sends `emergency_911_called`. On a device that can't place calls (a tablet) it shows the number to call and records none of that.
+- Heavy haptic feedback confirms the tap.
 
 ### Alert emergency contacts (SMS)
 
 - Composes an SMS to contacts with `notifyOnEmergency = true`.
 - Opens the system message composer (Android: an `smsto:` intent; iOS: `MFMessageComposeViewController`).
-- Includes the missing person's name, last-seen information, and a request to help search.
+- Includes the missing person's name, the time the search started, and a request to help search.
 
-### Info Sheet
+### Emergency Info
 
-- Navigates to `/readout` for a pre-written 911 script and full details.
+- The "Emergency Info" button opens the Emergency Info screen (`readout`): a pre-written 911 script and full details.
 
 ### Found — Safe
 
@@ -166,9 +165,9 @@ The app has no incident-history or insights screen.
 
 ---
 
-## 11. Last Seen
+## 11. Search Started
 
-The caregiver can record when/where the person was last seen. Last seen is the time the active emergency started; the info sheet shows it for dispatch.
+The 911 call script, the full details and the Emergency Info screen give the time the search started: when the active emergency started (the caregiver pressed Start), not when the person was last seen. The text to contacts gives it too ("Search started at ..."). Where the person was last seen is left to the caregiver to say on the call: on screen the script shows "Last known location:" followed by a highlighted "fill in location" blank, and the copied text has "[fill in location]" in its place.
 
 ---
 

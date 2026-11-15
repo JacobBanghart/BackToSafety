@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "backtosafety"
 include(":app")
+include(":baselineprofile")

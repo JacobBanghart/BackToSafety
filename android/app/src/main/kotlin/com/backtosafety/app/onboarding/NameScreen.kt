@@ -25,9 +25,15 @@ import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.core.ffi.ProfileField
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
 
 /** Port of app/onboarding/name.tsx. */
@@ -50,8 +56,8 @@ fun NameScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Uni
                 textStyle = type.bodyLarge.style().copy(fontWeight = FontWeight.SemiBold),
                 onClick = {
                     scope.launch {
-                        runCatching {
-                            store.saveProfile { it.copy(name = name.trim(), nickname = nickname.trim().ifEmpty { null }) }
+                        runCatchingCancellable {
+                            store.updateProfile(mapOf(ProfileField.FULL_NAME to name.trim(), ProfileField.NICKNAME to nickname.trim().ifEmpty { null }))
                             store.completeStep("profile_name")
                             trackStep(true, "profile_name")
                         }.onSuccess { onContinue() }.onFailure { e ->
@@ -74,7 +80,7 @@ fun NameScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Uni
             Field(t("name.nicknameLabel")) {
                 AppInput(nickname, { nickname = it }, t("name.nicknamePlaceholder"), "onboarding-name-nickname",
                     textStyle = rnTextStyle(18f, 22f), capitalization = KeyboardCapitalization.Words)
-                Text(t("name.nicknameHint"), style = type.body.style(), color = colors.textDisabled)
+                Text(t("name.nicknameHint"), style = type.body.style(), color = colors.textSecondary)
             }
             if (error.isNotEmpty()) Text(error, style = type.body.style(), color = colors.error)
         }

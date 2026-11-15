@@ -2,7 +2,11 @@ package com.backtosafety.app.ui
 
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -35,12 +39,32 @@ class AppColors(val isDark: Boolean) {
     val border = Color(if (isDark) DesignTokens.Dark.border else DesignTokens.Light.border)
     val primary = Color(if (isDark) DesignTokens.Dark.primary else DesignTokens.Light.primary)
     val primaryLight = Color(if (isDark) DesignTokens.Dark.primaryLight else DesignTokens.Light.primaryLight)
+
+    /**
+     * The round or square tile behind an accent icon on a card. In dark mode it is a step lighter
+     * than primaryLight, so the disc separates from the card (primaryText on it is 4.8:1).
+     */
+    val iconContainer = Color(if (isDark) DesignTokens.Dark.iconContainer else DesignTokens.Light.iconContainer)
+
+    /** The primary color for text and icons on the background (primary itself is a fill). */
+    val primaryText = Color(if (isDark) DesignTokens.Dark.primaryText else DesignTokens.Light.primaryText)
+
+    /** The countdown card: the accent in light mode, a calm deep tone of the same purple in dark. */
+    val timer = Color(if (isDark) DesignTokens.Dark.timer else DesignTokens.Light.timer)
     val tint = Color(if (isDark) DesignTokens.Dark.tint else DesignTokens.Light.tint)
     val inputBackground = Color(if (isDark) DesignTokens.Dark.inputBackground else DesignTokens.Light.inputBackground)
     val inputBorder = Color(if (isDark) DesignTokens.Dark.inputBorder else DesignTokens.Light.inputBorder)
     val inputPlaceholder = Color(if (isDark) DesignTokens.Dark.inputPlaceholder else DesignTokens.Light.inputPlaceholder)
     val error = Color(if (isDark) DesignTokens.Dark.error else DesignTokens.Light.error)
+
+    /** Error-coloured text and icons on the error-tinted fill (4.5:1 needs a deeper red in light, a paler one in dark). */
+    val errorText = Color(if (isDark) DesignTokens.Dark.errorText else DesignTokens.Light.errorText)
+
+    /** A highlight inside text (a script blank): a warm amber container, with its own ink, that reads as "fill this in", not as an error. */
+    val tertiaryContainer = Color(if (isDark) DesignTokens.Dark.tertiaryContainer else DesignTokens.Light.tertiaryContainer)
+    val onTertiaryContainer = Color(if (isDark) DesignTokens.Dark.onTertiaryContainer else DesignTokens.Light.onTertiaryContainer)
     val success = Color(if (isDark) DesignTokens.Dark.success else DesignTokens.Light.success)
+    val warning = Color(if (isDark) DesignTokens.Dark.warning else DesignTokens.Light.warning)
     val icon = Color(if (isDark) DesignTokens.Dark.icon else DesignTokens.Light.icon)
     val borderFocused = Color(if (isDark) DesignTokens.Dark.borderFocused else DesignTokens.Light.borderFocused)
 }
@@ -120,11 +144,42 @@ fun ceilPx(px: Float): Float = kotlin.math.ceil(px - 0.001f)
 fun DesignTokens.Type.style(fontWeight: Int = this.fontWeight, letterSpacing: Float = this.letterSpacing): TextStyle =
     rnTextStyle(fontSize, lineHeight, fontWeight, letterSpacing)
 
+/**
+ * The design tokens as Material 3's colour scheme, so the platform's own components (TopAppBar,
+ * Switch, Card, the outlined text field, ripples) take the app's colours rather than Material's
+ * baseline purple. Each role maps to the token that plays it: surfaces are the page and the card,
+ * the outline is the icon grey (3:1 for a switch's off state) and the outline variant the hairline.
+ */
+fun AppColors.materialScheme(): ColorScheme {
+    val base = if (isDark) darkColorScheme() else lightColorScheme()
+    return base.copy(
+        primary = primary, onPrimary = textOnPrimary,
+        primaryContainer = primaryLight, onPrimaryContainer = primaryText,
+        secondaryContainer = primaryLight, onSecondaryContainer = primaryText,
+        background = background, onBackground = text,
+        surface = background, onSurface = text,
+        surfaceVariant = surface, onSurfaceVariant = textSecondary,
+        surfaceContainerLowest = card, surfaceContainerLow = card, surfaceContainer = card,
+        surfaceContainerHigh = surface, surfaceContainerHighest = border,
+        surfaceTint = Color.Transparent,
+        outline = icon, outlineVariant = border,
+        error = error, onError = Color(DesignTokens.Light.textOnPrimary),
+    )
+}
+
 @Composable
 fun AppTheme(dark: Boolean, content: @Composable () -> Unit) {
     val viewConfiguration = LocalViewConfiguration.current
+    val colors = AppColors(dark)
+    MaterialTheme(colorScheme = colors.materialScheme()) {
+        AppThemeLocals(colors, viewConfiguration, content)
+    }
+}
+
+@Composable
+private fun AppThemeLocals(colors: AppColors, viewConfiguration: ViewConfiguration, content: @Composable () -> Unit) {
     CompositionLocalProvider(
-        LocalAppColors provides AppColors(dark),
+        LocalAppColors provides colors,
         // RN doesn't grow small touchables to 48dp (only an explicit hitSlop does). Matching
         // that keeps taps landing where they do in the RN app, and makes the bounds Compose
         // reports to UI Automator the real ones.

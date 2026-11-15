@@ -58,4 +58,4 @@ appId: com.backtosafety.app
     id: readout-script-toggle
 - assertVisible:
     id: readout-script-text
-    text: ".*Name: Margaret Smith\\. Age approximately \\d+\\. Last seen: .*Appearance: 5'6\".*Moderate Alzheimer's.*"
+    text: ".*Name: Margaret Smith\\. Age approximately \\d+\\. Search started: .*Appearance: 5'6\".*Moderate Alzheimer's.*"

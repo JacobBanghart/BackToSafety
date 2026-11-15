@@ -6,6 +6,7 @@
 - [ARCHITECTURE.md](./ARCHITECTURE.md): the Rust core, the Compose and SwiftUI apps, contracts and harness
 - [decisions/rust-core.md](./decisions/rust-core.md): why the shared core is Rust, with the measurements
 - [maestro/README.md](../maestro/README.md): device flows, screenshot fidelity, upgrade tests
+- [baseline-profile.md](./baseline-profile.md): the Android Baseline Profile, regenerating and measuring it
 
 ## Product
 

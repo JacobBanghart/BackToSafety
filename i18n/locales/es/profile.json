@@ -7,6 +7,11 @@
   "webCameraUnavailable": "Tomar una foto solo está disponible en la app móvil. En la web, usa \"Elegir foto\".",
   "photoLibraryPermission": "Necesitamos acceso a tu galería para actualizar la foto.",
   "cameraPermission": "Necesitamos acceso a la cámara para tomar una foto.",
+  "loadFailed": {
+    "title": "No se pudo cargar el perfil",
+    "message": "No se pudo leer el perfil guardado, así que no se cambió nada. Inténtalo de nuevo.",
+    "retry": "Reintentar"
+  },
   "unsavedChanges": {
     "title": "Cambios sin guardar",
     "message": "Tienes cambios sin guardar. Si sales ahora, se perderán.",
@@ -24,14 +29,15 @@
     "nickname": "Apodo / Nombre preferido",
     "nicknamePlaceholder": "Cómo prefiere que le llamen",
     "dateOfBirth": "Fecha de nacimiento",
+    "dateOfBirthPicker": "Elegir fecha de nacimiento",
     "height": "Estatura",
-    "heightPlaceholder": "5'6\"",
+    "heightPlaceholder": "p. ej., 5'6\"",
     "weight": "Peso",
-    "weightPlaceholder": "150 lbs",
+    "weightPlaceholder": "p. ej., 150 lbs",
     "hairColor": "Color de cabello",
-    "hairColorPlaceholder": "Canoso, corto",
+    "hairColorPlaceholder": "p. ej., Canoso, corto",
     "eyeColor": "Color de ojos",
-    "eyeColorPlaceholder": "Azules",
+    "eyeColorPlaceholder": "p. ej., Azules",
     "identifyingMarks": "Señas particulares",
     "identifyingMarksPlaceholder": "Tatuajes, cicatrices, marcas de nacimiento, lentes, aparatos auditivos...",
     "identifyingMarksHint": "Cualquier cosa que ayude a identificarle",
@@ -42,7 +48,7 @@
     "allergies": "Alergias",
     "allergiesPlaceholder": "Alergias a medicamentos, alimentos, del ambiente...",
     "cognitiveStatus": "Estado cognitivo",
-    "cognitiveStatusPlaceholder": "Demencia moderada; puede estar desorientado/a; responde a su nombre",
+    "cognitiveStatusPlaceholder": "p. ej., Demencia moderada; puede estar desorientado/a; responde a su nombre",
     "cognitiveStatusHint": "Describe cómo se comporta y qué deben esperar los rescatistas.",
     "dominantHand": "Mano dominante",
     "dominantHandHint": "Cuando se pierden, las personas suelen desviarse hacia el lado de su mano dominante",
@@ -79,7 +85,7 @@
     "medicAlertId": "ID de miembro de MedicAlert",
     "medicAlertIdPlaceholder": "Número de miembro",
     "medicAlertHotline": "Línea de MedicAlert",
-    "medicAlertHotlinePlaceholder": "1-800-432-5378",
+    "medicAlertHotlinePlaceholder": "p. ej., 1-800-432-5378",
     "medicAlertHotlineHint": "Línea de emergencia de MedicAlert Foundation, 24/7. Los rescatistas llaman ahí para consultar el historial médico."
   },
   "mobilityOptions": {
@@ -100,6 +106,7 @@
   },
   "cameraUnavailableTitle": "Cámara no disponible",
   "errors": {
-    "nameRequired": "El nombre es obligatorio."
+    "nameRequired": "El nombre es obligatorio.",
+    "photoSaveFailed": "No se pudo guardar la foto. Por favor, inténtalo de nuevo."
   }
 }

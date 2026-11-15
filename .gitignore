@@ -51,3 +51,6 @@ ios/build-tests/
 # The Rust core (builds go to CARGO_TARGET_DIR; this is the fallback)
 core/target/
 __pycache__/
+
+# Claude Code agent worktrees
+.claude/worktrees/

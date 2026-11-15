@@ -15,6 +15,7 @@ import com.backtosafety.app.core.Translations
 import com.backtosafety.app.destinations.DestinationsScreen
 import com.backtosafety.app.emergency.EmergencyScreen
 import com.backtosafety.app.home.HomeScreen
+import com.backtosafety.app.onboarding.CompleteScreen
 import com.backtosafety.app.onboarding.WelcomeScreen
 import com.backtosafety.app.profile.ProfileScreen
 import com.backtosafety.app.readout.ReadoutScreen
@@ -24,6 +25,14 @@ import com.backtosafety.core.ffi.AlertScheduler
 import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.DestinationEntity
 import com.backtosafety.core.ffi.ScheduledAlert
+import com.backtosafety.core.ffi.ActiveEmergency
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.EmergencyAway
+import com.backtosafety.core.ffi.ProfileField
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Translations
+import com.backtosafety.app.core.Store
+import com.backtosafety.core.ffi.AppDatabase
 import com.github.takahirom.roborazzi.captureRoboImage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -96,8 +105,8 @@ class ScreenSnapshotTest(private val mode: String) {
             store.seed()
             store.updateProfile(
                 mapOf(
-                    "name" to "Margaret Smith", "nickname" to "Maggie", "dateOfBirth" to "03/15/1940",
-                    "height" to "5'6\"", "medicalConditions" to "Moderate Alzheimer's", "dominantHand" to "left",
+                    ProfileField.FULL_NAME to "Margaret Smith", ProfileField.NICKNAME to "Maggie", ProfileField.DATE_OF_BIRTH to "03/15/1940",
+                    ProfileField.HEIGHT to "5'6\"", ProfileField.MEDICAL_CONDITIONS to "Moderate Alzheimer's", ProfileField.DOMINANT_HAND to "left",
                 ),
             )
             store.addContact(ContactEntity(name = "John Smith", phone = "(555) 123-4567", role = "primary_caregiver"))
@@ -122,6 +131,16 @@ class ScreenSnapshotTest(private val mode: String) {
 
     @Test fun home() = snapshot("home") { HomeScreen(t("home"), "911", store) {} }
 
+    /** The end of onboarding: its white check on a green that holds 4.5:1 in the dark theme too. */
+    @Test fun onboardingComplete() = snapshot("onboarding-complete") { CompleteScreen(t("onboarding"), store) {} }
+
+    /** Home while a search runs: the countdown is the headline, so it can't pass for Start. */
+    @Test fun homeActive() {
+        val startedAt = kotlin.time.Instant.fromEpochMilliseconds(NOW_MS - 4 * 60_000L).toString()
+        runBlocking { store.saveActiveEmergency(ActiveEmergency(startedAt, "", listOf("search_home", "call_911", "check_yard"))) }
+        snapshot("home-active") { HomeScreen(t("home"), "911", store) {} }
+    }
+
     @Test fun settings() = snapshot("settings") {
         SettingsScreen(t("settings"), t("common"), store, "system", {}, "en", {}, {}, {})
     }
@@ -132,7 +151,7 @@ class ScreenSnapshotTest(private val mode: String) {
 
     @Test fun places() = snapshot("places") { DestinationsScreen(t("destinations"), t("common"), store) {} }
 
-    @Test fun profile() = snapshot("profile") { ProfileScreen(t("profile"), t("common"), store, {}, {}) }
+    @Test fun profile() = snapshot("profile") { ProfileScreen(t("profile"), t("common"), store, CoroutineScope(Dispatchers.Unconfined), {}, {}) }
 
     @Test fun emergency() = snapshot("emergency") {
         EmergencyScreen(t("emergency"), t("common"), store, EmergencyAway(store, NoScheduler), CoroutineScope(Dispatchers.Unconfined), {}, {})

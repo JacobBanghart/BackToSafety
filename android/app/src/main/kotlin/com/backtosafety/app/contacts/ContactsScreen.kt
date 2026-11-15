@@ -1,11 +1,10 @@
 package com.backtosafety.app.contacts
 
-import android.Manifest
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.provider.ContactsContract
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -13,18 +12,18 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -32,6 +31,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -54,6 +54,11 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -64,6 +69,7 @@ import com.backtosafety.app.core.DesignTokens
 import com.backtosafety.app.core.Store
 import com.backtosafety.app.core.Translate
 import com.backtosafety.app.core.invoke
+import com.backtosafety.app.ui.ChipGrid
 import com.backtosafety.app.ui.FormDeleteButton
 import com.backtosafety.app.ui.FormTextInput
 import com.backtosafety.app.ui.HeaderSaveButton
@@ -79,6 +85,7 @@ import com.backtosafety.app.ui.listCard
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
@@ -87,6 +94,12 @@ import com.backtosafety.core.ffi.ContactEntity
 import com.backtosafety.core.ffi.DialTarget
 import com.backtosafety.core.ffi.formatPhoneInput
 import com.backtosafety.core.ffi.normalizeSmsRecipient
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.invoke
+import com.backtosafety.core.ffi.isUsablePhone
 import kotlinx.coroutines.launch
 
 private val space = DesignTokens.Spacing
@@ -147,14 +160,15 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         initialForm = ContactForm()
     }
     fun alert(validation: Boolean, message: String) =
-        showAlert(context, tCommon(if (validation) "required" else "error"), message)
+        showAlert(context, tCommon(if (validation) "required" else "error"), message, confirm = tCommon("ok") to {})
 
     fun save() {
         if (form.name.isBlank()) return alert(true, t("errors.nameRequired"))
         if (form.phone.isBlank()) return alert(true, t("errors.phoneRequired"))
+        if (!isUsablePhone(form.phone)) return alert(true, t("errors.phoneInvalid"))
         saving = true
         scope.launch {
-            runCatching {
+            runCatchingCancellable {
                 val entity = ContactEntity(
                     id = editing?.id ?: 0, name = form.name, phone = form.phone,
                     relationship = form.relationship.ifEmpty { null }, role = form.role,
@@ -179,7 +193,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         cancel = t("deleteModal.cancel"),
         confirm = t("deleteModal.confirm") to {
             scope.launch {
-                runCatching { store.deleteContact(contact.id) }
+                runCatchingCancellable { store.deleteContact(contact.id) }
                     .onSuccess {
                         Analytics.track(AnalyticsEvent.CONTACT_DELETED)
                         reload()
@@ -198,11 +212,12 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         )
     }
 
-    // expo-contacts: a picked contact's name and first phone number.
+    // The system's phone picker (a contact and which of its numbers). It hands back a URI this app
+    // may read once, so the app needs no contacts permission and never sees the rest of the address book.
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         importing = false
-        val id = result.data?.data?.lastPathSegment ?: return@rememberLauncherForActivityResult
-        val (name, phone) = runCatching { readContact(context, id) }.getOrElse {
+        val picked = result.data?.data ?: return@rememberLauncherForActivityResult
+        val (name, phone) = runCatching { readContact(context, picked) }.getOrElse {
             return@rememberLauncherForActivityResult alert(false, t("errors.importFailed"))
         }
         when {
@@ -216,22 +231,14 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
             }
         }
     }
-    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
-        if (grants[Manifest.permission.READ_CONTACTS] == true) {
-            picker.launch(Intent(Intent.ACTION_PICK).setType(ContactsContract.Contacts.CONTENT_TYPE))
-        } else {
-            importing = false
-            showAlert(
-                context, t("permission.title"), t("permission.message"), cancel = tCommon("notNow"),
-                confirm = tCommon("openSettings") to {
-                    context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", context.packageName, null)))
-                },
-            )
-        }
-    }
     fun import() {
         importing = true
-        permission.launch(arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS))
+        try {
+            picker.launch(Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI))
+        } catch (_: ActivityNotFoundException) {
+            importing = false
+            alert(false, t("errors.importFailed"))
+        }
     }
 
     UnsavedChangesGuard(
@@ -261,7 +268,7 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
         when {
             list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(tCommon("loading"), color = colors.text) }
             showForm -> Form(t, form, { form = it }, editing, ::delete)
-            else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
+            else -> Column(Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
                 if (list.isEmpty()) {
                     Empty(t, importing, onAdd = {
                         Analytics.track(AnalyticsEvent.CONTACT_ADD_TAPPED)
@@ -272,29 +279,41 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
                         Text(tCommon("nContacts", mapOf("count" to list.size)), style = type.body.style(), color = colors.textSecondary)
                         Text(t("reorderHint"), style = type.caption.style(), color = colors.textSecondary, modifier = Modifier.padding(top = space.xxs.udp))
                     }
+                    fun reorder(ordered: List<ContactEntity>) {
+                        contacts = ordered.mapIndexed { i, c -> c.copy(sortOrder = i) }
+                        scope.launch {
+                            runCatchingCancellable { store.reorderContacts(ordered) }.onFailure { e ->
+                                reportSaveFailed("contacts", "reorder", e)
+                                alert(false, t("errors.reorderFailed"))
+                            }
+                            reload()
+                        }
+                    }
+
+                    // Moves one card a place up or down: the screen reader's way to reorder.
+                    fun move(from: Int, to: Int) = reorder(list.toMutableList().apply { add(to, removeAt(from)) })
                     ReorderableColumn(
                         list, key = { it.id },
                         onDragStart = { haptics.performHapticFeedback(HapticFeedbackType.LongPress) },
-                        onReorder = { ordered ->
-                            contacts = ordered.mapIndexed { i, c -> c.copy(sortOrder = i) }
-                            scope.launch {
-                                runCatching { store.reorderContacts(ordered) }.onFailure { e ->
-                                    reportSaveFailed("contacts", "reorder", e)
-                                    alert(false, t("errors.reorderFailed"))
-                                }
-                                reload()
-                            }
-                        },
+                        onReorder = ::reorder,
                     ) { contact, index, dragging ->
-                        ContactCard(t, contact, index, dragging, onCall = {
-                            Analytics.track(AnalyticsEvent.CONTACT_CALL_TAPPED)
-                            dial(context, contact.phone, DialTarget.CONTACT, "contacts", tCommon)
-                        }) {
+                        ContactCard(
+                            t, contact, index, dragging,
+                            onMoveUp = if (index > 0) ({ move(index, index - 1) }) else null,
+                            onMoveDown = if (index < list.lastIndex) ({ move(index, index + 1) }) else null,
+                            onCall = {
+                                Analytics.track(AnalyticsEvent.CONTACT_CALL_TAPPED)
+                                dial(context, contact.phone, DialTarget.CONTACT, "contacts", tCommon)
+                            }) {
                             Analytics.track(AnalyticsEvent.CONTACT_EDIT_TAPPED)
                             open(contact, contact.toForm())
                         }
                     }
-                    Row(Modifier.padding(top = space.sm.udp), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
+                    // With a single contact, nobody else is called if they don't answer: say so
+                    // right above the Add button.
+                    if (list.size == 1) SecondContactPrompt(t, list.first().name)
+                    // One height for both buttons: the outlined Import's icon and edge mustn't make it taller.
+                    Row(Modifier.padding(top = space.sm.udp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         AddButton(t("addContact"), "contacts-add") {
                             Analytics.track(AnalyticsEvent.CONTACT_ADD_TAPPED)
                             open(null, ContactForm())
@@ -311,30 +330,46 @@ fun ContactsScreen(t: Translate, tCommon: Translate, store: Store, onBack: () ->
 /** The key two numbers share when they're the same contact (contacts.tsx toPhoneKey). */
 private fun phoneKey(phone: String) = normalizeSmsRecipient(phone).removePrefix("+")
 
-/** A picked contact's display name and first non-empty phone number. */
-private fun readContact(context: Context, id: String): Pair<String, String> {
-    val resolver = context.contentResolver
-    val name = resolver.query(
-        Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_URI, id),
-        arrayOf(ContactsContract.Contacts.DISPLAY_NAME), null, null, null,
-    )?.use { if (it.moveToFirst()) it.getString(0).orEmpty().trim() else "" }.orEmpty()
-    val phone = resolver.query(
-        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-        arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
-        "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?", arrayOf(id), null,
-    )?.use { c ->
-        generateSequence { if (c.moveToNext()) c.getString(0)?.trim().orEmpty() else null }.firstOrNull { it.isNotEmpty() }
-    }.orEmpty()
-    return name to phone
+/** The display name and number of the phone row the user [picked] (the one row the picker let us read). */
+private fun readContact(context: Context, picked: Uri): Pair<String, String> {
+    val columns = arrayOf(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER)
+    return context.contentResolver.query(picked, columns, null, null, null)
+        ?.use { if (it.moveToFirst()) it.getString(0).orEmpty().trim() to it.getString(1).orEmpty().trim() else null }
+        ?: ("" to "")
 }
 
 @Composable
-private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, dragging: Boolean, onCall: () -> Unit, onEdit: () -> Unit) {
+private fun ContactCard(
+    t: Translate,
+    contact: ContactEntity,
+    index: Int,
+    dragging: Boolean,
+    onMoveUp: (() -> Unit)?,
+    onMoveDown: (() -> Unit)?,
+    onCall: () -> Unit,
+    onEdit: () -> Unit,
+) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Box(Modifier.padding(bottom = space.md.udp)) {
         Column(Modifier.listCard(dragging).padding(space.lg.udp)) {
-            Row(Modifier.padding(bottom = space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.padding(bottom = if (contact.notifyOnEmergency) 0.udp else space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
+                // A visible handle says the cards can be dragged into order (hold, then drag). It is
+                // a 48dp target with a spoken name, and Move up / Move down actions, so TalkBack
+                // users can reorder without dragging. The glyph is the platform's drag indicator (Material's
+                // dotted grip, iOS's reorder lines) at 24dp in secondary text: the thin "=" read as faint.
+                val moveUp = t("actions.moveUp")
+                val moveDown = t("actions.moveDown")
+                Box(
+                    Modifier.size(48.udp).semantics {
+                        contentDescription = t("actions.reorderName", mapOf("name" to contact.name))
+                        customActions = listOfNotNull(
+                            onMoveUp?.let { CustomAccessibilityAction(moveUp) { it(); true } },
+                            onMoveDown?.let { CustomAccessibilityAction(moveDown) { it(); true } },
+                        )
+                    },
+                    contentAlignment = Alignment.Center,
+                ) { Icon("line.3.horizontal", 24f, colors.textSecondary) }
                 Column(Modifier.weight(1f).padding(end = space.md.udp)) {
                     Text(
                         contact.name, style = type.bodyLarge.style(fontWeight = 600), color = colors.text, maxLines = 1,
@@ -347,9 +382,31 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
                         modifier = Modifier.padding(top = 4.udp),
                     )
                 }
+                // Call is the action (green); Edit is secondary (outlined, neutral).
                 Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically) {
-                    CircleAction("contacts-item-$index-call", Color(DesignTokens.Semantic.success), "phone.fill", onCall)
-                    CircleAction("contacts-item-$index-edit", colors.primary, "pencil", onEdit)
+                    CircleAction(
+                        "contacts-item-$index-call", Color(DesignTokens.Semantic.success), white, "phone.fill", onCall,
+                        label = t("actions.callName", mapOf("name" to contact.name)),
+                    )
+                    CircleAction(
+                        "contacts-item-$index-edit", Color.Transparent, colors.text, "pencil", onEdit,
+                        label = t("actions.editName", mapOf("name" to contact.name)), border = colors.inputBorder,
+                    )
+                }
+            }
+            if (contact.notifyOnEmergency) {
+                // Its own row under the role, lined up with the name, across the card's full width:
+                // squeezed between the name and the call/edit buttons it wrapped at large text and
+                // crowded them. Sentence case, as caps at large text read as shouting and ran long.
+                Row(
+                    Modifier.padding(start = 48.udp, top = space.xs.udp, bottom = space.sm.udp)
+                        .clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(colors.primaryLight)
+                        .padding(horizontal = space.sm.udp, vertical = 3.udp),
+                    horizontalArrangement = Arrangement.spacedBy(4.udp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon("checkmark.circle.fill", 16f, colors.primaryText)
+                    Text(t("alertCircleBadge"), style = type.caption.style(fontWeight = 600), color = colors.primaryText)
                 }
             }
             contact.address?.ifEmpty { null }?.let {
@@ -359,41 +416,34 @@ private fun ContactCard(t: Translate, contact: ContactEntity, index: Int, draggi
                 }
             }
         }
-        if (contact.notifyOnEmergency) {
-            // Sits over the card's top edge (position absolute, top -10, right md).
-            Row(
-                Modifier.align(Alignment.TopEnd).offset(x = -space.md.udp, y = (-10).dp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .background(colors.primaryLight).rnBorder(1.udp, colors.primary, RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .padding(horizontal = space.sm.udp, vertical = 3.udp),
-                horizontalArrangement = Arrangement.spacedBy(4.udp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon("checkmark.circle.fill", 11f, colors.primary)
-                Text(t("alertCircleBadge"), style = rnTextStyle(10f, 12f, 700, 0.5f), color = colors.primary)
-            }
-        }
     }
 }
 
 @Composable
-private fun CircleAction(testID: String, color: Color, icon: String, onClick: () -> Unit) {
+// The glyph is hidden from TalkBack, so [label] ("Call Ana") is the control's only spoken name.
+private fun CircleAction(
+    testID: String, fill: Color, tint: Color, icon: String, onClick: () -> Unit, label: String, border: Color = Color.Transparent,
+) {
     Box(
-        Modifier.testTag(testID).size(44.udp).clip(CircleShape).clickable(onClick = onClick).background(color),
+        Modifier.testTag(testID).size(48.udp).clip(CircleShape).semantics { contentDescription = label }
+            .clickable(role = Role.Button, onClick = onClick).background(fill)
+            .rnBorder(1.udp, border, CircleShape),
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, 16f, white) }
+    ) { Icon(icon, 18f, tint) }
 }
 
 @Composable
 private fun RowScope.AddButton(label: String, testID: String, onClick: () -> Unit) {
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Row(
-        Modifier.weight(1f).testTag(testID).clip(shape).clickable(onClick = onClick)
+        Modifier.weight(1f).fillMaxHeight().testTag(testID).clip(shape).clickable(onClick = onClick)
             .background(LocalAppColors.current.primary).padding(space.lg.udp),
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon("plus", 20f, white)
-        Text(label, style = type.bodyBold.style(), color = white, maxLines = 1)
+        // textOnPrimary, not white: the dark theme's primary is a light tone with dark ink on it.
+        Icon("plus", 20f, LocalAppColors.current.textOnPrimary)
+        Text(label, style = type.bodyBold.style(), color = LocalAppColors.current.textOnPrimary, maxLines = 1)
     }
 }
 
@@ -401,14 +451,40 @@ private fun RowScope.AddButton(label: String, testID: String, onClick: () -> Uni
 private fun RowScope.ImportButton(label: String, testID: String, enabled: Boolean, onClick: () -> Unit) {
     val colors = LocalAppColors.current
     val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    // An outlined button in the accent, like the photo buttons: a pale grey edge beside the
+    // filled Add Contact read as disabled.
     Row(
-        Modifier.weight(1f).testTag(testID).clip(shape).clickable(enabled = enabled, onClick = onClick)
-            .background(colors.card).rnBorder(1.udp, colors.border, shape).padding(space.lg.udp),
+        Modifier.weight(1f).fillMaxHeight().testTag(testID).clip(shape).clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .background(colors.card).rnBorder(1.5f.udp, colors.primaryText, shape).padding(space.lg.udp),
         horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon("square.and.arrow.down", 18f, colors.tint)
-        Text(label, style = type.bodyBold.style(), color = colors.text, maxLines = 1)
+        Icon("square.and.arrow.down", 18f, colors.primaryText)
+        Text(label, style = type.bodyBold.style(), color = colors.primaryText, maxLines = 1)
+    }
+}
+
+/**
+ * Shown under the only contact: why a second one matters. Quiet (surface fill, no action of its
+ * own) because the Add button sits right under it; read as one sentence by TalkBack.
+ */
+@Composable
+private fun SecondContactPrompt(t: Translate, name: String) {
+    val colors = LocalAppColors.current
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = space.sm.udp).semantics(mergeDescendants = true) {}
+            .clip(shape).background(colors.surface).rnBorder(1.udp, colors.border, shape).padding(space.lg.udp),
+        horizontalArrangement = Arrangement.spacedBy(space.md.udp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(40.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
+            Icon("person.badge.plus", 20f, colors.primaryText)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(space.xxs.udp)) {
+            Text(t("secondContact.title"), style = type.bodyBold.style(), color = colors.text)
+            Text(t("secondContact.body", mapOf("name" to name)), style = type.label.style(fontWeight = 400, letterSpacing = 0f), color = colors.textSecondary)
+        }
     }
 }
 
@@ -423,11 +499,11 @@ private fun Empty(t: Translate, importing: Boolean, onAdd: () -> Unit, onImport:
         Box(
             Modifier.padding(bottom = space.sm.udp).size(88.udp).clip(CircleShape).background(colors.primaryLight),
             contentAlignment = Alignment.Center,
-        ) { Icon("person.2.fill", 40f, colors.primary) }
+        ) { Icon("person.2.fill", 40f, colors.primaryText) }
         Text(t("noContacts.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
         Text(t("noContacts.body"), style = type.body.style(), color = colors.textSecondary, textAlign = TextAlign.Center)
         Row(
-            Modifier.fillMaxWidth().widthIn(max = 560.udp).padding(top = space.sm.udp),
+            Modifier.fillMaxWidth().widthIn(max = 560.udp).padding(top = space.sm.udp).height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp),
         ) {
             AddButton(t("addContact"), "contacts-empty-add", onAdd)
@@ -436,7 +512,6 @@ private fun Empty(t: Translate, importing: Boolean, onAdd: () -> Unit, onImport:
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun Form(
     t: Translate,
@@ -446,11 +521,9 @@ private fun Form(
     onDelete: (ContactEntity) -> Unit,
 ) {
     val colors = LocalAppColors.current
-    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
-        Text(
-            t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
-            modifier = Modifier.padding(bottom = space.xl.udp),
-        )
+    Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
+        // No heading here: the app bar already says "Add Contact" / "Edit Contact", and a large
+        // second title right under it said the same thing twice and pushed the fields down.
         FormTextInput(
             t("form.nameLabel"), form.name, { onChange(form.copy(name = it)) }, "contacts-form-name",
             placeholder = t("form.namePlaceholder"), required = true, capitalization = KeyboardCapitalization.Words,
@@ -469,18 +542,17 @@ private fun Form(
         )
         Column(Modifier.padding(bottom = space.lg.udp)) {
             Text(t("form.roleLabel"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.padding(bottom = space.xs.udp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
-                for ((role, icon) in ROLES) {
-                    OptionChip(t("roles.$role"), icon, "contacts-form-role-$role", form.role == role, colors.primary) {
-                        if (form.role != role) onChange(form.copy(role = role))
-                    }
+            ChipGrid(ROLES) { (role, icon), modifier ->
+                OptionChip(t("roles.$role"), icon, "contacts-form-role-$role", form.role == role, colors.primary, modifier) {
+                    if (form.role != role) onChange(form.copy(role = role))
                 }
             }
         }
         val toggleShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
         Row(
             Modifier.fillMaxWidth().padding(bottom = space.lg.udp).testTag("contacts-form-notify").clip(toggleShape)
-                .clickable { onChange(form.copy(notifyOnEmergency = !form.notifyOnEmergency)) }
+                // The whole row is the switch: TalkBack reads its label, the Switch role and on/off.
+                .toggleable(form.notifyOnEmergency, role = Role.Switch) { onChange(form.copy(notifyOnEmergency = it)) }
                 .background(colors.inputBackground).rnBorder(1.udp, colors.inputBorder, toggleShape).padding(space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

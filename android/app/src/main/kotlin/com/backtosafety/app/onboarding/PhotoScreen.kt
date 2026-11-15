@@ -1,8 +1,6 @@
 package com.backtosafety.app.onboarding
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,7 +30,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -45,52 +43,95 @@ import com.backtosafety.app.core.DesignTokens
 import com.backtosafety.app.core.Store
 import com.backtosafety.app.core.Translate
 import com.backtosafety.app.core.invoke
+import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.OnboardingStepHeader
 import com.backtosafety.app.ui.PrimaryButton
 import com.backtosafety.app.ui.SkipButton
 import com.backtosafety.app.ui.TrackStepViewed
+import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
+import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
 import com.backtosafety.core.ffi.AnalyticsEvent
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.core.ffi.ProfileField
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.invoke
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 
 /** Port of app/onboarding/photo.tsx. */
 @Composable
-fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onContinue: () -> Unit) {
+fun PhotoScreen(
+    t: Translate,
+    tCommon: Translate,
+    store: Store,
+    /** Outlives the screen, for saving a picked photo. */
+    appScope: CoroutineScope,
+    onBack: () -> Unit,
+    onContinue: () -> Unit,
+) {
     TrackStepViewed("profile_photo")
     val colors = LocalAppColors.current
     val type = DesignTokens.Typography
     val space = DesignTokens.Spacing
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var photoUri by remember { mutableStateOf<String?>(null) }
+    // Saveable: a picked photo survives a font-size change and the system reclaiming the app,
+    // both of which recreate this screen (rotation doesn't: MainActivity handles it).
+    var photoUri by rememberSaveable { mutableStateOf<String?>(null) }
     var saving by remember { mutableStateOf(false) }
 
-    val picker = rememberPhotoPicker { photoUri = it }
+    // A photo that failed to save leaves the step's photo as it was.
+    val picker = rememberPhotoPicker(
+        appScope, "onboarding_photo",
+        onFailed = { showAlert(context, tCommon("error"), t("photo.saveFailed"), confirm = tCommon("ok") to {}) },
+    ) { photoUri = it }
 
     OnboardingScaffold(
         footer = {
             SkipButton(t("photo.skip"), "onboarding-photo-skip") {
-                trackStep(false, "profile_photo")
-                scope.launch { store.completeStep("profile_photo"); onContinue() }
+                if (saving) return@SkipButton
+                saving = true
+                scope.launch {
+                    runCatchingCancellable {
+                        store.completeStep("profile_photo")
+                        trackStep(false, "profile_photo")
+                    }.onSuccess { onContinue() }.onFailure { e ->
+                        // A failed skip keeps the user on the step and says so, so they can skip again.
+                        reportSaveFailed("onboarding_photo", "skip", e)
+                        showAlert(context, tCommon("error"), tCommon("saveFailed"), confirm = tCommon("ok") to {})
+                    }
+                    saving = false
+                }
             }
             PrimaryButton(
                 if (saving) tCommon("saving") else t("photo.continue"), "onboarding-photo-continue",
                 enabled = photoUri != null && !saving,
                 textStyle = rnTextStyle(18f, 24f, fontWeight = 600),
                 onClick = {
+                    if (saving) return@PrimaryButton
                     saving = true
                     scope.launch {
-                        store.saveProfile { it.copy(photoUri = photoUri) }
-                        store.completeStep("profile_photo")
-                        trackStep(true, "profile_photo")
+                        runCatchingCancellable {
+                            store.updateProfile(mapOf(ProfileField.PHOTO_URI to photoUri))
+                            store.completeStep("profile_photo")
+                            trackStep(true, "profile_photo")
+                        }.onSuccess { onContinue() }.onFailure { e ->
+                            // A failed save keeps the user on the step with the photo they picked, so they can retry.
+                            reportSaveFailed("onboarding_photo", "save", e)
+                            showAlert(context, tCommon("error"), tCommon("saveFailed"), confirm = tCommon("ok") to {})
+                        }
                         saving = false
-                        onContinue()
                     }
                 },
             )
@@ -101,9 +142,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
         Text(t("photo.subtitle"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xl.udp))
 
         Box(Modifier.fillMaxWidth().padding(bottom = space.xl.udp), contentAlignment = Alignment.Center) {
-            val bitmap = remember(photoUri) {
-                photoUri?.let { BitmapFactory.decodeFile(Uri.parse(it).path)?.asImageBitmap() }
-            }
+            val bitmap = rememberPhoto(photoUri, 200)
             if (bitmap != null) {
                 Image(bitmap, null, Modifier.size(200.udp).clip(CircleShape), contentScale = ContentScale.Crop)
             } else {
@@ -111,11 +150,12 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     Modifier
                         .size(200.udp)
                         .clip(CircleShape)
-                        .background(colors.surface)
+                        // An empty photo slot: a tinted fill and a dashed tint outline, as on Edit Profile.
+                        .background(colors.primaryLight)
                         .drawBehind {
                             val stroke = 2.dp.toPx()
                             drawCircle(
-                                color = colors.border,
+                                color = colors.tint,
                                 radius = size.minDimension / 2 - stroke / 2,
                                 center = Offset(size.width / 2, size.height / 2),
                                 style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
@@ -124,7 +164,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("📷", style = rnTextStyle(48f, 56f), modifier = Modifier.padding(top = space.xs.udp))
+                    Icon("camera.fill", 44f, colors.primaryText, Modifier.padding(top = space.xs.udp))
                     Text(t("photo.noPhoto"), color = colors.textSecondary, modifier = Modifier.padding(top = space.sm.udp))
                 }
             }
@@ -143,7 +183,7 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
         Text(
             t("photo.tip"),
             style = rnTextStyle(14f, 24f).copy(fontStyle = FontStyle.Italic),
-            color = colors.textDisabled,
+            color = colors.textSecondary,
             textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -158,12 +198,12 @@ private fun OutlineButton(label: String, testTag: String, onClick: () -> Unit) {
             .fillMaxWidth()
             .testTag(testTag)
             .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
-            .border(1.udp, colors.primary, RoundedCornerShape(DesignTokens.Radius.lg.dp))
+            .border(1.udp, colors.primaryText, RoundedCornerShape(DesignTokens.Radius.lg.dp))
             .clickable(onClick = onClick)
             // RN's 1dp border adds to the height (14 padding + 1 border each side).
             .padding(vertical = 15.udp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = colors.primary)
+        Text(label, style = DesignTokens.Typography.bodyBold.style(), color = colors.primaryText)
     }
 }

@@ -22,7 +22,7 @@ struct NameView: View {
                 }
                 Field(label: t("name.nicknameLabel")) {
                     AppInput(text: $nickname, placeholder: t("name.nicknamePlaceholder"), testID: "onboarding-name-nickname", size: 18, capitalization: .words)
-                    RNText(t("name.nicknameHint"), Typography.body.spec, color: colors.textDisabled)
+                    RNText(t("name.nicknameHint"), Typography.body.spec, color: colors.textSecondary)
                 }
                 if !error.isEmpty { RNText(error, Typography.body.spec, color: colors.error) }
             }
@@ -32,7 +32,7 @@ struct NameView: View {
                 Task {
                     do {
                         let nick = nickname.trimmingCharacters(in: .whitespaces)
-                        try await model.store.updateProfile(values: ["name": name.trimmingCharacters(in: .whitespaces), "nickname": nick.isEmpty ? nil : nick])
+                        try await model.store.updateProfile(values: [.fullName: name.trimmingCharacters(in: .whitespaces), .nickname: nick.isEmpty ? nil : nick])
                         try await model.store.completeStep(step: "profile_name")
                         trackStep(true, "profile_name")
                         model.path.append(.photo)
@@ -56,6 +56,9 @@ struct PhotoView: View {
     @State private var photoUri: String?
     @State private var saving = false
     @State private var picker: PickerSource?
+    @State private var alert: AppAlert?
+    /// The picked photo failed to save; said once the picker has gone, so the alert can show.
+    @State private var photoFailed = false
 
     var body: some View {
         OnboardingScaffold {
@@ -67,12 +70,13 @@ struct PhotoView: View {
                     Image(uiImage: image).resizable().scaledToFill().frame(width: 200, height: 200).clipShape(Circle())
                 } else {
                     VStack(spacing: 0) {
-                        RNText("📷", TextSpec(size: 48, lineHeight: 56), color: colors.text).padding(.top, Space.xs)
+                        SFIcon("camera.fill", 44, colors.primaryText).padding(.top, Space.xs)
                         RNText(t("photo.noPhoto"), TextSpec(size: 16, lineHeight: 24), color: colors.textSecondary).padding(.top, Space.sm)
                     }
                     .frame(width: 200, height: 200)
-                    .background(Circle().fill(colors.surface))
-                    .overlay(Circle().strokeBorder(colors.border, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
+                    // An empty photo slot: a tinted fill and a dashed tint outline, as on Edit Profile.
+                    .background(Circle().fill(colors.primaryLight))
+                    .overlay(Circle().strokeBorder(colors.tint, style: StrokeStyle(lineWidth: 2, dash: [6, 6])))
                 }
             }
             .frame(maxWidth: .infinity)
@@ -88,40 +92,65 @@ struct PhotoView: View {
                 }
             }
             .padding(.bottom, Space.xl)
-            RNText(t("photo.tip"), TextSpec(size: 14, lineHeight: 24).italic(), color: colors.textDisabled, align: .center)
+            RNText(t("photo.tip"), TextSpec(size: 14, lineHeight: 24).italic(), color: colors.textSecondary, align: .center)
                 .frame(maxWidth: .infinity)
         } footer: {
             SkipButton(label: t("photo.skip"), testID: "onboarding-photo-skip") {
-                trackStep(false, "profile_photo")
+                guard !saving else { return }
+                saving = true
                 Task {
-                    _ = try? await model.store.completeStep(step: "profile_photo")
-                    model.path.append(.appearance)
+                    defer { saving = false }
+                    do {
+                        try await model.store.completeStep(step: "profile_photo")
+                        trackStep(false, "profile_photo")
+                        model.path.append(.appearance)
+                    } catch {
+                        // A failed skip keeps the user on the step and says so, so they can skip again.
+                        reportSaveFailed(screen: "onboarding_photo", action: "skip", error: error)
+                        alert = AppAlert(title: tCommon("error"), message: tCommon("saveFailed"))
+                    }
                 }
             }
             PrimaryButton(label: saving ? tCommon("saving") : t("photo.continue"), testID: "onboarding-photo-continue",
                           enabled: photoUri != nil && !saving) {
+                guard !saving else { return }
                 saving = true
                 Task {
-                    _ = try? await model.store.updateProfile(values: ["photoUri": photoUri])
-                    _ = try? await model.store.completeStep(step: "profile_photo")
-                    trackStep(true, "profile_photo")
-                    saving = false
-                    model.path.append(.appearance)
+                    defer { saving = false }
+                    do {
+                        try await model.store.updateProfile(values: [.photoUri: photoUri])
+                        try await model.store.completeStep(step: "profile_photo")
+                        trackStep(true, "profile_photo")
+                        model.path.append(.appearance)
+                    } catch {
+                        // A failed save keeps the user on the step with the photo they picked, so they can retry.
+                        reportSaveFailed(screen: "onboarding_photo", action: "save", error: error)
+                        alert = AppAlert(title: tCommon("error"), message: tCommon("saveFailed"))
+                    }
                 }
             }
         }
-        .sheet(item: $picker) { source in
-            ImagePicker(source: source.uiSource) { photoUri = $0 }.ignoresSafeArea()
+        .appAlert($alert, ok: tCommon("ok"))
+        .sheet(item: $picker, onDismiss: showPhotoFailed) { source in
+            // A photo that failed to save leaves the step's photo as it was.
+            ImagePicker(source: source.uiSource, screen: "onboarding_photo", onPhoto: { photoUri = $0 }, onFailed: { photoFailed = true })
+                .ignoresSafeArea()
         }
         .trackStepViewed("profile_photo")
     }
 
+    private func showPhotoFailed() {
+        guard photoFailed else { return }
+        photoFailed = false
+        alert = AppAlert(title: tCommon("error"), message: t("photo.saveFailed"))
+    }
+
     private func outlineButton(_ label: String, _ testID: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            RNText(label, Typography.bodyBold.spec, color: colors.primary)
+            RNText(label, Typography.bodyBold.spec, color: colors.primaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 15)
-                .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primary, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.primaryText, lineWidth: 1))
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
@@ -179,7 +208,7 @@ struct AppearanceView: View {
                 Task {
                     func v(_ s: String) -> String? { let x = s.trimmingCharacters(in: .whitespaces); return x.isEmpty ? nil : x }
                     _ = try? await model.store.updateProfile(values: [
-                        "height": v(height), "weight": v(weight), "hairColor": v(hair), "eyeColor": v(eyes), "identifyingMarks": v(marks),
+                        .height: v(height), .weight: v(weight), .hairColor: v(hair), .eyeColor: v(eyes), .identifyingMarks: v(marks),
                     ])
                     _ = try? await model.store.completeStep(step: "profile_appearance")
                     trackStep(true, "profile_appearance")
@@ -200,6 +229,8 @@ struct ContactStepView: View {
     @State private var name = ""
     @State private var phone = ""
     @State private var relationship = ""
+    @State private var savedId: Int64?
+    @State private var saving = false
     @State private var error = ""
 
     var body: some View {
@@ -242,18 +273,26 @@ struct ContactStepView: View {
             }
             // Looks disabled until both fields are filled, but a tap explains what's missing.
             PrimaryButton(label: t("contact.continue"), testID: "onboarding-contact-continue", dimmed: missing) {
+                if saving { return }
                 if missing { error = t("contact.required"); return }
+                if !PhoneKt.isUsablePhone(phone: phone) { error = t("contact.phoneInvalid"); return }
+                saving = true
                 Task {
+                    defer { saving = false }
                     do {
                         let rel = relationship.trimmingCharacters(in: .whitespaces)
-                        _ = try await model.store.addContact(
-                            contact: ContactEntity(
-                                id: 0, name: name.trimmingCharacters(in: .whitespaces), phone: phone.trimmingCharacters(in: .whitespaces),
-                                relationship: rel.isEmpty ? nil : rel, role: "primary_caregiver", address: nil,
-                                notifyOnEmergency: true, shareMedicalInfo: true, notes: nil, sortOrder: 0, createdAt: nil, updatedAt: nil
-                            ),
-                            sortOrder: nil
+                        let contact = ContactEntity(
+                            id: savedId ?? 0, name: name.trimmingCharacters(in: .whitespaces), phone: phone.trimmingCharacters(in: .whitespaces),
+                            relationship: rel.isEmpty ? nil : rel, role: "primary_caregiver", address: nil,
+                            notifyOnEmergency: true, shareMedicalInfo: true, notes: nil, sortOrder: 0, createdAt: nil, updatedAt: nil
                         )
+                        // Back from the next screen and Continue again edits this contact
+                        // rather than adding a second one.
+                        if savedId != nil {
+                            try await model.store.updateContact(c: contact)
+                        } else {
+                            savedId = try await model.store.addContact(contact: contact, sortOrder: nil).int64Value
+                        }
                         try await model.store.completeStep(step: "emergency_contact")
                         trackStep(true, "emergency_contact")
                         model.path.append(.complete)
@@ -281,7 +320,9 @@ struct CompleteView: View {
                 VStack(spacing: 0) {
                     RNText(t("complete.icon"), TextSpec(size: 48, lineHeight: 56), color: Color(argb: Light.textOnPrimary))
                         .frame(width: 100, height: 100)
-                        .background(Circle().fill(colors.success))
+                        // The fixed success fill in both themes: white on the dark theme's light green
+                        // (#4ade80) was 1.74:1; on this one it passes 4.5:1.
+                        .background(Circle().fill(Color(argb: Semantic.success)))
                         .padding(.bottom, Space.xxl)
                     RNText(t("complete.title"), Typography.display.spec, color: colors.text, align: .center).padding(.bottom, Space.lg)
                     RNText(t("complete.description"), Typography.body.spec, color: colors.textSecondary, align: .center).padding(.bottom, Space.xxl)

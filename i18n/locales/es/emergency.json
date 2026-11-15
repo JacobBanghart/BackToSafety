@@ -1,6 +1,11 @@
 {
   "screenTitle": "Búsqueda de emergencia",
   "loading": "Cargando estado de la emergencia...",
+  "loadFailed": {
+    "title": "No se pudo cargar la emergencia",
+    "message": "No se pudo leer la emergencia guardada, así que no se inició una nueva. Inténtalo de nuevo.",
+    "retry": "Reintentar"
+  },
   "timer": {
     "labelActive": "Tiempo restante",
     "labelExpired": "HORA DE LLAMAR AL {{emergencyNumber}}",
@@ -16,19 +21,21 @@
     "label": "¿Qué ropa lleva puesta?",
     "hint": "Lo necesitarás para el {{emergencyNumber}}",
     "placeholder": "p. ej., chaqueta azul, pantalón gris, tenis blancos",
-    "dismiss": "Descartar"
+    "hide": "Ocultar"
   },
   "actions": {
     "foundSafe": "Encontrado: a salvo",
-    "call911": "📞 Llamar al {{emergencyNumber}}",
-    "infoSheet": "📋 Ficha de información",
-    "alertCircle": "📱 Avisar a contactos"
+    "call911": "Llamar al {{emergencyNumber}}",
+    "infoSheet": "Información de emergencia",
+    "alertCircle": "Avisar a contactos"
   },
   "checklist": {
     "title": "Protocolo de búsqueda",
     "priority": "PRIORIDAD",
     "savedPlaces": "Lugares guardados para revisar:",
-    "morePlaces": "+{{count}} más en Lugares"
+    "morePlaces": "+{{count}} más en Lugares",
+    "done": "Hecho",
+    "notDone": "Pendiente"
   },
   "steps": {
     "home_search": {
@@ -81,7 +88,7 @@
     "title": "Cuando la encuentres",
     "body": "• Acércate de frente\n• Habla despacio, con frases cortas\n• Dale tiempo para responder\n• Ofrécete a caminar a su lado\n• No discutas ni la corrijas"
   },
-  "smsMessage": "URGENTE: {{name}} está desaparecido/a. Visto/a por última vez: {{time}}. {{wearing}}Por favor ayuda a buscar o llama si lo/la ves.",
+  "smsMessage": "URGENTE: {{name}} está desaparecido/a. Búsqueda iniciada: {{time}}. {{wearing}}Por favor ayuda a buscar o llama si lo/la ves.",
   "smsWearing": "Lleva puesto: {{wearing}}. ",
   "modal": {
     "found": {
@@ -91,8 +98,9 @@
     "leave": {
       "title": "¿Salir de la búsqueda de emergencia?",
       "message": "El temporizador seguirá corriendo en segundo plano. Puedes volver para continuar.",
-      "stay": "Quedarme",
-      "leave": "Salir",
+      "notificationsOff": "Las notificaciones están desactivadas, así que no recibirás el aviso de los 5 minutos ni la alerta de fin del tiempo mientras estés fuera.",
+      "stay": "Seguir buscando",
+      "leave": "Salir: el temporizador sigue",
       "end": "Terminar emergencia"
     },
     "noContacts": {
@@ -108,12 +116,20 @@
   "alerts": {
     "warning": {
       "title": "Quedan menos de 5 minutos",
-      "body": "Sigue buscando. Si no aparece cuando termine el temporizador, llama al {{emergencyNumber}}."
+      "body": "Sigue buscando. Si no aparece cuando termine el temporizador, llama al {{emergencyNumber}}.",
+      "channel": "Aviso de la cuenta regresiva"
     },
     "expired": {
       "title": "Hora de llamar al {{emergencyNumber}}",
-      "body": "Terminaron los 15 minutos de búsqueda. Llama al {{emergencyNumber}} ahora y pide una Alerta Plateada."
-    },
-    "channel": "Cuenta regresiva de emergencia"
+      "body": "Terminaron los 15 minutos de búsqueda. Llama al {{emergencyNumber}} ahora y pide una Alerta Plateada.",
+      "channel": "Fin de la cuenta regresiva"
+    }
+  },
+  "ongoing": {
+    "channel": "Emergencia en curso",
+    "title": "Emergencia en curso",
+    "body": "Sigue buscando. Si no aparece cuando termine el temporizador, llama al {{emergencyNumber}}.",
+    "expiredTitle": "Hora de llamar al {{emergencyNumber}}",
+    "expiredBody": "Terminaron los 15 minutos de búsqueda. Llama al {{emergencyNumber}} ahora y pide una Alerta Plateada."
   }
 }

@@ -6,8 +6,11 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.PathInterpolator
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.EnterTransition
@@ -22,14 +25,15 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
@@ -61,10 +65,16 @@ import com.backtosafety.app.readout.ReadoutScreen
 import com.backtosafety.app.settings.SettingsScreen
 import com.backtosafety.app.ui.AppTheme
 import com.backtosafety.app.ui.LocalAppColors
+import com.backtosafety.app.ui.LocalBackLabel
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.core.ffi.AnalyticsEvent
 import com.posthog.PostHog
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.invoke
 import kotlinx.coroutines.launch
+import android.graphics.Color as AndroidColor
 
 /** Each route's path in the RN app (expo-router), which analytics reports screens as. */
 private val RN_PATHS = mapOf(
@@ -111,36 +121,43 @@ private fun AnimatedContentTransitionScope<NavBackStackEntry>.exit(to: Int): Exi
 /** i18n/index.ts: languages released to users (Spanish awaits a native review). */
 private val SHIPPED_LANGUAGES = listOf("en")
 
-/** The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). */
+/** i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships. */
+internal suspend fun Store.savedLanguage(): String = when (runCatchingCancellable { setting(Store.LANGUAGE_PREFERENCE) }.getOrNull()) {
+    "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
+    else -> "en"
+}
+
+/** The scrim behind white system-bar icons on a light screen where they can't turn dark (API < 26). */
+private val LIGHT_SCREEN_DARK_SCRIM = AndroidColor.argb(0x80, 0x1b, 0x1b, 0x1b)
+
+/**
+ * The app: theme from the saved preference, then onboarding or home (app/_layout.tsx). The
+ * database and the rest of [services] outlive this composition (BackToSafetyApp).
+ */
 @Composable
-fun App(store: Store, translations: Translations, modifier: Modifier, openEmergencyRequests: State<Int>) {
+fun App(services: AppServices, modifier: Modifier, openEmergencyRequests: State<Int>) {
+    val store = services.store
+    val translations = services.translations
+    val away = services.away
     var onboarded by remember { mutableStateOf<Boolean?>(null) }
     var themePreference by remember { mutableStateOf("system") }
-    var language by remember { mutableStateOf("en") }
-    val scope = rememberCoroutineScope()
     val context = LocalContext.current
-    val currentLanguage by rememberUpdatedState(language)
-    val notifications = remember {
-        CountdownNotifications(
-            context.applicationContext,
-            emergencyT = { translations.translator(currentLanguage, "emergency") },
-            emergencyNumber = { translations.translator(currentLanguage, "common")("emergencyNumber") },
-        )
-    }
-    val away = remember(store) { EmergencyAway(store, notifications) }
+    val app = context.applicationContext as BackToSafetyApp
+    // Starts as the language the process last showed (a recreated activity) until the saved one is read.
+    var language by remember { mutableStateOf(app.language) }
+    val scope = rememberCoroutineScope()
     LaunchedEffect(Unit) {
-        // Seeds, and reports data_migrated if opening migrated a database the RN app left.
-        store.seed()
-        // The device is the analytics identity (as on iOS).
-        runCatching { store.deviceId() }.onSuccess { if (BuildConfig.POSTHOG_KEY.isNotEmpty()) PostHog.identify(it) }
-        themePreference = store.setting(Store.THEME_PREFERENCE) ?: "system"
-        // i18n/index.ts loadSavedLanguage: Spanish only in dev builds until it ships.
-        language = when (store.setting(Store.LANGUAGE_PREFERENCE)) {
-            "es" -> if (BuildConfig.DEBUG || "es" in SHIPPED_LANGUAGES) "es" else "en"
-            else -> "en"
-        }
-        onboarded = store.isOnboarded()
+        // A failed read (the database didn't open, BackToSafetyApp) shows the defaults, as on iOS.
+        themePreference = runCatchingCancellable { store.setting(Store.THEME_PREFERENCE) }.getOrNull() ?: "system"
+        language = store.savedLanguage()
+        app.language = language
+        onboarded = runCatchingCancellable { store.isOnboarded() }.getOrDefault(false)
+        // An emergency under way (left running when the app was closed, or the phone
+        // restarted) shows its countdown again.
+        runCatchingCancellable { store.activeEmergency() }.getOrNull()?.let { services.countdown.sync(it.startedAt) }
     }
+    // The alerts scheduled while away are translated in the language showing now.
+    SideEffect { app.language = language }
     val dark = when (themePreference) {
         "dark" -> true
         "light" -> false
@@ -164,13 +181,28 @@ fun App(store: Store, translations: Translations, modifier: Modifier, openEmerge
         // differ from the system's, which the window's resource (values-night) follows.
         val activity = LocalActivity.current
         LaunchedEffect(background) { activity?.window?.setBackgroundDrawable(ColorDrawable(background.toArgb())) }
+        // The status and navigation bar icons follow the in-app theme too: enableEdgeToEdge
+        // picks them from the system's, which left light icons on a light screen.
+        // SystemBarStyle.light/dark pins the icon colour outright (auto lets the system pick it
+        // and fade it), so the clock and icons stay dark and crisp on a light screen.
+        LaunchedEffect(activity, dark) {
+            val component = activity as? ComponentActivity ?: return@LaunchedEffect
+            val style = if (dark) {
+                SystemBarStyle.dark(AndroidColor.TRANSPARENT)
+            } else {
+                // The second colour is the scrim used where the system can't draw dark icons
+                // (below API 26 for the navigation bar, minSdk is 24): a transparent one left
+                // white icons on the light screen there. This dark one is enableEdgeToEdge's own.
+                SystemBarStyle.light(AndroidColor.TRANSPARENT, LIGHT_SCREEN_DARK_SCRIM)
+            }
+            component.enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
+        }
         // The first screen's first frame: report how long the cold start took.
         LaunchedEffect(Unit) {
             withFrameNanos { }
             AppReady.report {
                 store.readinessProperties() + mapOf(
                     "notifications_enabled" to CountdownNotifications.enabled(context),
-                    "exact_alarms" to notifications.canScheduleExact(),
                 )
             }
         }
@@ -195,79 +227,90 @@ fun App(store: Store, translations: Translations, modifier: Modifier, openEmerge
             if (route != "home" || BuildConfig.TEST_SEAMS || Build.VERSION.SDK_INT < 33) return@LaunchedEffect
             if (away.shouldAskForNotifications()) askNotifications.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
-        // A tapped countdown alert opens the emergency, if it's still running.
+        // A tapped countdown alert opens the emergency, if it's still running: the screen already
+        // on the stack (under the readout, say), never a second one, which would start a new
+        // emergency when revealed after this one ends.
         LaunchedEffect(openEmergencyRequests.value) {
             if (openEmergencyRequests.value == 0 || !start) return@LaunchedEffect
-            if (store.activeEmergency() != null && route != "emergency") nav.navigate("emergency")
+            // A failed read still opens the screen: it says so, with Retry, which is better than a tap that does nothing.
+            val running = runCatchingCancellable { store.activeEmergency() }
+            if (running.isSuccess && running.getOrNull() == null) return@LaunchedEffect
+            if (!nav.popBackStack("emergency", inclusive = false)) nav.navigate("emergency") { launchSingleTop = true }
         }
-        NavHost(
-            nav,
-            startDestination = if (start) "home" else "welcome",
-            modifier = modifier.background(background),
-            enterTransition = { enter(from = 1) },
-            exitTransition = { exit(to = -1) },
-            popEnterTransition = { enter(from = -1) },
-            popExitTransition = { exit(to = 1) },
-        ) {
-            composable("welcome") {
-                WelcomeScreen(
-                    t = onboarding,
-                    themePreference = themePreference,
-                    onThemeChange = {
-                        Analytics.track(AnalyticsEvent.SETTINGS_THEME_CHANGED, mapOf("theme" to it, "source" to "onboarding_welcome"))
-                        setTheme(it)
-                    },
-                    onGetStarted = {
-                        trackStep(true, "welcome")
-                        scope.launch { store.completeStep("welcome"); nav.navigate("name") }
-                    },
-                )
-            }
-            composable("name") { NameScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("photo") } }
-            composable("photo") { PhotoScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("appearance") } }
-            composable("appearance") { AppearanceScreen(onboarding, store, onBack = { nav.popBackStack() }) { nav.navigate("contact") } }
-            composable("contact") { ContactScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("complete") } }
-            composable("complete") {
-                CompleteScreen(onboarding, store) { nav.navigate("home") { popUpTo(0) } }
-            }
-            composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) } }
-            composable("emergency") {
-                EmergencyScreen(
-                    emergency, common, store, away, scope,
-                    onLeave = { if (!nav.popBackStack()) nav.navigate("home") },
-                    onViewReadout = { nav.navigate("readout") },
-                )
-            }
-            composable("settings") {
-                SettingsScreen(
-                    settings, common, store,
-                    themePreference = themePreference,
-                    onThemeChange = {
-                        Analytics.track(AnalyticsEvent.SETTINGS_THEME_CHANGED, mapOf("theme" to it))
-                        setTheme(it)
-                    },
-                    language = language,
-                    onLanguageChange = {
-                        Analytics.track(AnalyticsEvent.SETTINGS_LANGUAGE_CHANGED, mapOf("language" to it))
-                        language = it
-                        scope.launch { store.putSetting(Store.LANGUAGE_PREFERENCE, it) }
-                    },
-                    onBack = { nav.popBackStack() },
-                    onDeleted = {
-                        scope.launch { away.ended() }
-                        nav.navigate("welcome") { popUpTo(0) }
-                    },
-                )
-            }
-            composable("contacts") { ContactsScreen(translations.translator(language, "contacts"), common, store) { nav.popBackStack() } }
-            composable("destinations") { DestinationsScreen(translations.translator(language, "destinations"), common, store) { nav.popBackStack() } }
-            composable("readout") { ReadoutScreen(readout, common, store) { nav.popBackStack() } }
-            composable("profile") {
-                ProfileScreen(
-                    translations.translator(language, "profile"), common, store,
-                    onBack = { nav.popBackStack() },
-                    onSaved = { nav.navigate("home") { popUpTo("home") { inclusive = true } } },
-                )
+        // Every back control is read as "Back" in the app's language.
+        CompositionLocalProvider(LocalBackLabel provides common("back")) {
+            NavHost(
+                nav,
+                startDestination = if (start) "home" else "welcome",
+                modifier = modifier.background(background),
+                enterTransition = { enter(from = 1) },
+                exitTransition = { exit(to = -1) },
+                popEnterTransition = { enter(from = -1) },
+                popExitTransition = { exit(to = 1) },
+            ) {
+                composable("welcome") {
+                    WelcomeScreen(
+                        t = onboarding,
+                        themePreference = themePreference,
+                        onThemeChange = {
+                            Analytics.track(AnalyticsEvent.SETTINGS_THEME_CHANGED, mapOf("theme" to it, "source" to "onboarding_welcome"))
+                            setTheme(it)
+                        },
+                        onGetStarted = {
+                            trackStep(true, "welcome")
+                            scope.launch { store.completeStep("welcome"); nav.navigate("name") }
+                        },
+                    )
+                }
+                composable("name") { NameScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("photo") } }
+                composable("photo") { PhotoScreen(onboarding, common, store, services.scope, onBack = { nav.popBackStack() }) { nav.navigate("appearance") } }
+                composable("appearance") { AppearanceScreen(onboarding, store, onBack = { nav.popBackStack() }) { nav.navigate("contact") } }
+                composable("contact") { ContactScreen(onboarding, common, store, onBack = { nav.popBackStack() }) { nav.navigate("complete") } }
+                composable("complete") {
+                    CompleteScreen(onboarding, store) { nav.navigate("home") { popUpTo(0) } }
+                }
+                // Single top: a double tap during the transition opens one screen, not two.
+                composable("home") { HomeScreen(home, common("emergencyNumber"), store) { nav.navigate(it) { launchSingleTop = true } } }
+                composable("emergency") {
+                    EmergencyScreen(
+                        emergency, common, store, away, services.scope,
+                        onLeave = { if (!nav.popBackStack()) nav.navigate("home") },
+                        onViewReadout = { nav.navigate("readout") },
+                        onRunning = services.countdown::sync,
+                    )
+                }
+                composable("settings") {
+                    SettingsScreen(
+                        settings, common, store,
+                        themePreference = themePreference,
+                        onThemeChange = {
+                            Analytics.track(AnalyticsEvent.SETTINGS_THEME_CHANGED, mapOf("theme" to it))
+                            setTheme(it)
+                        },
+                        language = language,
+                        onLanguageChange = {
+                            Analytics.track(AnalyticsEvent.SETTINGS_LANGUAGE_CHANGED, mapOf("language" to it))
+                            language = it
+                            scope.launch { store.putSetting(Store.LANGUAGE_PREFERENCE, it) }
+                        },
+                        onBack = { nav.popBackStack() },
+                        onDeleted = {
+                            services.scope.launch { away.ended() }
+                            services.countdown.sync(null)
+                            nav.navigate("welcome") { popUpTo(0) }
+                        },
+                    )
+                }
+                composable("contacts") { ContactsScreen(translations.translator(language, "contacts"), common, store) { nav.popBackStack() } }
+                composable("destinations") { DestinationsScreen(translations.translator(language, "destinations"), common, store) { nav.popBackStack() } }
+                composable("readout") { ReadoutScreen(readout, common, store) { nav.popBackStack() } }
+                composable("profile") {
+                    ProfileScreen(
+                        translations.translator(language, "profile"), common, store, services.scope,
+                        onBack = { nav.popBackStack() },
+                        onSaved = { nav.navigate("home") { popUpTo("home") { inclusive = true } } },
+                    )
+                }
             }
         }
     }

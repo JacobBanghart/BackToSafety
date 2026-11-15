@@ -1,7 +1,7 @@
 import SwiftUI
 import UIKit
 
-/// components/OnboardingStepHeader.tsx: back chevron, step dots, and a balancing spacer.
+/// components/OnboardingStepHeader.tsx: the platform back button, step dots, and a balancing spacer.
 struct OnboardingStepHeader: View {
     let active: Int
     let total: Int
@@ -10,8 +10,7 @@ struct OnboardingStepHeader: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            Button(action: onBack) { SFIcon("chevron.left", 20, colors.tint).frame(width: 44, height: 44) }
-                .buttonStyle(.pressable)
+            BackButton(action: onBack)
             HStack(spacing: Space.sm) {
                 ForEach(1 ... total, id: \.self) { step in
                     RoundedRectangle(cornerRadius: Radius.sm)
@@ -20,7 +19,7 @@ struct OnboardingStepHeader: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            Color.clear.frame(width: 44, height: 44)
+            Color.clear.frame(width: 48, height: 48)
         }
         .padding(.bottom, Space.xxl)
     }
@@ -120,12 +119,14 @@ struct PrimaryButton: View {
     @Environment(\.appColors) private var colors
 
     var body: some View {
+        // Not ready yet: a pale fill with the primary text on it, which still reads at over
+        // 4.5:1 in both themes (half-transparent white on primary didn't).
+        let muted = dimmed ?? !enabled
         Button(action: action) {
-            RNText(label, spec, color: colors.textOnPrimary)
-                .frame(maxWidth: .infinity)
+            RNText(label, spec, color: muted ? colors.primaryText : colors.textOnPrimary)
+                .frame(maxWidth: .infinity, minHeight: max(0, 48 - 2 * verticalPadding))
                 .padding(.vertical, verticalPadding)
-                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
-                .opacity((dimmed ?? !enabled) ? 0.5 : 1)
+                .background(RoundedRectangle(cornerRadius: Radius.lg).fill(muted ? colors.primaryLight : colors.primary))
         }
         .buttonStyle(.pressable)
         .disabled(!enabled)
@@ -133,7 +134,7 @@ struct PrimaryButton: View {
     }
 }
 
-/// "Skip for now": a quiet text button.
+/// "Skip for now": a quiet text button, still legible (textSecondary) and 48pt tall.
 struct SkipButton: View {
     let label: String
     let testID: String
@@ -142,8 +143,8 @@ struct SkipButton: View {
 
     var body: some View {
         Button(action: action) {
-            RNText(label, Typography.body.spec, color: colors.textDisabled)
-                .frame(maxWidth: .infinity)
+            RNText(label, Typography.body.spec, color: colors.textSecondary)
+                .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.sm)
                 .padding(.vertical, Space.sm)
                 .contentShape(Rectangle())
         }
@@ -163,6 +164,16 @@ extension View {
     }
 }
 
+extension View {
+    /// A screen's scroll view stops at the bottom safe area: at rest nothing readable sits under
+    /// the home indicator, where its bar reads as a strikethrough. SwiftUI scroll content draws
+    /// into the safe area unless clipped to the scroll view's frame. Matches Android, whose
+    /// scroll viewport ends above the gesture bar.
+    func scrollStopsAtSafeArea() -> some View {
+        clipped()
+    }
+}
+
 /// RN Pressable: no built-in press or disabled styling (SwiftUI's .plain dims disabled
 /// buttons on top of the app's own 0.5).
 struct PressableStyle: ButtonStyle {
@@ -171,4 +182,19 @@ struct PressableStyle: ButtonStyle {
 
 extension ButtonStyle where Self == PressableStyle {
     static var pressable: PressableStyle { PressableStyle() }
+}
+
+/// Buttons side by side at their natural width, centred, while they fit; otherwise stacked, each
+/// the full width. At large text two buttons in a row ran to within a few points of the screen
+/// edge and past the screen's margin. Mirrors Android's `ButtonRowOrStack`.
+struct ButtonRowOrStack<Content: View>: View {
+    var gap: CGFloat
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: gap, content: content).fixedSize()
+            VStack(spacing: gap, content: content)
+        }
+    }
 }

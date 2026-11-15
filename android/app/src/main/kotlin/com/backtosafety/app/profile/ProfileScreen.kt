@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
@@ -31,9 +32,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,8 +50,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.backtosafety.app.core.Analytics
 import com.backtosafety.app.core.AppClock
@@ -59,6 +67,8 @@ import com.backtosafety.app.core.Translate
 import com.backtosafety.app.core.formatDob
 import com.backtosafety.app.core.invoke
 import com.backtosafety.app.core.parseDob
+import com.backtosafety.app.ui.ButtonRowOrStack
+import com.backtosafety.app.ui.HeaderSaveButton
 import com.backtosafety.app.ui.Icon
 import com.backtosafety.app.ui.LocalAppColors
 import com.backtosafety.app.ui.RnTextField
@@ -68,6 +78,8 @@ import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
 import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnBorder
+import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
 import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.udp
@@ -77,6 +89,20 @@ import com.backtosafety.core.ffi.formatHeightInput
 import com.backtosafety.core.ffi.formatMedicAlertIdInput
 import com.backtosafety.core.ffi.formatPhoneInput
 import com.backtosafety.core.ffi.formatWeightInput
+import com.backtosafety.app.core.Analytics
+import com.backtosafety.app.core.AppClock
+import com.backtosafety.app.core.DesignTokens
+import com.backtosafety.app.core.MOBILITY_OPTIONS
+import com.backtosafety.app.core.MOBILITY_OPTION_KEYS
+import com.backtosafety.core.ffi.PROFILE_TEXT_FIELDS
+import com.backtosafety.core.ffi.ProfileField
+import com.backtosafety.core.ffi.ProfileKeyboard
+import com.backtosafety.app.core.Translate
+import com.backtosafety.app.core.Store
+import com.backtosafety.app.core.formatDob
+import com.backtosafety.app.core.invoke
+import com.backtosafety.app.core.parseDob
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
@@ -84,22 +110,14 @@ private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
 private val white = Color(DesignTokens.Light.textOnPrimary)
 
-/** Every text field on the screen, by its RN form key (testID profile-field-<key>). */
-private val TEXT_FIELDS = listOf(
-    "name", "nickname", "dateOfBirth", "photoUri", "height", "weight", "hairColor", "eyeColor", "identifyingMarks",
-    "medicalConditions", "medications", "allergies", "cognitiveStatus",
-    "communicationPreference", "escalationSigns", "deescalationTechniques", "approachGuidance", "likes",
-    "dislikesTriggers", "safeWord", "locativeDeviceInfo", "idBracelets", "medicAlertId", "medicAlertHotline",
-)
-
-private data class ProfileForm(
-    val text: Map<String, String> = TEXT_FIELDS.associateWith { "" },
+internal data class ProfileForm(
+    val text: Map<ProfileField, String> = PROFILE_TEXT_FIELDS.associateWith { "" },
     val dominantHand: String = "unknown",
     val mobility: List<String> = emptyList(),
     val mobilityOther: String = "",
 ) {
-    operator fun get(field: String) = text[field].orEmpty()
-    fun with(field: String, value: String) = copy(text = text + (field to value))
+    operator fun get(field: ProfileField) = text[field].orEmpty()
+    fun with(field: ProfileField, value: String) = copy(text = text + (field to value))
 
     /** utils: the selected options, with "Other" replaced by its text. */
     val resolvedMobility: String
@@ -107,33 +125,78 @@ private data class ProfileForm(
             .joinToString(", ")
 }
 
+/**
+ * Keeps a form across the activity being recreated (a font-size change, process death). It goes
+ * into the saved-state Bundle, so it holds only what the form needs, as strings and lists of
+ * strings: the text fields as key and value pairs (empty ones left out, to keep the Bundle small),
+ * then the hand, the mobility options and the Other text. A null form isn't saved.
+ */
+internal val ProfileFormSaver = Saver<ProfileForm?, List<Any>>(
+    save = { form ->
+        form?.let {
+            arrayListOf(
+                ArrayList(it.text.filterValues(String::isNotEmpty).flatMap { (field, value) -> listOf(field.key, value) }),
+                it.dominantHand,
+                ArrayList(it.mobility),
+                it.mobilityOther,
+            )
+        }
+    },
+    restore = { saved ->
+        val text = (saved[0] as List<*>).map { it as String }.chunked(2).associate { (key, value) -> key to value }
+        ProfileForm(
+            text = PROFILE_TEXT_FIELDS.associateWith { text[it.key].orEmpty() },
+            dominantHand = saved[1] as String,
+            mobility = (saved[2] as List<*>).map { it as String },
+            mobilityOther = saved[3] as String,
+        )
+    },
+)
+
 /** Port of app/profile.tsx: the full profile editor, in four collapsible sections. */
 @Composable
-fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Unit, onSaved: () -> Unit) {
+fun ProfileScreen(
+    t: Translate,
+    tCommon: Translate,
+    store: Store,
+    /** Outlives the screen, for saving a picked photo. */
+    appScope: CoroutineScope,
+    onBack: () -> Unit,
+    onSaved: () -> Unit,
+) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    var form by remember { mutableStateOf<ProfileForm?>(null) }
-    var initial by remember { mutableStateOf<ProfileForm?>(null) }
-    var expanded by remember { mutableStateOf<String?>("personal") }
+    // The form being edited, the loaded profile it's compared with to tell unsaved edits, and the
+    // open section survive the activity being recreated, so typed edits aren't thrown away.
+    var form by rememberSaveable(stateSaver = ProfileFormSaver) { mutableStateOf<ProfileForm?>(null) }
+    var initial by rememberSaveable(stateSaver = ProfileFormSaver) { mutableStateOf<ProfileForm?>(null) }
+    var expanded by rememberSaveable { mutableStateOf<String?>("personal") }
     var saving by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        val p = store.profile()
+    // Reading the saved profile failed (not: there is none), so no form was built.
+    var loadFailed by remember { mutableStateOf(false) }
+    var loadAttempt by remember { mutableIntStateOf(0) }
+
+    // A restored form is the user's unsaved work and must not be overwritten by a reload, so only
+    // a screen that starts without one reads the store: a first open, or one recreated while the
+    // form was still loading or had failed to load. Decided once, as the screen starts.
+    val restored = remember { form != null }
+
+    LaunchedEffect(loadAttempt, restored) {
+        if (restored) return@LaunchedEffect
+        loadFailed = false
+        // A failed read is not an empty profile: Save would write the empty form over the stored
+        // one (name, medical details, photo). Say so and offer to try again instead.
+        val p = runCatchingCancellable { store.profile() }.getOrElse { e ->
+            reportSaveFailed("profile", "load", e)
+            loadFailed = true
+            return@LaunchedEffect
+        }
         val tokens = p?.mobilityLevel.orEmpty().split(',').map { it.trim() }.filter { it.isNotEmpty() }
         val known = tokens.filter { it in MOBILITY_OPTIONS }
         val custom = tokens.filter { it !in MOBILITY_OPTIONS }
-        val values = mapOf(
-            "name" to p?.name, "nickname" to p?.nickname, "dateOfBirth" to p?.dateOfBirth, "photoUri" to p?.photoUri,
-            "height" to p?.height, "weight" to p?.weight, "hairColor" to p?.hairColor, "eyeColor" to p?.eyeColor,
-            "identifyingMarks" to p?.identifyingMarks, "medicalConditions" to p?.medicalConditions,
-            "medications" to p?.medications, "allergies" to p?.allergies, "cognitiveStatus" to p?.cognitiveStatus,
-            "communicationPreference" to p?.communicationPreference, "escalationSigns" to p?.escalationSigns,
-            "deescalationTechniques" to p?.deescalationTechniques, "approachGuidance" to p?.approachGuidance,
-            "likes" to p?.likes, "dislikesTriggers" to p?.dislikesTriggers, "safeWord" to p?.safeWord,
-            "locativeDeviceInfo" to p?.locativeDeviceInfo, "idBracelets" to p?.idBracelets,
-            "medicAlertId" to p?.medicAlertId, "medicAlertHotline" to p?.medicAlertHotline,
-        ).mapValues { it.value.orEmpty() }
+        val values = PROFILE_TEXT_FIELDS.associateWith { field -> p?.get(field).orEmpty() }
         val loaded = ProfileForm(
             text = values,
             dominantHand = p?.dominantHand?.ifEmpty { null } ?: "unknown",
@@ -153,35 +216,32 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     fun save() {
         val x = form ?: return
         // name is NOT NULL: an empty one is refused rather than failing silently (F-38).
-        if (x["name"].isBlank()) return showAlert(context, tCommon("required"), t("errors.nameRequired"))
+        if (x[ProfileField.FULL_NAME].isBlank()) return showAlert(context, tCommon("required"), t("errors.nameRequired"), confirm = tCommon("ok") to {})
         saving = true
         scope.launch {
-            fun v(field: String) = x[field].trim().ifEmpty { null }
-            runCatching {
-                store.saveProfile {
-                    it.copy(
-                        name = v("name")!!, nickname = v("nickname"), dateOfBirth = v("dateOfBirth"),
-                        photoUri = x["photoUri"].ifEmpty { null }, height = v("height"), weight = v("weight"),
-                        hairColor = v("hairColor"), eyeColor = v("eyeColor"), identifyingMarks = v("identifyingMarks"),
-                        medicalConditions = v("medicalConditions"), medications = v("medications"), allergies = v("allergies"),
-                        cognitiveStatus = v("cognitiveStatus"), dominantHand = x.dominantHand,
-                        mobilityLevel = x.resolvedMobility.ifEmpty { null },
-                        communicationPreference = v("communicationPreference"), escalationSigns = v("escalationSigns"),
-                        deescalationTechniques = v("deescalationTechniques"), approachGuidance = v("approachGuidance"),
-                        likes = v("likes"), dislikesTriggers = v("dislikesTriggers"), safeWord = v("safeWord"),
-                        locativeDeviceInfo = v("locativeDeviceInfo"), idBracelets = v("idBracelets"),
-                        medicAlertId = v("medicAlertId"), medicAlertHotline = v("medicAlertHotline"),
-                    )
+            fun v(field: ProfileField) = x[field].trim().ifEmpty { null }
+            runCatchingCancellable {
+                // A null clears the field, so every field on the screen is in the map.
+                val values = buildMap<ProfileField, String?> {
+                    for (field in PROFILE_TEXT_FIELDS) put(field, v(field))
+                    // The photo's path isn't trimmed.
+                    put(ProfileField.PHOTO_URI, x[ProfileField.PHOTO_URI].ifEmpty { null })
+                    put(ProfileField.DOMINANT_HAND, x.dominantHand)
+                    put(ProfileField.MOBILITY_LEVEL, x.resolvedMobility.ifEmpty { null })
                 }
+                store.updateProfile(values)
             }.onSuccess {
                 Analytics.track(AnalyticsEvent.PROFILE_SAVED,
-                    mapOf("has_photo" to x["photoUri"].isNotEmpty(), "has_medical" to x["medicalConditions"].isNotEmpty(), "has_medications" to x["medications"].isNotEmpty()),
+                    mapOf(
+                        "has_photo" to x[ProfileField.PHOTO_URI].isNotEmpty(), "has_medical" to x[ProfileField.MEDICAL_CONDITIONS].isNotEmpty(),
+                        "has_medications" to x[ProfileField.MEDICATIONS].isNotEmpty(),
+                    ),
                 )
                 initial = x
                 onSaved()
             }.onFailure { e ->
                 reportSaveFailed("profile", "save", e)
-                showAlert(context, tCommon("error"), tCommon("saveFailed"))
+                showAlert(context, tCommon("error"), tCommon("saveFailed"), confirm = tCommon("ok") to {})
             }
             saving = false
         }
@@ -191,7 +251,7 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
         if (!unsaved || saving) return onBack()
         showAlert(
             context, t("unsavedChanges.title"), t("unsavedChanges.message"),
-            cancel = t("unsavedChanges.cancelLabel", mapOf("defaultValue" to "Keep Editing")),
+            cancel = tCommon("keepEditing"),
             confirm = t("unsavedChanges.confirmLabel") to onBack,
         )
     }
@@ -199,82 +259,82 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
     UnsavedChangesGuard(
         enabled = unsaved && !saving,
         title = t("unsavedChanges.title"), message = t("unsavedChanges.message"),
-        keepEditing = "Keep Editing", discard = t("unsavedChanges.confirmLabel"),
+        keepEditing = tCommon("keepEditing"), discard = t("unsavedChanges.confirmLabel"),
         onDiscard = {}, onLeave = onBack,
     )
 
-    val picker = rememberPhotoPicker { uri -> form = form?.with("photoUri", uri) }
+    // A photo can't arrive before the form exists: the photo buttons only show once the form has
+    // loaded, and after recreation that form is restored before the picker's launchers deliver a
+    // result. The photo is an edit, so it shows as unsaved until Save. A photo that failed to save
+    // leaves the form's photo as it was.
+    val picker = rememberPhotoPicker(
+        appScope, "profile",
+        onFailed = { showAlert(context, tCommon("error"), t("errors.photoSaveFailed"), confirm = tCommon("ok") to {}) },
+    ) { uri -> form = form?.with(ProfileField.PHOTO_URI, uri) }
 
     // SafeAreaView with every edge, as RN's profile screen uses.
     Column(Modifier.fillMaxSize().background(colors.background).windowInsetsPadding(WindowInsets.safeDrawing)) {
         ScreenHeader(t("screenTitle"), "profile", ::back) {
-            Box(
-                Modifier.testTag("profile-save").widthIn(min = 72.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .clickable(enabled = !saving, onClick = ::save).background(colors.tint)
-                    .padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                contentAlignment = Alignment.Center,
-            ) { Text(t(if (saving) "saving" else "save"), style = type.bodyBold.style(), color = white, maxLines = 1) }
+            HeaderSaveButton(t(if (saving) "saving" else "save"), "profile-save", !saving && f != null, ::save)
+        }
+        if (loadFailed) {
+            LoadFailed(t) { loadAttempt++ }
+            return@Column
         }
         if (f == null) return@Column
         // Reads the form at call time, never `f`: fields keep the callback from the composition
         // they were drawn in, so an edit built on that snapshot reverted every edit since.
-        fun update(field: String, value: String) {
+        fun update(field: ProfileField, value: String) {
             form = form?.with(field, value)
         }
         val toggle: (String) -> Unit = { expanded = if (expanded == it) null else it }
-        Column(Modifier.weight(1f).imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
+        Column(Modifier.weight(1f).imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
             PhotoSection(
-                t, f["photoUri"],
+                t, f[ProfileField.PHOTO_URI],
                 onCamera = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_TAKEN); picker.fromCamera() },
                 onLibrary = { Analytics.track(AnalyticsEvent.PROFILE_PHOTO_CHOSEN); picker.fromLibrary() },
             )
 
             Section("personal", t("sections.personal"), "person.fill", expanded, toggle) {
-                Field(t("fields.name"), "name", f, ::update, t("fields.namePlaceholder"), capitalization = KeyboardCapitalization.Words)
-                Field(t("fields.nickname"), "nickname", f, ::update, t("fields.nicknamePlaceholder"), capitalization = KeyboardCapitalization.Words)
-                DateOfBirth(t("fields.dateOfBirth"), f["dateOfBirth"], { update("dateOfBirth", it) })
+                Field(t, ProfileField.FULL_NAME, f, ::update)
+                Field(t, ProfileField.NICKNAME, f, ::update)
+                DateOfBirth(t("fields.dateOfBirth"), t("fields.dateOfBirthPicker"), f[ProfileField.DATE_OF_BIRTH], { update(ProfileField.DATE_OF_BIRTH, it) })
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
                     Box(Modifier.weight(1f)) {
-                        Field(t("fields.height"), "height", f, ::update, t("fields.heightPlaceholder"), keyboardType = KeyboardType.Number)
+                        Field(t, ProfileField.HEIGHT, f, ::update)
                     }
                     Box(Modifier.weight(1f)) {
-                        Field(t("fields.weight"), "weight", f, ::update, t("fields.weightPlaceholder"), keyboardType = KeyboardType.Number)
+                        Field(t, ProfileField.WEIGHT, f, ::update)
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                    Box(Modifier.weight(1f)) { Field(t("fields.hairColor"), "hairColor", f, ::update, t("fields.hairColorPlaceholder")) }
-                    Box(Modifier.weight(1f)) { Field(t("fields.eyeColor"), "eyeColor", f, ::update, t("fields.eyeColorPlaceholder")) }
+                    Box(Modifier.weight(1f)) { Field(t, ProfileField.HAIR_COLOR, f, ::update) }
+                    Box(Modifier.weight(1f)) { Field(t, ProfileField.EYE_COLOR, f, ::update) }
                 }
-                Field(
-                    t("fields.identifyingMarks"), "identifyingMarks", f, ::update, t("fields.identifyingMarksPlaceholder"),
-                    multiline = true, hint = t("fields.identifyingMarksHint"),
-                )
+                Field(t, ProfileField.IDENTIFYING_MARKS, f, ::update)
             }
 
             Section("medical", t("sections.medical"), "cross.fill", expanded, toggle) {
-                Field(t("fields.medicalConditions"), "medicalConditions", f, ::update, t("fields.medicalConditionsPlaceholder"), multiline = true)
-                Field(t("fields.medications"), "medications", f, ::update, t("fields.medicationsPlaceholder"), multiline = true)
-                Field(t("fields.allergies"), "allergies", f, ::update, t("fields.allergiesPlaceholder"), multiline = true)
-                Field(
-                    t("fields.cognitiveStatus"), "cognitiveStatus", f, ::update, t("fields.cognitiveStatusPlaceholder"),
-                    multiline = true, hint = t("fields.cognitiveStatusHint"),
-                )
+                Field(t, ProfileField.MEDICAL_CONDITIONS, f, ::update)
+                Field(t, ProfileField.MEDICATIONS, f, ::update)
+                Field(t, ProfileField.ALLERGIES, f, ::update)
+                Field(t, ProfileField.COGNITIVE_STATUS, f, ::update)
                 Group(t("fields.dominantHand"), t("fields.dominantHandHint")) {
                     Row(horizontalArrangement = Arrangement.spacedBy(space.sm.udp)) {
                         for (hand in listOf("left", "right", "unknown")) {
                             val selected = f.dominantHand == hand
-                            val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                            val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                             Box(
                                 Modifier.weight(1f).testTag("profile-hand-$hand").clip(shape)
                                     .clickable { form = f.copy(dominantHand = hand) }
-                                    .background(if (selected) colors.tint else Color.Transparent)
-                                    .rnBorder(1.dp, if (selected) colors.tint else colors.border, shape)
+                                    .background(if (selected) colors.primary else Color.Transparent)
+                                    .rnBorder(1.dp, if (selected) colors.primary else colors.border, shape)
                                     .padding(vertical = space.sm.udp),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Text(
                                     t("fields.dominantHand${hand.replaceFirstChar { it.uppercase() }}"),
-                                    style = type.body.style(fontWeight = 500), color = if (selected) white else colors.text,
+                                    style = type.body.style(fontWeight = 500), color = if (selected) colors.textOnPrimary else colors.text,
                                 )
                             }
                         }
@@ -293,13 +353,13 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
                                             f.copy(mobility = f.mobility - option, mobilityOther = if (option == "Other") "" else f.mobilityOther)
                                         } else f.copy(mobility = f.mobility + option)
                                     }
-                                    .background(if (selected) colors.tint else Color.Transparent)
-                                    .rnBorder(1.dp, if (selected) colors.tint else colors.border, shape)
+                                    .background(if (selected) colors.primary else Color.Transparent)
+                                    .rnBorder(1.dp, if (selected) colors.primary else colors.border, shape)
                                     .padding(horizontal = space.md.udp, vertical = space.xs.udp),
                             ) {
                                 Text(
                                     t(MOBILITY_OPTION_KEYS.getValue(option)), style = type.body.style(fontWeight = 500),
-                                    color = if (selected) white else colors.text,
+                                    color = if (selected) colors.textOnPrimary else colors.text,
                                 )
                             }
                         }
@@ -315,36 +375,44 @@ fun ProfileScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> 
             }
 
             Section("communication", t("sections.communication"), "bubble.left.fill", expanded, toggle) {
-                Field(t("fields.communicationPreference"), "communicationPreference", f, ::update, t("fields.communicationPreferencePlaceholder"), multiline = true)
-                Field(t("fields.escalationSigns"), "escalationSigns", f, ::update, t("fields.escalationSignsPlaceholder"), multiline = true, hint = t("fields.escalationSignsHint"))
-                Field(t("fields.deescalationTechniques"), "deescalationTechniques", f, ::update, t("fields.deescalationTechniquesPlaceholder"), multiline = true, hint = t("fields.deescalationTechniquesHint"))
-                Field(t("fields.approachGuidance"), "approachGuidance", f, ::update, t("fields.approachGuidancePlaceholder"), multiline = true)
-                Field(t("fields.likes"), "likes", f, ::update, t("fields.likesPlaceholder"), multiline = true, hint = t("fields.likesHint"))
-                Field(t("fields.dislikesTriggers"), "dislikesTriggers", f, ::update, t("fields.dislikesTriggersPlaceholder"), multiline = true, hint = t("fields.dislikesTriggersHint"))
-                Field(t("fields.safeWord"), "safeWord", f, ::update, t("fields.safeWordPlaceholder"), hint = t("fields.safeWordHint"))
+                Field(t, ProfileField.COMMUNICATION_PREFERENCE, f, ::update)
+                Field(t, ProfileField.ESCALATION_SIGNS, f, ::update)
+                Field(t, ProfileField.DEESCALATION_TECHNIQUES, f, ::update)
+                Field(t, ProfileField.APPROACH_GUIDANCE, f, ::update)
+                Field(t, ProfileField.LIKES, f, ::update)
+                Field(t, ProfileField.DISLIKES_TRIGGERS, f, ::update)
+                Field(t, ProfileField.SAFE_WORD, f, ::update)
             }
 
             Section("devices", t("sections.devices"), "location.fill", expanded, toggle) {
-                Field(t("fields.locativeDeviceInfo"), "locativeDeviceInfo", f, ::update, t("fields.locativeDeviceInfoPlaceholder"), multiline = true, hint = t("fields.locativeDeviceInfoHint"))
-                Field(t("fields.idBracelets"), "idBracelets", f, ::update, t("fields.idBraceletsPlaceholder"), multiline = true, hint = t("fields.idBraceletsHint"))
-                Field(t("fields.medicAlertId"), "medicAlertId", f, ::update, t("fields.medicAlertIdPlaceholder"))
-                Field(
-                    t("fields.medicAlertHotline"), "medicAlertHotline", f, ::update, t("fields.medicAlertHotlinePlaceholder"),
-                    keyboardType = KeyboardType.Phone, hint = t("fields.medicAlertHotlineHint"),
-                )
+                Field(t, ProfileField.LOCATIVE_DEVICE_INFO, f, ::update)
+                Field(t, ProfileField.ID_BRACELETS, f, ::update)
+                Field(t, ProfileField.MEDIC_ALERT_ID, f, ::update)
+                Field(t, ProfileField.MEDIC_ALERT_HOTLINE, f, ::update)
             }
             Box(Modifier.height(40.udp))
         }
     }
 }
 
-/** What each field's input does to typed text (profile.tsx formatFieldInput). */
-private fun formatField(field: String, value: String) = when (field) {
-    "height" -> formatHeightInput(value)
-    "weight" -> formatWeightInput(value)
-    "medicAlertId" -> formatMedicAlertIdInput(value)
-    "medicAlertHotline" -> formatPhoneInput(value)
-    else -> value
+/** Reading the saved profile failed: said so, with Retry, under the header's Back. */
+@Composable
+private fun ColumnScope.LoadFailed(t: Translate, onRetry: () -> Unit) {
+    val colors = LocalAppColors.current
+    Column(
+        Modifier.weight(1f).fillMaxWidth().padding(space.xl.udp).testTag("profile-load-failed"),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(space.md.udp, Alignment.CenterVertically),
+    ) {
+        Text(t("loadFailed.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
+        Text(t("loadFailed.message"), style = rnTextStyle(16f, 22f), color = colors.textSecondary, textAlign = TextAlign.Center)
+        Box(
+            Modifier.fillMaxWidth().heightIn(min = 48.udp).testTag("profile-load-retry")
+                .clip(RoundedCornerShape(DesignTokens.Radius.lg.dp)).background(colors.primary)
+                .clickable(role = Role.Button, onClick = onRetry).padding(vertical = space.md.udp, horizontal = space.lg.udp),
+            contentAlignment = Alignment.Center,
+        ) { Text(t("loadFailed.retry"), style = type.bodyBold.style(), color = colors.textOnPrimary) }
+    }
 }
 
 @Composable
@@ -356,33 +424,45 @@ private fun PhotoSection(t: Translate, photoUri: String, onCamera: () -> Unit, o
             if (photo != null) {
                 Image(photo, null, Modifier.size(120.udp).clip(CircleShape).testTag("profile-photo"), contentScale = ContentScale.Crop)
             } else {
+                // An empty photo slot: a tinted fill and a dashed tint outline, visible on a dark
+                // background as well as a light one.
                 Box(
-                    Modifier.size(120.udp).clip(CircleShape).background(colors.card).drawBehind {
+                    Modifier.size(120.udp).clip(CircleShape).background(colors.primaryLight).drawBehind {
                         val stroke = 2.dp.toPx()
                         drawCircle(
-                            colors.border, radius = size.minDimension / 2 - stroke / 2,
+                            colors.tint, radius = size.minDimension / 2 - stroke / 2,
                             style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 6.dp.toPx()))),
                         )
                     },
                     contentAlignment = Alignment.Center,
-                ) { Icon("camera.fill", 38f, colors.textSecondary) }
+                ) { Icon("camera.fill", 38f, colors.primaryText) }
             }
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-            for ((label, tag, bg, action) in listOf(
-                Quad(t("takePhoto"), "profile-photo-take", colors.tint, onCamera),
-                Quad(t("choosePhoto"), "profile-photo-library", colors.primary, onLibrary),
+        // Two equal, secondary choices: outlined in the primary ink with its icon, 48dp tall, as
+        // on the onboarding photo step, so they don't weigh as much as Save. Side by side while
+        // they fit inside the screen's margins, stacked at large text.
+        ButtonRowOrStack(space.md.udp) {
+            for ((label, tag, icon, action) in listOf(
+                Quad(t("takePhoto"), "profile-photo-take", "camera.fill", onCamera),
+                Quad(t("choosePhoto"), "profile-photo-library", "photo.on.rectangle", onLibrary),
             )) {
-                Box(
-                    Modifier.testTag(tag).clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).clickable(onClick = action)
-                        .background(bg).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
-                ) { Text(label, style = type.bodyBold.style(), color = white) }
+                val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
+                Row(
+                    Modifier.testTag(tag).heightIn(min = 48.udp).clip(shape)
+                        .clickable(role = Role.Button, onClick = action)
+                        .rnBorder(1.udp, colors.primaryText, shape).padding(horizontal = space.lg.udp, vertical = space.sm.udp),
+                    horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(icon, 18f, colors.primaryText)
+                    Text(label, style = type.bodyBold.style(), color = colors.primaryText)
+                }
             }
         }
     }
 }
 
-private data class Quad(val label: String, val tag: String, val bg: Color, val action: () -> Unit)
+private data class Quad(val label: String, val tag: String, val icon: String, val action: () -> Unit)
 
 @Composable
 private fun Section(
@@ -397,8 +477,8 @@ private fun Section(
             horizontalArrangement = Arrangement.spacedBy(space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Box(Modifier.size(36.udp).clip(CircleShape).background(colors.primaryLight), contentAlignment = Alignment.Center) {
-                Icon(icon, 16f, colors.primary)
+            Box(Modifier.size(36.udp).clip(CircleShape).background(colors.iconContainer), contentAlignment = Alignment.Center) {
+                Icon(icon, 16f, colors.primaryText)
             }
             Text(title, style = type.bodyBold.style(), color = colors.text, modifier = Modifier.weight(1f))
             Icon(if (expanded == key) "chevron.up" else "chevron.down", 16f, colors.textSecondary)
@@ -423,17 +503,18 @@ private fun Group(label: String, hint: String? = null, content: @Composable Colu
 }
 
 @Composable
-private fun Field(
-    label: String, field: String, form: ProfileForm, onChange: (String, String) -> Unit, placeholder: String,
-    multiline: Boolean = false, hint: String? = null,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
-) {
+private fun Field(t: Translate, field: ProfileField, form: ProfileForm, onChange: (ProfileField, String) -> Unit) {
     val colors = LocalAppColors.current
-    Group(label, hint) {
+    Group(t("fields.${field.key}"), if (field.hasHint) t("fields.${field.key}Hint") else null) {
         RnTextField(
-            form[field], { onChange(field, formatField(field, it)) }, "profile-field-$field",
-            placeholder = placeholder, multiline = multiline, keyboardType = keyboardType, capitalization = capitalization,
+            form[field], { onChange(field, field.formatInput(it)) }, "profile-field-${field.key}",
+            placeholder = t("fields.${field.key}Placeholder"), multiline = field.multiline,
+            keyboardType = when (field.keyboard) {
+                ProfileKeyboard.TEXT -> KeyboardType.Text
+                ProfileKeyboard.NUMBER -> KeyboardType.Number
+                ProfileKeyboard.PHONE -> KeyboardType.Phone
+            },
+            capitalization = if (field.capitalizeWords) KeyboardCapitalization.Words else KeyboardCapitalization.Sentences,
             background = colors.card, border = colors.border,
         )
     }
@@ -441,28 +522,29 @@ private fun Field(
 
 /**
  * The date of birth: typed as MM/DD/YYYY, or picked in the platform date dialog. As in RN, a
- * bordered row (padding md) holds the 44dp input and the calendar button beside it.
+ * bordered row (padding md) holds the 48dp input and the 48dp calendar button beside it.
  */
 @Composable
-private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit) {
+private fun DateOfBirth(label: String, pickerLabel: String, value: String, onChange: (String) -> Unit) {
     val colors = LocalAppColors.current
     val context = LocalContext.current
-    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
     Group(label) {
         Row(
-            Modifier.fillMaxWidth().heightIn(min = 44.udp).clip(shape).background(colors.card)
+            Modifier.fillMaxWidth().heightIn(min = 48.udp).clip(shape).background(colors.card)
                 .rnBorder(1.dp, colors.border, shape).padding(horizontal = space.md.udp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             RnTextField(
-                value, { onChange(formatDobInput(it)) }, "profile-field-dateOfBirth",
+                value, { onChange(ProfileField.DATE_OF_BIRTH.formatInput(it)) }, "profile-field-dateOfBirth",
                 placeholder = "MM/DD/YYYY", keyboardType = KeyboardType.Number, maxLength = 10,
                 background = Color.Transparent, border = Color.Transparent, bare = true,
                 modifier = Modifier.weight(1f),
             )
             Box(
-                Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 44.udp, minHeight = 44.udp)
-                    .clickable {
+                Modifier.testTag("profile-dob-calendar").sizeIn(minWidth = 48.udp, minHeight = 48.udp)
+                    .semantics { contentDescription = pickerLabel }
+                    .clickable(role = Role.Button) {
                         val initial = parseDob(value) ?: LocalDate(1940, 1, 1)
                         DatePickerDialog(context, { _, y, m, d -> onChange(formatDob(LocalDate(y, m + 1, d))) }, initial.year, initial.month.ordinal, initial.day)
                             .apply { datePicker.maxDate = AppClock.nowMs() }
@@ -470,7 +552,7 @@ private fun DateOfBirth(label: String, value: String, onChange: (String) -> Unit
                     }
                     .padding(start = space.sm.udp),
                 contentAlignment = Alignment.Center,
-            ) { Icon("calendar", 18f, colors.textSecondary) }
+            ) { Icon("calendar", 20f, colors.textSecondary) }
         }
     }
 }

@@ -40,7 +40,7 @@
       "handRight": "Right"
     },
     "location": {
-      "title": "Last Seen",
+      "title": "Search Started",
       "time": "Time"
     },
     "medical": {
@@ -91,7 +91,7 @@
     "likes": "Likes/Soothers: {{value}}",
     "approach": "How to Approach: {{value}}",
     "safeWord": "Family Safe Word: {{value}}",
-    "lastSeen": "Last seen: {{time}}",
+    "lastSeen": "Search started: {{time}}",
     "coordinates": "Coordinates: {{coords}}",
     "locator": "Personal Locator: {{value}}",
     "idBracelet": "ID Bracelet: {{value}}",
@@ -108,9 +108,13 @@
     "opening": "I'm reporting a missing vulnerable adult who may be disoriented or at risk.",
     "name": "Name: {{name}}.",
     "age": "Age approximately {{age}}.",
-    "lastSeenTime": "Last seen: {{time}}.",
-    "lastSeenUnknown": "Last seen: [fill in time].",
-    "locationUnknown": "Last known location: [fill in location].",
+    "lastSeenTime": "Search started: {{time}}.",
+    "lastSeenUnknown": "Last seen: {{blank}}.",
+    "locationUnknown": "Last known location: {{blank}}.",
+    "blankTime": "fill in time",
+    "blankLocation": "fill in location",
+    "timeToday": "{{time}} today",
+    "timeYesterday": "{{time}} yesterday",
     "appearance": "Appearance: {{desc}}.",
     "additionalContext": "Additional context: {{desc}}.",
     "medicAlertId": "MedicAlert ID: {{id}}.",
