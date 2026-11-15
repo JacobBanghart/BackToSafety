@@ -46,7 +46,10 @@ import com.backtosafety.app.ui.SkipButton
 import com.backtosafety.app.ui.TrackStepViewed
 import com.backtosafety.app.ui.rememberPhoto
 import com.backtosafety.app.ui.rememberPhotoPicker
+import com.backtosafety.app.ui.reportSaveFailed
 import com.backtosafety.app.ui.rnTextStyle
+import com.backtosafety.app.ui.runCatchingCancellable
+import com.backtosafety.app.ui.showAlert
 import com.backtosafety.app.ui.style
 import com.backtosafety.app.ui.trackStep
 import com.backtosafety.app.ui.udp
@@ -79,21 +82,38 @@ fun PhotoScreen(t: Translate, tCommon: Translate, store: Store, onBack: () -> Un
     OnboardingScaffold(
         footer = {
             SkipButton(t("photo.skip"), "onboarding-photo-skip") {
-                trackStep(false, "profile_photo")
-                scope.launch { store.completeStep("profile_photo"); onContinue() }
+                if (saving) return@SkipButton
+                saving = true
+                scope.launch {
+                    runCatchingCancellable {
+                        store.completeStep("profile_photo")
+                        trackStep(false, "profile_photo")
+                    }.onSuccess { onContinue() }.onFailure { e ->
+                        // A failed skip keeps the user on the step and says so, so they can skip again.
+                        reportSaveFailed("onboarding_photo", "skip", e)
+                        showAlert(context, tCommon("error"), tCommon("saveFailed"), confirm = tCommon("ok") to {})
+                    }
+                    saving = false
+                }
             }
             PrimaryButton(
                 if (saving) tCommon("saving") else t("photo.continue"), "onboarding-photo-continue",
                 enabled = photoUri != null && !saving,
                 textStyle = rnTextStyle(18f, 24f, fontWeight = 600),
                 onClick = {
+                    if (saving) return@PrimaryButton
                     saving = true
                     scope.launch {
-                        store.updateProfile(mapOf(ProfileField.PHOTO_URI to photoUri))
-                        store.completeStep("profile_photo")
-                        trackStep(true, "profile_photo")
+                        runCatchingCancellable {
+                            store.updateProfile(mapOf(ProfileField.PHOTO_URI to photoUri))
+                            store.completeStep("profile_photo")
+                            trackStep(true, "profile_photo")
+                        }.onSuccess { onContinue() }.onFailure { e ->
+                            // A failed save keeps the user on the step with the photo they picked, so they can retry.
+                            reportSaveFailed("onboarding_photo", "save", e)
+                            showAlert(context, tCommon("error"), tCommon("saveFailed"), confirm = tCommon("ok") to {})
+                        }
                         saving = false
-                        onContinue()
                     }
                 },
             )
