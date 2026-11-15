@@ -8,6 +8,7 @@ private let categories = [
     ("walking_route", "figure.walk"), ("other", "mappin"),
 ]
 private let risks = [("high", Semantic.error), ("medium", Semantic.warning), ("low", Semantic.success)]
+/// The faint tint behind place icons. The icons themselves use primaryText: p600 on primaryLight was under 3:1 in dark.
 private let p600 = Color(argb: Primary.c600)
 private let white = Color(argb: Light.textOnPrimary)
 
@@ -192,7 +193,7 @@ struct DestinationsView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .top, spacing: Space.md) {
-                    SFIcon("info.circle.fill", 18, p600)
+                    SFIcon("info.circle.fill", 18, colors.primaryText)
                     RNText(t("searchTip"), Typography.caption.spec, color: colors.text).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(Space.md)
@@ -225,8 +226,8 @@ struct DestinationsView: View {
                     }
                     Button(action: add) {
                         HStack(spacing: Space.sm) {
-                            SFIcon("plus", 20, white)
-                            RNText(t("addDestination"), Typography.bodyBold.spec, color: white)
+                            SFIcon("plus", 20, colors.textOnPrimary)
+                            RNText(t("addDestination"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                         }
                         .frame(maxWidth: .infinity)
                         .padding(Space.lg)
@@ -240,11 +241,12 @@ struct DestinationsView: View {
             }
             .padding([.horizontal, .top], Space.lg)
         }
+        .scrollStopsAtSafeArea()
     }
 
     private var empty: some View {
         VStack(spacing: Space.md) {
-            SFIcon("mappin.and.ellipse", 40, colors.primary)
+            SFIcon("mappin.and.ellipse", 40, colors.primaryText)
                 .frame(width: 88, height: 88)
                 .background(Circle().fill(colors.primaryLight))
                 .padding(.bottom, Space.sm)
@@ -253,7 +255,7 @@ struct DestinationsView: View {
                    Typography.body.spec, color: colors.textSecondary, align: .center)
             Button(action: add) {
                 HStack(spacing: Space.sm) {
-                    SFIcon("plus", 18, white)
+                    SFIcon("plus", 18, colors.textOnPrimary)
                     RNText(t("noDestinations.button"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                 }
                 .padding(.horizontal, Space.xl).padding(.vertical, Space.md)
@@ -286,7 +288,7 @@ struct DestinationsView: View {
     }
 
     private func categoryIcon(_ d: DestinationEntity, _ size: CGFloat) -> some View {
-        SFIcon(categoryOf(d).1, size, p600)
+        SFIcon(categoryOf(d).1, size, colors.primaryText)
             .frame(width: 28, height: 28)
             .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
     }
@@ -313,18 +315,19 @@ struct DestinationsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 Button { edit(d) } label: {
-                    SFIcon("pencil", 18, p600)
+                    SFIcon("pencil", 18, colors.primaryText)
                         .frame(width: 40, height: 40)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(p600.opacity(0x15 / 255.0)))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(p600.opacity(0x15 / 255.0)))
                 }
                 .buttonStyle(.pressable)
+                .accessibilityLabel(t("editName", ["name": d.name]))
                 .accessibilityIdentifier("destinations-item-\(index)-edit")
             }
             .padding(.bottom, Space.sm)
             if let address = d.address, !address.isEmpty {
                 Button { openMaps(address) } label: {
                     HStack(spacing: 6) {
-                        SFIcon("location", 14, p600)
+                        SFIcon("location", 14, colors.primaryText)
                         RNText(address, Typography.caption.spec, color: addressColor, lines: 1).frame(maxWidth: .infinity, alignment: .leading)
                     }
                     .padding(.vertical, Space.xs).padding(.horizontal, 10)
@@ -367,7 +370,7 @@ struct DestinationsView: View {
                     VStack(spacing: 0) {
                         if let address = d.address, !address.isEmpty {
                             Button { openMaps(address) } label: {
-                                detailRow("location", p600, t("detail.address"), address, addressColor).contentShape(Rectangle())
+                                detailRow("location", colors.primaryText, t("detail.address"), address, addressColor).contentShape(Rectangle())
                             }
                             .buttonStyle(.pressable)
                             .accessibilityIdentifier("destinations-detail-maps")
@@ -385,18 +388,18 @@ struct DestinationsView: View {
                         RNText(tCommon("close"), Typography.bodyBold.spec, color: colors.textSecondary)
                             .frame(maxWidth: .infinity, minHeight: 42)
                             .padding(1)
-                            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(colors.border, lineWidth: 1))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.border, lineWidth: 1))
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("destinations-detail-close")
                     Button { edit(d) } label: {
                         HStack(spacing: Space.xs) {
-                            SFIcon("pencil", 14, white)
-                            RNText(tCommon("edit"), Typography.bodyBold.spec, color: white)
+                            SFIcon("pencil", 14, colors.textOnPrimary)
+                            RNText(tCommon("edit"), Typography.bodyBold.spec, color: colors.textOnPrimary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(RoundedRectangle(cornerRadius: Radius.md).fill(colors.tint))
+                        .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.primary))
                     }
                     .buttonStyle(.pressable)
                     .accessibilityIdentifier("destinations-detail-edit")
@@ -427,26 +430,26 @@ struct DestinationsView: View {
     private var formView: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                RNText(t(editing != nil ? "form.editTitle" : "form.newTitle"), Typography.headline.spec, color: colors.text).padding(.bottom, Space.sm)
+                // No heading here: the app bar already says "Add Location" / "Edit Location" (as on Contacts).
                 RNText(t("form.hint"), Typography.body.spec, color: colors.textSecondary).padding(.bottom, Space.xl)
                 FormTextInput(label: t("form.nameLabel"), text: $form.name, testID: "destinations-form-name",
                               placeholder: t("form.namePlaceholder"), required: true, capitalization: .words)
                 VStack(alignment: .leading, spacing: 0) {
                     RNText(t("form.categoryLabel"), Typography.bodyBold.spec, color: colors.text).padding(.bottom, Space.xs)
-                    FlowLayout(spacing: Space.sm) {
-                        ForEach(categories, id: \.0) { category, icon in
-                            OptionChip(label: t("categories.\(category)"), icon: icon, testID: "destinations-form-category-\(category)",
-                                       selected: form.category == category,
-                                       selectedColor: category == "water" ? Color(argb: Semantic.warning) : p600) {
-                                if form.category != category { form.category = category }
-                            }
+                    ChipGrid(items: categories) { item in
+                        OptionChip(label: t("categories.\(item.0)"), icon: item.1, testID: "destinations-form-category-\(item.0)",
+                                   selected: form.category == item.0,
+                                   // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
+                                   selectedColor: item.0 == "water" ? Color(argb: Light.warning) : colors.primary,
+                                   selectedContent: item.0 == "water" ? white : nil) {
+                            if form.category != item.0 { form.category = item.0 }
                         }
                     }
                     if form.category == "water" {
                         let warning = Color(argb: Semantic.warning)
                         HStack(spacing: Space.sm) {
-                            SFIcon("exclamationmark.triangle.fill", 16, warning)
-                            RNText(t("waterWarning"), Typography.caption.spec, color: warning).frame(maxWidth: .infinity, alignment: .leading)
+                            SFIcon("exclamationmark.triangle.fill", 16, colors.warning)
+                            RNText(t("waterWarning"), Typography.caption.spec, color: colors.warning).frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .padding(10)
                         .background(RoundedRectangle(cornerRadius: Radius.md).fill(warning.opacity(0x15 / 255.0)))
@@ -469,8 +472,8 @@ struct DestinationsView: View {
                                 RNText(t("riskLevels.\(risk)"), Typography.body.spec.weight(600), color: selected ? white : c)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, Space.md + 2)
-                                    .background(RoundedRectangle(cornerRadius: Radius.md).fill(selected ? c : .clear))
-                                    .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(c, lineWidth: 2))
+                                    .background(RoundedRectangle(cornerRadius: Radius.lg).fill(selected ? c : .clear))
+                                    .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(c, lineWidth: 2))
                                     .contentShape(Rectangle())
                             }
                             .buttonStyle(.pressable)
@@ -493,6 +496,7 @@ struct DestinationsView: View {
             .padding(Space.lg)
         }
         .scrollDismissesKeyboard(.interactively)
+        .scrollStopsAtSafeArea()
     }
 }
 

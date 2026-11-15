@@ -21,19 +21,21 @@
     "label": "What are they wearing?",
     "hint": "You'll need this for {{emergencyNumber}}",
     "placeholder": "e.g., Blue jacket, gray pants, white sneakers",
-    "dismiss": "Dismiss"
+    "hide": "Hide"
   },
   "actions": {
     "foundSafe": "Found — Safe",
-    "call911": "📞 Call {{emergencyNumber}}",
-    "infoSheet": "📋 Info Sheet",
-    "alertCircle": "📱 Alert Circle"
+    "call911": "Call {{emergencyNumber}}",
+    "infoSheet": "Emergency Info",
+    "alertCircle": "Alert Circle"
   },
   "checklist": {
     "title": "Search Protocol",
     "priority": "PRIORITY",
     "savedPlaces": "Saved places to check:",
-    "morePlaces": "+{{count}} more in Places"
+    "morePlaces": "+{{count}} more in Places",
+    "done": "Done",
+    "notDone": "Not done"
   },
   "steps": {
     "home_search": {
@@ -97,8 +99,8 @@
       "title": "Leave Emergency Search?",
       "message": "The timer will continue in the background. You can return to resume.",
       "notificationsOff": "Notifications are off, so the 5-minute warning and the time-up alert won't reach you while you're away.",
-      "stay": "Stay",
-      "leave": "Leave",
+      "stay": "Keep Searching",
+      "leave": "Leave — Timer Keeps Running",
       "end": "End Emergency"
     },
     "noContacts": {

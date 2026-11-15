@@ -42,3 +42,10 @@ fun formatDobInput(value: String): String {
         else -> "${digits.take(2)}/${digits.substring(2, 4)}/${digits.substring(4)}"
     }
 }
+
+/**
+ * A long identifier shortened for display, its start and end kept ("3f2a9c1b…41ef"): a whole
+ * UUID wrapped mid-string at large text. Whatever is copied or sent is still the full value.
+ */
+fun abbreviateId(id: String, head: Int = 8, tail: Int = 4): String =
+    if (id.length <= head + tail + 1) id else "${id.take(head)}…${id.takeLast(tail)}"

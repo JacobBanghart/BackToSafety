@@ -24,11 +24,15 @@
       "app": "App",
       "version": "Version",
       "platform": "Platform",
+      "platformAndroid": "Android",
+      "platformIos": "iOS",
       "theme": "Theme",
       "dbSchema": "DB Schema",
       "dbSchemaUnknown": "Unknown",
       "devSuffix": " (Dev)",
-      "deviceId": "Device ID"
+      "deviceId": "Device ID",
+      "diagnostics": "Support details",
+      "copyDeviceId": "Copy Device ID"
     }
   },
   "themeOptions": {

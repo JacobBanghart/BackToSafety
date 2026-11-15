@@ -216,6 +216,8 @@ struct RootView: View {
             }
         }
         .environment(\.appColors, colors)
+        // Every back control is read as "Back" in the app's language.
+        .environment(\.backLabel, model.t("common")("back"))
         .preferredColorScheme(scheme)
         .task { await model.load() }
     }

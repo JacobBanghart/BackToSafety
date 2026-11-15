@@ -63,7 +63,9 @@ dependencies {
     }
 }
 
-// The JVM tests read spec/vectors and i18n/locales straight from the repo.
+// The JVM tests read spec/vectors and i18n/locales straight from the repo. VECTORS_BLESS=1
+// lets VectorsTest write the code's output into vector cases that have no expected value yet.
 tasks.withType<Test>().configureEach {
     systemProperty("repoRoot", rootDir.parentFile.absolutePath)
+    systemProperty("vectorsBless", providers.environmentVariable("VECTORS_BLESS").getOrElse(""))
 }

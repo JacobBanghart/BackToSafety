@@ -10,6 +10,12 @@ import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -194,6 +200,16 @@ class EmergencyScreenTest {
         val incident = read { store.incidents() }.single()
         assertEquals("found", incident.outcome)
         assertNotNull(incident.endedAt)
+    }
+
+    @Test
+    fun aStepIsACheckboxThatSaysWhetherItIsDone() {
+        showScreen(ActiveEmergency(startedAt, "", emptyList(), incidentId = runBlocking { store.createIncident(startedAt) }))
+        val step = compose.onNodeWithTag("emergency-step-call_911")
+        step.assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Checkbox))
+            .assertIsOff().assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Not done"))
+        tap("emergency-step-call_911")
+        step.assertIsOn().assert(SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, "Done"))
     }
 
     @Test

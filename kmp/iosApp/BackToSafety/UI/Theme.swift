@@ -57,6 +57,13 @@ struct AppColors {
     var borderFocused: Color { pick(Light.borderFocused, Dark.borderFocused) }
     var primary: Color { pick(Light.primary, Dark.primary) }
     var primaryLight: Color { pick(Light.primaryLight, Dark.primaryLight) }
+    /// The round or square tile behind an accent icon on a card. In dark mode it is a step lighter
+    /// than primaryLight, so the disc separates from the card (primaryText on it is 4.8:1).
+    var iconContainer: Color { pick(Light.iconContainer, Dark.iconContainer) }
+    /// The primary color for text and icons on the background (primary itself is a fill).
+    var primaryText: Color { pick(Light.primaryText, Dark.primaryText) }
+    /// The countdown card: the accent in light mode, a calm deep tone of the same purple in dark.
+    var timer: Color { pick(Light.timer, Dark.timer) }
     var tint: Color { pick(Light.tint, Dark.tint) }
     var icon: Color { pick(Light.icon, Dark.icon) }
     var overlay: Color { pick(Light.overlay, Dark.overlay) }
@@ -64,7 +71,13 @@ struct AppColors {
     var inputBorder: Color { pick(Light.inputBorder, Dark.inputBorder) }
     var inputPlaceholder: Color { pick(Light.inputPlaceholder, Dark.inputPlaceholder) }
     var error: Color { pick(Light.error, Dark.error) }
+    /// Error-coloured text and icons on the error-tinted fill (4.5:1 needs a deeper red in light, a paler one in dark).
+    var errorText: Color { pick(Light.errorText, Dark.errorText) }
+    /// A highlight inside text (a script blank): a warm amber container, with its own ink, that reads as "fill this in", not as an error.
+    var tertiaryContainer: Color { pick(Light.tertiaryContainer, Dark.tertiaryContainer) }
+    var onTertiaryContainer: Color { pick(Light.onTertiaryContainer, Dark.onTertiaryContainer) }
     var success: Color { pick(Light.success, Dark.success) }
+    var warning: Color { pick(Light.warning, Dark.warning) }
 }
 
 private struct AppColorsKey: EnvironmentKey {

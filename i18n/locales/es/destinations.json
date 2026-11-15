@@ -1,6 +1,7 @@
 {
   "screenTitle": "Lugares para revisar",
   "loading": "Cargando...",
+  "editName": "Editar {{name}}",
   "addDestination": "Agregar lugar",
   "noDestinations": {
     "title": "Sin lugares guardados",
@@ -31,7 +32,6 @@
     "notes": "Notas"
   },
   "form": {
-    "newTitle": "Nuevo lugar",
     "editTitle": "Editar lugar",
     "hint": "Agrega lugares a donde podría ir. Aparecerán durante una búsqueda de emergencia.",
     "nameLabel": "Nombre del lugar",

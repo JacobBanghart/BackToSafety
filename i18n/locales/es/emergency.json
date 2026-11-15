@@ -21,19 +21,21 @@
     "label": "¿Qué ropa lleva puesta?",
     "hint": "Lo necesitarás para el {{emergencyNumber}}",
     "placeholder": "p. ej., chaqueta azul, pantalón gris, tenis blancos",
-    "dismiss": "Descartar"
+    "hide": "Ocultar"
   },
   "actions": {
     "foundSafe": "Encontrado: a salvo",
-    "call911": "📞 Llamar al {{emergencyNumber}}",
-    "infoSheet": "📋 Ficha de información",
-    "alertCircle": "📱 Avisar a contactos"
+    "call911": "Llamar al {{emergencyNumber}}",
+    "infoSheet": "Información de emergencia",
+    "alertCircle": "Avisar a contactos"
   },
   "checklist": {
     "title": "Protocolo de búsqueda",
     "priority": "PRIORIDAD",
     "savedPlaces": "Lugares guardados para revisar:",
-    "morePlaces": "+{{count}} más en Lugares"
+    "morePlaces": "+{{count}} más en Lugares",
+    "done": "Hecho",
+    "notDone": "Pendiente"
   },
   "steps": {
     "home_search": {
@@ -97,8 +99,8 @@
       "title": "¿Salir de la búsqueda de emergencia?",
       "message": "El temporizador seguirá corriendo en segundo plano. Puedes volver para continuar.",
       "notificationsOff": "Las notificaciones están desactivadas, así que no recibirás el aviso de los 5 minutos ni la alerta de fin del tiempo mientras estés fuera.",
-      "stay": "Quedarme",
-      "leave": "Salir",
+      "stay": "Seguir buscando",
+      "leave": "Salir: el temporizador sigue",
       "end": "Terminar emergencia"
     },
     "noContacts": {

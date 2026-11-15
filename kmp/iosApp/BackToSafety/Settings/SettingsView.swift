@@ -10,7 +10,6 @@ struct SettingsView: View {
     let tCommon: Translate
     @EnvironmentObject private var model: AppModel
     @Environment(\.appColors) private var colors
-    @Environment(\.dynamicTypeSize) private var dynamicType
     @State private var devMode = isDebug
     @State private var tapCount = 0
     @State private var lastTap: TimeInterval = 0
@@ -23,8 +22,6 @@ struct SettingsView: View {
         var id: Self { self }
     }
 
-    private var error: Color { Color(argb: Semantic.error) }
-
     var body: some View {
         VStack(spacing: 0) {
             ScreenHeader(title: t("screenTitle"), testID: "settings", onBack: { model.path.removeLast() })
@@ -34,32 +31,13 @@ struct SettingsView: View {
                         sectionHeader("paintbrush.fill", colors.text, t("sections.appearance.title"))
                         description(t("sections.appearance.description"))
                         HStack(spacing: Space.md) {
-                            ForEach([("system", "📱"), ("light", "☀️"), ("dark", "🌙")], id: \.0) { value, icon in
+                            ForEach([("system", "iphone"), ("light", "sun.max.fill"), ("dark", "moon.fill")], id: \.0) { value, icon in
                                 option(t("themeOptions.\(value)"), "settings-theme-\(value)", model.themePreference == value, icon) {
                                     Analytics.shared.track(event: .settingsThemeChanged, properties: ["theme": value])
                                     model.setTheme(value)
                                 }
                             }
                         }
-                    }
-
-                    AppCard {
-                        sectionHeader("trash.fill", error, t("sections.deleteAccount.title"))
-                        description(t("sections.deleteAccount.description"))
-                        Button { alert = .confirmDelete } label: {
-                            HStack(spacing: Space.sm) {
-                                SFIcon("trash.fill", 18, .white)
-                                RNText(t(deleting ? "sections.deleteAccount.deletingButton" : "sections.deleteAccount.button"),
-                                       Typography.bodyBold.spec, color: .white)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14).padding(.horizontal, 20)
-                            .background(RoundedRectangle(cornerRadius: Radius.md).fill(error))
-                            .opacity(deleting ? 0.6 : 1)
-                        }
-                        .buttonStyle(.pressable)
-                        .disabled(deleting)
-                        .accessibilityIdentifier("settings-delete-account")
                     }
 
                     if devMode {
@@ -83,20 +61,63 @@ struct SettingsView: View {
                         RNText(t("sections.about.title"), TextSpec(size: 20, lineHeight: 0, weight: 700), color: colors.text)
                         ListItem(label: t("sections.about.app"), value: appName)
                         ListItem(label: t("sections.about.version"), value: versionLabel + (devMode ? t("sections.about.devSuffix") : ""),
-                                 testID: "settings-version", onPress: onVersionTap)
-                        ListItem(label: t("sections.about.platform"), value: "ios")
-                        ListItem(label: t("sections.about.theme"), value: colors.isDark ? "dark" : "light")
-                        if devMode { ListItem(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
-                        ListItem(label: t("sections.about.deviceId"), value: deviceId ?? "—", testID: "settings-device-id",
-                                 ruleColor: .clear) {
+                                 testID: "settings-version", ruleColor: .clear, onPress: onVersionTap)
+                    }
+
+                    // Platform, theme and the device ID are for support, not for the caregiver: under
+                    // About, outside any card, in small type with one line each, so they read as
+                    // secondary. The values are words from the strings ("iOS", "Dark"), not raw keys.
+                    VStack(alignment: .leading, spacing: 0) {
+                        RNText(t("sections.about.diagnostics").uppercased(), Typography.caption.spec.weight(600).spacing(0.8), color: colors.textSecondary)
+                            .padding(.bottom, Space.xs)
+                            .accessibilityAddTraits(.isHeader)
+                        DetailRow(label: t("sections.about.platform"), value: t("sections.about.platformIos"))
+                        DetailRow(label: t("sections.about.theme"), value: t(colors.isDark ? "themeOptions.dark" : "themeOptions.light"))
+                        if devMode { DetailRow(label: t("sections.about.dbSchema"), value: String(AppDatabaseKt.DATABASE_VERSION)) }
+                        // Shortened to one line with a copy icon: the whole UUID wrapped mid-string at large
+                        // text, and support needs it pasted, not read out. The copy is the full ID.
+                        DetailRow(label: t("sections.about.deviceId"), value: deviceId.map { FormattersKt.abbreviateId(id: $0, head: 8, tail: 4) } ?? "—",
+                                  testID: "settings-device-id",
+                                  action: (icon: "doc.on.clipboard.fill", label: t("sections.about.copyDeviceId"))) {
                             guard let deviceId else { return }
                             UIPasteboard.general.string = deviceId
                             alert = .copied
                         }
                     }
+                    .padding(.horizontal, Space.lg + 1)
+
+                    // The danger zone sits last, under About, and is outlined rather than a solid red
+                    // block: deleting everything is rare and final, so it shouldn't read as prominently
+                    // as a routine option. A rule with space either side sets it apart from the support
+                    // details, so it doesn't read as one of them. Its confirmation alert is unchanged.
+                    // The card is washed and edged in red and the button has a 1.5 red outline, so the
+                    // warning is carried by more than a faint outline and icon.
+                    Rectangle().fill(colors.border).frame(height: 1).padding(.vertical, Space.sm)
+                    AppCard(danger: true) {
+                        sectionHeader("trash.fill", colors.error, t("sections.deleteAccount.title"))
+                        description(t("sections.deleteAccount.description"))
+                        Button { alert = .confirmDelete } label: {
+                            HStack(spacing: Space.sm) {
+                                SFIcon("trash.fill", 18, colors.error)
+                                RNText(t(deleting ? "sections.deleteAccount.deletingButton" : "sections.deleteAccount.button"),
+                                       Typography.bodyBold.spec, color: colors.error)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 48 - 2 * Space.md)
+                            .padding(.vertical, Space.md).padding(.horizontal, 20)
+                            .background(RoundedRectangle(cornerRadius: Radius.lg).fill(colors.card))
+                            .overlay(RoundedRectangle(cornerRadius: Radius.lg).strokeBorder(colors.error, lineWidth: 1.5))
+                            .contentShape(Rectangle())
+                            .opacity(deleting ? 0.6 : 1)
+                        }
+                        .buttonStyle(.pressable)
+                        .disabled(deleting)
+                        .accessibilityIdentifier("settings-delete-account")
+                    }
                 }
-                .padding(Space.xl)
+                // The 16pt margin of every other screen, so the cards line up with the header.
+                .padding(Space.lg)
             }
+            .scrollStopsAtSafeArea()
         }
         .background(colors.background.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
@@ -193,13 +214,13 @@ struct SettingsView: View {
         RNText(text, TextSpec(size: 16, lineHeight: 24), color: colors.textSecondary).padding(.bottom, Space.lg)
     }
 
-    /// A theme or language choice: 2pt border, tint and primaryLight when selected.
+    /// A theme or language choice: 2pt border, tint and primaryLight when selected, the label in primaryText (tint on primaryLight is under 4.5:1).
     private func option(_ label: String, _ testID: String, _ selected: Bool, _ icon: String?, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 0) {
-                // The emoji font is taller than the line; RN clamps it to the 24pt line height.
-                if let icon { RNText(icon, TextSpec(size: 24, lineHeight: 24), color: colors.text).frame(height: 24 * rnFontMultiplier(dynamicType)).padding(.bottom, Space.xs) }
-                RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.tint : colors.text)
+                // A 24pt symbol, tinted like the label.
+                if let icon { SFIcon(icon, 24, selected ? colors.primaryText : colors.textSecondary).padding(.bottom, Space.xs) }
+                RNText(label, TextSpec(size: 14, lineHeight: 24, weight: selected ? 600 : 400), color: selected ? colors.primaryText : colors.text)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, Space.lg + 2)
@@ -209,5 +230,6 @@ struct SettingsView: View {
         }
         .buttonStyle(.pressable)
         .accessibilityIdentifier(testID)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }

@@ -24,6 +24,9 @@ struct RNTextInput: UIViewRepresentable {
     var maxHeight: CGFloat = .infinity
     var format: ((String) -> String)?
     var onFocus: (Bool) -> Void = { _ in }
+    /// The field's name for VoiceOver. Without one a filled field reads only its text (the
+    /// placeholder label isn't spoken), so a field with no visible label of its own sets one.
+    var accessibilityLabel: String?
 
     /// The text attributes RN gives an input with a lineHeight (RCTAttributedTextUtils).
     fileprivate var attributes: [NSAttributedString.Key: Any] {
@@ -58,6 +61,7 @@ struct RNTextInput: UIViewRepresentable {
     func updateUIView(_ view: UIView, context: Context) {
         context.coordinator.parent = self
         view.accessibilityIdentifier = testID
+        view.accessibilityLabel = accessibilityLabel
         if let field = view as? InsetTextField {
             if field.text != text { field.text = text }
             field.font = font

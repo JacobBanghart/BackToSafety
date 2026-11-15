@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -50,11 +51,15 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.backtosafety.app.ui.ChipGrid
 import com.backtosafety.app.ui.FormDeleteButton
 import com.backtosafety.app.ui.FormTextInput
 import com.backtosafety.app.ui.HeaderSaveButton
@@ -84,6 +89,8 @@ import kotlinx.coroutines.launch
 private val space = DesignTokens.Spacing
 private val type = DesignTokens.Typography
 private val white = Color(DesignTokens.Light.textOnPrimary)
+
+/** The faint tint behind place icons. The icons themselves use primaryText: p600 on primaryLight was under 3:1 in dark. */
 private val p600 = Color(DesignTokens.Primary.c600)
 
 private val CATEGORIES = listOf(
@@ -257,13 +264,13 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
             when {
                 list == null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text(tCommon("loading"), color = colors.text) }
                 showForm -> Form(t, form, { form = it }, editing, ::delete)
-                else -> Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
+                else -> Column(Modifier.weight(1f).navigationBarsPadding().verticalScroll(rememberScrollState()).padding(start = space.lg.udp, end = space.lg.udp, top = space.lg.udp)) {
                     Row(
                         Modifier.fillMaxWidth().padding(bottom = space.lg.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
                             .background(colors.primaryLight).padding(space.md.udp),
                         horizontalArrangement = Arrangement.spacedBy(space.md.udp),
                     ) {
-                        Icon("info.circle.fill", 18f, p600)
+                        Icon("info.circle.fill", 18f, LocalAppColors.current.primaryText)
                         Text(t("searchTip"), style = type.caption.style(), color = colors.text, modifier = Modifier.weight(1f))
                     }
                     if (list.isEmpty()) {
@@ -302,8 +309,8 @@ fun DestinationsScreen(t: Translate, tCommon: Translate, store: Store, onBack: (
                             horizontalArrangement = Arrangement.spacedBy(space.sm.udp, Alignment.CenterHorizontally),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            Icon("plus", 20f, white)
-                            Text(t("addDestination"), style = type.bodyBold.style(), color = white)
+                            Icon("plus", 20f, colors.textOnPrimary)
+                            Text(t("addDestination"), style = type.bodyBold.style(), color = colors.textOnPrimary)
                         }
                     }
                     Box(Modifier.height(40.udp))
@@ -344,7 +351,7 @@ private fun CategoryIcon(d: DestinationEntity, size: Float) {
     Box(
         Modifier.size(28.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp)).background(p600.copy(alpha = 0x15 / 255f)),
         contentAlignment = Alignment.Center,
-    ) { Icon(categoryOf(d).second, size, p600) }
+    ) { Icon(categoryOf(d).second, size, LocalAppColors.current.primaryText) }
 }
 
 @Composable
@@ -375,10 +382,11 @@ private fun PlaceCard(
                 }
             }
             Box(
-                Modifier.testTag("destinations-item-$index-edit").size(40.udp).clip(RoundedCornerShape(DesignTokens.Radius.md.dp))
-                    .clickable(onClick = onEdit).background(p600.copy(alpha = 0x15 / 255f)),
+                Modifier.testTag("destinations-item-$index-edit").size(40.udp).clip(RoundedCornerShape(DesignTokens.Radius.lg.dp))
+                    .semantics { contentDescription = t("editName", mapOf("name" to d.name)) }
+                    .clickable(role = Role.Button, onClick = onEdit).background(p600.copy(alpha = 0x15 / 255f)),
                 contentAlignment = Alignment.Center,
-            ) { Icon("pencil", 18f, p600) }
+            ) { Icon("pencil", 18f, LocalAppColors.current.primaryText) }
         }
         d.address?.ifEmpty { null }?.let { address ->
             Row(
@@ -387,7 +395,7 @@ private fun PlaceCard(
                     .padding(vertical = space.xs.udp, horizontal = 10.udp),
                 horizontalArrangement = Arrangement.spacedBy(6.udp), verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon("location", 14f, p600)
+                Icon("location", 14f, LocalAppColors.current.primaryText)
                 Text(
                     address, style = type.caption.style(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
                     color = Color(if (colors.isDark) DesignTokens.Primary.c300 else DesignTokens.Primary.c700),
@@ -408,7 +416,7 @@ private fun Empty(t: Translate, personName: String?, onAdd: () -> Unit) {
         Box(
             Modifier.padding(bottom = space.sm.udp).size(88.udp).clip(CircleShape).background(colors.primaryLight),
             contentAlignment = Alignment.Center,
-        ) { Icon("mappin.and.ellipse", 40f, colors.primary) }
+        ) { Icon("mappin.and.ellipse", 40f, colors.primaryText) }
         Text(t("noDestinations.title"), style = type.title.style(), color = colors.text, textAlign = TextAlign.Center)
         Text(
             t("noDestinations.body", mapOf("name" to (personName?.ifEmpty { null } ?: t("noDestinations.nameFallback")))),
@@ -421,7 +429,7 @@ private fun Empty(t: Translate, personName: String?, onAdd: () -> Unit) {
                 .padding(horizontal = space.xl.udp, vertical = space.md.udp),
             horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon("plus", 18f, white)
+            Icon("plus", 18f, colors.textOnPrimary)
             Text(t("noDestinations.button"), style = type.bodyBold.style(), color = colors.textOnPrimary)
         }
     }
@@ -432,11 +440,8 @@ private fun Empty(t: Translate, personName: String?, onAdd: () -> Unit) {
 private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, editing: DestinationEntity?, onDelete: (DestinationEntity) -> Unit) {
     val colors = LocalAppColors.current
     val warning = Color(DesignTokens.Semantic.warning)
-    Column(Modifier.fillMaxSize().imePadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
-        Text(
-            t(if (editing != null) "form.editTitle" else "form.newTitle"), style = type.headline.style(), color = colors.text,
-            modifier = Modifier.padding(bottom = space.sm.udp),
-        )
+    Column(Modifier.fillMaxSize().imePadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(space.lg.udp)) {
+        // No heading here: the app bar already says "Add Location" / "Edit Location" (as on Contacts).
         Text(t("form.hint"), style = type.body.style(), color = colors.textSecondary, modifier = Modifier.padding(bottom = space.xl.udp))
         FormTextInput(
             t("form.nameLabel"), form.name, { onChange(form.copy(name = it)) }, "destinations-form-name",
@@ -444,13 +449,14 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
         )
         Column(Modifier.padding(bottom = space.lg.udp)) {
             Text(t("form.categoryLabel"), style = type.bodyBold.style(), color = colors.text, modifier = Modifier.padding(bottom = space.xs.udp))
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalArrangement = Arrangement.spacedBy(space.sm.udp)) {
-                for ((category, icon) in CATEGORIES) {
-                    OptionChip(
-                        t("categories.$category"), icon, "destinations-form-category-$category", form.category == category,
-                        if (category == "water") warning else p600,
-                    ) { if (form.category != category) onChange(form.copy(category = category)) }
-                }
+            ChipGrid(CATEGORIES) { (category, icon), modifier ->
+                OptionChip(
+                    t("categories.$category"), icon, "destinations-form-category-$category", form.category == category,
+                    // Fills that carry a white label above 4.5:1: deep amber for water, else primary.
+                    if (category == "water") Color(DesignTokens.Light.warning) else colors.primary,
+                    modifier,
+                    selectedContent = if (category == "water") white else colors.textOnPrimary,
+                ) { if (form.category != category) onChange(form.copy(category = category)) }
             }
             if (form.category == "water") {
                 Row(
@@ -458,8 +464,8 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
                         .background(warning.copy(alpha = 0x15 / 255f)).padding(10.udp),
                     horizontalArrangement = Arrangement.spacedBy(space.sm.udp), verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon("exclamationmark.triangle.fill", 16f, warning)
-                    Text(t("waterWarning"), style = type.caption.style(), color = warning, modifier = Modifier.weight(1f))
+                    Icon("exclamationmark.triangle.fill", 16f, colors.warning)
+                    Text(t("waterWarning"), style = type.caption.style(), color = colors.warning, modifier = Modifier.weight(1f))
                 }
             }
             if (form.category == "other") {
@@ -477,7 +483,7 @@ private fun Form(t: Translate, form: PlaceForm, onChange: (PlaceForm) -> Unit, e
                 for ((risk, color) in RISKS) {
                     val c = Color(color)
                     val selected = form.riskLevel == risk
-                    val shape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                    val shape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                     Box(
                         Modifier.weight(1f).testTag("destinations-form-risk-$risk").clip(shape)
                             .clickable { onChange(form.copy(riskLevel = risk)) }
@@ -543,7 +549,7 @@ private fun Detail(
             }
             Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).padding(horizontal = space.lg.udp)) {
                 d.address?.ifEmpty { null }?.let {
-                    DetailRow("location", p600, t("detail.address"), it, Color(if (colors.isDark) DesignTokens.Primary.c300 else DesignTokens.Primary.c700),
+                    DetailRow("location", LocalAppColors.current.primaryText, t("detail.address"), it, Color(if (colors.isDark) DesignTokens.Primary.c300 else DesignTokens.Primary.c700),
                         Modifier.testTag("destinations-detail-maps").clickable { onMaps(it) })
                 }
                 d.distanceFromHome?.ifEmpty { null }?.let { DetailRow("figure.walk", colors.textSecondary, t("detail.distance"), it, colors.text) }
@@ -551,7 +557,7 @@ private fun Detail(
                 notes.ifEmpty { null }?.let { DetailRow("note.text", colors.textSecondary, t("detail.notes"), it, colors.text) }
             }
             Row(Modifier.padding(space.lg.udp), horizontalArrangement = Arrangement.spacedBy(space.md.udp)) {
-                val buttonShape = RoundedCornerShape(DesignTokens.Radius.md.dp)
+                val buttonShape = RoundedCornerShape(DesignTokens.Radius.lg.dp)
                 Row(
                     Modifier.weight(1f).heightIn(min = 44.udp).testTag("destinations-detail-close").clip(buttonShape)
                         .clickable(onClick = onClose).rnBorder(1.dp, colors.border, buttonShape),
@@ -559,12 +565,12 @@ private fun Detail(
                 ) { Text(tCommon("close"), style = type.bodyBold.style(), color = colors.textSecondary) }
                 Row(
                     Modifier.weight(1f).heightIn(min = 44.udp).testTag("destinations-detail-edit").clip(buttonShape)
-                        .clickable(onClick = onEdit).background(colors.tint),
+                        .clickable(onClick = onEdit).background(colors.primary),
                     horizontalArrangement = Arrangement.spacedBy(space.xs.udp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon("pencil", 14f, white)
-                    Text(tCommon("edit"), style = type.bodyBold.style(), color = white)
+                    Icon("pencil", 14f, colors.textOnPrimary)
+                    Text(tCommon("edit"), style = type.bodyBold.style(), color = colors.textOnPrimary)
                 }
             }
         }
